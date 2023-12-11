@@ -1,0 +1,15 @@
+{
+    "contests": {
+        "Contest Name Goes Here": {
+            "contestName": "Contest Name Goes Here",
+            "description": "A short description of the contest",
+            "rulesLink": "place a URL here",
+            "startTimeStamp": 2234779200,
+            "endTimeStamp": 2235845200,
+            "categories": {}
+        }
+    },
+    "contestChannel": {
+        "1142053423370481747": "Contest Name Goes Here"
+	}
+}

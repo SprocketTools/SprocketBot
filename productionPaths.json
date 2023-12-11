@@ -1,0 +1,262 @@
+{
+    "Bartkowicz Motor Works": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Aeroette Munitions": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Bastion Steelworks": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Basilio Angelo Dynamic Systems": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Kquistlunds Motorworks": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Patch & Bits Inc": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Zavark Industrial Kompany": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Dragonfire Industries": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "PARS Heavy Machineries": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "AVM Ltd.": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Wills Works": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Vulcan Foundry": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "<@169688771736895488> Vulcan Foundry": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    }
+}
