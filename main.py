@@ -3,7 +3,8 @@ import datetime
 utc = datetime.timezone.utc
 
 # If no tzinfo is given then UTC is assumed.
-# import os
+from pathlib import Path
+import os
 import platform
 import discord
 import json
@@ -44,7 +45,8 @@ if platform.system() == "Windows":
     client_id = '1139195875994910740'
     token = secretsList[1] # testing bot token
     channel_id = '1152377925916688484'
-    TANKrepository = "/tankCatalog"
+    TANKrepository = "\\tankCatalog\\"
+    OSslashLine = "\\"
     prefix = "?"
 
 else:
@@ -71,6 +73,7 @@ else:
     token = secretsList[0] # official bot token
     channel_id = '1142053482371756062'
     TANKrepository = directory + "tankCatalog/"
+    OSslashLine = "/"
     prefix = "-"
 
 bot = commands.Bot(command_prefix=prefix, description=description, intents=intents, help_command=None)
@@ -1259,7 +1262,7 @@ async def removeContractor(ctx, name: discord.User, *, company):
 
 @bot.command()
 async def leaveCompany(ctx):
-    ID = ctx.user.id
+    ID = ctx.author.id
 
     del operatorsList[str(ID)]
     await ctx.send("You are no longer part of a company.")
@@ -1349,6 +1352,7 @@ async def message(ctx, *, country):
         file = await attachment.to_file()
         await channel.send(file=file, content="")
 @bot.command()
+@commands.has_role('Moderator')
 async def troll(ctx, channelin: str, *, message):
     import re
     channelin = int(re.sub(r'[^0-9]', '', channelin))
@@ -3033,7 +3037,9 @@ async def getZheifuBlueprintCheckerConfig(ctx):
         railwayLevel = int(variablesList[country][0]["railwayTech"])
     except Exception:
         railwayLevel = 2
+
     # data fed into the blueprint checker
+
     contestName = "Zheifu"
     era = "Latewar"
     errorTolerance = 0
@@ -3068,6 +3074,7 @@ async def getZheifuBlueprintCheckerConfig(ctx):
     # fuel
     litersPerDisplacement = 20
     litersPerTon = 0.01
+    minEDPT = 0.01
 
     # suspension
     maxWeight = weightLimit[suspensionLevel]
@@ -3105,6 +3112,7 @@ async def getZheifuBlueprintCheckerConfig(ctx):
         "groundPressureMax": groundPressureMax,
         "litersPerDisplacement": litersPerDisplacement,
         "litersPerTon": litersPerTon,
+        "minEDPT": minEDPT,
         "caliberLimit": caliberLimit,
         "propellantLimit": propellantLimit,
         "boreLimit": boreLimit,
@@ -3147,6 +3155,7 @@ async def runBlueprintCheck(ctx, attachment, config):
         requireGroundPressure = config["requireGroundPressure"]
         groundPressureMax = config["groundPressureMax"]
         litersPerDisplacement = config["litersPerDisplacement"]
+        minEDPT = config["minEDPT"]
         litersPerTon = config["litersPerTon"]
         caliberLimit = config["caliberLimit"]
         propellantLimit = config["propellantLimit"]
@@ -3466,7 +3475,9 @@ async def runBlueprintCheck(ctx, attachment, config):
                     errorCount += 1
                 else:
                     report = await addLine(report, f"Engine \"{name}\" has {displacement} liters of displacement.")
-
+                if (displacement/weight) < minEDPT:
+                    report = await addLine(report, f"Engine \"{name}\" has a {round((displacement/weight), 2)} engine displacement per tonnage ratio.  This is too low - the minimum requirement is {minEDPT}.")
+                    errorCount += 1
             x += 1
 
         # print out minimum engine tech required
@@ -3819,26 +3830,195 @@ async def attachNumberDecals(blueprintData: dict):
         blueprintData["ext"].append(decal)
     return blueprintData
 
+async def getContestName(ctx):
+    import asyncio
+    await ctx.send("Beginning processing now.")
+    contestName = ""
+    contestHostID = ctx.author.id
+    contestListText = ""
+    for contestTitle, contestInfo in contestsList["contests"].items():
+        print(contestInfo)
+        if contestInfo["contestHost"] == contestHostID:
+            contestListText = contestListText + f"\n{contestTitle}"
+    await ctx.send(f"What contest are you adding categories to? Currently you are managing the following contests: {contestListText}")
+    def check(m: discord.Message):
+        return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+    try:
+        msg = await bot.wait_for('message', check=check, timeout=300.0)
+        contestName = str(msg.content)
+    except asyncio.TimeoutError:
+        await ctx.reply("Operation cancelled.")
+        return
+    if contestsList["contests"][contestName]["contestHost"] != contestHostID:
+        await ctx.reply("This isn't your contest!")
+        return
+    else:
+        return contestName
+
+@bot.command()
+@commands.has_role('event organizer')
+async def toggleEntries(ctx):
+    contestName = await getContestName(ctx)
+    contestsList["contests"][contestName]["acceptEntries"] = not contestsList["contests"][contestName]["acceptEntries"]
+    await ctx.reply(f"{contestName}'s submission processing is now set to {contestsList['contests'][contestName]['acceptEntries']}!")
+
 @bot.command()
 @commands.has_role('event organizer')
 async def registerContest(ctx):
+    await ctx.send("Beginning processing now.")
+    contestHostID = ctx.author.id
     for attachment in ctx.message.attachments:
-        #try:
-            fileData = json.loads(await attachment.read())
-            contestName = fileData["contestName"]
-            contestsList["contests"][contestName] = fileData
-            contestsList["contests"][contestName]["categories"] = {}
-            contestsList["loggingChannel"][ctx.channel.id] = contestName
-            await backupFiles()
-            await ctx.send("Success!  Your contest is now registered and backed up.")
-        #except Exception:
-            #await ctx.send("Something is wrong with the .json file.  Please try again.")
+        fileData = json.loads(await attachment.read())
+        contestName = fileData["contestName"]
+        submitDirectory = TANKrepository + f"{contestName}"
+        Path(submitDirectory).mkdir(parents=True, exist_ok=True)
+        contestsList["contests"][contestName] = fileData
+        contestsList["contests"][contestName]["categories"] = {}
+        contestsList["contests"][contestName]["submissions"] = {}
+        contestsList["contests"][contestName]["contestHost"] = contestHostID
+        contestsList["contests"][contestName]["acceptEntries"] = "false"
 
-        #logChannel = ctx.user.id
+        # create logging channel
+        channel = bot.get_channel(ctx.channel.id)
+        thread = await channel.create_thread(
+            name=contestName,
+            type=discord.ChannelType.private_thread
+        )
+        contestsList["loggingChannel"][contestName] = thread.id
+
+        # await backupFiles()
+        await thread.send(f"<@{contestHostID}>, the {contestName} is now registered!  Submissions are turned off for now - enable them once you are ready.  Once you do enable submissions, they will be logged here.")
 
 
+@bot.command()
+@commands.has_role('event organizer')
+async def registerContestCategory(ctx):
+    import asyncio
+    await ctx.send("Beginning processing now.")
+    contestName = ""
+    contestHostID = ctx.author.id
+    contestListText = ""
+    for contestTitle, contestInfo in contestsList["contests"].items():
+        print(contestInfo)
+        if contestInfo["contestHost"] == contestHostID:
+            contestListText = contestListText + f"\n{contestTitle}"
+    await ctx.send(f"What contest are you adding categories to? Currently you are managing the following contests: {contestListText}")
+    def check(m: discord.Message):
+        return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+    try:
+        msg = await bot.wait_for('message', check=check, timeout=300.0)
+    except asyncio.TimeoutError:
+        await ctx.reply("Operation cancelled.")
+        return
+    else:
+        contestName = str(msg.content)
+    if contestsList["contests"][contestName]["contestHost"] != contestHostID:
+        await ctx.reply("This isn't your contest!")
+        return
+    channel = bot.get_channel(ctx.channel.id)
+    for attachment in ctx.message.attachments:
+        fileData = json.loads(await attachment.read())
+        categoryName = fileData["categoryName"]
+        # contestsList["contests"][contestName] = fileData
+        contestsList["contests"][contestName]["categories"][categoryName] = fileData
+        contestsList["contests"][contestName]["categories"][categoryName]["hostChannel"] = ctx.channel.id
+        contestsList["contests"][contestName]["categories"][categoryName]["submissions"] = {}
+        contestsList["contests"][contestName]["categories"][categoryName]["contestName"] = contestName
+
+        submitDirectory = TANKrepository + contestName + OSslashLine + categoryName
+        Path(submitDirectory).mkdir(parents=True, exist_ok=True)
+        # await backupFiles()
+        await ctx.send(f"The category \"{categoryName}\" is now registered!")
+
+@bot.command()
+async def submit(ctx):
+    import asyncio
+    name = "invalid"
+    weight = -1
+    errors = 0
+    contestName = ""
+    contestListText = ""
+    for contestTitle, contestInfo in contestsList["contests"].items():
+        if contestInfo["acceptEntries"] == True:
+            contestListText = contestListText + f"\n{contestTitle}"
+    for attachment in ctx.message.attachments:
+        await ctx.send(f"What contest are you submitting the {attachment.filename} to? The following contests are currently available: {contestListText}")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await bot.wait_for('message', check=check, timeout=300.0)
+            contestName = msg.content
+            try:
+                if contestsList["contests"][contestName]["acceptEntries"] != True:
+                    await ctx.reply(f"This contest has closed entries.  its ending date was <t:{contestsList[contestName]['endTimeStamp']}:R>")
+                    return
+            except Exception:
+                await ctx.reply("This contest does not exist.  Please make sure you spelled the contest's name correctly.")
+
+        except asyncio.TimeoutError:
+            await ctx.reply("Operation cancelled.")
+            return
 
 
+        categoryListText = ""
+        for categoryTitle, categoryInfo in contestsList["contests"][contestName]["categories"].items():
+            categoryListText = categoryListText + f"\n{categoryTitle}"
+
+        await ctx.send(f"What category are you submitting the {attachment.filename} to? You can pick from the following categories: {categoryListText}")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await bot.wait_for('message', check=check, timeout=300.0)
+            categoryName = msg.content
+            try:
+                configuration = contestsList["contests"][contestName]["categories"][categoryName]
+            except Exception:
+                await ctx.reply("This category does not exist.  Please make sure you spelled the contest's name correctly.")
+                return
+
+        except asyncio.TimeoutError:
+            await ctx.reply("Operation cancelled.")
+            return
+
+        results = await runBlueprintCheck(ctx, attachment, configuration)
+        await ctx.reply("Blueprint processing complete.")
+        name = results["tankName"]
+        weight = results["tankWeight"]
+        valid = results["valid"]
+        crewReport = results["crewReport"]
+        crewCount = results["crewCount"]
+        maxVehicleArmor = float(results["maxArmor"])
+        tankWidth = results["tankWidth"]
+        results["tankOwner"] = ctx.author.id
+        if valid == True:
+            await ctx.send(f"## Attach the specified photos of the {name} here.  \n**Picture 1** needs to be a well-lit picture of the tank's front and side.\n**Picture 2** needs to be a well-lit picture of the tank's rear and side.\n**Picture 3** needs to be a front view of the tank using the \"Internals\" overlay **while looking at the ammunition rack editor.**\n**Picture 4** needs to be a top+side view of the tank using the \"Internals\" overlay **while looking at the ammunition rack editor.**\n### Note: at least one of your screenshots needs to include the full page and Sprocket UI.")
+
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
+            try:
+                msg = await bot.wait_for('message', check=check, timeout=5000.0)
+            except asyncio.TimeoutError:
+                await ctx.send("Operation cancelled.")
+                return
+
+            blueprintData = json.loads(await attachment.read())
+
+            await ctx.send(f"The {name} has been submitted!  Thanks for participating in the {contestName}!")
+            json_output = json.dumps(blueprintData, indent=4)
+            file_location = f"{TANKrepository}{OSslashLine}{contestName}"
+            from pathlib import Path
+            Path(file_location).mkdir(parents=True, exist_ok=True)
+            with open(str(file_location + "/" + str(name) + ".blueprint"), "w") as outfile:
+                outfile.write(json_output)
+
+            msg = ctx.message
+            url = msg.jump_url
+            chnl = bot.get_channel(int(contestsList["loggingChannel"][contestName]))
+            await chnl.send(f"### You have a new entry into the {contestName}! \nName: {name} \nConstruction type: {type} \nCrew count: {crewCount} \n{crewReport} \n## Vehicle blueprint: [here]({url})")
+            await chnl.send(f"** ** \n\n** **")
+        else:
+            await ctx.send("The " + name + " needs fixes to the problems listed above before it can be registered.")
 
 
 bot.run(token)
