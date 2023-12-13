@@ -132,7 +132,22 @@
                     "ATsafeMin": 20,
                     "armorMax": 200,
                     "hostChannel": 1142053423370481747,
-                    "submissions": {}
+                    "submissions": {
+                        "ZIK-MAT 5": {
+                            "tankName": "ZIK-MAT 5",
+                            "tankWeight": 20.804,
+                            "errorCount": 1,
+                            "valid": true,
+                            "tankWidth": 2.71,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['radioman', 'driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 80,
+                            "tankOwner": 712509599135321673
+                        }
+                    },
+                    "contestName": "Watch on the Rhine"
                 },
                 "Tank Destroyer": {
                     "categoryName": "Tank Destroyer",

@@ -207,7 +207,7 @@ print(cannonWeights)
 # Arrays for using with tech levels
 cannonWeights = [120, 198, 276, 355, 433, 511, 590, 668, 746, 825, 903, 981, 1060, 1138, 1216, 1295, 1373, 1451, 1530, 1608, 1686, 1765, 1843, 1921, 2000]
 # propellantLengths = [200, 215, 240, 270, 300, 340, 385, 500, 600, 750, 950, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200]
-shellLengths = [350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1350, 1400, 1450, 1500, 1550]
+shellLengths = [350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500, 1550]
 boreLengths = [2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2, 4.4, 4.6, 4.8, 5.0, 5.2, 5.4, 5.6, 5.8, 6.0, 6.2, 6.4, 6.6, 6.8, 7.0]
 netDisplacement = [3.6, 4.2, 4.8, 5.6, 7.0, 8.5, 10.5, 14, 17, 20, 22, 24.5, 28, 32, 36, 40, 45, 50, 55, 60, 65, 70, 74, 77, 80]
 weightLimit = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135]
@@ -3856,42 +3856,47 @@ async def getContestName(ctx):
         return contestName
 
 @bot.command()
-@commands.has_role('event organizer')
 async def toggleEntries(ctx):
     contestName = await getContestName(ctx)
     contestsList["contests"][contestName]["acceptEntries"] = not contestsList["contests"][contestName]["acceptEntries"]
     await ctx.reply(f"{contestName}'s submission processing is now set to {contestsList['contests'][contestName]['acceptEntries']}!")
 
 @bot.command()
-@commands.has_role('event organizer')
 async def registerContest(ctx):
     await ctx.send("Beginning processing now.")
     contestHostID = ctx.author.id
     for attachment in ctx.message.attachments:
         fileData = json.loads(await attachment.read())
         contestName = fileData["contestName"]
-        submitDirectory = TANKrepository + f"{contestName}"
-        Path(submitDirectory).mkdir(parents=True, exist_ok=True)
-        contestsList["contests"][contestName] = fileData
-        contestsList["contests"][contestName]["categories"] = {}
-        contestsList["contests"][contestName]["submissions"] = {}
-        contestsList["contests"][contestName]["contestHost"] = contestHostID
-        contestsList["contests"][contestName]["acceptEntries"] = "false"
+        allowWriting = True
+        try:
+            if contestsList["contests"][contestName]["contestHost"] != contestHostID:
+                await ctx.send(f"Someone else already has a contest registered under this name!")
+                allowWriting = False
+        except Exception:
+            pass
+        if allowWriting == True:
+            submitDirectory = TANKrepository + f"{contestName}"
+            Path(submitDirectory).mkdir(parents=True, exist_ok=True)
+            contestsList["contests"][contestName] = fileData
+            contestsList["contests"][contestName]["categories"] = {}
+            contestsList["contests"][contestName]["submissions"] = {}
+            contestsList["contests"][contestName]["contestHost"] = contestHostID
+            contestsList["contests"][contestName]["acceptEntries"] = "false"
 
-        # create logging channel
-        channel = bot.get_channel(ctx.channel.id)
-        thread = await channel.create_thread(
-            name=contestName,
-            type=discord.ChannelType.private_thread
-        )
-        contestsList["loggingChannel"][contestName] = thread.id
+            # create logging channel
+            channel = bot.get_channel(ctx.channel.id)
+            thread = await channel.create_thread(
+                name=contestName,
+                type=discord.ChannelType.private_thread
+            )
+            contestsList["loggingChannel"][contestName] = thread.id
 
-        # await backupFiles()
-        await thread.send(f"<@{contestHostID}>, the {contestName} is now registered!  Submissions are turned off for now - enable them once you are ready.  Once you do enable submissions, they will be logged here.")
+            # await backupFiles()
+            await thread.send(f"<@{contestHostID}>, the {contestName} is now registered!  Submissions are turned off for now - enable them once you are ready.  Once you do enable submissions, they will be logged here.")
 
 
 @bot.command()
-@commands.has_role('event organizer')
 async def registerContestCategory(ctx):
     import asyncio
     await ctx.send("Beginning processing now.")
@@ -3931,13 +3936,14 @@ async def registerContestCategory(ctx):
         await ctx.send(f"The category \"{categoryName}\" is now registered!")
 
 @bot.command()
-async def submit(ctx):
+async def submitTank(ctx):
     import asyncio
     name = "invalid"
     weight = -1
     errors = 0
     contestName = ""
     contestListText = ""
+    allowEntry = True
     for contestTitle, contestInfo in contestsList["contests"].items():
         if contestInfo["acceptEntries"] == True:
             contestListText = contestListText + f"\n{contestTitle}"
@@ -3964,21 +3970,29 @@ async def submit(ctx):
         for categoryTitle, categoryInfo in contestsList["contests"][contestName]["categories"].items():
             categoryListText = categoryListText + f"\n{categoryTitle}"
 
-        await ctx.send(f"What category are you submitting the {attachment.filename} to? You can pick from the following categories: {categoryListText}")
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        try:
-            msg = await bot.wait_for('message', check=check, timeout=300.0)
-            categoryName = msg.content
-            try:
+        if len(contestsList["contests"][contestName]["categories"]) == 1:
+            for categoryTitle, categoryInfo in contestsList["contests"][contestName]["categories"].items():
+                categoryName = categoryTitle
                 configuration = contestsList["contests"][contestName]["categories"][categoryName]
-            except Exception:
-                await ctx.reply("This category does not exist.  Please make sure you spelled the contest's name correctly.")
+        else:
+            await ctx.send(f"What category are you submitting the {attachment.filename} to? You can pick from the following categories: {categoryListText}")
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            try:
+                msg = await bot.wait_for('message', check=check, timeout=300.0)
+                categoryName = msg.content
+                try:
+                    configuration = contestsList["contests"][contestName]["categories"][categoryName]
+                except Exception:
+                    await ctx.reply("This category does not exist.  Please make sure you spelled the contest's name correctly.")
+                    return
+
+            except asyncio.TimeoutError:
+                await ctx.reply("Operation cancelled.")
                 return
 
-        except asyncio.TimeoutError:
-            await ctx.reply("Operation cancelled.")
-            return
+
+
 
         results = await runBlueprintCheck(ctx, attachment, configuration)
         await ctx.reply("Blueprint processing complete.")
@@ -3990,6 +4004,14 @@ async def submit(ctx):
         maxVehicleArmor = float(results["maxArmor"])
         tankWidth = results["tankWidth"]
         results["tankOwner"] = ctx.author.id
+
+        try:
+            if contestsList["contests"][contestName]["categories"][categoryName]["submissions"][name]["tankOwner"] != ctx.author.id:
+                await ctx.reply("Someone else has already submitted a tank with this name!  Please choose a different name.")
+                valid = False
+        except Exception:
+            pass
+
         if valid == True:
             await ctx.send(f"## Attach the specified photos of the {name} here.  \n**Picture 1** needs to be a well-lit picture of the tank's front and side.\n**Picture 2** needs to be a well-lit picture of the tank's rear and side.\n**Picture 3** needs to be a front view of the tank using the \"Internals\" overlay **while looking at the ammunition rack editor.**\n**Picture 4** needs to be a top+side view of the tank using the \"Internals\" overlay **while looking at the ammunition rack editor.**\n### Note: at least one of your screenshots needs to include the full page and Sprocket UI.")
 
@@ -4006,16 +4028,18 @@ async def submit(ctx):
 
             await ctx.send(f"The {name} has been submitted!  Thanks for participating in the {contestName}!")
             json_output = json.dumps(blueprintData, indent=4)
-            file_location = f"{TANKrepository}{OSslashLine}{contestName}"
+            file_location = f"{TANKrepository}{OSslashLine}{contestName}{OSslashLine}{categoryName}"
             from pathlib import Path
             Path(file_location).mkdir(parents=True, exist_ok=True)
             with open(str(file_location + "/" + str(name) + ".blueprint"), "w") as outfile:
                 outfile.write(json_output)
 
+            contestsList["contests"][contestName]["categories"][categoryName]["submissions"][name] = results
+
             msg = ctx.message
             url = msg.jump_url
             chnl = bot.get_channel(int(contestsList["loggingChannel"][contestName]))
-            await chnl.send(f"### You have a new entry into the {contestName}! \nName: {name} \nConstruction type: {type} \nCrew count: {crewCount} \n{crewReport} \n## Vehicle blueprint: [here]({url})")
+            await chnl.send(f"### You have a new entry into the {contestName}! \nName: {name} \nCrew count: {crewCount} \n{crewReport} \n## Vehicle blueprint: [here]({url})")
             await chnl.send(f"** ** \n\n** **")
         else:
             await ctx.send("The " + name + " needs fixes to the problems listed above before it can be registered.")
