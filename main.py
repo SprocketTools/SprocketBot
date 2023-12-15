@@ -452,7 +452,7 @@ async def advanceDay():
                             cost = -50000
                         if tankName == "7.5T Flatbed Transporter":
                             cost = -150000
-                        # variablesList[country][0]["money"] = int(variablesList[country][0]["money"]) - cost
+                        variablesList[country][0]["money"] = int(variablesList[country][0]["money"]) - cost
                     countryChannel = bot.get_channel(int(variablesList[country][0]["channel"]))
                     await countryChannel.send(f"A {tankName} has finished assembly!  Auto Build is enabled for {country}, so another {tankName} is now being built.")
                     # print(tankName)
@@ -1354,15 +1354,16 @@ async def message(ctx, *, country):
 @bot.command()
 @commands.has_role('Moderator')
 async def troll(ctx, channelin: str, *, message):
-    import re
-    channelin = int(re.sub(r'[^0-9]', '', channelin))
-    print(channelin)
-    channel = bot.get_channel(channelin)
-    await ctx.send("Message is en route.")
-    await channel.send(message)
-    for attachment in ctx.message.attachments:
-        file = await attachment.to_file()
-        await channel.send(file=file, content="")
+    if ctx.author.id == 712509599135301673:
+        import re
+        channelin = int(re.sub(r'[^0-9]', '', channelin))
+        print(channelin)
+        channel = bot.get_channel(channelin)
+        await ctx.send("Message is en route.")
+        await channel.send(message)
+        for attachment in ctx.message.attachments:
+            file = await attachment.to_file()
+            await channel.send(file=file, content="")
 
 @bot.command()
 async def postContract(ctx, *, message):
@@ -2411,7 +2412,8 @@ async def tankInfo(ctx, *, tankName):
 
 async def getUserCountry(ctx):
     user_id = ctx.author.id
-
+    if ctx.message.guild.id != 1137849402891960340:
+        return "invalid_country"
     ainakikoRole = discord.utils.get(ctx.message.guild.roles, name="aina-kiko")
     argunshireRole = discord.utils.get(ctx.message.guild.roles, name="argunshire")
     austrondianRole = discord.utils.get(ctx.message.guild.roles, name="austrondian")
