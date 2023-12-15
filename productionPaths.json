@@ -258,5 +258,25 @@
             "nextTank": "",
             "nextTankWeight": 0
         }
+    },
+    "Clippit Manufacturing": {
+        "Production Line 1": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "under construction",
+            "factoryHealth": "0",
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
     }
 }

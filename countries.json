@@ -580,5 +580,27 @@
             "autoBuild": "false",
             "autoResearch": "false"
         }
+    ],
+    "Clippit Manufacturing": [
+        {
+            "displayName": "Clippit Manufacturing",
+            "type": "company",
+            "channel": 1185190067757662319,
+            "contractors": 0,
+            "money": 3000000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 0,
+            "cannonTech": 0,
+            "armorTech": 0,
+            "suspensionTech": 0,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "false",
+            "focus": "none"
+        }
     ]
 }

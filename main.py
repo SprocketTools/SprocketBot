@@ -1872,7 +1872,7 @@ async def configureFactory(ctx, *, factoryName):
     except Exception:
         await ctx.reply("It appears that your factory does not exist.  Try again.")
         return
-    await ctx.send(f"Name the tank you wish to build in {factoryName}.  Or, reply with \"none\" to stop future production of vehicles.")
+    await ctx.send(f"Name the tank you wish to build in {factoryName}!  \nReply with \"none\" to stop future production of vehicles. \nReply with \"clear\" to completely stop production of vehicles.")
     def check(m: discord.Message): return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
     try:
         msg = await bot.wait_for('message', check=check, timeout=1800.0)
@@ -1885,6 +1885,14 @@ async def configureFactory(ctx, *, factoryName):
             productionList[country][factoryName]['nextTank'] = ""
             await ctx.send(f"{factoryName} will no longer build new vehicles automatically.")
             return
+        if tankName == "clear":
+            productionList[country][factoryName]['status'] = "idle"
+            productionList[country][factoryName]['nextTank'] = ""
+            productionList[country][factoryName]['currentTank'] = ""
+            productionList[country][factoryName]['currentTankProgress'] = 0
+            await ctx.send(f"{factoryName} is now awaiting new instructions.")
+            return
+
         if tankName == "7.5T Flatbed Transporter" or tankName == "2.5T Transport Truck":
             if variablesList[country][0]["type"] == "company":
                 specialStatus = True
@@ -3907,7 +3915,7 @@ async def registerContestCategory(ctx):
         print(contestInfo)
         if contestInfo["contestHost"] == contestHostID:
             contestListText = contestListText + f"\n{contestTitle}"
-    await ctx.send(f"What contest are you adding categories to? Currently you are managing the following contests: {contestListText}")
+    await ctx.send(f"What contest are you adding categories to? Currently you are managing the following contests: {contestListText}\nWarning!  Overwriting an existing category will clear its submission list.")
     def check(m: discord.Message):
         return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
     try:
