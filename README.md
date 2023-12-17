@@ -16,6 +16,47 @@ Two configuration .json file examples are included above.  The first one, `conte
 }
 ```
 
+The second one, `contestCategoryTemplate.json` is used to establish a category for a contest:
+```
+{
+        "categoryName": "Contest Name Goes Here",		<< The name of your category
+        "era": "earlywar",					<< This must match the name of the target contest
+        "gameVersion": 0.127,					<< The game version you are analyzing entries with
+        "weightLimit": 28,					<< The weight limit in metric tons
+        "enforceGameVersion": "True",				<< Set to "True" or "False" to determine whether multiple game versions are allowed
+        "errorTolerance": 1,					<< The amount of violations a tank can have before it is denied
+        "crewMaxSpace": 1.0,					<< Limit on amount of space a crew member may have (in-game limit is 1.0)
+        "crewMinSpace": 0.8,					<< Minimum requirement for crew size (in-game limit is 0.6)
+        "crewMin": 3,						<< Minimum required amount of crew
+        "crewMax": 6,						<< Maximum allowed amount of crew (in-game limit is 16)
+        "turretRadiusMin": 0.8,					<< Required minimum turret radius (NOT Diameter)
+        "allowGCM": "True",					<< Allow "Geometric Custom Mantlets" A.K.A. GCMs A.K.A. sideways turrets.  *See note 1
+        "GCMratioMin": 65,					<< Minimum traverse ratio of GCMs 
+        "GCMtorqueMax": 150,					<< Maximum torque allowed for GCMs
+        "hullHeightMin": 0.98,					<< Minimum height requirement for hulls.  Drivers are usually 1 meter tall when sitting
+        "hullWidthMax": 2.85,					<< Maximum hull width in meters.  Accounts for geometry, tracks, and pre-made fenders
+        "torsionBarLengthMin": 0.5,				<< Minimum length for torsion bars.
+        "useDynamicTBLength": "True",				<< *See note 2
+        "allowHVSS": "False",					<< *See note 3
+        "beltWidthMin": 100,					<< Belt width requirement in millimeters
+        "requireGroundPressure": "True",			<< If enabled, checks for ground pressure
+        "groundPressureMax": 1.0,				<< Ground pressure requirement
+        "litersPerDisplacement": 28,				<< Minimum liters of internal fuel required per liter of engine displacement
+        "litersPerTon": 1,					<< Minimum liters of internal fuel required per metric ton of vehicle weight
+	"minEDPT": 0.25,					<< Minimum engine displacement required per metric ton of vehicle weight
+        "caliberLimit": 128,					<< Gun caliber upper limit.  In-game limit is 250mm
+        "propellantLimit": 600,					<< Propellant length limit in millimeters
+        "boreLimit": 4,						<< Limit on cannon bore length (shell length + barrel length)
+        "shellLimit": 1200,					<< Limit on shell length (caliber*3 + propellant)
+        "armorMin": 8,						<< Minimum armor thickness requirement.  Checks all compartments and turret rings.
+        "ATsafeMin": 15,					<< *See note 4
+        "armorMax": 250						<< Upper armor limit.   In-game limit is 500mm (you can type numbers past the slider limit)
+    }
+```
+
+
+
+
 
 ## Contributing Code
 Sprocket Bot is written purely in Python.  The attached .json files are usable as examples, and do not reflect the current campaign level.  It is recommended to use Github to download and update the files, opening main.py with PyCharm.
