@@ -91,4 +91,22 @@ Sprocket bot is an **in-development** utility bot, developed by a college studen
 - Granting Sprocket Bot administrator priveledges is not recommended.  It currently has no code that allows it to delete *anything* outsize Zheifu, but ask me about this in DMs on Discord.
 - I cannot keep the bot's entire source code public once administrative utilities and/or vehicle rating formulas are added.
 
+## Requirements
+My responsibility for how contest hosts run their contests is extremely limited.  
+Contest hosts may run whatever contests they'd like to with Sprocket Bot, except in the following circumstances:  
+- The contest(s) violate Discord's TOS in rather blatant ways 
+- The contest(s) cause excessive strain on the server or break it (which I would be impressed to actually see, no contest ever ran in Sprocket Official's history would have managed to do this *except the Ambushed! challenge*)
 
+This doesn't mean I won't help to ensure the contests are set up as intended though.  Should issues like these arise, please contact me through Discord for fastest response.
+
+## Contributors
+Overlord
+Azomer
+
+## Bug Hunters
+0bihoernchen
+Hackstar
+Everyone in the **Zheifu Testing** server who has helped test the bot during development
+
+## Code Contributors
+*Be the first to put your name here!*
