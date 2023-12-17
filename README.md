@@ -104,11 +104,14 @@ This doesn't mean I won't help to ensure the contests are set up as intended tho
 
 ### Contributors
 Overlord
-** **Azomer
+
+Azomer
 
 ### Bug Hunters
-0bihoernchen,
-Hackstar,
+0bihoernchen
+
+Hackstar
+
 Everyone in the **Zheifu Testing** server who has helped test the bot during development
 
 ### Code Contributors
