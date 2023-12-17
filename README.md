@@ -1,10 +1,20 @@
 # Sprocket Bot
-### The best Discord bot for improving your Sprocket Tank Design experience!
+### The best Discord Utility bot for improving your Sprocket Tank Design experience!
 This bot's primary utility is to run the Zheifu campaign, while also incorporating several tools and utilities for manipulating vehicle blueprints.
 
-Invite Sprocket Bot to your Discord server [here](https://discord.com/api/oauth2/authorize?client_id=1137847253114040330&permissions=68169452355409&scope=bot%20applications.commands)
+Invite Sprocket Bot to your Discord server [here](https://discord.com/api/oauth2/authorize?client_id=1137847253114040330&permissions=68169452355409&scope=bot%20applications.commands)!
 
+The big thing:
 ## Setting up your own contests
+
+Setting up contests is fairly straightforward.  You will need:
+- A "contest info" .json file
+- One or more "contest category" .json files
+- A private channel that you can make threads in 
+- A public channel that users can use to run the `-submitTank` command with 
+
+
+
 Two configuration .json file examples are included above.  The first one, `contestInfoTemplate.json` is used to establish a contest:
 ```
 {
@@ -22,7 +32,7 @@ The second one, `contestCategoryTemplate.json` is used to establish a category f
         "categoryName": "Contest Name Goes Here",		<< The name of your category
         "era": "earlywar",					<< This must match the name of the target contest
         "gameVersion": 0.127,					<< The game version you are analyzing entries with
-        "weightLimit": 28,					<< The weight limit in metric tons
+        "weightLimit": 28,					<< The weight limit of a tank in metric tons
         "enforceGameVersion": "True",				<< Set to "True" or "False" to determine whether multiple game versions are allowed
         "errorTolerance": 1,					<< The amount of violations a tank can have before it is denied
         "crewMaxSpace": 1.0,					<< Limit on amount of space a crew member may have (in-game limit is 1.0)
@@ -53,12 +63,20 @@ The second one, `contestCategoryTemplate.json` is used to establish a category f
         "armorMax": 250						<< Upper armor limit.   In-game limit is 500mm (you can type numbers past the slider limit)
     }
 ```
-
-
+Notes:
+- "Geometric Custom Mantlets" are detected when a turret radius is below the set minimum radius, and the turret is rotated more than 20 degrees
+- If "dynamic torsion bars" is set to `True`, then the `torsionBarLengthMin` is multiplied by the track separation instead.  In cases like this, `torsionBarLengthMin` should not exceed a value of 0.9
+- HVSS is not guaranteed to be accurate when calculating ground pressure
+- The "ATsafeMin" is a soft armor requirement that simply flashes a warning whenever the thinnest armor plate is below this value.  Use it mainly for bonus points, otherwise set the value to zero.
 
 
 
 ## Contributing Code
 Sprocket Bot is written purely in Python.  The attached .json files are usable as examples, and do not reflect the current campaign level.  It is recommended to use Github to download and update the files, opening main.py with PyCharm.
+
+## Warnings
+Sprocket bot is an **in-development** utility bot, developed by a college student during their free time.  I say "utility" because its capabilities are changing quite rapidly, and is nowhere near the end result I want it to be in.  As a result, 100% reliability in its services is not guaranteed.  
+- Granting Sprocket Bot administrator priveledges is not recommended.  It currently has no code that allows it to delete *anything,* but I would recommend ensuring it cannot ping @everyone in your server.
+- I cannot keep the bot's entire source code public once administrative utilities and/or vehicle rating formulas are added.
 
 
