@@ -69,7 +69,10 @@ The second one, `contestCategoryTemplate.json` is used to establish a category f
 ```
 Use the `-registerContestCategory` command to register a contest category, attaching the appropriate .json file while doing so.  Sprocket Bot will ask you for the contest you wish to register it to.
 
+To allow or disable entries, run the `-toggleContestEntries` command.  This will change whether participants (note: from all servers Sprocket Bot is in) to submit a tank to the contest.
+
 Anyone can submit a tank using the `-submitTank` command - attach the .blueprint file when running the command.  The participant will be prompted for information about their vehicle before and after running the blueprint checks.  Once all checks clear, the vehicle .blueprint will be saved to Sprocket Bot's storage, and the entry will be logged in the appropriate thread and in the contest data file.
+
 
 
 ### Notes:
