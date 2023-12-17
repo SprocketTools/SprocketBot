@@ -99,14 +99,14 @@ Contest hosts may run whatever contests they'd like to with Sprocket Bot, except
 
 This doesn't mean I won't help to ensure the contests are set up as intended though.  Should issues like these arise, please contact me through Discord for fastest response.
 
-## Contributors
-Overlord
+### Contributors
+Overlord,
 Azomer
 
-## Bug Hunters
-0bihoernchen
-Hackstar
+### Bug Hunters
+0bihoernchen,
+Hackstar,
 Everyone in the **Zheifu Testing** server who has helped test the bot during development
 
-## Code Contributors
+### Code Contributors
 *Be the first to put your name here!*
