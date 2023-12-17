@@ -99,6 +99,9 @@ Contest hosts may run whatever contests they'd like to with Sprocket Bot, except
 
 This doesn't mean I won't help to ensure the contests are set up as intended though.  Should issues like these arise, please contact me through Discord for fastest response.
 
+##
+** **
+
 ### Contributors
 Overlord,
 Azomer
