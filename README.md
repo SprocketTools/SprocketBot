@@ -13,6 +13,8 @@ Setting up contests is fairly straightforward.  You will need:
 - A private channel that you can make threads in 
 - A public channel that users can use to run the `-submitTank` command with 
 
+Contests can have multiple categories, and you can re-register contests and categories under the same name (if you originally created it).  Be warned that saving over existing items you made before will clear everything except the .blueprint files of previous entries.
+
 
 
 Two configuration .json file examples are included above.  The first one, `contestInfoTemplate.json` is used to establish a contest:
@@ -25,6 +27,8 @@ Two configuration .json file examples are included above.  The first one, `conte
 	"endTimeStamp": 2235845200                              << use https://r.3v.fi/discord-timestamps/ to get the timestamp number 
 }
 ```
+Use the `-registerContest` command to register a contest, attaching the appropriate .json file while doing so.  Sprocket Bot will create a thread to log entries to.
+
 
 The second one, `contestCategoryTemplate.json` is used to establish a category for a contest:
 ```
@@ -63,7 +67,12 @@ The second one, `contestCategoryTemplate.json` is used to establish a category f
         "armorMax": 250						<< Upper armor limit.   In-game limit is 500mm (you can type numbers past the slider limit)
     }
 ```
-Notes:
+Use the `-registerContestCategory` command to register a contest category, attaching the appropriate .json file while doing so.  Sprocket Bot will ask you for the contest you wish to register it to.
+
+Anyone can submit a tank using the `-submitTank` command - attach the .blueprint file when running the command.  The participant will be prompted for information about their vehicle before and after running the blueprint checks.  Once all checks clear, the vehicle .blueprint will be saved to Sprocket Bot's storage, and the entry will be logged in the appropriate thread and in the contest data file.
+
+
+### Notes:
 - "Geometric Custom Mantlets" are detected when a turret radius is below the set minimum radius, and the turret is rotated more than 20 degrees
 - If "dynamic torsion bars" is set to `True`, then the `torsionBarLengthMin` is multiplied by the track separation instead.  In cases like this, `torsionBarLengthMin` should not exceed a value of 0.9
 - HVSS is not guaranteed to be accurate when calculating ground pressure
@@ -76,7 +85,7 @@ Sprocket Bot is written purely in Python.  The attached .json files are usable a
 
 ## Warnings
 Sprocket bot is an **in-development** utility bot, developed by a college student during their free time.  I say "utility" because its capabilities are changing quite rapidly, and is nowhere near the end result I want it to be in.  As a result, 100% reliability in its services is not guaranteed.  
-- Granting Sprocket Bot administrator priveledges is not recommended.  It currently has no code that allows it to delete *anything,* but I would recommend ensuring it cannot ping @everyone in your server.
+- Granting Sprocket Bot administrator priveledges is not recommended.  It currently has no code that allows it to delete *anything* outsize Zheifu, but ask me about this in DMs on Discord.
 - I cannot keep the bot's entire source code public once administrative utilities and/or vehicle rating formulas are added.
 
 
