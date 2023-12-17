@@ -103,8 +103,8 @@ This doesn't mean I won't help to ensure the contests are set up as intended tho
 ** **
 
 ### Contributors
-Overlord,
-Azomer
+Overlord
+** **Azomer
 
 ### Bug Hunters
 0bihoernchen,
