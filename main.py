@@ -2527,15 +2527,14 @@ async def listDeployment(ctx, country: str):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.has_role('Campaign Manager')
-async def listInventory(ctx, country: str):
+async def listInventory(ctx):
     user_id = ctx.author.id
     country = await getUserCountry(ctx)
     description = ""
     appendation = ""
     for tankName, tankInfo in inventoryList[country].items():
         if int(tankInfo["stored"]) > 0:
-            appendation = f" ** {tankName} ** \nIn storage: {tankInfo['stored']} \n Deployed: {tankInfo['deployed']} \n \n"
+            appendation = f" ** {tankName} ** \nIn storage: {int(tankInfo['stored'])} \n Deployed: {int(tankInfo['deployed'])} \n \n"
             description = description.__add__(appendation)
 
     embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + "'s Tank Designs",
