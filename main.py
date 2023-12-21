@@ -2077,8 +2077,7 @@ async def flipGeometry(ctx):
 @bot.command()
 async def bakeGeometry(ctx):
     import asyncio
-    country = await getUserCountry(ctx)
-
+    # country = await getUserCountry(ctx)
 
     # received if else statement from stackoverflow: https://stackoverflow.com/questions/65169339/download-csv-file-sent-by-user-discord-py
     for attachment in ctx.message.attachments:
@@ -2088,23 +2087,32 @@ async def bakeGeometry(ctx):
         name = blueprintData["header"]["name"]
         x = 0
         for iteration in blueprintData["blueprints"]:
-            partName = blueprintData["blueprints"][x]["id"]
-            partString = blueprintData["blueprints"][x]["data"]
+            partName = blueprintDataSave["blueprints"][x]["id"]
+            partString = blueprintDataSave["blueprints"][x]["data"]
             partString.replace("\\", "")
             partInfo = json.loads(partString)
             clonePartInfo = copy.deepcopy(partInfo)
             if partName == "Compartment" and partInfo["name"] == "target":
-                basePartPoints = partInfo["compartment"]["points"]
-                basePartPointsLength = len(basePartPoints)
-                basePartSharedPoints = partInfo["compartment"]["sharedPoints"]
-                basePartThicknessMap = partInfo["compartment"]["thicknessMap"]
-                basePartFaceMap = partInfo["compartment"]["faceMap"]
+
 
                 print("Found a target!")
                 y = 0
                 for iteration in blueprintData["blueprints"]:
-                    sourcePartName = blueprintData["blueprints"][y]["id"]
-                    sourcePartString = blueprintData["blueprints"][y]["data"]
+
+                    partName = blueprintDataSave["blueprints"][x]["id"]
+                    partString = blueprintDataSave["blueprints"][x]["data"]
+                    partString.replace("\\", "")
+                    partInfo = json.loads(partString)
+                    clonePartInfo = copy.deepcopy(partInfo)
+
+                    basePartPoints = partInfo["compartment"]["points"]
+                    basePartPointsLength = len(basePartPoints)
+                    basePartSharedPoints = partInfo["compartment"]["sharedPoints"]
+                    basePartThicknessMap = partInfo["compartment"]["thicknessMap"]
+                    basePartFaceMap = partInfo["compartment"]["faceMap"]
+
+                    sourcePartName = blueprintDataSave["blueprints"][y]["id"]
+                    sourcePartString = blueprintDataSave["blueprints"][y]["data"]
                     sourcePartString.replace("\\", "")
                     sourcePartInfo = json.loads(sourcePartString)
 
@@ -2184,7 +2192,6 @@ async def bakeGeometry(ctx):
         stringOut = json.dumps(blueprintDataSave, indent=4)
         data = io.BytesIO(stringOut.encode())
         await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
-
 
 @bot.command()
 async def flipGeometry2(ctx):
