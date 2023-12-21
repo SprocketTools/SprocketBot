@@ -6,14 +6,6 @@ Invite Sprocket Bot to your Discord server [here](https://discord.com/api/oauth2
 
 For documentation on Sprocket Bot's tools, check the [contest documentation](https://github.com/SprocketTools/SprocketBot/blob/main/CONTESTS.md) and [utilities documentation](https://github.com/SprocketTools/SprocketBot/blob/main/TOOLS.md).
 
-### Notes:
-- "Geometric Custom Mantlets" are detected when a turret radius is below the set minimum radius, and the turret is rotated more than 20 degrees
-- If "dynamic torsion bars" is set to `True`, then the `torsionBarLengthMin` is multiplied by the track separation instead.  In cases like this, `torsionBarLengthMin` should not exceed a value of 0.9
-- HVSS is not guaranteed to be accurate when calculating ground pressure
-- The "ATsafeMin" is a soft armor requirement that simply flashes a warning whenever the thinnest armor plate is below this value.  Use it mainly for bonus points, otherwise set the value to zero.
-
-
-
 ## Contributing Code
 Sprocket Bot is written purely in Python.  The attached .json files are usable as examples, and do not reflect the current campaign level.  It is recommended to use Github to download and update the files, opening main.py with PyCharm.
 
