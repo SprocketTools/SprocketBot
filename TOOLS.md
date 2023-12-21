@@ -3,14 +3,8 @@
 ```-bakeGeometry```
 
 This command takes any compartments named "source" and merges their geometry into the "target" compartment!
-
-Start by naming your base compartment "target" - capitalization needs to match
-
-Name all compartments you wish to merge into it "source" - these turrets must be connected to your "target" compartment
-
-Next, save your tank and run the command, with the **vehicle** blueprint attached to your message when running the command.
-
-Then download your compartment and move your source turrets out of the way!
+** **
+Start by naming your base compartment "target" - capitalization needs to match.  Then name all compartments you wish to merge into it "source" - these turrets must be connected to your "target" compartment.  Next, save your tank and run the command, with the **vehicle** blueprint attached to your message when running the command.  Then download your compartment and move your source turrets out of the way!
 
 Before and after:
 ![2023-12-20_05-07-44](https://github.com/SprocketTools/SprocketBot/assets/137387488/ed71c4da-9b5f-4e59-a05a-c40aa07dd9f9)
