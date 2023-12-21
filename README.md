@@ -4,7 +4,7 @@ This bot's primary utility is to run the Zheifu campaign, while also incorporati
 
 Invite Sprocket Bot to your Discord server [here](https://discord.com/api/oauth2/authorize?client_id=1137847253114040330&permissions=68169452355409&scope=bot%20applications.commands)!
 
-For documentation on Sprocket Bot's tools, check the other documentation files here.
+For documentation on Sprocket Bot's tools, check the [contest documentation](https://github.com/SprocketTools/SprocketBot/blob/main/CONTESTS.md) and [utilities documentation](https://github.com/SprocketTools/SprocketBot/blob/main/TOOLS.md).
 
 ### Notes:
 - "Geometric Custom Mantlets" are detected when a turret radius is below the set minimum radius, and the turret is rotated more than 20 degrees
