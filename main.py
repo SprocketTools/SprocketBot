@@ -2496,12 +2496,7 @@ async def setBaseTechnology(ctx, orgValue: int):
 @bot.command()
 async def listTanksLegacy(ctx):
     user_id = ctx.author.id
-    try:
-        country = operatorsList[str(user_id)]
-    except Exception:
-        print("test")
-        country = ctx.channel.name
-    print(country)
+    country = await getUserCountry(ctx)
     embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + "'s Tank Designs",
                           description="These are all the tanks you have available to produce. \n You currently have ฿" + str(variablesList[country][0]["money"]) + " in funds, and " + str(variablesList[country][0]["unspentTonnage"]) + "T in available production.",
                           color=discord.Color.random())
@@ -2515,34 +2510,42 @@ async def listTanksLegacy(ctx):
 @bot.command()
 @commands.has_role('Campaign Manager')
 async def listDeployment(ctx, country: str):
-
     embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + "'s Deployments",
                           description="These are all the tanks deployed by " + country + ". \n They currently have ฿" + str(variablesList[country][0]["money"]) + " in funds, and " + str(variablesList[country][0]["unspentTonnage"]) + "T in available production.",
                           color=discord.Color.random())
     countryTanksInfo = inventoryList[country]
-    print(countryTanksInfo)
     for tankName, tankInfo in inventoryList[country].items():
-        print(tankInfo)
         if int(tankInfo["deployed"]) > 0:
             embed.add_field(name=tankName, value="Deployed: " + str(tankInfo["deployed"]),inline=False)
     await ctx.send(embed=embed)
 
 @bot.command()
-async def listTanks(ctx):
+@commands.has_role('Campaign Manager')
+async def listInventory(ctx, country: str):
     user_id = ctx.author.id
-    try:
-        country = operatorsList[str(user_id)]
-    except Exception:
-        print("test")
-        country = ctx.channel.name
-    print(country)
+    country = await getUserCountry(ctx)
     description = ""
     appendation = ""
     for tankName, tankInfo in inventoryList[country].items():
-        print(tankName)
+        if int(tankInfo["stored"]) > 0:
+            appendation = f" ** {tankName} ** \nIn storage: {tankInfo['stored']} \n Deployed: {tankInfo['deployed']} \n \n"
+            description = description.__add__(appendation)
+
+    embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + "'s Tank Designs",
+                          description=description,
+                          color=discord.Color.random())
+    countryTanksInfo = inventoryList[country]
+    print(countryTanksInfo)
+    await ctx.send(embed=embed)
+@bot.command()
+async def listTanks(ctx):
+    user_id = ctx.author.id
+    country = await getUserCountry(ctx)
+    description = ""
+    appendation = ""
+    for tankName, tankInfo in inventoryList[country].items():
         appendation = f" ** {tankName} ** \n weight: {tankInfo['weight']} tons \n In storage: {tankInfo['stored']} \n Deployed: {tankInfo['deployed']} \n \n"
         description = description.__add__(appendation)
-        print(appendation)
 
     embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + "'s Tank Designs",
                           description=description,
