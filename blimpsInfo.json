@@ -1,1 +1,229 @@
-{}
+{
+    "Hindenburg": {
+        "origin": "landepunkt",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Hamburg": {
+        "origin": "landepunkt",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Mecklenburg": {
+        "origin": "landepunkt",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Seltzburg": {
+        "origin": "landepunkt",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "rat drop": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Munich": {
+        "origin": "landepunkt",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "1": {
+        "origin": "shoisho",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 150,
+        "RNGpoint": 600,
+        "travel_goal": 100,
+        "risk_factor": 0,
+        "status": "active",
+        "riskLevel": 5
+    },
+    "Rat Race": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Rat Trap": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Ratn' You Out": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "\u51b0\u6dc7\u51cc": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Rosschild": {
+        "origin": "posterian",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 5000,
+        "risk_factor": 0,
+        "status": "idle",
+        "riskLevel": 0
+    },
+    "Rosschild 2": {
+        "origin": "posterian",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 5000,
+        "risk_factor": 0,
+        "status": "idle",
+        "riskLevel": 0
+    },
+    "Rosschild 3": {
+        "origin": "posterian",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 5000,
+        "risk_factor": 0,
+        "status": "idle",
+        "riskLevel": 0
+    },
+    "Rosschild 4": {
+        "origin": "posterian",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 5000,
+        "risk_factor": 0,
+        "status": "idle",
+        "riskLevel": 0
+    },
+    "Rosschild 5": {
+        "origin": "posterian",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 5000,
+        "risk_factor": 0,
+        "status": "idle",
+        "riskLevel": 0
+    },
+    "Rosschild 6": {
+        "origin": "posterian",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 5000,
+        "risk_factor": 0,
+        "status": "idle",
+        "riskLevel": 0
+    },
+    "RedWall": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "\u5175": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Landepunkt Express": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "SpyBalloon": {
+        "origin": "AVM Ltd.",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Canadian war crimes": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    }
+}
