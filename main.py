@@ -827,34 +827,67 @@ async def decommissionTank (ctx, *, tankDelete):
 
 
 
+@bot.command()
+async def undeployEverything(ctx):
+    for country, countrySheet in inventoryList.items():
+        for tankName, tankInfo in countrySheet.items():
+            tankInfo["stored"] = int(tankInfo["deployed"]) + int(tankInfo["stored"])
+            tankInfo["deployed"] = 0
+    await ctx.send("And so ends an era... \nIncredible.")
+
+
 
 
 @bot.command()
 async def deployTank(ctx, tankCount: int, *, tankName):
-    """Adds two numbers together."""
+    import asyncio
     # try:
     country = await getUserCountry(ctx)
     # except Exception:
     #     await ctx.send("You're not a country!  You can't deploy tanks to fight!")
     #     return
+
+    await ctx.send("What regiment are you deploying your tanks to?")
+    description = ""
+    appendation = ""
+    for regimentName, regimentInfo in variablesList[country][0]["regiments"].items():
+        totalTankCount = 0
+        for regimentTankName, tankInfo in regimentInfo["tanks"].items():
+            totalTankCount += int(tankInfo["deployedCount"])
+        appendation = f" ** {regimentName} ** \n Vehicle count: {totalTankCount}\n \n"
+        description = description.__add__(appendation)
+
+    embed = discord.Embed(title="These are your current regiments",
+                          description=description,
+                          color=discord.Color.random())
+    await ctx.send(embed=embed)
+
+    def check(m: discord.Message): return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+    try:
+        msg = await bot.wait_for('message', check=check, timeout=30.0)
+        regimentName = msg.content
+    except asyncio.TimeoutError:
+        await ctx.send("Operation cancelled.")
+        return
+
     try:
         inStorage = inventoryList[country][tankName]["stored"]
         if int(inStorage) >= int(tankCount):
+            try:
+                print(variablesList[country][0]["regiments"][regimentName]["tanks"][tankName]["count"])
+            except Exception:
+                variablesList[country][0]["regiments"][regimentName]["tanks"][tankName] = {"name": tankName, "deployedCount": 0}
             inventoryList[country][tankName]["stored"] = int(inStorage) - int(tankCount)
-            inventoryList[country][tankName]["deployed"] = int(inventoryList[country][tankName]["deployed"]) + int(tankCount)
+            existingTankCount = int(variablesList[country][0]["regiments"][regimentName]["tanks"][tankName]["deployedCount"])
+            variablesList[country][0]["regiments"][regimentName]["tanks"][tankName]["deployedCount"] = existingTankCount + int(tankCount)
             await ctx.send("Successfully deployed " + str(tankCount) + "x " + tankName + "!")
         else:
             await ctx.send("\"The commander said to deploy " + str(tankCount) + " of these... wait, where did they go?\" \n \n Make sure you actually have sufficient tanks in storage before trying to deploy them.")
 
     except KeyError as ke:
 
-        try:
-            testVal = variablesList[country][0]["intelSize"]
-            country = ctx.channel.name
-            print(testVal)
-            await ctx.send("This tank doesn't exist in your inventory!")
-        except Exception:
-            await ctx.send("I'd be interested to watch an actual company-on-country war take place, but my precepts dictate I cannot allow a company to deploy vehicles to a standing army.")
+        await ctx.send("This tank doesn't exist in your inventory!")
+
 
 @bot.command()
 @commands.has_role('Campaign Manager')
@@ -1351,6 +1384,59 @@ async def message(ctx, *, country):
     for attachment in msg.attachments:
         file = await attachment.to_file()
         await channel.send(file=file, content="")
+
+@bot.command()
+async def initializeRegiments(ctx):
+    for country, countryInfo in variablesList.items():
+        countryInfo[0]["regiments"] = {}
+        countryInfo[0]["regiments"][f"{country} Defence Force"] = {'name': f"{country} Defence Force", 'status': "unknown", 'tanks': {}}
+    await ctx.send("Done!")
+
+@bot.command()
+async def establishRegiment(ctx, *, regimentName):
+    country = await getUserCountry(ctx)
+    number = len(variablesList[country][0]["regiments"])
+    variablesList[country][0]["regiments"][regimentName] = {'name': str(regimentName), 'status': "unknown", 'tanks': {}}
+    await ctx.send(f"The {regimentName} is now established!  Take a look at it using `-regimentDetails`.")
+
+@bot.command()
+async def regimentDetails(ctx, *, regimentName):
+    user_id = ctx.author.id
+    country = await getUserCountry(ctx)
+    description = ""
+    appendation = ""
+    totalTankCount = 0
+    for tankName, tankInfo in variablesList[country][0]["regiments"][regimentName]["tanks"].items():
+        totalTankCount += tankInfo["deployedCount"]
+        tankCount = tankInfo["deployedCount"]
+        appendation = f" ** {tankName} ** \n Vehicle count: {tankCount}\n \n"
+        description = description.__add__(appendation)
+
+    embed = discord.Embed(title="Regiment: " + str(regimentName) + f" ({totalTankCount} vehicles)",
+                          description=description,
+                          color=discord.Color.random())
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def listRegiments(ctx):
+    user_id = ctx.author.id
+    country = await getUserCountry(ctx)
+    description = ""
+    appendation = ""
+
+    for regimentName, regimentInfo in variablesList[country][0]["regiments"].items():
+        totalTankCount = 0
+        for tankName in regimentInfo["tanks"]:
+            totalTankCount += int(tankName)
+            appendation = f" ** {tankName} ** \n Vehicle count: {totalTankCount}\n \n"
+            description = description.__add__(appendation)
+
+    embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + "'s Regiments",
+                          description=description,
+                          color=discord.Color.random())
+    await ctx.send(embed=embed)
+
+
 @bot.command()
 @commands.has_role('Moderator')
 async def troll(ctx, channelin: str, *, message):
@@ -2527,17 +2613,39 @@ async def listDeployment(ctx, country: str):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.has_role('Campaign Manager')
+async def countAllTanks(ctx):
+    user_id = ctx.author.id
+    country = await getUserCountry(ctx)
+    description = ""
+    appendation = ""
+    totalTankCount = 0
+    for country, countryInfo in variablesList.items():
+        countryTankCount = 0
+        for tankName, tankInfo in inventoryList[country].items():
+            if int(tankInfo["stored"]) > 0 or int(tankInfo["deployed"]) > 0:
+                if tankName != "7.5T Flatbed Transporter" and tankName != "2.5T Transport Truck":
+                    totalTankCount += int(tankInfo['stored']) + int(tankInfo['deployed'])
+                    countryTankCount += int(tankInfo['stored']) + int(tankInfo['deployed'])
+        appendation = f"{country} vehicle count: {countryTankCount}\n"
+        description = description.__add__(appendation)
+
+    await ctx.send(description)
+    await ctx.send(f"# Total count: {totalTankCount}")
+
+@bot.command()
 async def listInventory(ctx):
     user_id = ctx.author.id
     country = await getUserCountry(ctx)
     description = ""
     appendation = ""
+    totalTankCount = 0
     for tankName, tankInfo in inventoryList[country].items():
-        if int(tankInfo["stored"]) > 0:
+        if int(tankInfo["stored"]) > 0 or int(tankInfo["deployed"]) > 0:
             appendation = f" ** {tankName} ** \nIn storage: {int(tankInfo['stored'])} \n Deployed: {int(tankInfo['deployed'])} \n \n"
             description = description.__add__(appendation)
-
-    embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + "'s Tank Designs",
+            totalTankCount += int(tankInfo['stored']) + int(tankInfo['deployed'])
+    embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + f"'s Tank Designs (total: {totalTankCount})",
                           description=description,
                           color=discord.Color.random())
     countryTanksInfo = inventoryList[country]
@@ -3448,21 +3556,21 @@ async def runBlueprintCheck(ctx, attachment, config):
                     errorCount += 1
 
                 print(partInfo["wheels"][1])
-                if beltWidth < beltWidthMin:
+                if round(beltWidth, 3) < beltWidthMin:
                     report = await addLine(report,
                         f"Your tack belt is {beltWidth}mm wide.  This is too narrow and will lead to bad off-road performance.  Increase your track width to at least {beltWidthMin}mm.")
                     errorCount += 1
-                if trackSystemWidth > hullWidthMax:
+                if round(trackSystemWidth, 3) > hullWidthMax:
                     report = await addLine(report,
                         f"Your tack system is {round(trackSystemWidth, 2)} meters wide.  This is too wide for your railways, which can only support vehicles up to {hullWidthMax} meters wide.")
                     errorCount += 1
-                if trackSystemWidth > overallTankWidth:
-                    overallTankWidth = trackSystemWidth
+                if trackSystemWidth >= overallTankWidth:
+                    overallTankWidth = round(trackSystemWidth, 3)
                 try:
                     torsionBarLength = float(partInfo["suspensions"]["TBLength"])
                     if useDynamicTBlength == True:
                         torsionBarLengthMin = torsionBarLengthMin * separation
-                    if torsionBarLength < torsionBarLengthMin:
+                    if round(torsionBarLength, 3) < torsionBarLengthMin:
                         report = await addLine(report, f"Your torsion bar is {torsionBarLength}m wide.  This is too short and will lead to bad off-road performance.  Increase your torsion bar length to at least {torsionBarLengthMin}m.")
                         errorCount += 1
 
@@ -3476,7 +3584,7 @@ async def runBlueprintCheck(ctx, attachment, config):
                 separation = 2 * float(partInfo["f"][3])
                 sectWidth = 2 * float(partInfo["f"][9])
                 totalWidth = separation + sectWidth
-                if totalWidth > hullWidthMax:
+                if totalWidth > round(hullWidthMax, 2):
                     report = await addLine(report,
                         f"Your fenders are {totalWidth} meters wide.  This is too wide - the maximum width is {hullWidthMax} meters.")
                     errorCount += 1

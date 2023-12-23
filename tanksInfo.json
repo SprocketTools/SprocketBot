@@ -3205,5 +3205,29 @@
         "licenseFee": 0,
         "importFee": 0,
         "buyoutFee": 0
+    },
+    "Autosave": {
+        "origin": "Clippit Manufacturing",
+        "originType": "company",
+        "status": "undetermined",
+        "weight": 27.5,
+        "width": 3.29,
+        "cost": 76430,
+        "buildTimeScalar": 1,
+        "licenseFee": 0,
+        "importFee": 0,
+        "buyoutFee": 0
+    },
+    "@everyone": {
+        "origin": "Clippit Manufacturing",
+        "originType": "company",
+        "status": "undetermined",
+        "weight": 27.5,
+        "width": 3.29,
+        "cost": 76430,
+        "buildTimeScalar": 1,
+        "licenseFee": 0,
+        "importFee": 0,
+        "buyoutFee": 0
     }
 }

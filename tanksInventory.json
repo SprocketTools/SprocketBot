@@ -17,7 +17,7 @@
         "Iron Bull Tankette": {
             "weight": 8.889,
             "type": "local",
-            "stored": 2.0,
+            "stored": 2,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -52,8 +52,8 @@
         "A-KM26-2": {
             "weight": 14.923,
             "type": "local",
-            "stored": 0,
-            "deployed": 18,
+            "stored": 18,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "A-KLT 12 Anu bis": {
@@ -66,22 +66,22 @@
         "A-K Iron Bull Tankette": {
             "weight": 7.467,
             "type": "local",
-            "stored": 0,
-            "deployed": 5,
+            "stored": 5,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "A-KTALV-4 AsH": {
             "weight": 18.436,
             "type": "local",
-            "stored": 0,
-            "deployed": 6,
+            "stored": 6,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "A-KTALV-3 mod. 1": {
             "weight": 17.818,
             "type": "local",
-            "stored": 0,
-            "deployed": 6,
+            "stored": 6,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 6-A": {
@@ -94,22 +94,22 @@
         "MSB-Z \u010d. 8-A": {
             "weight": 7.499,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 8,
+            "stored": 8,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 11-B Albatros\u00edk-Z": {
             "weight": 32.493,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 1,
+            "stored": 1,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "A-KLT 13 Garapata": {
             "weight": 14.425,
             "type": "local",
-            "stored": 0,
-            "deployed": 3,
+            "stored": 3,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "C-2": {
@@ -122,8 +122,8 @@
         "A-K Isopod": {
             "weight": 13.921,
             "type": "local",
-            "stored": 50.0,
-            "deployed": 29,
+            "stored": 79,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "A-K41LANDERH": {
@@ -136,8 +136,8 @@
         "AMA T-14AK-F": {
             "weight": 13.743,
             "type": "foreign",
-            "stored": 2,
-            "deployed": 4,
+            "stored": 6,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "A-K46": {
@@ -150,15 +150,15 @@
         "A-K46 RKS": {
             "weight": 22.878,
             "type": "local",
-            "stored": 41.0,
-            "deployed": 6,
+            "stored": 47,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 9-A": {
             "weight": 9.983,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 1,
+            "stored": 1,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "TE-V1 (6.2cm) T5": {
@@ -229,8 +229,8 @@
         "K.A.T 2326 'Acanthostega'": {
             "weight": 17.316,
             "type": "local",
-            "stored": 120.0,
-            "deployed": 49,
+            "stored": 169,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "K.A.T 17 Sh. with 105mm Heavy Tank": {
@@ -250,8 +250,8 @@
         "MSB-Z \u010d. 4-A": {
             "weight": 14.892,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 1,
+            "stored": 1,
+            "deployed": 0,
             "deployedAbroad": 0
         }
     },
@@ -259,21 +259,21 @@
         "HRT 1": {
             "weight": 16.0,
             "type": "local",
-            "stored": 0,
-            "deployed": 40,
+            "stored": 40,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "HRT 2": {
             "weight": 22.0,
             "type": "local",
-            "stored": 24.0,
-            "deployed": 50,
+            "stored": 74,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "HRT 3": {
             "weight": 28.0,
             "type": "local",
-            "stored": 57.0,
+            "stored": 58,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -296,22 +296,22 @@
         "MSB-Z \u010d. 6-A": {
             "weight": 2.498,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 2,
+            "stored": 2,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "T-Drakken-U5": {
             "weight": 15.997,
             "type": "local",
-            "stored": 0,
-            "deployed": 36,
+            "stored": 36,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "DT-obj13": {
             "weight": 22.174,
             "type": "local",
-            "stored": 0,
-            "deployed": 1,
+            "stored": 1,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "DT-obj115": {
@@ -324,8 +324,8 @@
         "DT-obj14": {
             "weight": 22.994,
             "type": "local",
-            "stored": 27.0,
-            "deployed": 35,
+            "stored": 62,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "DT-obj-400": {
@@ -359,7 +359,7 @@
         "Objekt 126U": {
             "weight": 14.994,
             "type": "local",
-            "stored": 70.0,
+            "stored": 70,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -396,22 +396,22 @@
         "JTP 2L Gremlin": {
             "weight": 4.981,
             "type": "local",
-            "stored": 0,
-            "deployed": 4,
+            "stored": 4,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "z16 k": {
             "weight": 7.453,
             "type": "local",
-            "stored": 0,
-            "deployed": 4,
+            "stored": 4,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "Z31 k": {
             "weight": 18.77,
             "type": "local",
-            "stored": 0,
-            "deployed": 4,
+            "stored": 4,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "JTP 4L Rat": {
@@ -424,64 +424,64 @@
         "Z34 g": {
             "weight": 9.97,
             "type": "local",
-            "stored": 0,
-            "deployed": 4,
+            "stored": 4,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "C-2": {
             "weight": 3.782,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 1,
+            "stored": 1,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "M20-65": {
             "weight": 18.019,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 2,
+            "stored": 2,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-MAT 4": {
             "weight": 18.248,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 1,
+            "stored": 1,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 6-A": {
             "weight": 2.498,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 2,
+            "stored": 2,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "Z42 g": {
             "weight": 12.008,
             "type": "local",
-            "stored": 0,
-            "deployed": 5,
+            "stored": 5,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "Z45 i": {
             "weight": 24.825,
             "type": "local",
-            "stored": 46.0,
-            "deployed": 71,
+            "stored": 117,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-AT 5": {
             "weight": 17.46,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 2,
+            "stored": 2,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-MAT 5": {
             "weight": 20.804,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 2,
+            "stored": 2,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "Z65 i": {
@@ -494,42 +494,42 @@
         "ZIK-ISAK 4-7": {
             "weight": 16.977,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 2,
+            "stored": 2,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-MAT 7": {
             "weight": 21.201,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 2,
+            "stored": 2,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "Z62 d Spahi": {
             "weight": 17.49,
             "type": "local",
-            "stored": 4.0,
-            "deployed": 3,
+            "stored": 7,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-AT 10.2": {
             "weight": 30.883,
             "type": "local",
-            "stored": 5.0,
+            "stored": 5,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-BOI Skout": {
             "weight": 1.995,
             "type": "local",
-            "stored": 2.0,
+            "stored": 2,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Z122 s": {
             "weight": 29.99,
             "type": "foreign",
-            "stored": 146.0,
+            "stored": 149,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -552,56 +552,56 @@
         "VL1 'Lisanne'": {
             "weight": 9.567,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-Karhund": {
             "weight": 12.634,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-AK 1": {
             "weight": 8.777,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-ISAK 1": {
             "weight": 7.333,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-Skout 1": {
             "weight": 5.502,
             "type": "local",
-            "stored": 10.0,
+            "stored": 10,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "TK-19": {
             "weight": 9.682,
             "type": "local",
-            "stored": 7.0,
+            "stored": 7,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 5-A": {
             "weight": 4.997,
             "type": "local",
-            "stored": 7.0,
+            "stored": 7,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "SDAV 11A": {
             "weight": 14.679,
             "type": "local",
-            "stored": 7.0,
+            "stored": 7,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -615,7 +615,7 @@
         "TK-20": {
             "weight": 10.7,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -629,7 +629,7 @@
         "ZIK-MAT 5": {
             "weight": 20.804,
             "type": "local",
-            "stored": 35.0,
+            "stored": 35,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -664,35 +664,35 @@
         "ZIK-AT 10.2": {
             "weight": 30.883,
             "type": "local",
-            "stored": 3.0,
+            "stored": 5,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-MAT 10": {
             "weight": 28.646,
             "type": "local",
-            "stored": 7.0,
+            "stored": 7,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "HTE-V1": {
             "weight": 39.834,
             "type": "local",
-            "stored": 0,
+            "stored": 1,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 13-A": {
             "weight": 3.566,
             "type": "local",
-            "stored": 3.0,
+            "stored": 4,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-Skout 10.2": {
             "weight": 17.87,
             "type": "local",
-            "stored": 1.0,
+            "stored": 1,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -701,50 +701,50 @@
         "Pz38": {
             "weight": 10.242,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Pz38 (II) Ausf. A": {
             "weight": 10.415,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "StuH40 Ausf. A": {
             "weight": 14.349,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Pz40 Ausf. C": {
             "weight": 17.487,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "StuH40 Ausf. B": {
             "weight": 15.752,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Pz40 Ausf. D": {
             "weight": 18.412,
             "type": "local",
-            "stored": 0.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Pz40 Ausf. E": {
             "weight": 18.478,
             "type": "local",
-            "stored": 0.0,
-            "deployed": 8,
+            "stored": 8,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "Pz45 Ausf. A": {
@@ -771,14 +771,14 @@
         "Pz50 Ausf. A": {
             "weight": 21.229,
             "type": "local",
-            "stored": 8.0,
+            "stored": 8,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Pz45 Ausf. B": {
             "weight": 22.374,
             "type": "local",
-            "stored": 15.0,
+            "stored": 15,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -801,35 +801,35 @@
         "T1B": {
             "weight": 8.091,
             "type": "local",
-            "stored": 30.0,
+            "stored": 30,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "T1GC": {
             "weight": 5.749,
             "type": "local",
-            "stored": 27.0,
+            "stored": 27,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "T1H": {
             "weight": 8.406,
             "type": "local",
-            "stored": 15.0,
+            "stored": 15,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "AV 12M": {
             "weight": 31.96,
             "type": "local",
-            "stored": 24.0,
+            "stored": 24,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "AV 13M": {
             "weight": 32.41,
             "type": "local",
-            "stored": 11.0,
+            "stored": 11,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -843,7 +843,7 @@
         "AV 14M": {
             "weight": 41.51,
             "type": "local",
-            "stored": 28.0,
+            "stored": 28,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -864,14 +864,14 @@
         "AV 16M": {
             "weight": 44.482,
             "type": "local",
-            "stored": 19.0,
+            "stored": 19,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Buy AVM Next Time [AV]": {
             "weight": 48.003,
             "type": "local",
-            "stored": 1.0,
+            "stored": 2,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -943,29 +943,29 @@
         "Tapette CA3": {
             "weight": 4.999,
             "type": "local",
-            "stored": 9.0,
+            "stored": 9,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Anti-Blimp forte CA4": {
             "weight": 4.65,
             "type": "local",
-            "stored": 48.0,
+            "stored": 48,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Tapette CA4": {
             "weight": 4.999,
             "type": "local",
-            "stored": 49.0,
+            "stored": 49,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 2-A": {
             "weight": 14.999,
             "type": "foreign",
-            "stored": 6,
-            "deployed": 1,
+            "stored": 7,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "AV SPAA 2": {
@@ -978,8 +978,8 @@
         "MSB Cb2": {
             "weight": 14.998,
             "type": "foreign",
-            "stored": 6,
-            "deployed": 3,
+            "stored": 9,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "AMA AA-8 CA2": {
@@ -1020,14 +1020,14 @@
         "Blakdumper CA9": {
             "weight": 7.481,
             "type": "local",
-            "stored": 15.0,
+            "stored": 15,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Anti-Blimp forte CA9": {
             "weight": 4.673,
             "type": "local",
-            "stored": 15.0,
+            "stored": 15,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1041,8 +1041,8 @@
         "STG Cb11": {
             "weight": 37.738,
             "type": "local",
-            "stored": 4,
-            "deployed": 12,
+            "stored": 16,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "STG Cb12": {
@@ -1055,43 +1055,43 @@
         "MSB-Z \u010d. 11-B Albatros\u00edk-Z": {
             "weight": 32.493,
             "type": "foreign",
-            "stored": 2,
-            "deployed": 4,
+            "stored": 6,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "AMA T-17V2": {
             "weight": 16.908,
             "type": "local",
-            "stored": 0,
-            "deployed": 6,
+            "stored": 6,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "AV 8H": {
             "weight": 27.486,
             "type": "foreign",
-            "stored": 3,
-            "deployed": 2,
+            "stored": 5,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "BMW PT - 2  M54": {
             "weight": 17.968,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 9,
+            "stored": 9,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "M20-96": {
             "weight": 24.915,
             "type": "foreign",
-            "stored": 17,
-            "deployed": 8,
+            "stored": 25,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "STG Cs14": {
             "weight": 17.64,
             "type": "local",
-            "stored": 0,
-            "deployed": 14,
+            "stored": 14,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "AS-17": {
@@ -1104,43 +1104,43 @@
         "STG Cs15": {
             "weight": 17.324,
             "type": "local",
-            "stored": 0,
-            "deployed": 3,
+            "stored": 3,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "AV 9M": {
             "weight": 24.868,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 1,
+            "stored": 1,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-ISAK 4-7": {
             "weight": 16.977,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 3,
+            "stored": 3,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 9-A": {
             "weight": 9.983,
             "type": "foreign",
-            "stored": 9,
-            "deployed": 1,
+            "stored": 10,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-MAT 7": {
             "weight": 21.201,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 3,
+            "stored": 3,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 12-A": {
             "weight": 39.988,
             "type": "foreign",
-            "stored": 18,
-            "deployed": 4,
+            "stored": 22,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "AMA AA-9": {
@@ -1153,15 +1153,15 @@
         "AV 10M": {
             "weight": 26.585,
             "type": "foreign",
-            "stored": 1,
-            "deployed": 4,
+            "stored": 5,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "TK-26": {
             "weight": 29.352,
             "type": "foreign",
-            "stored": 0,
-            "deployed": 2,
+            "stored": 2,
+            "deployed": 0,
             "deployedAbroad": 0
         },
         "POS H-10": {
@@ -1174,7 +1174,7 @@
         "STG Cb17": {
             "weight": 39.061,
             "type": "local",
-            "stored": 14.0,
+            "stored": 14,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1188,14 +1188,14 @@
         "STG Cb25": {
             "weight": 56.142,
             "type": "local",
-            "stored": 3.0,
+            "stored": 3,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "STG Cs25-2": {
             "weight": 41.002,
             "type": "local",
-            "stored": 45.0,
+            "stored": 45,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1246,7 +1246,7 @@
         "C-2": {
             "weight": 3.782,
             "type": "local",
-            "stored": 2.0,
+            "stored": 2,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1351,28 +1351,28 @@
         "Type 17 O-I (proto.)": {
             "weight": 32.245,
             "type": "local",
-            "stored": 3.0,
+            "stored": 3,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Type-17 Chi-ha": {
             "weight": 18.787,
             "type": "local",
-            "stored": 9.0,
+            "stored": 9,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Type-35 Chi-Ken (Tekken)": {
             "weight": 27.857,
             "type": "local",
-            "stored": 2.0,
+            "stored": 2,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Type-17 Ke-Ha": {
             "weight": 15.401,
             "type": "local",
-            "stored": 3.0,
+            "stored": 3,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1386,21 +1386,21 @@
         "O-Ken I (P)": {
             "weight": 37.835,
             "type": "local",
-            "stored": 7.0,
+            "stored": 8,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Ke-Ho (P)": {
             "weight": 20.26,
             "type": "local",
-            "stored": 6.0,
+            "stored": 6,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-MAT 10": {
             "weight": 28.646,
             "type": "local",
-            "stored": 44.0,
+            "stored": 44,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1414,14 +1414,14 @@
         "ZIK-Skout 10": {
             "weight": 17.411,
             "type": "local",
-            "stored": 63.0,
+            "stored": 63,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Type-35 Ke-Ni": {
             "weight": 15.647,
             "type": "local",
-            "stored": 21.0,
+            "stored": 21,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1449,7 +1449,7 @@
         "TE-V2": {
             "weight": 28.394,
             "type": "local",
-            "stored": 10.0,
+            "stored": 10,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1486,7 +1486,7 @@
         "BMW CS - 1 DP S23": {
             "weight": 10.448,
             "type": "local",
-            "stored": 8.0,
+            "stored": 8,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1500,7 +1500,7 @@
         "BMW PT - 2  M54": {
             "weight": 17.968,
             "type": "local",
-            "stored": 8.0,
+            "stored": 8,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1690,7 +1690,7 @@
         "ZIK-BOI Skout": {
             "weight": 1.995,
             "type": "local",
-            "stored": 135.0,
+            "stored": 137,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1767,7 +1767,7 @@
         "POS H-12": {
             "weight": 32.809,
             "type": "local",
-            "stored": 4.0,
+            "stored": 4,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1839,7 +1839,7 @@
         "7.5T Flatbed Transporter": {
             "weight": 7.5,
             "type": "foreign",
-            "stored": 20.0,
+            "stored": 20,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -1969,7 +1969,7 @@
         "AV Invader": {
             "weight": 3.741,
             "type": "local",
-            "stored": 5.0,
+            "stored": 5,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1983,7 +1983,7 @@
         "AV 26L": {
             "weight": 2.512,
             "type": "local",
-            "stored": 12.0,
+            "stored": 13,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -2006,7 +2006,7 @@
         "ZL-1A": {
             "weight": 13.055,
             "type": "local",
-            "stored": 2.0,
+            "stored": 2,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2100,7 +2100,7 @@
         "AV 2C": {
             "weight": 5.907,
             "type": "foreign",
-            "stored": 1.0,
+            "stored": 1,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2128,7 +2128,7 @@
         "MSB-Z \u010d. 12-A": {
             "weight": 39.988,
             "type": "local",
-            "stored": 0,
+            "stored": 1,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2201,7 +2201,7 @@
         "Sd.Kfz. 230 Ausf. A (d)": {
             "weight": 8.287,
             "type": "local",
-            "stored": 23.0,
+            "stored": 23,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2252,14 +2252,14 @@
         "TK-20": {
             "weight": 10.7,
             "type": "local",
-            "stored": 0,
+            "stored": 10,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "TK-22": {
             "weight": 10.355,
             "type": "local",
-            "stored": 0,
+            "stored": 20,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2322,14 +2322,14 @@
         "7.5T Flatbed Transporter": {
             "weight": 7.5,
             "type": "foreign",
-            "stored": 1.0,
+            "stored": 1,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "2.5T Transport Truck": {
             "weight": 2.5,
             "type": "foreign",
-            "stored": 17.0,
+            "stored": 17,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2363,6 +2363,20 @@
         },
         "LT-25": {
             "weight": 44.984,
+            "type": "local",
+            "stored": 0,
+            "deployed": 0,
+            "deployedAbroad": 0
+        },
+        "Autosave": {
+            "weight": 27.5,
+            "type": "local",
+            "stored": 0,
+            "deployed": 0,
+            "deployedAbroad": 0
+        },
+        "@everyone": {
+            "weight": 27.5,
             "type": "local",
             "stored": 0,
             "deployed": 0,
@@ -2414,14 +2428,14 @@
         "Ironshield Defence ID-1": {
             "weight": 14.275,
             "type": "local",
-            "stored": 32.0,
+            "stored": 32,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Ironshield Defence ID-1A1": {
             "weight": 18.422,
             "type": "local",
-            "stored": 24.0,
+            "stored": 24,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2472,21 +2486,21 @@
         "AMA C-3B": {
             "weight": 21.364,
             "type": "local",
-            "stored": 7.0,
+            "stored": 7,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "2.5T Transport Truck": {
             "weight": 2.5,
             "type": "foreign",
-            "stored": 8.0,
+            "stored": 8,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "7.5T Flatbed Transporter": {
             "weight": 7.5,
             "type": "foreign",
-            "stored": 3.0,
+            "stored": 3,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2539,7 +2553,7 @@
         "TE-V2VMA": {
             "weight": 23.409,
             "type": "local",
-            "stored": 1.0,
+            "stored": 1,
             "deployed": 0,
             "deployedAbroad": 0
         },

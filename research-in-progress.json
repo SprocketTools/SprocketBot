@@ -1,121 +1,104 @@
 {
     "illustravit": {
         "railway": {
-            "progress": 0.06473214285714285,
+            "progress": 0.10357142857142855,
             "rate": 0.25
         }
     },
     "argunshire": {},
     "bugoslavia": {
         "suspension": {
-            "progress": 0.7551741637953968,
+            "progress": 0.9169971988944106,
             "rate": 1.041619536269513
         },
         "engine": {
-            "progress": 0.7551741637953968,
+            "progress": 0.9169971988944106,
             "rate": 1.041619536269513
         }
     },
     "landepunkt": {
         "engine": {
-            "progress": 0.6630118787034786,
+            "progress": 0.947159826719255,
             "rate": 0.6096660953595207
         }
     },
     "posterian": {},
     "shoisho": {
         "armor": {
-            "progress": 0.46142518870525057,
+            "progress": 0.5091588289161385,
             "rate": 0.307251017449394
         },
         "cannon": {
-            "progress": 0.46142518870525057,
+            "progress": 0.5091588289161385,
             "rate": 0.307251017449394
         },
         "engine": {
-            "progress": 0.46142518870525057,
+            "progress": 0.5091588289161385,
             "rate": 0.307251017449394
         },
         "suspension": {
-            "progress": 0.46142518870525057,
+            "progress": 0.5091588289161385,
             "rate": 0.307251017449394
         }
     },
-    "aina-kiko": {
-        "armor": {
-            "progress": 0.9836468206164601,
-            "rate": 0.31657598824437816
-        },
-        "cannon": {
-            "progress": 0.9836468206164601,
-            "rate": 0.31657598824437816
-        },
-        "engine": {
-            "progress": 0.9836468206164601,
-            "rate": 0.31657598824437816
-        },
-        "suspension": {
-            "progress": 0.9836468206164601,
-            "rate": 0.31657598824437816
-        }
-    },
+    "aina-kiko": {},
     "ghania": {
         "armor": {
-            "progress": 0.5674034107496219,
+            "progress": 0.6383288370933246,
             "rate": 0.4565314799134891
         },
         "cannon": {
-            "progress": 0.5674034107496219,
+            "progress": 0.6383288370933246,
             "rate": 0.4565314799134891
         },
         "engine": {
-            "progress": 0.5674034107496219,
+            "progress": 0.6383288370933246,
             "rate": 0.4565314799134891
         },
         "suspension": {
-            "progress": 0.5674034107496219,
+            "progress": 0.6383288370933246,
             "rate": 0.4565314799134891
         },
         "railway": {
-            "progress": 0.6214285714285718,
+            "progress": 0.6602678571428575,
             "rate": 0.25
         }
     },
     "nunatuniq": {},
     "austrondian": {
         "engine": {
-            "progress": 0.8536322269103231,
+            "progress": 0,
             "rate": 0.5494644219192883
         },
         "suspension": {
-            "progress": 0.8536322269103231,
+            "progress": 0,
             "rate": 0.5494644219192883
         },
         "cannon": {
-            "progress": 0.8536322269103231,
+            "progress": 0,
             "rate": 0.5494644219192883
         },
         "armor": {
-            "progress": 0.8536322269103231,
+            "progress": 0,
             "rate": 0.5494644219192883
         }
     },
     "PARS Heavy Machineries": {},
     "Bartkowicz Motor Works": {
         "armor": {
-            "progress": 0.05282142857142857,
+            "progress": 0.21128571428571427,
             "rate": 0.51
         },
         "cannon": {
-            "progress": 0.05282142857142857,
+            "progress": 0.21128571428571427,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.05282142857142857,
+            "progress": 0.21128571428571427,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.05282142857142857,
+            "progress": 0.21128571428571427,
             "rate": 0.51
         }
     },
@@ -123,93 +106,93 @@
     "Wills Works": {},
     "Zavark Industrial Kompany": {
         "armor": {
-            "progress": 0.8979642857142857,
+            "progress": 0.05282142857142857,
             "rate": 0.51
         },
         "cannon": {
-            "progress": 0.8979642857142857,
+            "progress": 0.05282142857142857,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.8979642857142857,
+            "progress": 0.05282142857142857,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.8979642857142857,
+            "progress": 0.05282142857142857,
             "rate": 0.51
         }
     },
     "Aeroette Munitions": {
         "Armor": {
-            "progress": 0.5924285714285713,
+            "progress": 0.6732142857142855,
             "rate": 0.52
         },
         "cannon": {
-            "progress": 0.5810357142857142,
+            "progress": 0.6602678571428571,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.5810357142857142,
+            "progress": 0.6602678571428571,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.5810357142857142,
+            "progress": 0.6602678571428571,
             "rate": 0.51
         }
     },
     "Dakhtuva Motor Company": {},
     "Clippit Manufacturing": {
         "armor": {
-            "progress": 0.23769642857142856,
+            "progress": 0.3169285714285714,
             "rate": 0.51
         },
         "cannon": {
-            "progress": 0.23769642857142856,
+            "progress": 0.3169285714285714,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.23769642857142856,
+            "progress": 0.3169285714285714,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.23769642857142856,
+            "progress": 0.3169285714285714,
             "rate": 0.51
         }
     },
     "AVM Ltd.": {
         "armor": {
-            "progress": 0.924375,
+            "progress": 0.05282142857142857,
             "rate": 0.51
         },
         "cannon": {
-            "progress": 0.924375,
+            "progress": 0.05282142857142857,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.924375,
+            "progress": 0.05282142857142857,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.924375,
+            "progress": 0.05282142857142857,
             "rate": 0.51
         }
     },
     "Patch & Bits Inc": {},
     "Ma\u0161in\u00e9rn\u00ed Spole\u010dnost Bernardova": {
         "armor": {
-            "progress": 0.39616071428571425,
+            "progress": 0.6338571428571428,
             "rate": 0.51
         },
         "cannon": {
-            "progress": 0.39616071428571425,
+            "progress": 0.6338571428571428,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.39616071428571425,
+            "progress": 0.6338571428571428,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.39616071428571425,
+            "progress": 0.6338571428571428,
             "rate": 0.51
         }
     },
@@ -218,19 +201,19 @@
     "<IronShield Defence Contractors>": {},
     "Aiko Motors Arsenal": {
         "armor": {
-            "progress": 0.07923214285714285,
+            "progress": 0.1584642857142857,
             "rate": 0.51
         },
         "cannon": {
-            "progress": 0.07923214285714285,
+            "progress": 0.1584642857142857,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.07923214285714285,
+            "progress": 0.1584642857142857,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.07923214285714285,
+            "progress": 0.1584642857142857,
             "rate": 0.51
         }
     },
@@ -238,37 +221,37 @@
     "Bastion Steelworks": {},
     "Dragonfire Industries": {
         "cannon": {
-            "progress": 0.3169285714285714,
+            "progress": 0.4753928571428571,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.3169285714285714,
+            "progress": 0.4753928571428571,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.3169285714285714,
+            "progress": 0.4753928571428571,
             "rate": 0.51
         },
         "armor": {
-            "progress": 0.2641071428571428,
+            "progress": 0.42257142857142854,
             "rate": 0.51
         }
     },
     "TEKKTH Productions": {
         "armor": {
-            "progress": 0.9507857142857142,
+            "progress": 0.1584642857142857,
             "rate": 0.51
         },
         "cannon": {
-            "progress": 0.9507857142857142,
+            "progress": 0.1584642857142857,
             "rate": 0.51
         },
         "engine": {
-            "progress": 0.9507857142857142,
+            "progress": 0.1584642857142857,
             "rate": 0.51
         },
         "suspension": {
-            "progress": 0.9507857142857142,
+            "progress": 0.1584642857142857,
             "rate": 0.51
         }
     },

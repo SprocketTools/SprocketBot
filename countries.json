@@ -5,7 +5,7 @@
             "type": "country",
             "channel": 1141147916434669579,
             "description": "A country built upon dozens of chained islands, home to rich agricultural land and diverse cultures.",
-            "money": 255240623,
+            "money": 253740623,
             "income": "100000",
             "land": "531558",
             "idealTonnage": "60",
@@ -18,10 +18,10 @@
             "averageIncome": 110,
             "taxRate": 15,
             "taxPercentToArmy": "7",
-            "engineTech": 8,
-            "cannonTech": 7,
-            "armorTech": 8,
-            "suspensionTech": 8,
+            "engineTech": 9,
+            "cannonTech": 8,
+            "armorTech": 9,
+            "suspensionTech": 9,
             "transportTech": 0,
             "engineResearchFunding": "50000",
             "cannonResearchFunding": "45000",
@@ -31,7 +31,14 @@
             "autoBuild": "true",
             "autoResearch": "false",
             "railwayTech": 2,
-            "focus": "research"
+            "focus": "research",
+            "regiments": {
+                "Defence Force": {
+                    "name": "aina-kiko Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "argunshire": [
@@ -66,7 +73,14 @@
             "autoBuild": "false",
             "autoResearch": "false",
             "railwayTech": 0,
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "argunshire Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "austrondian": [
@@ -75,7 +89,7 @@
             "type": "country",
             "channel": 1142411727116443649,
             "description": "A country that has a long history of raiding other colonies, with limited partners and resources to work with.",
-            "money": 83927314,
+            "money": 66727889,
             "income": "100000",
             "land": "1038258",
             "idealTonnage": "60",
@@ -88,10 +102,10 @@
             "averageIncome": 60,
             "taxRate": 25,
             "taxPercentToArmy": "10",
-            "engineTech": 13,
-            "cannonTech": 13,
-            "armorTech": 13,
-            "suspensionTech": 13,
+            "engineTech": 14,
+            "cannonTech": 14,
+            "armorTech": 14,
+            "suspensionTech": 14,
             "transportTech": 0,
             "engineResearchFunding": 0,
             "cannonResearchFunding": 0,
@@ -101,7 +115,14 @@
             "autoBuild": "false",
             "autoResearch": "true",
             "railwayTech": 1,
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "austrondian Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "bugoslavia": [
@@ -110,7 +131,7 @@
             "type": "country",
             "channel": 1142411807298949134,
             "description": "An interesting empire with an odd history and populace.",
-            "money": 40336252,
+            "money": 38836252,
             "income": "100000",
             "land": "464805",
             "idealTonnage": "60",
@@ -136,7 +157,14 @@
             "autoBuild": "false",
             "autoResearch": "false",
             "railwayTech": 1,
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "bugoslavia Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "ghania": [
@@ -145,7 +173,7 @@
             "type": "country",
             "channel": 1142411858435915846,
             "description": "A diverse country with control of many important geographical areas around the world.",
-            "money": 126764915,
+            "money": 121064915,
             "income": "100000",
             "land": "894708",
             "idealTonnage": "60",
@@ -171,7 +199,14 @@
             "autoBuild": "false",
             "autoResearch": "true",
             "railwayTech": 0,
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "ghania Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "illustravit": [
@@ -180,7 +215,7 @@
             "type": "country",
             "channel": 1140969320105648220,
             "description": "An older country with an impressive intellectual base. Many impressive technologies were invented here over the ages.",
-            "money": 48230948,
+            "money": 46530948,
             "income": "100000",
             "land": "1100574",
             "idealTonnage": "60",
@@ -206,7 +241,14 @@
             "autoBuild": "false",
             "autoResearch": "true",
             "railwayTech": 0,
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "illustravit Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "landepunkt": [
@@ -215,7 +257,7 @@
             "type": "country",
             "channel": 1142411915688149133,
             "description": "A country with fertile agricultural lands and improtant trade routes.",
-            "money": 258663112,
+            "money": 257163112,
             "income": "100000",
             "land": "473868",
             "idealTonnage": "60",
@@ -241,7 +283,14 @@
             "autoBuild": "false",
             "autoResearch": "true",
             "railwayTech": 0,
-            "focus": "research"
+            "focus": "research",
+            "regiments": {
+                "Defence Force": {
+                    "name": "landepunkt Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "nunatuniq": [
@@ -250,7 +299,7 @@
             "type": "country",
             "channel": 1142411952434446390,
             "description": "One of the largest countries in Zheifu, containing an impressive industrial landscape.",
-            "money": 339821754,
+            "money": 338271754,
             "income": "100000",
             "land": "1421550",
             "idealTonnage": "60",
@@ -276,7 +325,14 @@
             "autoBuild": "false",
             "autoResearch": "false",
             "railwayTech": 2,
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "nunatuniq Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "posterian": [
@@ -285,7 +341,7 @@
             "type": "country",
             "channel": 1142411987284938752,
             "description": "A country that has shrank significantly since when it was first founded.",
-            "money": 1056442596,
+            "money": 1054942596,
             "income": "100000",
             "land": "207144",
             "idealTonnage": "60",
@@ -311,7 +367,14 @@
             "autoBuild": "false",
             "autoResearch": "true",
             "railwayTech": 2,
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "posterian Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "shoisho": [
@@ -320,7 +383,7 @@
             "type": "country",
             "channel": 1153859889932795934,
             "description": "One of the earliest known countries to have engaged in trade, Shoisho's history extends back for millenium.",
-            "money": 399380213,
+            "money": 396209959,
             "income": "100000",
             "land": "1299249",
             "idealTonnage": "60",
@@ -346,7 +409,14 @@
             "autoBuild": "false",
             "autoResearch": "true",
             "railwayTech": 2,
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "shoisho Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Bartkowicz Motor Works": [
@@ -368,7 +438,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Bartkowicz Motor Works Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Aeroette Munitions": [
@@ -377,7 +454,7 @@
             "type": "company",
             "channel": 1166662576130768967,
             "contractors": 1,
-            "money": 173985672,
+            "money": 173835672,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -390,7 +467,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Aeroette Munitions Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Bastion Steelworks": [
@@ -412,7 +496,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Bastion Steelworks Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Basilio Angelo Dynamic Systems": [
@@ -434,7 +525,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Basilio Angelo Dynamic Systems Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Kquistlunds Motorworks": [
@@ -456,7 +554,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Kquistlunds Motorworks Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Patch & Bits Inc": [
@@ -478,7 +583,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Patch & Bits Inc Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Zavark Industrial Kompany": [
@@ -487,20 +599,27 @@
             "type": "company",
             "channel": 1166664084733841441,
             "contractors": 1,
-            "money": 213391979,
+            "money": 211980176,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": 2.8500000000000014,
-            "engineTech": 14,
-            "cannonTech": 14,
-            "armorTech": 14,
-            "suspensionTech": 14,
+            "engineTech": 15,
+            "cannonTech": 15,
+            "armorTech": 15,
+            "suspensionTech": 15,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Zavark Industrial Kompany Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Dragonfire Industries": [
@@ -522,7 +641,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Dragonfire Industries Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "PARS Heavy Machineries": [
@@ -544,7 +670,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "PARS Heavy Machineries Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "AVM Ltd.": [
@@ -553,20 +686,27 @@
             "type": "company",
             "channel": 1166664874156380181,
             "contractors": 1,
-            "money": 254617209,
+            "money": 252932658,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 14,
-            "cannonTech": 16,
-            "armorTech": 16,
-            "suspensionTech": 14,
+            "engineTech": 15,
+            "cannonTech": 17,
+            "armorTech": 17,
+            "suspensionTech": 15,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "AVM Ltd. Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Wills Works": [
@@ -588,7 +728,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Wills Works Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Vulcan Foundry": [
@@ -610,7 +757,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Vulcan Foundry Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Ma\u0161in\u00e9rn\u00ed Spole\u010dnost Bernardova": [
@@ -619,7 +773,7 @@
             "type": "company",
             "channel": 1166669159694868542,
             "contractors": 1,
-            "money": 32466212,
+            "money": 30541115,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -632,7 +786,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "true",
             "autoResearch": "true",
-            "focus": "research"
+            "focus": "research",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Ma\u0161in\u00e9rn\u00ed Spole\u010dnost Bernardova Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "H.S.J": [
@@ -654,7 +815,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "H.S.J Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Dakhtuva Motor Company": [
@@ -676,7 +844,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Dakhtuva Motor Company Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Clippit Manufacturing": [
@@ -685,7 +860,7 @@
             "type": "company",
             "channel": 1168050035347443794,
             "contractors": 1,
-            "money": 1953432,
+            "money": -5786556,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -698,7 +873,32 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Clippit Manufacturing Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                },
+                "The Funny": {
+                    "name": "The Funny",
+                    "status": "unknown",
+                    "tanks": {
+                        "LT-23": {
+                            "name": "LT-23",
+                            "deployedCount": 2
+                        },
+                        "LT-25": {
+                            "name": "LT-25",
+                            "deployedCount": 5
+                        },
+                        "LT-25-4": {
+                            "name": "LT-24",
+                            "deployedCount": 8
+                        }
+                    }
+                }
+            }
         }
     ],
     "Volxl Defence agency": [
@@ -720,7 +920,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Volxl Defence agency Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "SMW": [
@@ -742,7 +949,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "SMW Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "<company name>": [
@@ -764,7 +978,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "<company name> Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "<IronShield Defence Contractors>": [
@@ -786,7 +1007,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "<IronShield Defence Contractors> Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Ironshield Defence": [
@@ -808,7 +1036,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Ironshield Defence Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Aiko Motors Arsenal": [
@@ -817,7 +1052,7 @@
             "type": "company",
             "channel": 1168427677221404732,
             "contractors": 0,
-            "money": 20930952,
+            "money": 20780952,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -830,7 +1065,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "building"
+            "focus": "building",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Aiko Motors Arsenal Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Lydensvark Corp.": [
@@ -852,7 +1094,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Lydensvark Corp. Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Brzoza Armoured Vehicles": [
@@ -874,7 +1123,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Brzoza Armoured Vehicles Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "TEKKTH Productions": [
@@ -883,20 +1139,27 @@
             "type": "company",
             "channel": 1179360115720212522,
             "contractors": 0,
-            "money": 16077709,
+            "money": 14327709,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 9,
-            "cannonTech": 9,
-            "armorTech": 9,
-            "suspensionTech": 9,
+            "engineTech": 10,
+            "cannonTech": 10,
+            "armorTech": 10,
+            "suspensionTech": 10,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "research"
+            "focus": "research",
+            "regiments": {
+                "Defence Force": {
+                    "name": "TEKKTH Productions Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "<R.A.M>": [
@@ -918,7 +1181,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "<R.A.M> Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "R.A.M": [
@@ -940,7 +1210,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "R.A.M Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Tobuzoku Heavy Industries": [
@@ -962,7 +1239,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Tobuzoku Heavy Industries Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Steelshire Manufacturing": [
@@ -984,7 +1268,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Steelshire Manufacturing Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "GRE Tanks": [
@@ -1006,7 +1297,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "GRE Tanks Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ],
     "Darwin mil agency": [
@@ -1028,7 +1326,14 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "false",
-            "focus": "none"
+            "focus": "none",
+            "regiments": {
+                "Defence Force": {
+                    "name": "Darwin mil agency Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
         }
     ]
 }
