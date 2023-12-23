@@ -1423,15 +1423,14 @@ async def listRegiments(ctx):
     country = await getUserCountry(ctx)
     description = ""
     appendation = ""
-
     for regimentName, regimentInfo in variablesList[country][0]["regiments"].items():
         totalTankCount = 0
-        for tankName in regimentInfo["tanks"]:
-            totalTankCount += int(tankName)
-            appendation = f" ** {tankName} ** \n Vehicle count: {totalTankCount}\n \n"
-            description = description.__add__(appendation)
+        for regimentTankName, tankInfo in regimentInfo["tanks"].items():
+            totalTankCount += int(tankInfo["deployedCount"])
+        appendation = f" ** {regimentName} ** \n Vehicle count: {totalTankCount}\n \n"
+        description = description.__add__(appendation)
 
-    embed = discord.Embed(title=str(variablesList[country][0]["displayName"]) + "'s Regiments",
+    embed = discord.Embed(title=f"{country}'s Regiments",
                           description=description,
                           color=discord.Color.random())
     await ctx.send(embed=embed)
