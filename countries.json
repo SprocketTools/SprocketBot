@@ -5,7 +5,7 @@
             "type": "country",
             "channel": 1141147916434669579,
             "description": "A country built upon dozens of chained islands, home to rich agricultural land and diverse cultures.",
-            "money": 253740623,
+            "money": 269600213,
             "income": "100000",
             "land": "531558",
             "idealTonnage": "60",
@@ -14,14 +14,14 @@
             "deploymentLimit": "600",
             "governmentType": "democracy",
             "populationCount": "250040026",
-            "populationHappiness": 89.0,
+            "populationHappiness": 96.0,
             "averageIncome": 110,
             "taxRate": 15,
             "taxPercentToArmy": "7",
-            "engineTech": 9,
-            "cannonTech": 8,
-            "armorTech": 9,
-            "suspensionTech": 9,
+            "engineTech": 10,
+            "cannonTech": 9,
+            "armorTech": 10,
+            "suspensionTech": 10,
             "transportTech": 0,
             "engineResearchFunding": "50000",
             "cannonResearchFunding": "45000",
@@ -31,12 +31,99 @@
             "autoBuild": "true",
             "autoResearch": "false",
             "railwayTech": 2,
-            "focus": "research",
+            "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "aina-kiko Defence Force": {
                     "name": "aina-kiko Defence Force",
                     "status": "unknown",
-                    "tanks": {}
+                    "tanks": {
+                        "A-KM26-2": {
+                            "name": "A-KM26-2",
+                            "deployedCount": 18
+                        },
+                        "A-KTALV-3 mod. 1": {
+                            "name": "A-KTALV-3 mod. 1",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "Regi1 isopods": {
+                    "name": "Regi1 isopods",
+                    "status": "unknown",
+                    "tanks": {
+                        "A-K Giant Isopod": {
+                            "name": "A-K Giant Isopod",
+                            "deployedCount": 48
+                        },
+                        "A-K Isopod": {
+                            "name": "A-K Isopod",
+                            "deployedCount": 84
+                        }
+                    }
+                },
+                "Regi3 AA": {
+                    "name": "Regi3 AA",
+                    "status": "unknown",
+                    "tanks": {
+                        "A-KTALV-4 AsH": {
+                            "name": "A-KTALV-4 AsH",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "Regi4 heavies": {
+                    "name": "Regi4 heavies",
+                    "status": "unknown",
+                    "tanks": {
+                        "A-K46 RKS": {
+                            "name": "A-K46 RKS",
+                            "deployedCount": 54
+                        }
+                    }
+                },
+                "Royal Capital Mounted Gaurd": {
+                    "name": "Royal Capital Mounted Gaurd",
+                    "status": "unknown",
+                    "tanks": {
+                        "A-K Iron Bull Tankette": {
+                            "name": "A-K Iron Bull Tankette",
+                            "deployedCount": 5
+                        }
+                    }
+                },
+                "Mercenary Co.": {
+                    "name": "Mercenary Co.",
+                    "status": "unknown",
+                    "tanks": {
+                        "HTE-V2": {
+                            "name": "HTE-V2",
+                            "deployedCount": 1
+                        },
+                        "MTE-V1": {
+                            "name": "MTE-V1",
+                            "deployedCount": 5
+                        },
+                        "TE-V1 (6.2cm) T5": {
+                            "name": "TE-V1 (6.2cm) T5",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 9-A": {
+                            "name": "MSB-Z \u010d. 9-A",
+                            "deployedCount": 1
+                        },
+                        "AMA T-14AK-F": {
+                            "name": "AMA T-14AK-F",
+                            "deployedCount": 6
+                        },
+                        "MSB-Z \u010d. 11-B Albatros\u00edk-Z": {
+                            "name": "MSB-Z \u010d. 11-B Albatros\u00edk-Z",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 8-A": {
+                            "name": "MSB-Z \u010d. 8-A",
+                            "deployedCount": 8
+                        }
+                    }
                 }
             }
         }
@@ -47,7 +134,7 @@
             "type": "country",
             "channel": 1140969361184657438,
             "description": "Error: too lazy to describe this country's decription properly.",
-            "money": 163998029,
+            "money": 216985253,
             "income": "140000",
             "land": "652779",
             "idealTonnage": "60",
@@ -56,8 +143,8 @@
             "deploymentLimit": "600",
             "governmentType": "monarchy",
             "populationCount": "117832643",
-            "populationHappiness": 79.0909090909091,
-            "averageIncome": 94.19047619047619,
+            "populationHappiness": 86.0909090909091,
+            "averageIncome": 101.19047619047619,
             "taxRate": 13,
             "taxPercentToArmy": "9",
             "engineTech": 6,
@@ -73,9 +160,9 @@
             "autoBuild": "false",
             "autoResearch": "false",
             "railwayTech": 0,
-            "focus": "none",
+            "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "argunshire Defence Force": {
                     "name": "argunshire Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -89,7 +176,7 @@
             "type": "country",
             "channel": 1142411727116443649,
             "description": "A country that has a long history of raiding other colonies, with limited partners and resources to work with.",
-            "money": 66727889,
+            "money": 79686244,
             "income": "100000",
             "land": "1038258",
             "idealTonnage": "60",
@@ -102,25 +189,58 @@
             "averageIncome": 60,
             "taxRate": 25,
             "taxPercentToArmy": "10",
-            "engineTech": 14,
-            "cannonTech": 14,
-            "armorTech": 14,
-            "suspensionTech": 14,
+            "engineTech": 16,
+            "cannonTech": 16,
+            "armorTech": 16,
+            "suspensionTech": 16,
             "transportTech": 0,
             "engineResearchFunding": 0,
             "cannonResearchFunding": 0,
             "armorResearchFunding": 0,
             "securitySize": "10",
             "intelSize": "5",
-            "autoBuild": "false",
+            "autoBuild": "true",
             "autoResearch": "true",
             "railwayTech": 1,
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "austrondian Defence Force": {
                     "name": "austrondian Defence Force",
                     "status": "unknown",
-                    "tanks": {}
+                    "tanks": {
+                        "HRT 4": {
+                            "name": "HRT 4",
+                            "deployedCount": 23
+                        },
+                        "HOLT 1": {
+                            "name": "HOLT 1",
+                            "deployedCount": 4
+                        }
+                    }
+                },
+                "Wolfpack Raiders": {
+                    "name": "Wolfpack Raiders",
+                    "status": "unknown",
+                    "tanks": {
+                        "HRT 1": {
+                            "name": "HRT 1",
+                            "deployedCount": 40
+                        },
+                        "HRT 2": {
+                            "name": "HRT 2",
+                            "deployedCount": 74
+                        }
+                    }
+                },
+                "IronWolf Raiders": {
+                    "name": "IronWolf Raiders",
+                    "status": "unknown",
+                    "tanks": {
+                        "HRT 3": {
+                            "name": "HRT 3",
+                            "deployedCount": 70
+                        }
+                    }
                 }
             }
         }
@@ -131,7 +251,7 @@
             "type": "country",
             "channel": 1142411807298949134,
             "description": "An interesting empire with an odd history and populace.",
-            "money": 38836252,
+            "money": 38293172,
             "income": "100000",
             "land": "464805",
             "idealTonnage": "60",
@@ -144,10 +264,10 @@
             "averageIncome": 103.33333333333333,
             "taxRate": 25,
             "taxPercentToArmy": "18",
-            "engineTech": 12,
+            "engineTech": 14,
             "cannonTech": 15,
             "armorTech": 14,
-            "suspensionTech": 12,
+            "suspensionTech": 14,
             "transportTech": 0,
             "engineResearchFunding": 0,
             "cannonResearchFunding": 0,
@@ -159,10 +279,122 @@
             "railwayTech": 1,
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "bugoslavia Defence Force": {
                     "name": "bugoslavia Defence Force",
                     "status": "unknown",
                     "tanks": {}
+                },
+                "Artic Clipper": {
+                    "name": "Artic Clipper",
+                    "status": "unknown",
+                    "tanks": {
+                        "DT-obj251": {
+                            "name": "DT-obj251",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 6-A": {
+                            "name": "MSB-Z \u010d. 6-A",
+                            "deployedCount": 1
+                        },
+                        "Objekt 247": {
+                            "name": "Objekt 247",
+                            "deployedCount": 7
+                        },
+                        "DT-obj13": {
+                            "name": "DT-obj13",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Nuna Wedgie": {
+                    "name": "Nuna Wedgie",
+                    "status": "unknown",
+                    "tanks": {
+                        "Objekt 247": {
+                            "name": "Objekt 247",
+                            "deployedCount": 7
+                        },
+                        "Objekt 126U": {
+                            "name": "Objekt 126U",
+                            "deployedCount": 23
+                        },
+                        "DT-obj14": {
+                            "name": "DT-obj14",
+                            "deployedCount": 20
+                        },
+                        "T-Drakken-U5": {
+                            "name": "T-Drakken-U5",
+                            "deployedCount": 18
+                        }
+                    }
+                },
+                "-establishRegiment": {
+                    "name": "-establishRegiment",
+                    "status": "unknown",
+                    "tanks": {
+                        "DT-obj-33": {
+                            "name": "DT-obj-33",
+                            "deployedCount": 40
+                        }
+                    }
+                },
+                "Capital Defence": {
+                    "name": "Capital Defence",
+                    "status": "unknown",
+                    "tanks": {
+                        "Objekt 247": {
+                            "name": "Objekt 247",
+                            "deployedCount": 14
+                        },
+                        "Objekt 126U": {
+                            "name": "Objekt 126U",
+                            "deployedCount": 24
+                        },
+                        "DT-obj14": {
+                            "name": "DT-obj14",
+                            "deployedCount": 22
+                        }
+                    }
+                },
+                "Anvil": {
+                    "name": "Anvil",
+                    "status": "unknown",
+                    "tanks": {
+                        "Objekt 247": {
+                            "name": "Objekt 247",
+                            "deployedCount": 14
+                        },
+                        "Objekt 126U": {
+                            "name": "Objekt 126U",
+                            "deployedCount": 23
+                        },
+                        "DT-obj14": {
+                            "name": "DT-obj14",
+                            "deployedCount": 20
+                        },
+                        "T-Drakken-U5": {
+                            "name": "T-Drakken-U5",
+                            "deployedCount": 18
+                        },
+                        "DT-obj-33": {
+                            "name": "DT-obj-33",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Shoi Clipper": {
+                    "name": "Shoi Clipper",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 6-A": {
+                            "name": "MSB-Z \u010d. 6-A",
+                            "deployedCount": 1
+                        },
+                        "DT-obj-33": {
+                            "name": "DT-obj-33",
+                            "deployedCount": 1
+                        }
+                    }
                 }
             }
         }
@@ -173,7 +405,7 @@
             "type": "country",
             "channel": 1142411858435915846,
             "description": "A diverse country with control of many important geographical areas around the world.",
-            "money": 121064915,
+            "money": 134038425,
             "income": "100000",
             "land": "894708",
             "idealTonnage": "60",
@@ -186,10 +418,10 @@
             "averageIncome": 102.92592592592592,
             "taxRate": 25,
             "taxPercentToArmy": "10",
-            "engineTech": 7,
-            "cannonTech": 8,
-            "armorTech": 8,
-            "suspensionTech": 7,
+            "engineTech": 8,
+            "cannonTech": 9,
+            "armorTech": 9,
+            "suspensionTech": 8,
             "transportTech": 0,
             "engineResearchFunding": 0,
             "cannonResearchFunding": 0,
@@ -198,13 +430,160 @@
             "intelSize": "5",
             "autoBuild": "false",
             "autoResearch": "true",
-            "railwayTech": 0,
+            "railwayTech": 1,
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "ghania Defence Force": {
                     "name": "ghania Defence Force",
                     "status": "unknown",
-                    "tanks": {}
+                    "tanks": {
+                        "Z45 i": {
+                            "name": "Z45 i",
+                            "deployedCount": 14
+                        },
+                        "Z122 s": {
+                            "name": "Z122 s",
+                            "deployedCount": 0
+                        },
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 0
+                        },
+                        "JTP 2L Gremlin": {
+                            "name": "JTP 2L Gremlin",
+                            "deployedCount": 4
+                        },
+                        "z16 k": {
+                            "name": "z16 k",
+                            "deployedCount": 4
+                        },
+                        "Z34 g": {
+                            "name": "Z34 g",
+                            "deployedCount": 4
+                        },
+                        "C-2": {
+                            "name": "C-2",
+                            "deployedCount": 1
+                        },
+                        "M20-65": {
+                            "name": "M20-65",
+                            "deployedCount": 2
+                        },
+                        "ZIK-MAT 4": {
+                            "name": "ZIK-MAT 4",
+                            "deployedCount": 1
+                        },
+                        "Z31 k": {
+                            "name": "Z31 k",
+                            "deployedCount": 4
+                        },
+                        "MSB-Z \u010d. 6-A": {
+                            "name": "MSB-Z \u010d. 6-A",
+                            "deployedCount": 2
+                        },
+                        "Z42 g": {
+                            "name": "Z42 g",
+                            "deployedCount": 5
+                        },
+                        "ZIK-AT 5": {
+                            "name": "ZIK-AT 5",
+                            "deployedCount": 2
+                        },
+                        "ZIK-MAT 5": {
+                            "name": "ZIK-MAT 5",
+                            "deployedCount": 2
+                        },
+                        "ZIK-ISAK 4-7": {
+                            "name": "ZIK-ISAK 4-7",
+                            "deployedCount": 2
+                        },
+                        "ZIK-MAT 7": {
+                            "name": "ZIK-MAT 7",
+                            "deployedCount": 2
+                        },
+                        "Z62 d Spahi": {
+                            "name": "Z62 d Spahi",
+                            "deployedCount": 7
+                        },
+                        "ZIK-AT 10.2": {
+                            "name": "ZIK-AT 10.2",
+                            "deployedCount": 0
+                        },
+                        "TE-V1 (6.2cm) T5": {
+                            "name": "TE-V1 (6.2cm) T5",
+                            "deployedCount": 0
+                        },
+                        "Z165 s": {
+                            "name": "Z165 s",
+                            "deployedCount": 0
+                        }
+                    }
+                },
+                "army group 1": {
+                    "name": "army group 1",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 20
+                        },
+                        "Z45 i": {
+                            "name": "Z45 i",
+                            "deployedCount": 30
+                        },
+                        "Z122 s": {
+                            "name": "Z122 s",
+                            "deployedCount": 98
+                        },
+                        "TE-V1 (6.2cm) T5": {
+                            "name": "TE-V1 (6.2cm) T5",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "army group 2": {
+                    "name": "army group 2",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 20
+                        },
+                        "Z45 i": {
+                            "name": "Z45 i",
+                            "deployedCount": 23
+                        },
+                        "Z122 s": {
+                            "name": "Z122 s",
+                            "deployedCount": 100
+                        }
+                    }
+                },
+                "army group 3": {
+                    "name": "army group 3",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 32
+                        },
+                        "Z45 i": {
+                            "name": "Z45 i",
+                            "deployedCount": 50
+                        },
+                        "Z122 s": {
+                            "name": "Z122 s",
+                            "deployedCount": 20
+                        },
+                        "ZIK-AT 10.2": {
+                            "name": "ZIK-AT 10.2",
+                            "deployedCount": 5
+                        },
+                        "Z165 s": {
+                            "name": "Z165 s",
+                            "deployedCount": 44
+                        }
+                    }
                 }
             }
         }
@@ -215,7 +594,7 @@
             "type": "country",
             "channel": 1140969320105648220,
             "description": "An older country with an impressive intellectual base. Many impressive technologies were invented here over the ages.",
-            "money": 46530948,
+            "money": 160535393,
             "income": "100000",
             "land": "1100574",
             "idealTonnage": "60",
@@ -243,7 +622,7 @@
             "railwayTech": 0,
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "illustravit Defence Force": {
                     "name": "illustravit Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -257,7 +636,7 @@
             "type": "country",
             "channel": 1142411915688149133,
             "description": "A country with fertile agricultural lands and improtant trade routes.",
-            "money": 257163112,
+            "money": 786988649,
             "income": "100000",
             "land": "473868",
             "idealTonnage": "60",
@@ -266,11 +645,11 @@
             "deploymentLimit": "600",
             "governmentType": "democracy",
             "populationCount": "84637485",
-            "populationHappiness": 78.96,
-            "averageIncome": 108.04166666666667,
+            "populationHappiness": 58.96,
+            "averageIncome": 110,
             "taxRate": 16,
             "taxPercentToArmy": "16",
-            "engineTech": 13,
+            "engineTech": 17,
             "cannonTech": 7,
             "armorTech": 8,
             "suspensionTech": 8,
@@ -285,7 +664,7 @@
             "railwayTech": 0,
             "focus": "research",
             "regiments": {
-                "Defence Force": {
+                "landepunkt Defence Force": {
                     "name": "landepunkt Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -299,7 +678,7 @@
             "type": "country",
             "channel": 1142411952434446390,
             "description": "One of the largest countries in Zheifu, containing an impressive industrial landscape.",
-            "money": 338271754,
+            "money": 974308556,
             "income": "100000",
             "land": "1421550",
             "idealTonnage": "60",
@@ -327,10 +706,472 @@
             "railwayTech": 2,
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "nunatuniq Defence Force": {
                     "name": "nunatuniq Defence Force",
                     "status": "unknown",
                     "tanks": {}
+                },
+                "1st Armored Fighting Corp": {
+                    "name": "1st Armored Fighting Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 4
+                        },
+                        "Buy AVM Next Time [AV]": {
+                            "name": "Buy AVM Next Time [AV]",
+                            "deployedCount": 8
+                        },
+                        "AV 16M": {
+                            "name": "AV 16M",
+                            "deployedCount": 9
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 5
+                        },
+                        "ZIK-AT 10.2": {
+                            "name": "ZIK-AT 10.2",
+                            "deployedCount": 1
+                        },
+                        "TE-V1 (6.2cm) T5": {
+                            "name": "TE-V1 (6.2cm) T5",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "2nd Armored Fighting Corp": {
+                    "name": "2nd Armored Fighting Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV 16M": {
+                            "name": "AV 16M",
+                            "deployedCount": 9
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 5
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 1
+                        },
+                        "TE-V2": {
+                            "name": "TE-V2",
+                            "deployedCount": 1
+                        },
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 3
+                        },
+                        "Buy AVM Next Time [AV]": {
+                            "name": "Buy AVM Next Time [AV]",
+                            "deployedCount": 8
+                        }
+                    }
+                },
+                "3rd Armored Fighting Corp": {
+                    "name": "3rd Armored Fighting Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 3
+                        },
+                        "Buy AVM Next Time [AV]": {
+                            "name": "Buy AVM Next Time [AV]",
+                            "deployedCount": 8
+                        },
+                        "AV 13M": {
+                            "name": "AV 13M",
+                            "deployedCount": 5
+                        }
+                    }
+                },
+                "4th Armored Fighting Corp": {
+                    "name": "4th Armored Fighting Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 3
+                        },
+                        "Buy AVM Next Time [AV]": {
+                            "name": "Buy AVM Next Time [AV]",
+                            "deployedCount": 8
+                        },
+                        "AV 13M": {
+                            "name": "AV 13M",
+                            "deployedCount": 6
+                        },
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "5th Armored Fighting Corp": {
+                    "name": "5th Armored Fighting Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZTD-2B": {
+                            "name": "ZTD-2B",
+                            "deployedCount": 1
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 6
+                        },
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 1
+                        },
+                        "AV 16M": {
+                            "name": "AV 16M",
+                            "deployedCount": 1
+                        },
+                        "ZTD-3A": {
+                            "name": "ZTD-3A",
+                            "deployedCount": 2
+                        },
+                        "Buy AVM Next Time [AV]": {
+                            "name": "Buy AVM Next Time [AV]",
+                            "deployedCount": 2
+                        },
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 1
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "1st Armored Defense Corp": {
+                    "name": "1st Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "2nd Armored Defense Corp": {
+                    "name": "2nd Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "3rd Armored Defense Corp": {
+                    "name": "3rd Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "4th Armored Defense Corp": {
+                    "name": "4th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "5th Armored Defense Corp": {
+                    "name": "5th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "6th Armored Defense Corp": {
+                    "name": "6th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "7th Armored Defense Corp": {
+                    "name": "7th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "8th Armored Defense Corp": {
+                    "name": "8th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "9th Armored Defense Corp": {
+                    "name": "9th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "10th Armored Defense Corp": {
+                    "name": "10th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "11th Armored Defense Corp": {
+                    "name": "11th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "12th Armored Defense Corp": {
+                    "name": "12th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "13th Armored Defense Corp": {
+                    "name": "13th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "14th Armored Defense Corp": {
+                    "name": "14th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "15th Armored Defense Corp": {
+                    "name": "15th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "16th Armored Defense Corp": {
+                    "name": "16th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "17th Armored Defense Corp": {
+                    "name": "17th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "18th Armored Defense Corp": {
+                    "name": "18th Armored Defense Corp",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 2
+                        },
+                        "AV 12M": {
+                            "name": "AV 12M",
+                            "deployedCount": 1
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 1
+                        }
+                    }
                 }
             }
         }
@@ -341,7 +1182,7 @@
             "type": "country",
             "channel": 1142411987284938752,
             "description": "A country that has shrank significantly since when it was first founded.",
-            "money": 1054942596,
+            "money": 277565910,
             "income": "100000",
             "land": "207144",
             "idealTonnage": "60",
@@ -369,10 +1210,1206 @@
             "railwayTech": 2,
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "posterian Defence Force": {
                     "name": "posterian Defence Force",
                     "status": "unknown",
                     "tanks": {}
+                },
+                "P1": {
+                    "name": "P1",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb25": {
+                            "name": "STG Cb25",
+                            "deployedCount": 3
+                        },
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 27
+                        },
+                        "MSB-Z \u010d. 15-A Citadela": {
+                            "name": "MSB-Z \u010d. 15-A Citadela",
+                            "deployedCount": 5
+                        },
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 2
+                        },
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "P2": {
+                    "name": "P2",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb25": {
+                            "name": "STG Cb25",
+                            "deployedCount": 3
+                        },
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 27
+                        },
+                        "MSB-Z \u010d. 15-A Citadela": {
+                            "name": "MSB-Z \u010d. 15-A Citadela",
+                            "deployedCount": 5
+                        },
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "P3": {
+                    "name": "P3",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb25": {
+                            "name": "STG Cb25",
+                            "deployedCount": 1
+                        },
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 14
+                        },
+                        "MSB-Z \u010d. 15-A Citadela": {
+                            "name": "MSB-Z \u010d. 15-A Citadela",
+                            "deployedCount": 2
+                        },
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 13
+                        },
+                        "POS H-16 v2": {
+                            "name": "POS H-16 v2",
+                            "deployedCount": 4
+                        },
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 1
+                        },
+                        "M30-105": {
+                            "name": "M30-105",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "P4": {
+                    "name": "P4",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb25": {
+                            "name": "STG Cb25",
+                            "deployedCount": 1
+                        },
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 14
+                        },
+                        "MSB-Z \u010d. 15-A Citadela": {
+                            "name": "MSB-Z \u010d. 15-A Citadela",
+                            "deployedCount": 2
+                        },
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 13
+                        },
+                        "POS H-16 v2": {
+                            "name": "POS H-16 v2",
+                            "deployedCount": 4
+                        },
+                        "M30-105": {
+                            "name": "M30-105",
+                            "deployedCount": 5
+                        }
+                    }
+                },
+                "N1": {
+                    "name": "N1",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 5
+                        }
+                    }
+                },
+                "L1": {
+                    "name": "L1",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 6
+                        },
+                        "MSB-Z \u010d. 11-B Albatros\u00edk-Z": {
+                            "name": "MSB-Z \u010d. 11-B Albatros\u00edk-Z",
+                            "deployedCount": 6
+                        },
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 7
+                        },
+                        "ZIK-MAT 7": {
+                            "name": "ZIK-MAT 7",
+                            "deployedCount": 3
+                        },
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 4
+                        },
+                        "STG Cb17": {
+                            "name": "STG Cb17",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "L2": {
+                    "name": "L2",
+                    "status": "unknown",
+                    "tanks": {
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 3
+                        },
+                        "AV 26L": {
+                            "name": "AV 26L",
+                            "deployedCount": 1
+                        },
+                        "HTE-V1": {
+                            "name": "HTE-V1",
+                            "deployedCount": 1
+                        },
+                        "LT-25-2": {
+                            "name": "LT-25-2",
+                            "deployedCount": 2
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 2
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 5
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "L3": {
+                    "name": "L3",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV 8H": {
+                            "name": "AV 8H",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 9-A": {
+                            "name": "MSB-Z \u010d. 9-A",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 3
+                        },
+                        "TK-26": {
+                            "name": "TK-26",
+                            "deployedCount": 1
+                        },
+                        "POS H-10": {
+                            "name": "POS H-10",
+                            "deployedCount": 1
+                        },
+                        "STG Cb17": {
+                            "name": "STG Cb17",
+                            "deployedCount": 3
+                        },
+                        "AV 12W": {
+                            "name": "AV 12W",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "L4": {
+                    "name": "L4",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV 8H": {
+                            "name": "AV 8H",
+                            "deployedCount": 1
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 3
+                        },
+                        "TK-26": {
+                            "name": "TK-26",
+                            "deployedCount": 1
+                        },
+                        "POS H-10": {
+                            "name": "POS H-10",
+                            "deployedCount": 1
+                        },
+                        "STG Cb17": {
+                            "name": "STG Cb17",
+                            "deployedCount": 3
+                        },
+                        "AV 12W": {
+                            "name": "AV 12W",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "I1": {
+                    "name": "I1",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb25": {
+                            "name": "STG Cb25",
+                            "deployedCount": 1
+                        },
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 10
+                        },
+                        "MSB-Z \u010d. 15-A Citadela": {
+                            "name": "MSB-Z \u010d. 15-A Citadela",
+                            "deployedCount": 2
+                        },
+                        "LT-25-4": {
+                            "name": "LT-25-4",
+                            "deployedCount": 2
+                        },
+                        "PT25-95": {
+                            "name": "PT25-95",
+                            "deployedCount": 4
+                        },
+                        "M40-105": {
+                            "name": "M40-105",
+                            "deployedCount": 1
+                        },
+                        "HTE-V2": {
+                            "name": "HTE-V2",
+                            "deployedCount": 1
+                        },
+                        "LT-25-3": {
+                            "name": "LT-25-3",
+                            "deployedCount": 3
+                        },
+                        "PT25-95-FLAT": {
+                            "name": "PT25-95-FLAT",
+                            "deployedCount": 4
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 4
+                        }
+                    }
+                },
+                "I2": {
+                    "name": "I2",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 9-A": {
+                            "name": "MSB-Z \u010d. 9-A",
+                            "deployedCount": 1
+                        },
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 2
+                        },
+                        "LT-21": {
+                            "name": "LT-21",
+                            "deployedCount": 1
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 5
+                        },
+                        "M30-105": {
+                            "name": "M30-105",
+                            "deployedCount": 2
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "I3": {
+                    "name": "I3",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 9-A": {
+                            "name": "MSB-Z \u010d. 9-A",
+                            "deployedCount": 1
+                        },
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 2
+                        },
+                        "LT-21": {
+                            "name": "LT-21",
+                            "deployedCount": 1
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 5
+                        },
+                        "M30-105": {
+                            "name": "M30-105",
+                            "deployedCount": 2
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "I4": {
+                    "name": "I4",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 9-A": {
+                            "name": "MSB-Z \u010d. 9-A",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 2
+                        },
+                        "LT-21": {
+                            "name": "LT-21",
+                            "deployedCount": 1
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 5
+                        },
+                        "M30-105": {
+                            "name": "M30-105",
+                            "deployedCount": 2
+                        },
+                        "AV 14M": {
+                            "name": "AV 14M",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "I5": {
+                    "name": "I5",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 2
+                        },
+                        "POS H-10": {
+                            "name": "POS H-10",
+                            "deployedCount": 4
+                        },
+                        "STG Cb17": {
+                            "name": "STG Cb17",
+                            "deployedCount": 1
+                        },
+                        "AV 12W": {
+                            "name": "AV 12W",
+                            "deployedCount": 2
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3A": {
+                            "name": "AMA C-3A",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "I6": {
+                    "name": "I6",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 2
+                        },
+                        "POS H-10": {
+                            "name": "POS H-10",
+                            "deployedCount": 3
+                        },
+                        "STG Cb17": {
+                            "name": "STG Cb17",
+                            "deployedCount": 1
+                        },
+                        "AV 12W": {
+                            "name": "AV 12W",
+                            "deployedCount": 2
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 4
+                        },
+                        "AMA C-3A": {
+                            "name": "AMA C-3A",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "G1": {
+                    "name": "G1",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb25": {
+                            "name": "STG Cb25",
+                            "deployedCount": 1
+                        },
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 14
+                        },
+                        "MSB-Z \u010d. 15-A Citadela": {
+                            "name": "MSB-Z \u010d. 15-A Citadela",
+                            "deployedCount": 2
+                        },
+                        "LT-25-4": {
+                            "name": "LT-25-4",
+                            "deployedCount": 1
+                        },
+                        "PT25-95": {
+                            "name": "PT25-95",
+                            "deployedCount": 4
+                        },
+                        "M40-105": {
+                            "name": "M40-105",
+                            "deployedCount": 1
+                        },
+                        "LT-25-3": {
+                            "name": "LT-25-3",
+                            "deployedCount": 1
+                        },
+                        "PT25-95-FLAT": {
+                            "name": "PT25-95-FLAT",
+                            "deployedCount": 4
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 4
+                        }
+                    }
+                },
+                "G2": {
+                    "name": "G2",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 1
+                        },
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 4
+                        },
+                        "TE-V2VMA": {
+                            "name": "TE-V2VMA",
+                            "deployedCount": 1
+                        },
+                        "PT25-95-FLAT": {
+                            "name": "PT25-95-FLAT",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "G3": {
+                    "name": "G3",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 1
+                        },
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 4
+                        },
+                        "TE-V2VMA": {
+                            "name": "TE-V2VMA",
+                            "deployedCount": 1
+                        },
+                        "PT25-95-FLAT": {
+                            "name": "PT25-95-FLAT",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "G4": {
+                    "name": "G4",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 1
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 3
+                        },
+                        "STG Cs15": {
+                            "name": "STG Cs15",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3A": {
+                            "name": "AMA C-3A",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "G5": {
+                    "name": "G5",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cs14": {
+                            "name": "STG Cs14",
+                            "deployedCount": 3
+                        },
+                        "AV 9M": {
+                            "name": "AV 9M",
+                            "deployedCount": 1
+                        },
+                        "ZIK-ISAK 4-7": {
+                            "name": "ZIK-ISAK 4-7",
+                            "deployedCount": 3
+                        },
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "B1": {
+                    "name": "B1",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb25": {
+                            "name": "STG Cb25",
+                            "deployedCount": 1
+                        },
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 14
+                        },
+                        "MSB-Z \u010d. 15-A Citadela": {
+                            "name": "MSB-Z \u010d. 15-A Citadela",
+                            "deployedCount": 2
+                        },
+                        "LT-25-4": {
+                            "name": "LT-25-4",
+                            "deployedCount": 1
+                        },
+                        "PT25-95": {
+                            "name": "PT25-95",
+                            "deployedCount": 4
+                        },
+                        "M40-105": {
+                            "name": "M40-105",
+                            "deployedCount": 1
+                        },
+                        "LT-25-3": {
+                            "name": "LT-25-3",
+                            "deployedCount": 1
+                        },
+                        "PT25-95-FLAT": {
+                            "name": "PT25-95-FLAT",
+                            "deployedCount": 2
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "B2": {
+                    "name": "B2",
+                    "status": "unknown",
+                    "tanks": {
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 12
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 3
+                        },
+                        "STG Cs14": {
+                            "name": "STG Cs14",
+                            "deployedCount": 2
+                        },
+                        "AV 26L": {
+                            "name": "AV 26L",
+                            "deployedCount": 4
+                        },
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 2
+                        },
+                        "TE-V2VMA": {
+                            "name": "TE-V2VMA",
+                            "deployedCount": 1
+                        },
+                        "LT-23": {
+                            "name": "LT-23",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 2
+                        },
+                        "AMA C-3B": {
+                            "name": "AMA C-3B",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "B3": {
+                    "name": "B3",
+                    "status": "unknown",
+                    "tanks": {
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 12
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 3
+                        },
+                        "STG Cs14": {
+                            "name": "STG Cs14",
+                            "deployedCount": 2
+                        },
+                        "AV 26L": {
+                            "name": "AV 26L",
+                            "deployedCount": 4
+                        },
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 2
+                        },
+                        "TE-V2VMA": {
+                            "name": "TE-V2VMA",
+                            "deployedCount": 1
+                        },
+                        "LT-23": {
+                            "name": "LT-23",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 2
+                        },
+                        "AMA C-3B": {
+                            "name": "AMA C-3B",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "B4": {
+                    "name": "B4",
+                    "status": "unknown",
+                    "tanks": {
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 12
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 3
+                        },
+                        "STG Cs14": {
+                            "name": "STG Cs14",
+                            "deployedCount": 2
+                        },
+                        "AV 26L": {
+                            "name": "AV 26L",
+                            "deployedCount": 4
+                        },
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 2
+                        },
+                        "TE-V2VMA": {
+                            "name": "TE-V2VMA",
+                            "deployedCount": 1
+                        },
+                        "LT-23": {
+                            "name": "LT-23",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 2
+                        },
+                        "AMA C-3B": {
+                            "name": "AMA C-3B",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "B5": {
+                    "name": "B5",
+                    "status": "unknown",
+                    "tanks": {
+                        "BMW CL - 6 S11": {
+                            "name": "BMW CL - 6 S11",
+                            "deployedCount": 12
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 3
+                        },
+                        "STG Cs14": {
+                            "name": "STG Cs14",
+                            "deployedCount": 2
+                        },
+                        "AV 26L": {
+                            "name": "AV 26L",
+                            "deployedCount": 4
+                        },
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 2
+                        },
+                        "TE-V2VMA": {
+                            "name": "TE-V2VMA",
+                            "deployedCount": 1
+                        },
+                        "LT-23": {
+                            "name": "LT-23",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 2
+                        },
+                        "AMA C-3B": {
+                            "name": "AMA C-3B",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "S1": {
+                    "name": "S1",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 18-A": {
+                            "name": "MSB-Z \u010d. 18-A",
+                            "deployedCount": 3
+                        },
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 2
+                        },
+                        "LT-26 AT": {
+                            "name": "LT-26 AT",
+                            "deployedCount": 2
+                        },
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 2
+                        },
+                        "AV 10M": {
+                            "name": "AV 10M",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 1
+                        },
+                        "LT-21": {
+                            "name": "LT-21",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "S2": {
+                    "name": "S2",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 18-A": {
+                            "name": "MSB-Z \u010d. 18-A",
+                            "deployedCount": 2
+                        },
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 2
+                        },
+                        "LT-26 AT": {
+                            "name": "LT-26 AT",
+                            "deployedCount": 3
+                        },
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 2
+                        },
+                        "AV 10M": {
+                            "name": "AV 10M",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 1
+                        },
+                        "LT-21": {
+                            "name": "LT-21",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "S3": {
+                    "name": "S3",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB Cb2": {
+                            "name": "MSB Cb2",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "S4": {
+                    "name": "S4",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 2-A": {
+                            "name": "MSB-Z \u010d. 2-A",
+                            "deployedCount": 1
+                        },
+                        "MSB Cb2": {
+                            "name": "MSB Cb2",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "S5": {
+                    "name": "S5",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 2-A": {
+                            "name": "MSB-Z \u010d. 2-A",
+                            "deployedCount": 1
+                        },
+                        "MSB Cb2": {
+                            "name": "MSB Cb2",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "S6": {
+                    "name": "S6",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 2-A": {
+                            "name": "MSB-Z \u010d. 2-A",
+                            "deployedCount": 1
+                        },
+                        "MSB Cb2": {
+                            "name": "MSB Cb2",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "S7": {
+                    "name": "S7",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 2-A": {
+                            "name": "MSB-Z \u010d. 2-A",
+                            "deployedCount": 1
+                        },
+                        "MSB Cb2": {
+                            "name": "MSB Cb2",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "S8": {
+                    "name": "S8",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 2-A": {
+                            "name": "MSB-Z \u010d. 2-A",
+                            "deployedCount": 1
+                        },
+                        "MSB Cb2": {
+                            "name": "MSB Cb2",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "S9": {
+                    "name": "S9",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 2-A": {
+                            "name": "MSB-Z \u010d. 2-A",
+                            "deployedCount": 1
+                        },
+                        "MSB Cb2": {
+                            "name": "MSB Cb2",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "S10": {
+                    "name": "S10",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 2-A": {
+                            "name": "MSB-Z \u010d. 2-A",
+                            "deployedCount": 1
+                        },
+                        "MSB Cb2": {
+                            "name": "MSB Cb2",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "A1": {
+                    "name": "A1",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG Cb25": {
+                            "name": "STG Cb25",
+                            "deployedCount": 1
+                        },
+                        "STG Cs25-2": {
+                            "name": "STG Cs25-2",
+                            "deployedCount": 10
+                        },
+                        "MSB-Z \u010d. 15-A Citadela": {
+                            "name": "MSB-Z \u010d. 15-A Citadela",
+                            "deployedCount": 2
+                        },
+                        "MTE-V1": {
+                            "name": "MTE-V1",
+                            "deployedCount": 1
+                        },
+                        "LT-25-4": {
+                            "name": "LT-25-4",
+                            "deployedCount": 1
+                        },
+                        "PT25-95": {
+                            "name": "PT25-95",
+                            "deployedCount": 5
+                        },
+                        "PT25-95-FLAT": {
+                            "name": "PT25-95-FLAT",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 6
+                        },
+                        "M30-105": {
+                            "name": "M30-105",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "A2": {
+                    "name": "A2",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 18-A": {
+                            "name": "MSB-Z \u010d. 18-A",
+                            "deployedCount": 1
+                        },
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 1
+                        },
+                        "AV 8H": {
+                            "name": "AV 8H",
+                            "deployedCount": 1
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 3
+                        },
+                        "STG Cs14": {
+                            "name": "STG Cs14",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 9-A": {
+                            "name": "MSB-Z \u010d. 9-A",
+                            "deployedCount": 2
+                        },
+                        "AV 10M": {
+                            "name": "AV 10M",
+                            "deployedCount": 1
+                        },
+                        "BMW PT - 2  M54": {
+                            "name": "BMW PT - 2  M54",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "A3": {
+                    "name": "A3",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 18-A": {
+                            "name": "MSB-Z \u010d. 18-A",
+                            "deployedCount": 1
+                        },
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 1
+                        },
+                        "AV 8H": {
+                            "name": "AV 8H",
+                            "deployedCount": 1
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 3
+                        },
+                        "STG Cs14": {
+                            "name": "STG Cs14",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 9-A": {
+                            "name": "MSB-Z \u010d. 9-A",
+                            "deployedCount": 2
+                        },
+                        "AV 10M": {
+                            "name": "AV 10M",
+                            "deployedCount": 1
+                        },
+                        "BMW PT - 2  M54": {
+                            "name": "BMW PT - 2  M54",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "A4": {
+                    "name": "A4",
+                    "status": "unknown",
+                    "tanks": {
+                        "MSB-Z \u010d. 18-A": {
+                            "name": "MSB-Z \u010d. 18-A",
+                            "deployedCount": 1
+                        },
+                        "STG Cb11": {
+                            "name": "STG Cb11",
+                            "deployedCount": 1
+                        },
+                        "AV 8H": {
+                            "name": "AV 8H",
+                            "deployedCount": 1
+                        },
+                        "M20-96": {
+                            "name": "M20-96",
+                            "deployedCount": 3
+                        },
+                        "STG Cs14": {
+                            "name": "STG Cs14",
+                            "deployedCount": 1
+                        },
+                        "MSB-Z \u010d. 9-A": {
+                            "name": "MSB-Z \u010d. 9-A",
+                            "deployedCount": 2
+                        },
+                        "AV 10M": {
+                            "name": "AV 10M",
+                            "deployedCount": 1
+                        },
+                        "BMW PT - 2  M54": {
+                            "name": "BMW PT - 2  M54",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "K1": {
+                    "name": "K1",
+                    "status": "unknown",
+                    "tanks": {
+                        "STG AS25": {
+                            "name": "STG AS25",
+                            "deployedCount": 4
+                        },
+                        "LT-24": {
+                            "name": "LT-24",
+                            "deployedCount": 1
+                        },
+                        "PT25-95-FLAT": {
+                            "name": "PT25-95-FLAT",
+                            "deployedCount": 1
+                        },
+                        "POS H-12 v2": {
+                            "name": "POS H-12 v2",
+                            "deployedCount": 4
+                        },
+                        "AMA C-3C": {
+                            "name": "AMA C-3C",
+                            "deployedCount": 3
+                        },
+                        "AMA C-3A": {
+                            "name": "AMA C-3A",
+                            "deployedCount": 3
+                        }
+                    }
                 }
             }
         }
@@ -383,7 +2420,7 @@
             "type": "country",
             "channel": 1153859889932795934,
             "description": "One of the earliest known countries to have engaged in trade, Shoisho's history extends back for millenium.",
-            "money": 396209959,
+            "money": 518102237,
             "income": "100000",
             "land": "1299249",
             "idealTonnage": "60",
@@ -392,14 +2429,14 @@
             "deploymentLimit": "600",
             "governmentType": "monarchy",
             "populationCount": "266617339",
-            "populationHappiness": 59.0,
-            "averageIncome": 75.08695652173913,
+            "populationHappiness": 66.0,
+            "averageIncome": 82.08695652173913,
             "taxRate": 15,
             "taxPercentToArmy": "15",
-            "engineTech": 7,
-            "cannonTech": 7,
-            "armorTech": 7,
-            "suspensionTech": 7,
+            "engineTech": 8,
+            "cannonTech": 8,
+            "armorTech": 8,
+            "suspensionTech": 8,
             "transportTech": 0,
             "engineResearchFunding": 0,
             "cannonResearchFunding": 0,
@@ -411,10 +2448,201 @@
             "railwayTech": 2,
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "shoisho Defence Force": {
                     "name": "shoisho Defence Force",
                     "status": "unknown",
-                    "tanks": {}
+                    "tanks": {
+                        "BMW CL - 5 S65 Grasshopper": {
+                            "name": "BMW CL - 5 S65 Grasshopper",
+                            "deployedCount": 15
+                        }
+                    }
+                },
+                "1st silly catalry": {
+                    "name": "1st silly catalry",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-Skout 10": {
+                            "name": "ZIK-Skout 10",
+                            "deployedCount": 36
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 19
+                        },
+                        "HTE-V2": {
+                            "name": "HTE-V2",
+                            "deployedCount": 5
+                        },
+                        "TE-V2": {
+                            "name": "TE-V2",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "2nd silly Defence Force": {
+                    "name": "2nd silly Defence Force",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-Skout 10": {
+                            "name": "ZIK-Skout 10",
+                            "deployedCount": 36
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 19
+                        },
+                        "HTE-V2": {
+                            "name": "HTE-V2",
+                            "deployedCount": 5
+                        },
+                        "TE-V2": {
+                            "name": "TE-V2",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "1st paratank regiment": {
+                    "name": "1st paratank regiment",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-Skout 10": {
+                            "name": "ZIK-Skout 10",
+                            "deployedCount": 14
+                        }
+                    }
+                },
+                "2nd paratank regiment": {
+                    "name": "2nd paratank regiment",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-Skout 10": {
+                            "name": "ZIK-Skout 10",
+                            "deployedCount": 14
+                        }
+                    }
+                },
+                "1st flagtank fleet": {
+                    "name": "1st flagtank fleet",
+                    "status": "unknown",
+                    "tanks": {
+                        "Type 7 OH-NO": {
+                            "name": "Type 7 OH-NO",
+                            "deployedCount": 1
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 15
+                        },
+                        "MTE-V1": {
+                            "name": "MTE-V1",
+                            "deployedCount": 10
+                        }
+                    }
+                },
+                "1st stroke force": {
+                    "name": "1st stroke force",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-Skout 10": {
+                            "name": "ZIK-Skout 10",
+                            "deployedCount": 15
+                        },
+                        "TE-V2VMA": {
+                            "name": "TE-V2VMA",
+                            "deployedCount": 6
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 5
+                        },
+                        "Ke-Ho (P)": {
+                            "name": "Ke-Ho (P)",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "2nd stroke force": {
+                    "name": "2nd stroke force",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-Skout 10": {
+                            "name": "ZIK-Skout 10",
+                            "deployedCount": 15
+                        },
+                        "TE-V2VMA": {
+                            "name": "TE-V2VMA",
+                            "deployedCount": 6
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 5
+                        },
+                        "Ke-Ho (P)": {
+                            "name": "Ke-Ho (P)",
+                            "deployedCount": 3
+                        }
+                    }
+                },
+                "1st reserve fleet": {
+                    "name": "1st reserve fleet",
+                    "status": "unknown",
+                    "tanks": {
+                        "Type-35 Ke-Ni": {
+                            "name": "Type-35 Ke-Ni",
+                            "deployedCount": 12
+                        },
+                        "O-Ken I (P)": {
+                            "name": "O-Ken I (P)",
+                            "deployedCount": 4
+                        }
+                    }
+                },
+                "2nd reserve fleet": {
+                    "name": "2nd reserve fleet",
+                    "status": "unknown",
+                    "tanks": {
+                        "Type-35 Ke-Ni": {
+                            "name": "Type-35 Ke-Ni",
+                            "deployedCount": 12
+                        },
+                        "O-Ken I (P)": {
+                            "name": "O-Ken I (P)",
+                            "deployedCount": 4
+                        }
+                    }
+                },
+                "3rd reserve fleet": {
+                    "name": "3rd reserve fleet",
+                    "status": "unknown",
+                    "tanks": {
+                        "Type-17 Chi-ha": {
+                            "name": "Type-17 Chi-ha",
+                            "deployedCount": 9
+                        },
+                        "Type 17 O-I (proto.)": {
+                            "name": "Type 17 O-I (proto.)",
+                            "deployedCount": 3
+                        },
+                        "Type-17 Chi-I": {
+                            "name": "Type-17 Chi-I",
+                            "deployedCount": 5
+                        }
+                    }
+                },
+                "1st scout group": {
+                    "name": "1st scout group",
+                    "status": "unknown",
+                    "tanks": {
+                        "C-2": {
+                            "name": "C-2",
+                            "deployedCount": 2
+                        },
+                        "Type-17 Ke-Ha": {
+                            "name": "Type-17 Ke-Ha",
+                            "deployedCount": 3
+                        }
+                    }
                 }
             }
         }
@@ -425,22 +2653,22 @@
             "type": "company",
             "channel": 1166662029709414450,
             "contractors": 1,
-            "money": 2309418,
+            "money": 25112798,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 12,
-            "cannonTech": 10,
-            "armorTech": 11,
-            "suspensionTech": 9,
+            "engineTech": 13,
+            "cannonTech": 11,
+            "armorTech": 12,
+            "suspensionTech": 10,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none",
+            "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "Bartkowicz Motor Works Defence Force": {
                     "name": "Bartkowicz Motor Works Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -454,14 +2682,14 @@
             "type": "company",
             "channel": 1166662576130768967,
             "contractors": 1,
-            "money": 173835672,
+            "money": 135836337,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 15,
-            "cannonTech": 15,
-            "armorTech": 15,
-            "suspensionTech": 15,
+            "engineTech": 16,
+            "cannonTech": 16,
+            "armorTech": 16,
+            "suspensionTech": 16,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
@@ -469,10 +2697,42 @@
             "autoResearch": "true",
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "Aeroette Munitions Defence Force": {
                     "name": "Aeroette Munitions Defence Force",
                     "status": "unknown",
                     "tanks": {}
+                },
+                "501st Coastbreaker": {
+                    "name": "501st Coastbreaker",
+                    "status": "unknown",
+                    "tanks": {
+                        "SH-80 Geirvaldr": {
+                            "name": "SH-80 Geirvaldr",
+                            "deployedCount": 2
+                        },
+                        "M40-105": {
+                            "name": "M40-105",
+                            "deployedCount": 2
+                        },
+                        "PT25-95": {
+                            "name": "PT25-95",
+                            "deployedCount": 7
+                        },
+                        "PT25-95-FLAT": {
+                            "name": "PT25-95-FLAT",
+                            "deployedCount": 5
+                        }
+                    }
+                },
+                "69th Capital Control": {
+                    "name": "69th Capital Control",
+                    "status": "unknown",
+                    "tanks": {
+                        "B4-LL": {
+                            "name": "B4-LL",
+                            "deployedCount": 3
+                        }
+                    }
                 }
             }
         }
@@ -498,7 +2758,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Bastion Steelworks Defence Force": {
                     "name": "Bastion Steelworks Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -527,7 +2787,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Basilio Angelo Dynamic Systems Defence Force": {
                     "name": "Basilio Angelo Dynamic Systems Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -556,7 +2816,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Kquistlunds Motorworks Defence Force": {
                     "name": "Kquistlunds Motorworks Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -585,7 +2845,7 @@
             "autoResearch": "true",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Patch & Bits Inc Defence Force": {
                     "name": "Patch & Bits Inc Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -599,25 +2859,157 @@
             "type": "company",
             "channel": 1166664084733841441,
             "contractors": 1,
-            "money": 211980176,
+            "money": 236942631,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": 2.8500000000000014,
-            "engineTech": 15,
-            "cannonTech": 15,
-            "armorTech": 15,
-            "suspensionTech": 15,
+            "engineTech": 16,
+            "cannonTech": 16,
+            "armorTech": 16,
+            "suspensionTech": 16,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none",
+            "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "Zavark Industrial Kompany Defence Force": {
                     "name": "Zavark Industrial Kompany Defence Force",
                     "status": "unknown",
                     "tanks": {}
+                },
+                "capital raid 1": {
+                    "name": "capital raid 1",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        },
+                        "ZIK-AT 10.2": {
+                            "name": "ZIK-AT 10.2",
+                            "deployedCount": 2
+                        },
+                        "ZIK-Skout 10.2": {
+                            "name": "ZIK-Skout 10.2",
+                            "deployedCount": 4
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "capital raid 2": {
+                    "name": "capital raid 2",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        },
+                        "ZIK-Skout 10.2": {
+                            "name": "ZIK-Skout 10.2",
+                            "deployedCount": 4
+                        }
+                    }
+                },
+                "capital raid 3": {
+                    "name": "capital raid 3",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        },
+                        "ZIK-Skout 10.2": {
+                            "name": "ZIK-Skout 10.2",
+                            "deployedCount": 7
+                        },
+                        "ZIK-MAT 10": {
+                            "name": "ZIK-MAT 10",
+                            "deployedCount": 2
+                        },
+                        "POS H-12": {
+                            "name": "POS H-12",
+                            "deployedCount": 4
+                        },
+                        "POS H-16 v2": {
+                            "name": "POS H-16 v2",
+                            "deployedCount": 5
+                        }
+                    }
+                },
+                "capital raid 4": {
+                    "name": "capital raid 4",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        }
+                    }
+                },
+                "capital raid 5": {
+                    "name": "capital raid 5",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        }
+                    }
+                },
+                "capital raid 6": {
+                    "name": "capital raid 6",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        }
+                    }
+                },
+                "capital raid 7": {
+                    "name": "capital raid 7",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        }
+                    }
+                },
+                "capital raid 8": {
+                    "name": "capital raid 8",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        }
+                    }
+                },
+                "capital raid 9": {
+                    "name": "capital raid 9",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        }
+                    }
+                },
+                "capital raid 10": {
+                    "name": "capital raid 10",
+                    "status": "unknown",
+                    "tanks": {
+                        "ZIK-BOI Skout": {
+                            "name": "ZIK-BOI Skout",
+                            "deployedCount": 11
+                        }
+                    }
                 }
             }
         }
@@ -628,22 +3020,22 @@
             "type": "company",
             "channel": 1166664386539180122,
             "contractors": 1,
-            "money": 1050000,
+            "money": 6850000,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 7,
-            "cannonTech": 8,
-            "armorTech": 6,
-            "suspensionTech": 4,
+            "engineTech": 9,
+            "cannonTech": 10,
+            "armorTech": 8,
+            "suspensionTech": 6,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
-            "autoResearch": "false",
+            "autoResearch": "true",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Dragonfire Industries Defence Force": {
                     "name": "Dragonfire Industries Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -672,7 +3064,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "PARS Heavy Machineries Defence Force": {
                     "name": "PARS Heavy Machineries Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -686,25 +3078,183 @@
             "type": "company",
             "channel": 1166664874156380181,
             "contractors": 1,
-            "money": 252932658,
+            "money": 8152435083,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 15,
-            "cannonTech": 17,
-            "armorTech": 17,
-            "suspensionTech": 15,
+            "engineTech": 16,
+            "cannonTech": 18,
+            "armorTech": 18,
+            "suspensionTech": 16,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "none",
+            "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "AVM Ltd. Defence Force": {
                     "name": "AVM Ltd. Defence Force",
                     "status": "unknown",
                     "tanks": {}
+                },
+                "Division Red": {
+                    "name": "Division Red",
+                    "status": "unknown",
+                    "tanks": {
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 14
+                        },
+                        "Buy AVM Next Time [AV]": {
+                            "name": "Buy AVM Next Time [AV]",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "Division Yellow": {
+                    "name": "Division Yellow",
+                    "status": "unknown",
+                    "tanks": {
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "Division Blue": {
+                    "name": "Division Blue",
+                    "status": "unknown",
+                    "tanks": {
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "Division Black": {
+                    "name": "Division Black",
+                    "status": "unknown",
+                    "tanks": {
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 6
+                        },
+                        "Buy AVM Next Time [AV]": {
+                            "name": "Buy AVM Next Time [AV]",
+                            "deployedCount": 2
+                        }
+                    }
+                },
+                "Division Green": {
+                    "name": "Division Green",
+                    "status": "unknown",
+                    "tanks": {
+                        ".Nigelcore [AV]": {
+                            "name": ".Nigelcore [AV]",
+                            "deployedCount": 6
+                        }
+                    }
+                },
+                "Division Aqua": {
+                    "name": "Division Aqua",
+                    "status": "unknown",
+                    "tanks": {
+                        "Buy AVM Next Time [AV]": {
+                            "name": "Buy AVM Next Time [AV]",
+                            "deployedCount": 5
+                        }
+                    }
+                },
+                "Hwachan": {
+                    "name": "Hwachan",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV Invader": {
+                            "name": "AV Invader",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Xinsu": {
+                    "name": "Xinsu",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV Invader": {
+                            "name": "AV Invader",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Kumiagari": {
+                    "name": "Kumiagari",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV Invader": {
+                            "name": "AV Invader",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Zhong": {
+                    "name": "Zhong",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV Invader": {
+                            "name": "AV Invader",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Torobe": {
+                    "name": "Torobe",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV Invader": {
+                            "name": "AV Invader",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Unhuang": {
+                    "name": "Unhuang",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV Invader": {
+                            "name": "AV Invader",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Huang": {
+                    "name": "Huang",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV Invader": {
+                            "name": "AV Invader",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Naoshisajuku": {
+                    "name": "Naoshisajuku",
+                    "status": "unknown",
+                    "tanks": {
+                        "AV Invader": {
+                            "name": "AV Invader",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "Seong": {
+                    "name": "Seong",
+                    "status": "unknown",
+                    "tanks": {
+                        "Waffles cant aim [AV]": {
+                            "name": "Waffles cant aim [AV]",
+                            "deployedCount": 1
+                        }
+                    }
                 }
             }
         }
@@ -715,7 +3265,7 @@
             "type": "company",
             "channel": 1166665178142756864,
             "contractors": 1,
-            "money": -1985433,
+            "money": -4434627,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -730,7 +3280,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Wills Works Defence Force": {
                     "name": "Wills Works Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -759,7 +3309,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Vulcan Foundry Defence Force": {
                     "name": "Vulcan Foundry Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -773,22 +3323,22 @@
             "type": "company",
             "channel": 1166669159694868542,
             "contractors": 1,
-            "money": 30541115,
+            "money": 48765470,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 16,
-            "cannonTech": 16,
-            "armorTech": 16,
-            "suspensionTech": 15,
+            "engineTech": 17,
+            "cannonTech": 17,
+            "armorTech": 17,
+            "suspensionTech": 16,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "true",
             "autoResearch": "true",
-            "focus": "research",
+            "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "Ma\u0161in\u00e9rn\u00ed Spole\u010dnost Bernardova Defence Force": {
                     "name": "Ma\u0161in\u00e9rn\u00ed Spole\u010dnost Bernardova Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -817,7 +3367,7 @@
             "autoResearch": "true",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "H.S.J Defence Force": {
                     "name": "H.S.J Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -831,7 +3381,7 @@
             "type": "company",
             "channel": 1167449273110114374,
             "contractors": 1,
-            "money": -971825,
+            "money": -4429059,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -846,7 +3396,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Dakhtuva Motor Company Defence Force": {
                     "name": "Dakhtuva Motor Company Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -860,14 +3410,14 @@
             "type": "company",
             "channel": 1168050035347443794,
             "contractors": 1,
-            "money": -5786556,
+            "money": 73966801,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 14,
-            "cannonTech": 14,
-            "armorTech": 14,
-            "suspensionTech": 13,
+            "engineTech": 15,
+            "cannonTech": 15,
+            "armorTech": 15,
+            "suspensionTech": 14,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
@@ -875,26 +3425,68 @@
             "autoResearch": "true",
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "Clippit Manufacturing Defence Force": {
                     "name": "Clippit Manufacturing Defence Force",
                     "status": "unknown",
                     "tanks": {}
                 },
-                "The Funny": {
-                    "name": "The Funny",
+                "The Tomfoolery Train": {
+                    "name": "The Tomfoolery Train",
                     "status": "unknown",
                     "tanks": {
-                        "LT-23": {
-                            "name": "LT-23",
-                            "deployedCount": 2
+                        "LT-25-4": {
+                            "name": "LT-25-4",
+                            "deployedCount": 10
+                        },
+                        "LT-25-3": {
+                            "name": "LT-25-3",
+                            "deployedCount": 5
+                        },
+                        "LT-24": {
+                            "name": "LT-24",
+                            "deployedCount": 1
                         },
                         "LT-25": {
                             "name": "LT-25",
+                            "deployedCount": 1
+                        },
+                        "LT-25-2": {
+                            "name": "LT-25-2",
+                            "deployedCount": 2
+                        },
+                        "Shoisho's chances at winning": {
+                            "name": "Shoisho's chances at winning",
+                            "deployedCount": 1
+                        },
+                        "LT-26 AT": {
+                            "name": "LT-26 AT",
                             "deployedCount": 5
                         },
+                        "MSB-Z \u010d. 18-A": {
+                            "name": "MSB-Z \u010d. 18-A",
+                            "deployedCount": 5
+                        },
+                        "MSB-Z \u010d. 12-A": {
+                            "name": "MSB-Z \u010d. 12-A",
+                            "deployedCount": 1
+                        }
+                    }
+                },
+                "The Chenzhou Tea Party": {
+                    "name": "The Chenzhou Tea Party",
+                    "status": "unknown",
+                    "tanks": {
                         "LT-25-4": {
-                            "name": "LT-24",
-                            "deployedCount": 8
+                            "name": "LT-25-4",
+                            "deployedCount": 5
+                        },
+                        "LT-26 AT": {
+                            "name": "LT-26 AT",
+                            "deployedCount": 4
+                        },
+                        "Shoisho's chances at winning": {
+                            "name": "Shoisho's chances at winning",
+                            "deployedCount": 1
                         }
                     }
                 }
@@ -922,7 +3514,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Volxl Defence agency Defence Force": {
                     "name": "Volxl Defence agency Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -951,66 +3543,8 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "SMW Defence Force": {
                     "name": "SMW Defence Force",
-                    "status": "unknown",
-                    "tanks": {}
-                }
-            }
-        }
-    ],
-    "<company name>": [
-        {
-            "displayName": "<company name>",
-            "type": "company",
-            "channel": 1168416506317635627,
-            "contractors": 0,
-            "money": 3000000,
-            "idealTonnage": "50",
-            "currentTonnage": "50",
-            "unspentTonnage": "50",
-            "engineTech": 4,
-            "cannonTech": 4,
-            "armorTech": 4,
-            "suspensionTech": 4,
-            "engineResearchFunding": 22000,
-            "cannonResearchFunding": 22000,
-            "armorResearchFunding": 22000,
-            "autoBuild": "false",
-            "autoResearch": "false",
-            "focus": "none",
-            "regiments": {
-                "Defence Force": {
-                    "name": "<company name> Defence Force",
-                    "status": "unknown",
-                    "tanks": {}
-                }
-            }
-        }
-    ],
-    "<IronShield Defence Contractors>": [
-        {
-            "displayName": "<IronShield Defence Contractors>",
-            "type": "company",
-            "channel": 1168417874336034847,
-            "contractors": 0,
-            "money": 2600000,
-            "idealTonnage": "50",
-            "currentTonnage": "50",
-            "unspentTonnage": "50",
-            "engineTech": 4,
-            "cannonTech": 4,
-            "armorTech": 4,
-            "suspensionTech": 4,
-            "engineResearchFunding": 22000,
-            "cannonResearchFunding": 22000,
-            "armorResearchFunding": 22000,
-            "autoBuild": "false",
-            "autoResearch": "false",
-            "focus": "none",
-            "regiments": {
-                "Defence Force": {
-                    "name": "<IronShield Defence Contractors> Defence Force",
                     "status": "unknown",
                     "tanks": {}
                 }
@@ -1023,7 +3557,7 @@
             "type": "company",
             "channel": 1168425728585519136,
             "contractors": 0,
-            "money": 25399478,
+            "money": 16285566,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -1038,7 +3572,7 @@
             "autoResearch": "true",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Ironshield Defence Defence Force": {
                     "name": "Ironshield Defence Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -1052,14 +3586,14 @@
             "type": "company",
             "channel": 1168427677221404732,
             "contractors": 0,
-            "money": 20780952,
+            "money": 72651767,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 16,
-            "cannonTech": 15,
-            "armorTech": 15,
-            "suspensionTech": 15,
+            "engineTech": 17,
+            "cannonTech": 16,
+            "armorTech": 16,
+            "suspensionTech": 16,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
@@ -1067,7 +3601,7 @@
             "autoResearch": "true",
             "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "Aiko Motors Arsenal Defence Force": {
                     "name": "Aiko Motors Arsenal Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -1096,7 +3630,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Lydensvark Corp. Defence Force": {
                     "name": "Lydensvark Corp. Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -1125,7 +3659,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Brzoza Armoured Vehicles Defence Force": {
                     "name": "Brzoza Armoured Vehicles Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -1139,52 +3673,23 @@
             "type": "company",
             "channel": 1179360115720212522,
             "contractors": 0,
-            "money": 14327709,
+            "money": 47512135,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 10,
-            "cannonTech": 10,
-            "armorTech": 10,
-            "suspensionTech": 10,
+            "engineTech": 11,
+            "cannonTech": 11,
+            "armorTech": 11,
+            "suspensionTech": 11,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "research",
+            "focus": "building",
             "regiments": {
-                "Defence Force": {
+                "TEKKTH Productions Defence Force": {
                     "name": "TEKKTH Productions Defence Force",
-                    "status": "unknown",
-                    "tanks": {}
-                }
-            }
-        }
-    ],
-    "<R.A.M>": [
-        {
-            "displayName": "<R.A.M>",
-            "type": "company",
-            "channel": 1179410541081546832,
-            "contractors": 0,
-            "money": 3000000,
-            "idealTonnage": "50",
-            "currentTonnage": "50",
-            "unspentTonnage": "50",
-            "engineTech": 0,
-            "cannonTech": 0,
-            "armorTech": 0,
-            "suspensionTech": 0,
-            "engineResearchFunding": 22000,
-            "cannonResearchFunding": 22000,
-            "armorResearchFunding": 22000,
-            "autoBuild": "false",
-            "autoResearch": "false",
-            "focus": "none",
-            "regiments": {
-                "Defence Force": {
-                    "name": "<R.A.M> Defence Force",
                     "status": "unknown",
                     "tanks": {}
                 }
@@ -1212,7 +3717,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "R.A.M Defence Force": {
                     "name": "R.A.M Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -1241,7 +3746,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Tobuzoku Heavy Industries Defence Force": {
                     "name": "Tobuzoku Heavy Industries Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -1270,7 +3775,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Steelshire Manufacturing Defence Force": {
                     "name": "Steelshire Manufacturing Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -1299,7 +3804,7 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "GRE Tanks Defence Force": {
                     "name": "GRE Tanks Defence Force",
                     "status": "unknown",
                     "tanks": {}
@@ -1328,8 +3833,66 @@
             "autoResearch": "false",
             "focus": "none",
             "regiments": {
-                "Defence Force": {
+                "Darwin mil agency Defence Force": {
                     "name": "Darwin mil agency Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
+        }
+    ],
+    "Goslingmetal": [
+        {
+            "displayName": "Goslingmetal",
+            "type": "company",
+            "channel": 1186427386783342633,
+            "contractors": 0,
+            "money": 3000000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 0,
+            "cannonTech": 0,
+            "armorTech": 0,
+            "suspensionTech": 0,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "false",
+            "focus": "none",
+            "regiments": {
+                "Goslingmetal Defence Force": {
+                    "name": "Goslingmetal Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
+        }
+    ],
+    "Goslingmetall": [
+        {
+            "displayName": "Goslingmetall",
+            "type": "company",
+            "channel": 1186428226369753180,
+            "contractors": 0,
+            "money": 2200000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 0,
+            "cannonTech": 0,
+            "armorTech": 1,
+            "suspensionTech": 0,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "true",
+            "focus": "none",
+            "regiments": {
+                "Goslingmetall Defence Force": {
+                    "name": "Goslingmetall Defence Force",
                     "status": "unknown",
                     "tanks": {}
                 }

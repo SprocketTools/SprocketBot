@@ -1,4 +1,7 @@
 import datetime
+
+import numpy
+
 # import asyncio
 utc = datetime.timezone.utc
 
@@ -41,6 +44,7 @@ if platform.system() == "Windows":
     FUNFACTSpath = "fun-facts.json"
     PRODUCTIONpath = "productionPaths.json"
     CONSOLELOGpath = "log.txt"
+    REGIMENTSOUTpath = "\\regimentsCatalog\\"
     CONTESTSpath = "contestInfo.json"
     client_id = '1139195875994910740'
     token = secretsList[1] # testing bot token
@@ -69,6 +73,7 @@ else:
     FUNFACTSpath = directory + "fun-facts.json"
     CONSOLELOGpath = directory + "log.txt"
     CONTESTSpath = directory + "contestInfo.json"
+    REGIMENTSOUTpath = directory + "regimentsCatalog/"
     client_id = "1137847253114040330"
     token = secretsList[0] # official bot token
     channel_id = '1142053482371756062'
@@ -233,7 +238,7 @@ costToBuyFactory = 5000000
 researchSpeed = 0.725
 companyWeeksToResearch = 0.51
 strategyCost = 50000
-advanceTime = True
+advanceTime = False
 themes = ["Steampunk or Interwar", "Interwar through Early WWII", "Early WWII", "Middle of WWII", "Closing of WWII", "Postwar", "Early Cold War"]
 themeCount = len(themes)
 focusSchools = ["madurai", "vazarin", "naramon", "unairu", "zenurik"]
@@ -874,12 +879,13 @@ async def deployTank(ctx, tankCount: int, *, tankName):
         inStorage = inventoryList[country][tankName]["stored"]
         if int(inStorage) >= int(tankCount):
             try:
-                print(variablesList[country][0]["regiments"][regimentName]["tanks"][tankName]["count"])
+                print(variablesList[country][0]["regiments"][regimentName]["tanks"][tankName]["deployedCount"])
             except Exception:
                 variablesList[country][0]["regiments"][regimentName]["tanks"][tankName] = {"name": tankName, "deployedCount": 0}
             inventoryList[country][tankName]["stored"] = int(inStorage) - int(tankCount)
             existingTankCount = int(variablesList[country][0]["regiments"][regimentName]["tanks"][tankName]["deployedCount"])
-            variablesList[country][0]["regiments"][regimentName]["tanks"][tankName]["deployedCount"] = existingTankCount + int(tankCount)
+            variablesList[country][0]["regiments"][regimentName]["tanks"][tankName]["deployedCount"] = int(existingTankCount) + int(tankCount)
+
             await ctx.send("Successfully deployed " + str(tankCount) + "x " + tankName + "!")
         else:
             await ctx.send("\"The commander said to deploy " + str(tankCount) + " of these... wait, where did they go?\" \n \n Make sure you actually have sufficient tanks in storage before trying to deploy them.")
@@ -1435,6 +1441,28 @@ async def listRegiments(ctx):
                           color=discord.Color.random())
     await ctx.send(embed=embed)
 
+@bot.command()
+async def listRegimentsPrint(ctx):
+    import numpy
+    user_id = ctx.author.id
+    appendation = ""
+    description = ""
+    for country,countryInfo in variablesList.items():
+        for regimentName, regimentInfo in variablesList[country][0]["regiments"].items():
+
+            totalTankCount = 0
+            for tankName, tankInfo in variablesList[country][0]["regiments"][regimentName]["tanks"].items():
+                totalTankCount += tankInfo["deployedCount"]
+                tankCount = tankInfo["deployedCount"]
+                if totalTankCount > 0:
+                    appendation = f"{country},{regimentName},{tankName},{tankCount}\n"
+                    description = description.__add__(appendation)
+
+    print(description)
+    file = open(f"{REGIMENTSOUTpath}everything.csv", "w", encoding="utf-8")
+    print(description)
+    file.write(description)
+    file.close()
 
 @bot.command()
 @commands.has_role('Moderator')
@@ -1449,6 +1477,8 @@ async def troll(ctx, channelin: str, *, message):
         for attachment in ctx.message.attachments:
             file = await attachment.to_file()
             await channel.send(file=file, content="")
+
+
 
 @bot.command()
 async def postContract(ctx, *, message):
@@ -2158,6 +2188,120 @@ async def flipGeometry(ctx):
         stringOut = json.dumps(blueprintData, indent=4)
         data = io.BytesIO(stringOut.encode())
         await ctx.send(file=discord.File(data, f'{name}.blueprint'))
+
+@bot.command()
+async def getFileType(ctx):
+    for attachment in ctx.message.attachments:
+        await ctx.send(f"This is a {attachment.content_type}!")
+@bot.command()
+async def tunePowertrain(ctx):
+    import asyncio
+    for attachment in ctx.message.attachments:
+        if "image" in attachment.content_type:
+            await ctx.reply("Your tank is very pretty, but maybe send me the **actual** blueprint that I can do stuff with? <:caatt:1151402846202376212>")
+        blueprintData = json.loads(await attachment.read())
+        name = blueprintData["header"]["name"]
+        tankName = blueprintData["header"]["name"]
+        era = blueprintData["header"]["era"]
+        weight = float(blueprintData["header"]["mass"])/1000
+        climbAngle = numpy.radians(45)
+        gearCount = 8
+        # eraBaseRPM is the ideal RPM when displacement is 1L/cyl
+        eraPowerMod = 1
+        flatnessScalar = 0.6
+        eraResistance = 1
+        eraBaseRPM = 4100
+        sprocketDiameter = 0.6
+        initialGear = 6.0
+        finalGear = 0.5
+        finalGearAdjustment = 1
+        #dispPerCyl = 0
+        if era == "midwar":
+            eraPowerMod = 0.92
+            eraResistance = 1.25
+            eraBaseRPM = 3800
+        if era == "earlywar":
+            eraPowerMod = 0.72
+            eraResistance = 1.5
+            eraBaseRPM = 3100
+        if era == "interwar":
+            eraPowerMod = 0.586
+            eraResistance = 3
+            eraBaseRPM = 2700
+            gearCount = 6
+        if era == "WWI":
+            eraPowerMod = 0.23
+            eraResistance = 4
+            eraBaseRPM = 1500
+            gearCount = 3
+            finalGearAdjustment = 0.95
+
+        x = 0
+        for iteration in blueprintData["blueprints"]:
+            partName = blueprintData["blueprints"][x]["id"]
+            partString = blueprintData["blueprints"][x]["data"]
+
+            partString.replace("\\", "")
+            partInfo = json.loads(partString)
+            clonePartInfo = copy.deepcopy(partInfo)
+            if partName == "ENG":
+                name = partInfo["name"]
+                displacement = round(float(partInfo["cylinders"]) * float(partInfo["cylinderDisplacement"]), 2)
+                cylinders = int(partInfo["cylinders"])
+                dispPerCyl = float(partInfo["cylinderDisplacement"])
+                partInfo["targetMaxRPM"] = eraBaseRPM*(dispPerCyl**-0.3)
+                maxRPM = int(partInfo["targetMaxRPM"])
+            if partName == "TRK":
+                sprocketDiameter = partInfo["wheels"][0]["diameter"]
+                print(sprocketDiameter)
+
+
+            x += 1
+        idealRPM = eraBaseRPM*(dispPerCyl**-0.3)/1.01
+        horsepower = 40*(dispPerCyl**0.7)*cylinders*eraPowerMod
+        topSpeed = (13.33 * (horsepower ** 0.5) ) / ( (eraResistance ** 0.8) * ((weight) ** 0.5) )
+        Torque = 9.5492*746*horsepower/idealRPM
+        initialGear = (11*( (sprocketDiameter/2)*(weight*1000)*9.81*climbAngle)/Torque)/100
+        finalGear = round(58*numpy.pi*idealRPM*sprocketDiameter*finalGearAdjustment/(10000*topSpeed), 3)
+        print(topSpeed)
+        import io
+        await ctx.send(f"Your top speed should be about {round(topSpeed)} km/h. \nSet your upshift RPM to {int(idealRPM)}RPM and your maximum RPM to the highest setting available.\nEstimated max horsepower is {round(horsepower)}HP\n\nDownload the .blueprint attached below to get your updated transmission!")
+
+
+
+        # "GM1" = "number of gears" - 1
+        # "ideal flatness" = (("first gear"/"last gear")^(1/("GM1"))-1)*100
+        # "flatness" = "ideal flatness" * "scalar"
+        # "B-value" = ("first gear"/("last gear"*(1+"flatness"/100)^("GM1")))^(1/((("GM1")^2+("GM1"))/2))
+
+        # each gear ratio is:
+        # "previous gear" / ((1+("flatness"/100))*("B-value"^("number of gears" - "current gear")))
+
+        gearCountM1 = gearCount - 1
+        idealFlatness = ((initialGear/finalGear)**(1/(gearCountM1))-1)*100
+        flatness = idealFlatness * flatnessScalar
+        Bvalue = (initialGear/(finalGear*(1+flatness/100)**(gearCountM1)))**(1/(((gearCountM1)**2+(gearCountM1))/2))
+        transmissionGears = [initialGear]
+        x = 1
+        transmissionGears[0] = round(initialGear, 2)
+        while x < gearCount:
+            transmissionGears.append(round(float(transmissionGears[x-1])/((1+(flatness/100))*(Bvalue**(gearCount - x))), 3))
+            x += 1
+        x = 0
+        for iteration in blueprintData["blueprints"]:
+            partName = blueprintData["blueprints"][x]["id"]
+            partString = blueprintData["blueprints"][x]["data"]
+            partString.replace("\\", "")
+            partInfo = json.loads(partString)
+            clonePartInfo = copy.deepcopy(partInfo)
+            if partName == "TSN":
+                partInfo["d"] = list(transmissionGears)
+                partInfo["r"] = list(transmissionGears)
+            blueprintData["blueprints"][x]["data"] = json.dumps(partInfo)
+            x += 1
+        stringOut = json.dumps(blueprintData, indent=4)
+        data = io.BytesIO(stringOut.encode())
+        await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
 
 @bot.command()
 async def bakeGeometry(ctx):

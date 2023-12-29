@@ -1,159 +1,186 @@
 {
     "Bartkowicz Motor Works": {
         "Line 1": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 9,
+            "currentTank": "BMW CL - 6 S11",
+            "currentTankWeight": 4,
             "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 9
+            "nextTank": "BMW CL - 6 S11",
+            "nextTankWeight": 4
         },
         "Line 2": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 9,
+            "currentTank": "BMW CL - 6 S11",
+            "currentTankWeight": 4,
             "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 9
+            "nextTank": "BMW CL - 6 S11",
+            "nextTankWeight": 4
         },
         "BMW Icematille Branch": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 9,
+            "currentTank": "BMW CL - 6 S11",
+            "currentTankWeight": 4,
             "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 9
+            "nextTank": "BMW CL - 6 S11",
+            "nextTankWeight": 4
         },
         "BMW Posteria Factory #1": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 9,
+            "currentTank": "BMW CL - 6 S11",
+            "currentTankWeight": 4,
             "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 9
+            "nextTank": "BMW CL - 6 S11",
+            "nextTankWeight": 4
         },
         "BMW Posteria Factory #2": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 9,
+            "currentTank": "BMW CL - 6 S11",
+            "currentTankWeight": 4,
             "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 9
+            "nextTank": "BMW CL - 6 S11",
+            "nextTankWeight": 4
         },
         "R4E2 Bonus Line": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": "100",
-            "currentTank": "",
-            "currentTankWeight": 9,
+            "currentTank": "BMW CL - 6 S11",
+            "currentTankWeight": 4,
             "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 9
+            "nextTank": "BMW CL - 6 S11",
+            "nextTankWeight": 4
         }
     },
     "Aeroette Munitions": {
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "PT25-95-FLAT",
-            "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
-            "nextTankWeight": 26
+            "currentTank": "M40-105",
+            "currentTankWeight": 39,
+            "currentTankProgress": 0.6612923542007809,
+            "nextTank": "M40-105",
+            "nextTankWeight": 39
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "PT25-95-FLAT",
-            "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
-            "nextTankWeight": 26
+            "currentTank": "M40-105",
+            "currentTankWeight": 39,
+            "currentTankProgress": 0.6612923542007809,
+            "nextTank": "M40-105",
+            "nextTankWeight": 39
         },
         "Line 3 duh": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "PT25-95-FLAT",
-            "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
-            "nextTankWeight": 26
+            "currentTank": "B4-LL",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "B4-LL",
+            "nextTankWeight": 3
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "PT25-95-FLAT",
-            "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
-            "nextTankWeight": 26
+            "currentTank": "B4-LL",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "B4-LL",
+            "nextTankWeight": 3
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "PT25-95-FLAT",
+            "currentTank": "PT25-95",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
+            "currentTankProgress": 0.1433650648010093,
+            "nextTank": "PT25-95",
             "nextTankWeight": 26
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "PT25-95-FLAT",
+            "currentTank": "PT25-95",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
+            "currentTankProgress": 0.1433650648010093,
+            "nextTank": "PT25-95",
             "nextTankWeight": 26
         },
         "Line 7": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "PT25-95-FLAT",
+            "currentTank": "PT25-95",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
+            "currentTankProgress": 0.1433650648010093,
+            "nextTank": "PT25-95",
             "nextTankWeight": 26
         },
         "R4E2 Bonus Line": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "PT25-95-FLAT",
+            "currentTank": "PT25-95",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
+            "currentTankProgress": 0.1433650648010093,
+            "nextTank": "PT25-95",
             "nextTankWeight": 26
         },
         "Line 9": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "PT25-95-FLAT",
+            "currentTank": "PT25-95",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
+            "currentTankProgress": 0.1433650648010093,
+            "nextTank": "PT25-95",
             "nextTankWeight": 26
         },
         "Line 10": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "PT25-95-FLAT",
+            "currentTank": "PT25-95",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.14213159490600363,
-            "nextTank": "PT25-95-FLAT",
+            "currentTankProgress": 0.1433650648010093,
+            "nextTank": "PT25-95",
             "nextTankWeight": 26
         },
         "Line 11": {
-            "status": "under construction",
-            "factoryHealth": 0.12,
-            "currentTank": "PT25-95-FLAT",
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "PT25-95",
             "currentTankWeight": 26,
-            "currentTankProgress": 0,
-            "nextTank": "PT25-95-FLAT",
+            "currentTankProgress": 0.1433650648010093,
+            "nextTank": "PT25-95",
             "nextTankWeight": 26
+        },
+        "Line 12": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "B4-LL",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "B4-LL",
+            "nextTankWeight": 3
+        },
+        "Line 13": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "M40-105",
+            "currentTankWeight": 39,
+            "currentTankProgress": 0.6612923542007809,
+            "nextTank": "M40-105",
+            "nextTankWeight": 39
+        },
+        "Line 14": {
+            "status": "under construction",
+            "factoryHealth": 0.6,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
         }
     },
     "Bastion Steelworks": {
@@ -276,123 +303,159 @@
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "ZIK-BOI Skout",
-            "currentTankWeight": 1,
-            "currentTankProgress": 0,
-            "nextTank": "ZIK-BOI Skout",
-            "nextTankWeight": 1
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.6295467263570229,
+            "nextTank": "",
+            "nextTankWeight": 17
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "ZIK-BOI Skout",
-            "currentTankWeight": 1,
+            "currentTank": "ZIK-MAT 10",
+            "currentTankWeight": 28,
             "currentTankProgress": 0,
-            "nextTank": "ZIK-BOI Skout",
-            "nextTankWeight": 1
+            "nextTank": "",
+            "nextTankWeight": 28
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "POS H-12 v2",
-            "currentTankWeight": 32,
-            "currentTankProgress": 0.6869389998168165,
-            "nextTank": "POS H-12 v2",
-            "nextTankWeight": 32
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.6295467263570229,
+            "nextTank": "",
+            "nextTankWeight": 17
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "POS H-12 v2",
-            "currentTankWeight": 32,
-            "currentTankProgress": 0.6869389998168165,
-            "nextTank": "POS H-12 v2",
-            "nextTankWeight": 32
+            "currentTank": "POS H-16 v2",
+            "currentTankWeight": 44,
+            "currentTankProgress": 0.3336150527111783,
+            "nextTank": "",
+            "nextTankWeight": 44
         },
         "Illustravit 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "POS H-12 v2",
-            "currentTankWeight": 32,
-            "currentTankProgress": 0.5342858887464128,
-            "nextTank": "POS H-12 v2",
-            "nextTankWeight": 32
+            "currentTank": "POS H-16 v2",
+            "currentTankWeight": 44,
+            "currentTankProgress": 0.16680752635558915,
+            "nextTank": "",
+            "nextTankWeight": 44
         },
         "Ghania 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "POS H-12 v2",
-            "currentTankWeight": 32,
-            "currentTankProgress": 0.5342858887464128,
-            "nextTank": "POS H-12 v2",
-            "nextTankWeight": 32
+            "currentTank": "POS H-16 v2",
+            "currentTankWeight": 44,
+            "currentTankProgress": 0.16680752635558915,
+            "nextTank": "",
+            "nextTankWeight": 44
         },
         "Bugoslav 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "POS H-12 v2",
-            "currentTankWeight": 32,
-            "currentTankProgress": 0.6869389998168165,
-            "nextTank": "POS H-12 v2",
-            "nextTankWeight": 32
+            "currentTank": "POS H-16 v2",
+            "currentTankWeight": 44,
+            "currentTankProgress": 0.3336150527111783,
+            "nextTank": "",
+            "nextTankWeight": 44
         },
         "Posterian 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "POS H-12 v2",
-            "currentTankWeight": 32,
-            "currentTankProgress": 0.5342858887464128,
-            "nextTank": "POS H-12 v2",
-            "nextTankWeight": 32
+            "currentTank": "POS H-16 v2",
+            "currentTankWeight": 44,
+            "currentTankProgress": 0.16680752635558915,
+            "nextTank": "",
+            "nextTankWeight": 44
         },
         "R4E2 Bonus Line": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "ZIK-MAT 10",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.7854499755637786,
-            "nextTank": "ZIK-MAT 10",
-            "nextTankWeight": 28
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.8393956351426972,
+            "nextTank": "",
+            "nextTankWeight": 17
         },
         "Shoisho": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "ZIK-AT 10.2",
-            "currentTankWeight": 30,
-            "currentTankProgress": 0.8095068484279377,
-            "nextTank": "ZIK-AT 10.2",
-            "nextTankWeight": 30
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.6295467263570229,
+            "nextTank": "",
+            "nextTankWeight": 17
         },
         "bababoey": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "ZIK-MAT 10",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.6981777560566921,
-            "nextTank": "ZIK-MAT 10",
-            "nextTankWeight": 28
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 17
         },
         "babayaga": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "POS H-16 v2",
+            "currentTankWeight": 44,
+            "currentTankProgress": 0.3336150527111783,
+            "nextTank": "",
+            "nextTankWeight": 44
+        },
+        "oogabooga": {
             "status": "building",
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10.2",
             "currentTankWeight": 17,
             "currentTankProgress": 0.8393956351426972,
-            "nextTank": "ZIK-Skout 10.2",
+            "nextTank": "",
             "nextTankWeight": 17
         },
-        "oogabooga": {
+        "oofa": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "POS H-12 v2",
-            "currentTankWeight": 32,
-            "currentTankProgress": 0.5342858887464128,
-            "nextTank": "POS H-12 v2",
-            "nextTankWeight": 32
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.8393956351426972,
+            "nextTank": "",
+            "nextTankWeight": 17
         },
-        "oofa": {
+        "breh": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.6295467263570229,
+            "nextTank": "",
+            "nextTankWeight": 17
+        },
+        "wat": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.8393956351426972,
+            "nextTank": "",
+            "nextTankWeight": 17
+        },
+        "hehe": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "ZIK-Skout 10.2",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.2098489087856743,
+            "nextTank": "",
+            "nextTankWeight": 17
+        },
+        "abuh": {
             "status": "under construction",
-            "factoryHealth": 0.56,
+            "factoryHealth": 0.6,
             "currentTank": "",
             "currentTankWeight": 0,
             "currentTankProgress": 0,
@@ -406,7 +469,7 @@
             "factoryHealth": 1,
             "currentTank": "7.5T Flatbed Transporter",
             "currentTankWeight": 7.5,
-            "currentTankProgress": 0.6666666666666666,
+            "currentTankProgress": 0.3333333333333333,
             "nextTank": "7.5T Flatbed Transporter",
             "nextTankWeight": 7.5
         },
@@ -415,7 +478,7 @@
             "factoryHealth": 1,
             "currentTank": "7.5T Flatbed Transporter",
             "currentTankWeight": 7.5,
-            "currentTankProgress": 0.6666666666666666,
+            "currentTankProgress": 0.3333333333333333,
             "nextTank": "7.5T Flatbed Transporter",
             "nextTankWeight": 7.5
         },
@@ -424,7 +487,7 @@
             "factoryHealth": 1,
             "currentTank": "7.5T Flatbed Transporter",
             "currentTankWeight": 7.5,
-            "currentTankProgress": 0.6666666666666666,
+            "currentTankProgress": 0.3333333333333333,
             "nextTank": "7.5T Flatbed Transporter",
             "nextTankWeight": 7.5
         },
@@ -433,7 +496,7 @@
             "factoryHealth": "100",
             "currentTank": "7.5T Flatbed Transporter",
             "currentTankWeight": 7.5,
-            "currentTankProgress": 0.6666666666666666,
+            "currentTankProgress": 0.3333333333333333,
             "nextTank": "7.5T Flatbed Transporter",
             "nextTankWeight": 7.5
         }
@@ -471,83 +534,83 @@
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Cheerio": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Shoisho": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Nunatuniq": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Aina Kiko": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Illustravit": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Landepunkt": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "R4E2 Bonus Line": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "Buy AVM Next Time [AV]",
-            "currentTankWeight": 48,
-            "currentTankProgress": 0.8332812532550051,
-            "nextTank": "",
-            "nextTankWeight": 48
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Ard Ghania": {
             "status": "building",
@@ -561,58 +624,94 @@
         "Argunshire": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "AV Invader",
-            "currentTankWeight": 3,
-            "currentTankProgress": 0.8687516706762897,
-            "nextTank": "AV Invader",
-            "nextTankWeight": 3
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
         },
         "Austrondia": {
-            "status": "under construction",
-            "factoryHealth": 0.9199999999999998,
-            "currentTank": "",
-            "currentTankWeight": 0,
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
             "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 0
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
+        },
+        "Posteria": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Waffles cant aim [AV]",
+            "currentTankWeight": 13,
+            "currentTankProgress": 0,
+            "nextTank": "Waffles cant aim [AV]",
+            "nextTankWeight": 13
+        },
+        "Bugoslavia": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Waffles cant aim [AV]",
+            "currentTankWeight": 13,
+            "currentTankProgress": 0,
+            "nextTank": "Waffles cant aim [AV]",
+            "nextTankWeight": 13
+        },
+        "AVM Ltd.": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "AV 26L",
+            "currentTankWeight": 2,
+            "currentTankProgress": 0,
+            "nextTank": "AV 26L",
+            "nextTankWeight": 2
+        },
+        "Zavark": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Waffles cant aim [AV]",
+            "currentTankWeight": 13,
+            "currentTankProgress": 0,
+            "nextTank": "Waffles cant aim [AV]",
+            "nextTankWeight": 13
         }
     },
     "Wills Works": {
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "ZTD-3A",
-            "currentTankWeight": 24,
-            "currentTankProgress": 0.3000600120024005,
-            "nextTank": "ZTD-3A",
-            "nextTankWeight": 24
+            "currentTank": "2.5T Transport Truck",
+            "currentTankWeight": 2.5,
+            "currentTankProgress": 0,
+            "nextTank": "2.5T Transport Truck",
+            "nextTankWeight": 2.5
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "ZTD-2B",
-            "currentTankWeight": 34,
-            "currentTankProgress": 0.6433166547533953,
-            "nextTank": "ZTD-2B",
-            "nextTankWeight": 34
+            "currentTank": "2.5T Transport Truck",
+            "currentTankWeight": 2.5,
+            "currentTankProgress": 0,
+            "nextTank": "2.5T Transport Truck",
+            "nextTankWeight": 2.5
         },
         "R4E2 Bonus Line": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": "100",
-            "currentTank": "ZL-1A",
-            "currentTankWeight": 13,
+            "currentTank": "2.5T Transport Truck",
+            "currentTankWeight": 2.5,
             "currentTankProgress": 0,
-            "nextTank": "ZL-1A",
-            "nextTankWeight": 13
+            "nextTank": "2.5T Transport Truck",
+            "nextTankWeight": 2.5
         },
         "F1": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 0,
+            "currentTank": "2.5T Transport Truck",
+            "currentTankWeight": 2.5,
             "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 0
+            "nextTank": "2.5T Transport Truck",
+            "nextTankWeight": 2.5
         }
     },
     "Vulcan Foundry": {
@@ -648,209 +747,245 @@
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.01927435893482183,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.33348154735437974,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.3662128197616147,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.33348154735437974,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line name": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.03854871786964366,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.33348154735437974,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.34693846082679286,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.33348154735437974,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.3662128197616147,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.33348154735437974,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.05782307680446549,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.6669630947087595,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.01927435893482183,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.33348154735437974,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line 7": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.05782307680446549,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.6669630947087595,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line 8": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0.3662128197616147,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.33348154735437974,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "R4E2 Bonus Line": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "MSB-Z \u010d. 15-A Citadela",
-            "currentTankWeight": 64,
-            "currentTankProgress": 0,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0.33348154735437974,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
         },
         "Line 9": {
             "status": "building",
             "factoryHealth": 1,
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
+        },
+        "Line X": {
+            "status": "building",
+            "factoryHealth": 1,
             "currentTank": "MSB-Z \u010d. 15-A Citadela",
             "currentTankWeight": 64,
-            "currentTankProgress": 0.13492051254375279,
-            "nextTank": "MSB-Z \u010d. 15-A Citadela",
-            "nextTankWeight": 64
+            "currentTankProgress": 0.9829923056759136,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
+        },
+        "Line 11": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "MSB-Z \u010d. 15-A Citadela",
+            "currentTankWeight": 64,
+            "currentTankProgress": 0.9829923056759136,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
+        },
+        "Line 12": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "MSB-Z \u010d. 18-A",
+            "currentTankWeight": 11,
+            "currentTankProgress": 0,
+            "nextTank": "MSB-Z \u010d. 18-A",
+            "nextTankWeight": 11
+        },
+        "Line 13": {
+            "status": "under construction",
+            "factoryHealth": 0.96,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
         }
     },
     "aina-kiko": {
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K46 RKS",
-            "currentTankWeight": 22,
-            "currentTankProgress": 0.9834775767112506,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.6946760031121485,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K46 RKS",
-            "currentTankWeight": 22,
-            "currentTankProgress": 0.9834775767112506,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.6946760031121485,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K46 RKS",
-            "currentTankWeight": 22,
-            "currentTankProgress": 0.9834775767112506,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.6946760031121485,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K46 RKS",
-            "currentTankWeight": 22,
-            "currentTankProgress": 0.4371011452050003,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.2778704012448594,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K46 RKS",
-            "currentTankWeight": 22,
-            "currentTankProgress": 0.4371011452050003,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.2778704012448594,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K Isopod",
-            "currentTankWeight": 13,
-            "currentTankProgress": 0.9877163996839308,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.6946760031121485,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Line 7": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K Isopod",
-            "currentTankWeight": 13,
-            "currentTankProgress": 0.9877163996839308,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.6946760031121485,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Line 8": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K Isopod",
-            "currentTankWeight": 13,
-            "currentTankProgress": 0.9877163996839308,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.6946760031121485,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "neko nya": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K Isopod",
-            "currentTankWeight": 13,
-            "currentTankProgress": 0.4489619998563322,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.4168056018672891,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Bugo Slave Works": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K Isopod",
-            "currentTankWeight": 13,
-            "currentTankProgress": 0.9877163996839308,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.6946760031121485,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Knights of Keeping Kiko": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K46 RKS",
-            "currentTankWeight": 22,
-            "currentTankProgress": 0.6010140746568754,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.4168056018672891,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Line Omerga": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "A-K46 RKS",
-            "currentTankWeight": 22,
-            "currentTankProgress": 0.7649270041087505,
+            "currentTank": "A-K Giant Isopod",
+            "currentTankWeight": 26,
+            "currentTankProgress": 0.5557408024897188,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
@@ -859,7 +994,7 @@
             "factoryHealth": 1,
             "currentTank": "A-K Giant Isopod",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.0463117335408099,
+            "currentTankProgress": 0.9725464043570079,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
@@ -868,7 +1003,7 @@
             "factoryHealth": 1,
             "currentTank": "A-K Giant Isopod",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.0463117335408099,
+            "currentTankProgress": 0.9725464043570079,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
@@ -877,7 +1012,7 @@
             "factoryHealth": 1,
             "currentTank": "A-K Giant Isopod",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.0463117335408099,
+            "currentTankProgress": 0.9725464043570079,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
@@ -886,13 +1021,13 @@
             "factoryHealth": 1,
             "currentTank": "A-K Giant Isopod",
             "currentTankWeight": 26,
-            "currentTankProgress": 0.0463117335408099,
+            "currentTankProgress": 0.9725464043570079,
             "nextTank": "A-K Giant Isopod",
             "nextTankWeight": 26
         },
         "Argunshire Christmas Vacation": {
-            "status": "under construction",
-            "factoryHealth": 0.04,
+            "status": "idle",
+            "factoryHealth": 1,
             "currentTank": "",
             "currentTankWeight": 0,
             "currentTankProgress": 0,
@@ -904,242 +1039,260 @@
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "Line 7": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "Line 8": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "new Qhhhhhq": {
-            "status": "building",
+            "status": "idle",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
+            "currentTank": "",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 48
         },
         "Invalid Character": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.8662508662508663,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         },
         "\u00e2\u2013\u2019": {
             "status": "building",
             "factoryHealth": 0,
-            "currentTank": "K.A.T 2326 'Acanthostega'",
-            "currentTankWeight": 17,
-            "currentTankProgress": 0.4331254331254331,
-            "nextTank": "K.A.T 2326 'Acanthostega'",
-            "nextTankWeight": 17
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.1538935056940597,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
         }
     },
     "austrondian": {
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "Line 7": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.8035714285714286,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "Line 8": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "HRT Tractor Works": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "HRT Tractor Works 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.5357142857142857,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "Buh??": {
             "status": "building",
             "factoryHealth": "10",
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.8928571428571429,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HRT 4",
+            "currentTankWeight": 38,
+            "currentTankProgress": 0.3947368421052631,
+            "nextTank": "HRT 4",
+            "nextTankWeight": 38
         },
         "HRT Tractor Works 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HRT 3",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0,
-            "nextTank": "HRT 3",
-            "nextTankWeight": 28
+            "currentTank": "HOLT 1",
+            "currentTankWeight": 45,
+            "currentTankProgress": 0.622222222222222,
+            "nextTank": "HOLT 1",
+            "nextTankWeight": 45
         },
         "Special Tank works Line 1": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 0,
-            "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 0
+            "currentTank": "HOLT 1",
+            "currentTankWeight": 45,
+            "currentTankProgress": 0.4666666666666665,
+            "nextTank": "HOLT 1",
+            "nextTankWeight": 45
         },
         "Special Tank works Line 2": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 0,
-            "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 0
+            "currentTank": "HOLT 1",
+            "currentTankWeight": 45,
+            "currentTankProgress": 0.4666666666666665,
+            "nextTank": "HOLT 1",
+            "nextTankWeight": 45
         },
         "Special Tank works Line 3": {
-            "status": "idle",
+            "status": "building",
             "factoryHealth": 1,
-            "currentTank": "",
-            "currentTankWeight": 0,
-            "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 0
+            "currentTank": "HOLT 1",
+            "currentTankWeight": 45,
+            "currentTankProgress": 0.4666666666666665,
+            "nextTank": "HOLT 1",
+            "nextTankWeight": 45
         },
         "Special Tank works Line 4": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "HOLT 1",
+            "currentTankWeight": 45,
+            "currentTankProgress": 0.19444444444444442,
+            "nextTank": "HOLT 1",
+            "nextTankWeight": 45
+        },
+        "Special Tank works Line 5": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "HOLT 1",
+            "currentTankWeight": 45,
+            "currentTankProgress": 0.19444444444444442,
+            "nextTank": "HOLT 1",
+            "nextTankWeight": 45
+        },
+        "Special Tank works Line 6": {
             "status": "under construction",
-            "factoryHealth": 0.08,
+            "factoryHealth": 0.4,
             "currentTank": "",
             "currentTankWeight": 0,
             "currentTankProgress": 0,
@@ -1151,337 +1304,346 @@
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 7": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 8": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "PBF": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "CTF": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "MES": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 10": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "R.A.M": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         },
         "Line 13": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Objekt 126U",
-            "currentTankWeight": 14,
-            "currentTankProgress": 0.7503001200480192,
-            "nextTank": "Objekt 247",
-            "nextTankWeight": 52
+            "currentTank": "DT-obj-33",
+            "currentTankWeight": 3,
+            "currentTankProgress": 0,
+            "nextTank": "DT-obj-33",
+            "nextTankWeight": 3
         }
     },
     "ghania": {
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "Line 7": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "Line 8": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "france 9": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "poland 10": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "england 11": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "denmark 12": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "america 13": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "germany 14": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "canada 15": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.25008336112037344,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.2197351459041369,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "italy 16": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.875291763921307,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.9888081565686158,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "ussr 17": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.875291763921307,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.9888081565686158,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "mexico 18": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.875291763921307,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.9888081565686158,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "spain 19": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
-            "currentTankProgress": 0.12504168056018672,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.10986757295206845,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "britain 20": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
             "currentTankProgress": 0,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "sweeden 21": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
             "currentTankProgress": 0,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "norwar 22": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Z122 s",
-            "currentTankWeight": 29,
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
             "currentTankProgress": 0,
-            "nextTank": "Z122 s",
-            "nextTankWeight": 29
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         },
         "finland 23": {
-            "status": "under construction",
-            "factoryHealth": 0.96,
-            "currentTank": "",
-            "currentTankWeight": 0,
-            "currentTankProgress": 0,
-            "nextTank": "",
-            "nextTankWeight": 0
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.5493378647603422,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
+        },
+        "ireland 24": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Z165 s",
+            "currentTankWeight": 34,
+            "currentTankProgress": 0.769073010664479,
+            "nextTank": "Z165 s",
+            "nextTankWeight": 34
         }
     },
     "illustravit": {
@@ -1490,7 +1652,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10.2",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.8393956351426972,
+            "currentTankProgress": 0.6295467263570229,
             "nextTank": "ZIK-Skout 10.2",
             "nextTankWeight": 17
         },
@@ -1499,7 +1661,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.5236333170425189,
+            "currentTankProgress": 0,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
@@ -1508,7 +1670,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.5236333170425189,
+            "currentTankProgress": 0,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
@@ -1517,7 +1679,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.13090832926062973,
+            "currentTankProgress": 0.6545416463031486,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
@@ -1526,7 +1688,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.13090832926062973,
+            "currentTankProgress": 0.6545416463031486,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
@@ -1535,7 +1697,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-AT 10.2",
             "currentTankWeight": 30,
-            "currentTankProgress": 0,
+            "currentTankProgress": 0.9714082181135255,
             "nextTank": "ZIK-AT 10.2",
             "nextTankWeight": 30
         },
@@ -1544,7 +1706,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-AT 10.2",
             "currentTankWeight": 30,
-            "currentTankProgress": 0,
+            "currentTankProgress": 0.9714082181135255,
             "nextTank": "ZIK-AT 10.2",
             "nextTankWeight": 30
         },
@@ -1553,7 +1715,7 @@
             "factoryHealth": 1,
             "currentTank": "HTE-V1",
             "currentTankWeight": 39,
-            "currentTankProgress": 0,
+            "currentTankProgress": 0.7907817442385902,
             "nextTank": "HTE-V1",
             "nextTankWeight": 39
         },
@@ -1571,13 +1733,13 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10.2",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.2098489087856743,
+            "currentTankProgress": 0,
             "nextTank": "ZIK-Skout 10.2",
             "nextTankWeight": 17
         },
         "MeowMix3": {
-            "status": "under construction",
-            "factoryHealth": 0.72,
+            "status": "idle",
+            "factoryHealth": 1,
             "currentTank": "",
             "currentTankWeight": 0,
             "currentTankProgress": 0,
@@ -1591,7 +1753,7 @@
             "factoryHealth": 1,
             "currentTank": "AV 12M",
             "currentTankWeight": 31,
-            "currentTankProgress": 0.7822277847309135,
+            "currentTankProgress": 0.4693366708385481,
             "nextTank": "AV 12M",
             "nextTankWeight": 31
         },
@@ -1600,7 +1762,7 @@
             "factoryHealth": 1,
             "currentTank": "AV 12M",
             "currentTankWeight": 31,
-            "currentTankProgress": 0.7822277847309135,
+            "currentTankProgress": 0.4693366708385481,
             "nextTank": "AV 12M",
             "nextTankWeight": 31
         },
@@ -1609,7 +1771,7 @@
             "factoryHealth": 1,
             "currentTank": "AV 12M",
             "currentTankWeight": 31,
-            "currentTankProgress": 0.7822277847309135,
+            "currentTankProgress": 0.4693366708385481,
             "nextTank": "AV 12M",
             "nextTankWeight": 31
         },
@@ -1618,7 +1780,7 @@
             "factoryHealth": 1,
             "currentTank": "AV 12M",
             "currentTankWeight": 31,
-            "currentTankProgress": 0.7822277847309135,
+            "currentTankProgress": 0.4693366708385481,
             "nextTank": "AV 12M",
             "nextTankWeight": 31
         },
@@ -1627,7 +1789,7 @@
             "factoryHealth": 1,
             "currentTank": "AV 12M",
             "currentTankWeight": 31,
-            "currentTankProgress": 0.6648936170212765,
+            "currentTankProgress": 0.35200250312891107,
             "nextTank": "AV 12M",
             "nextTankWeight": 31
         },
@@ -1636,7 +1798,7 @@
             "factoryHealth": 1,
             "currentTank": "AV 12M",
             "currentTankWeight": 31,
-            "currentTankProgress": 0.7431163954943678,
+            "currentTankProgress": 0.4302252816020024,
             "nextTank": "AV 12M",
             "nextTankWeight": 31
         },
@@ -1645,7 +1807,7 @@
             "factoryHealth": 1,
             "currentTank": "AV 12M",
             "currentTankWeight": 31,
-            "currentTankProgress": 0.6257822277847308,
+            "currentTankProgress": 0.3128911138923654,
             "nextTank": "AV 12M",
             "nextTankWeight": 31
         },
@@ -1654,7 +1816,7 @@
             "factoryHealth": 1,
             "currentTank": "AV 12M",
             "currentTankWeight": 31,
-            "currentTankProgress": 0.9777847309136418,
+            "currentTankProgress": 0.6648936170212765,
             "nextTank": "AV 12M",
             "nextTankWeight": 31
         }
@@ -1663,159 +1825,186 @@
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.5468408224485969,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.5468408224485969,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.5468408224485969,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.23436035247797013,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.23436035247797013,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.5468408224485969,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 7": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.5468408224485969,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 8": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.6249609399412536,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.7694675284702986,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 14": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.6249609399412536,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.7694675284702986,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 15": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.6249609399412536,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.7694675284702986,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 16": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.6249609399412536,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.7694675284702986,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 17": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.6249609399412536,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.7694675284702986,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 18": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.23436035247797013,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "\"Line 19\"": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.6925207756232687,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 20": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.15624023498531342,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.8464142813173285,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 21": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.07812011749265671,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.7694675284702986,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 22": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Buy AVM Next Time [AV]",
+            "currentTank": ".Nigelcore [AV]",
             "currentTankWeight": 48,
-            "currentTankProgress": 0.4687207049559402,
-            "nextTank": "Buy AVM Next Time [AV]",
+            "currentTankProgress": 0.8464142813173285,
+            "nextTank": ".Nigelcore [AV]",
             "nextTankWeight": 48
         },
         "Line 23": {
-            "status": "under construction",
-            "factoryHealth": 0.24,
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.8464142813173285,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
+        },
+        "Line 24": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.8464142813173285,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
+        },
+        "Line 25": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": ".Nigelcore [AV]",
+            "currentTankWeight": 48,
+            "currentTankProgress": 0.9233610341643584,
+            "nextTank": ".Nigelcore [AV]",
+            "nextTankWeight": 48
+        },
+        "Line 26": {
+            "status": "idle",
+            "factoryHealth": 1,
             "currentTank": "",
             "currentTankWeight": 0,
             "currentTankProgress": 0,
@@ -1827,36 +2016,36 @@
         "Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "STG Cb25",
-            "currentTankWeight": 56,
-            "currentTankProgress": 0.5343593031954685,
-            "nextTank": "STG Cb25",
-            "nextTankWeight": 56
+            "currentTank": "STG AS25",
+            "currentTankWeight": 18,
+            "currentTankProgress": 0.7935431361909928,
+            "nextTank": "STG Cs25-2",
+            "nextTankWeight": 41
         },
         "Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "STG Cb25",
-            "currentTankWeight": 56,
-            "currentTankProgress": 0.5343593031954685,
-            "nextTank": "STG Cb25",
-            "nextTankWeight": 56
+            "currentTank": "STG AS25",
+            "currentTankWeight": 18,
+            "currentTankProgress": 0.7935431361909928,
+            "nextTank": "STG Cs25-2",
+            "nextTankWeight": 41
         },
         "Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "STG Cb25",
-            "currentTankWeight": 56,
-            "currentTankProgress": 0.5343593031954685,
-            "nextTank": "STG Cb25",
-            "nextTankWeight": 56
+            "currentTank": "STG AS25",
+            "currentTankWeight": 18,
+            "currentTankProgress": 0.7935431361909928,
+            "nextTank": "STG Cs25-2",
+            "nextTankWeight": 41
         },
         "Line 4": {
             "status": "building",
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1865,7 +2054,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1874,7 +2063,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1883,7 +2072,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1892,7 +2081,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1901,7 +2090,7 @@
             "factoryHealth": "100",
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1910,7 +2099,7 @@
             "factoryHealth": "100",
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1919,7 +2108,7 @@
             "factoryHealth": "100",
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1928,7 +2117,7 @@
             "factoryHealth": "100",
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1937,7 +2126,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1946,7 +2135,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1955,7 +2144,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1964,7 +2153,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1973,7 +2162,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1982,7 +2171,7 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
@@ -1991,16 +2180,52 @@
             "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
-            "currentTankProgress": 0.5944831959416614,
+            "currentTankProgress": 0,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         },
         "Line 19": {
-            "status": "under construction",
-            "factoryHealth": 0.48,
+            "status": "building",
+            "factoryHealth": 1,
             "currentTank": "STG Cs25-2",
             "currentTankWeight": 41,
             "currentTankProgress": 0,
+            "nextTank": "STG Cs25-2",
+            "nextTankWeight": 41
+        },
+        "Line 20": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "STG Cs25-2",
+            "currentTankWeight": 41,
+            "currentTankProgress": 0,
+            "nextTank": "STG Cs25-2",
+            "nextTankWeight": 41
+        },
+        "Line 21": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "STG Cs25-2",
+            "currentTankWeight": 41,
+            "currentTankProgress": 0,
+            "nextTank": "STG Cs25-2",
+            "nextTankWeight": 41
+        },
+        "Line 22": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "STG AS25",
+            "currentTankWeight": 18,
+            "currentTankProgress": 0.5290287574606619,
+            "nextTank": "STG Cs25-2",
+            "nextTankWeight": 41
+        },
+        "Line 23": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "STG AS25",
+            "currentTankWeight": 18,
+            "currentTankProgress": 0.7935431361909928,
             "nextTank": "STG Cs25-2",
             "nextTankWeight": 41
         }
@@ -2011,7 +2236,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.3927249877818892,
+            "currentTankProgress": 0.9163583048244079,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
@@ -2020,7 +2245,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.26181665852125946,
+            "currentTankProgress": 0.7854499755637783,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
@@ -2029,7 +2254,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.6545416463031486,
+            "currentTankProgress": 0.13090832926062973,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
@@ -2038,25 +2263,25 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.6545416463031486,
+            "currentTankProgress": 0.13090832926062973,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
         "Line 5": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Type-35 Ke-Ni",
-            "currentTankWeight": 15,
-            "currentTankProgress": 0.23966255512238765,
-            "nextTank": "Type-35 Ke-Ni",
-            "nextTankWeight": 15
+            "currentTank": "Type 7 OH-NO",
+            "currentTankWeight": 54,
+            "currentTankProgress": 0.9566849499790443,
+            "nextTank": "ZIK-Skout 10",
+            "nextTankWeight": 17
         },
         "Line 6": {
             "status": "building",
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.6461432427775544,
+            "currentTankProgress": 0.4307621618517029,
             "nextTank": "ZIK-Skout 10",
             "nextTankWeight": 17
         },
@@ -2065,7 +2290,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.6461432427775544,
+            "currentTankProgress": 0.4307621618517029,
             "nextTank": "ZIK-Skout 10",
             "nextTankWeight": 17
         },
@@ -2074,7 +2299,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.4307621618517029,
+            "currentTankProgress": 0.21538108092585145,
             "nextTank": "ZIK-Skout 10",
             "nextTankWeight": 17
         },
@@ -2083,25 +2308,25 @@
             "factoryHealth": "100",
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.26181665852125946,
+            "currentTankProgress": 0.7854499755637783,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
         "Type-17": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "TE-V2",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.7924209340001409,
-            "nextTank": "TE-V2",
-            "nextTankWeight": 28
+            "currentTank": "MTE-V1",
+            "currentTankWeight": 37,
+            "currentTankProgress": 0.20121803986800096,
+            "nextTank": "MTE-V1",
+            "nextTankWeight": 37
         },
         "Line 9": {
             "status": "building",
             "factoryHealth": 1,
             "currentTank": "MTE-V1",
             "currentTankWeight": 37,
-            "currentTankProgress": 0,
+            "currentTankProgress": 0.40243607973600193,
             "nextTank": "MTE-V1",
             "nextTankWeight": 37
         },
@@ -2110,7 +2335,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.8615243237034058,
+            "currentTankProgress": 0.6461432427775544,
             "nextTank": "ZIK-Skout 10",
             "nextTankWeight": 17
         },
@@ -2119,7 +2344,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.21538108092585145,
+            "currentTankProgress": 0,
             "nextTank": "ZIK-Skout 10",
             "nextTankWeight": 17
         },
@@ -2128,34 +2353,34 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.6461432427775544,
+            "currentTankProgress": 0.4307621618517029,
             "nextTank": "ZIK-Skout 10",
             "nextTankWeight": 17
         },
         "Line 13": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "Type-35 Ke-Ni",
-            "currentTankWeight": 15,
-            "currentTankProgress": 0.4793251102447753,
-            "nextTank": "Type-35 Ke-Ni",
-            "nextTankWeight": 15
+            "currentTank": "Type 7 OH-NO",
+            "currentTankWeight": 54,
+            "currentTankProgress": 0.6833463928421745,
+            "nextTank": "Type 7 OH-NO",
+            "nextTankWeight": 54
         },
         "Line 14": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "TE-V2",
-            "currentTankWeight": 28,
-            "currentTankProgress": 0.13207015566669017,
-            "nextTank": "TE-V2",
-            "nextTankWeight": 28
+            "currentTank": "TE-V2VMA",
+            "currentTankWeight": 23,
+            "currentTankProgress": 0.3203895937459951,
+            "nextTank": "TE-V2VMA",
+            "nextTankWeight": 23
         },
         "Line 15": {
             "status": "building",
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.9163583048244079,
+            "currentTankProgress": 0.3927249877818892,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
@@ -2164,7 +2389,7 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-Skout 10",
             "currentTankWeight": 17,
-            "currentTankProgress": 0.4307621618517029,
+            "currentTankProgress": 0.21538108092585145,
             "nextTank": "ZIK-Skout 10",
             "nextTankWeight": 17
         },
@@ -2173,27 +2398,63 @@
             "factoryHealth": 1,
             "currentTank": "ZIK-MAT 10",
             "currentTankWeight": 28,
-            "currentTankProgress": 0.6545416463031486,
+            "currentTankProgress": 0.13090832926062973,
             "nextTank": "ZIK-MAT 10",
             "nextTankWeight": 28
         },
         "Line 18": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "TE-V2VMA",
-            "currentTankWeight": 23,
-            "currentTankProgress": 0.8009739843649878,
-            "nextTank": "TE-V2VMA",
-            "nextTankWeight": 23
+            "currentTank": "ZIK-Skout 10",
+            "currentTankWeight": 17,
+            "currentTankProgress": 0.4307621618517029,
+            "nextTank": "ZIK-Skout 10",
+            "nextTankWeight": 17
         },
         "Line 19": {
-            "status": "under construction",
-            "factoryHealth": 0.48,
-            "currentTank": "MTE-V1",
-            "currentTankWeight": 37,
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "HTE-V2",
+            "currentTankWeight": 47,
+            "currentTankProgress": 0.31433361274098914,
+            "nextTank": "HTE-V2",
+            "nextTankWeight": 47
+        },
+        "Line 20": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "HTE-V2",
+            "currentTankWeight": 47,
+            "currentTankProgress": 0.15716680637049457,
+            "nextTank": "HTE-V2",
+            "nextTankWeight": 47
+        },
+        "Line 21": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "ZIK-Skout 10",
+            "currentTankWeight": 17,
             "currentTankProgress": 0,
-            "nextTank": "MTE-V1",
-            "nextTankWeight": 37
+            "nextTank": "ZIK-Skout 10",
+            "nextTankWeight": 17
+        },
+        "Line 22": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Type 7 OH-NO",
+            "currentTankWeight": 54,
+            "currentTankProgress": 0.615011753557957,
+            "nextTank": "Type 7 OH-NO",
+            "nextTankWeight": 54
+        },
+        "Line 23": {
+            "status": "idle",
+            "factoryHealth": 1,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
         }
     },
     "H.S.J": {
@@ -2258,65 +2519,92 @@
         "Production Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "LT-25",
-            "currentTankWeight": 44,
-            "currentTankProgress": 0,
-            "nextTank": "LT-25",
-            "nextTankWeight": 44
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0.5101506906655505,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
         },
         "Production Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "LT-25",
-            "currentTankWeight": 44,
-            "currentTankProgress": 0,
-            "nextTank": "LT-25",
-            "nextTankWeight": 44
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0.5101506906655505,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
         },
         "Posterian": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "LT-25",
-            "currentTankWeight": 44,
-            "currentTankProgress": 0,
-            "nextTank": "LT-25",
-            "nextTankWeight": 44
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0.5101506906655505,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
         },
         "R4E2 Bonus Line": {
             "status": "building",
             "factoryHealth": "100",
-            "currentTank": "LT-25",
-            "currentTankWeight": 44,
-            "currentTankProgress": 0,
-            "nextTank": "LT-25",
-            "nextTankWeight": 44
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0.5101506906655505,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
         },
         "The Sus\u2122\ufe0f": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "LT-24",
-            "currentTankWeight": 44,
-            "currentTankProgress": 0.6409256080433379,
-            "nextTank": "LT-25",
-            "nextTankWeight": 44
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
         },
         "Demagnetizer Plant": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "LT-24",
-            "currentTankWeight": 44,
-            "currentTankProgress": 0.6409256080433379,
-            "nextTank": "LT-25",
-            "nextTankWeight": 44
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
         },
         "Unauthorized Inefficiency": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "LT-25",
-            "currentTankWeight": 44,
-            "currentTankProgress": 0.08336297350168947,
-            "nextTank": "LT-25",
-            "nextTankWeight": 44
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0.5101506906655505,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
+        },
+        "Joey Tempest's Auditorium": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
+        },
+        "Wooden Roller Coaster 2 looks too intense for me!": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0.5101506906655505,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
+        },
+        "Intrepid": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "Shoisho's chances at winning",
+            "currentTankWeight": 9,
+            "currentTankProgress": 0,
+            "nextTank": "Shoisho's chances at winning",
+            "nextTankWeight": 9
         }
     },
     "Volxl Defence agency": {
@@ -2441,7 +2729,7 @@
             "factoryHealth": 1,
             "currentTank": "Ironshield Defence ID-1",
             "currentTankWeight": 14,
-            "currentTankProgress": 0.7005253940455342,
+            "currentTankProgress": 0,
             "nextTank": "Ironshield Defence ID-1",
             "nextTankWeight": 14
         },
@@ -2450,7 +2738,7 @@
             "factoryHealth": 1,
             "currentTank": "Ironshield Defence ID-1A1",
             "currentTankWeight": 18,
-            "currentTankProgress": 0.5428292259255239,
+            "currentTankProgress": 0,
             "nextTank": "Ironshield Defence ID-1A1",
             "nextTankWeight": 18
         },
@@ -2470,7 +2758,7 @@
             "factoryHealth": 1,
             "currentTank": "AMA C-3C",
             "currentTankWeight": 23,
-            "currentTankProgress": 0.15674636348436716,
+            "currentTankProgress": 0.47023909045310147,
             "nextTank": "AMA C-3C",
             "nextTankWeight": 23
         },
@@ -2479,7 +2767,7 @@
             "factoryHealth": 1,
             "currentTank": "AMA C-3C",
             "currentTankWeight": 23,
-            "currentTankProgress": 0.15674636348436716,
+            "currentTankProgress": 0.47023909045310147,
             "nextTank": "AMA C-3C",
             "nextTankWeight": 23
         },
@@ -2488,7 +2776,7 @@
             "factoryHealth": 1,
             "currentTank": "AMA C-3C",
             "currentTankWeight": 23,
-            "currentTankProgress": 0.3134927269687343,
+            "currentTankProgress": 0.6269854539374686,
             "nextTank": "AMA C-3C",
             "nextTankWeight": 23
         },
@@ -2497,7 +2785,7 @@
             "factoryHealth": 1,
             "currentTank": "AMA C-3C",
             "currentTankWeight": 23,
-            "currentTankProgress": 0.3134927269687343,
+            "currentTankProgress": 0.6269854539374686,
             "nextTank": "AMA C-3C",
             "nextTankWeight": 23
         },
@@ -2506,7 +2794,7 @@
             "factoryHealth": 1,
             "currentTank": "AMA C-3C",
             "currentTankWeight": 23,
-            "currentTankProgress": 0.3134927269687343,
+            "currentTankProgress": 0.6269854539374686,
             "nextTank": "AMA C-3C",
             "nextTankWeight": 23
         },
@@ -2515,29 +2803,11 @@
             "factoryHealth": 1,
             "currentTank": "AMA C-3C",
             "currentTankWeight": 23,
-            "currentTankProgress": 0.3134927269687343,
+            "currentTankProgress": 0.6269854539374686,
             "nextTank": "AMA C-3C",
             "nextTankWeight": 23
         },
         "AMA PL-7": {
-            "status": "building",
-            "factoryHealth": 1,
-            "currentTank": "AMA C-3B",
-            "currentTankWeight": 21,
-            "currentTankProgress": 0.9361542782250514,
-            "nextTank": "AMA C-3C",
-            "nextTankWeight": 23
-        },
-        "R4E2 Bonus Line": {
-            "status": "building",
-            "factoryHealth": "100",
-            "currentTank": "AMA C-3C",
-            "currentTankWeight": 23,
-            "currentTankProgress": 0.3134927269687343,
-            "nextTank": "AMA C-3C",
-            "nextTankWeight": 23
-        },
-        "AMA PL-8": {
             "status": "building",
             "factoryHealth": 1,
             "currentTank": "AMA C-3C",
@@ -2546,7 +2816,16 @@
             "nextTank": "AMA C-3C",
             "nextTankWeight": 23
         },
-        "AMA PL-9": {
+        "R4E2 Bonus Line": {
+            "status": "building",
+            "factoryHealth": "100",
+            "currentTank": "AMA C-3C",
+            "currentTankWeight": 23,
+            "currentTankProgress": 0.6269854539374686,
+            "nextTank": "AMA C-3C",
+            "nextTankWeight": 23
+        },
+        "AMA PL-8": {
             "status": "building",
             "factoryHealth": 1,
             "currentTank": "AMA C-3C",
@@ -2555,9 +2834,36 @@
             "nextTank": "AMA C-3C",
             "nextTankWeight": 23
         },
+        "AMA PL-9": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "AMA C-3C",
+            "currentTankWeight": 23,
+            "currentTankProgress": 0.7837318174218357,
+            "nextTank": "AMA C-3C",
+            "nextTankWeight": 23
+        },
         "AMA PL-10": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "AMA C-3C",
+            "currentTankWeight": 23,
+            "currentTankProgress": 0.6269854539374686,
+            "nextTank": "AMA C-3C",
+            "nextTankWeight": 23
+        },
+        "AMA PL-11": {
+            "status": "idle",
+            "factoryHealth": 1,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "AMA PL-13": {
             "status": "under construction",
-            "factoryHealth": 0.36,
+            "factoryHealth": 0.24,
             "currentTank": "",
             "currentTankWeight": 0,
             "currentTankProgress": 0,
@@ -2627,45 +2933,54 @@
         "Production Line 1": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "TE-V2VMA",
-            "currentTankWeight": 23,
-            "currentTankProgress": 0.961168781237985,
-            "nextTank": "2.5T Transport Truck",
-            "nextTankWeight": 2.5
+            "currentTank": "HTE-V2",
+            "currentTankWeight": 47,
+            "currentTankProgress": 0.47150041911148366,
+            "nextTank": "HTE-V2",
+            "nextTankWeight": 47
         },
         "Production Line 2": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "HTE-V1",
-            "currentTankWeight": 39,
-            "currentTankProgress": 0.9006125420495055,
-            "nextTank": "TE-V2VMA",
-            "nextTankWeight": 23
+            "currentTank": "HTE-V2",
+            "currentTankWeight": 47,
+            "currentTankProgress": 0.7072506286672254,
+            "nextTank": "HTE-V2",
+            "nextTankWeight": 47
         },
         "R4E2 Bonus Line": {
             "status": "building",
             "factoryHealth": "100",
             "currentTank": "TE-V2VMA",
             "currentTankWeight": 23,
-            "currentTankProgress": 0.85437224998932,
-            "nextTank": "MTE-V1",
-            "nextTankWeight": 37
+            "currentTankProgress": 0.16019479687299756,
+            "nextTank": "TE-V2VMA",
+            "nextTankWeight": 23
         },
         "Production Line 3": {
             "status": "building",
             "factoryHealth": 1,
-            "currentTank": "TE-V2VMA",
-            "currentTankWeight": 23,
-            "currentTankProgress": 0.6407791874919901,
+            "currentTank": "MTE-V1",
+            "currentTankWeight": 37,
+            "currentTankProgress": 0.40243607973600193,
             "nextTank": "MTE-V1",
             "nextTankWeight": 37
         },
         "Production Line 4": {
-            "status": "under construction",
-            "factoryHealth": 0.9200000000000003,
+            "status": "building",
+            "factoryHealth": 1,
             "currentTank": "MTE-V1",
             "currentTankWeight": 37,
-            "currentTankProgress": 0,
+            "currentTankProgress": 0.603654119604003,
+            "nextTank": "MTE-V1",
+            "nextTankWeight": 37
+        },
+        "Production Line 5": {
+            "status": "building",
+            "factoryHealth": 1,
+            "currentTank": "MTE-V1",
+            "currentTankWeight": 37,
+            "currentTankProgress": 0.804872159472004,
             "nextTank": "MTE-V1",
             "nextTankWeight": 37
         }
@@ -2807,6 +3122,66 @@
         }
     },
     "Darwin mil agency": {
+        "Production Line 1": {
+            "status": "idle",
+            "factoryHealth": 1,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "idle",
+            "factoryHealth": 1,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "<Goslingmetal>": {
+        "Production Line 1": {
+            "status": "idle",
+            "factoryHealth": 1,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "idle",
+            "factoryHealth": 1,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Goslingmetal": {
+        "Production Line 1": {
+            "status": "idle",
+            "factoryHealth": 1,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        },
+        "Production Line 2": {
+            "status": "idle",
+            "factoryHealth": 1,
+            "currentTank": "",
+            "currentTankWeight": 0,
+            "currentTankProgress": 0,
+            "nextTank": "",
+            "nextTankWeight": 0
+        }
+    },
+    "Goslingmetall": {
         "Production Line 1": {
             "status": "idle",
             "factoryHealth": 1,

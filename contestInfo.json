@@ -121,7 +121,7 @@
                         },
                         "Habicht I": {
                             "tankName": "Habicht I",
-                            "tankWeight": 59.504,
+                            "tankWeight": 59.511,
                             "errorCount": 0,
                             "valid": true,
                             "tankWidth": 3.45231214,
@@ -134,7 +134,7 @@
                         },
                         "PZ.VII Irbis": {
                             "tankName": "PZ.VII Irbis",
-                            "tankWeight": 74.491,
+                            "tankWeight": 74.928,
                             "errorCount": 0,
                             "valid": true,
                             "tankWidth": 3.45,
@@ -147,7 +147,7 @@
                         },
                         "Pz. Kpfw. X Landsknecht": {
                             "tankName": "Pz. Kpfw. X Landsknecht",
-                            "tankWeight": 55.976,
+                            "tankWeight": 55.98,
                             "errorCount": 0,
                             "valid": true,
                             "tankWidth": 3.3779999000000003,
@@ -160,10 +160,10 @@
                         },
                         "Pzkpfw VI ausf H mit 10.5cm kwk L66 (Uber Tiger)": {
                             "tankName": "Pzkpfw VI ausf H mit 10.5cm kwk L66 (Uber Tiger)",
-                            "tankWeight": 52.877,
+                            "tankWeight": 58.522,
                             "errorCount": 0,
                             "valid": true,
-                            "tankWidth": 3.6503500000000004,
+                            "tankWidth": 3.75035,
                             "crewCount": 5,
                             "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 0.95m of space, roles: ['gunner'] \nCrew #3: 1.0m of space, roles: ['loader'] \nCrew #4: 1.0m of space, roles: ['driver'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
                             "turretCount": 1,
@@ -186,7 +186,7 @@
                         },
                         "VK 55.01 Heavy": {
                             "tankName": "VK 55.01 Heavy",
-                            "tankWeight": 56.044,
+                            "tankWeight": 56.059,
                             "errorCount": 0,
                             "valid": true,
                             "tankWidth": 3.9000000000000004,
@@ -196,6 +196,97 @@
                             "GCMratioMin": 0,
                             "maxArmor": 190,
                             "tankOwner": 241963411234226176
+                        },
+                        "STG E55": {
+                            "tankName": "STG E55",
+                            "tankWeight": 55.011,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 4.0,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 0.6m of space, roles: ['driver'] \nCrew #3: 0.95m of space, roles: ['gunner'] \nCrew #4: 0.96m of space, roles: ['loader'] \nCrew #5: 0.96m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 307262048537018368
+                        },
+                        "VK.60.01 B": {
+                            "tankName": "VK.60.01 B",
+                            "tankWeight": 65.526,
+                            "errorCount": 1,
+                            "valid": true,
+                            "tankWidth": 3.449999928,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander', 'radioman'] \nCrew #2: 0.6m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 704626729993371860
+                        },
+                        "VK 67.50 Sphinx": {
+                            "tankName": "VK 67.50 Sphinx",
+                            "tankWeight": 67.533,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.6900000000000004,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 636355099412791332
+                        },
+                        "E 75 ts challange": {
+                            "tankName": "E 75 ts challange",
+                            "tankWeight": 58.06,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 2.84199992,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 0.7m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 0.9m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 800973577385148418
+                        },
+                        "Panzerkampfwagen Schneeleopard Ausf.D": {
+                            "tankName": "Panzerkampfwagen Schneeleopard Ausf.D",
+                            "tankWeight": 65.0,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.7200000000000006,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 201755475388137473
+                        },
+                        "VK 44.01": {
+                            "tankName": "VK 44.01",
+                            "tankWeight": 62.943,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.1999999000000003,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 819700392253980692
+                        },
+                        "Tiger III": {
+                            "tankName": "Tiger III",
+                            "tankWeight": 57.513,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.57171169,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 139187907993796608
                         }
                     },
                     "contestName": "Watch on the Rhine"
@@ -277,7 +368,7 @@
                         },
                         "Spatz III A": {
                             "tankName": "Spatz III A",
-                            "tankWeight": 42.881,
+                            "tankWeight": 42.894,
                             "errorCount": 0,
                             "valid": true,
                             "tankWidth": 3.2639999100000003,
@@ -290,7 +381,7 @@
                         },
                         "VK.35.01 B (Jaguar)": {
                             "tankName": "VK.35.01 B (Jaguar)",
-                            "tankWeight": 41.747,
+                            "tankWeight": 36.641,
                             "errorCount": 1,
                             "valid": true,
                             "tankWidth": 3.039999914,
@@ -326,6 +417,136 @@
                             "GCMratioMin": 0,
                             "maxArmor": 150,
                             "tankOwner": 241963411234226176
+                        },
+                        "STG E26": {
+                            "tankName": "STG E26",
+                            "tankWeight": 26.002,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.6020000000000003,
+                            "crewCount": 3,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander', 'driver'] \nCrew #2: 0.84m of space, roles: ['gunner'] \nCrew #3: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 150,
+                            "tankOwner": 307262048537018368
+                        },
+                        "E42": {
+                            "tankName": "E42",
+                            "tankWeight": 39.791,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.4618538800000005,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 150,
+                            "tankOwner": 712509599135301673
+                        },
+                        "Kliener Schwerer Panzer mit 8.8cm KwK 43": {
+                            "tankName": "Kliener Schwerer Panzer mit 8.8cm KwK 43",
+                            "tankWeight": 46.75,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.46,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 150,
+                            "tankOwner": 793164012035637248
+                        },
+                        "Pz.III Ausf. O": {
+                            "tankName": "Pz.III Ausf. O",
+                            "tankWeight": 31.664,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.2199999999999998,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 150,
+                            "tankOwner": 305603992384176128
+                        },
+                        "VK 30.75 Halpanzer-panter": {
+                            "tankName": "VK 30.75 Halpanzer-panter",
+                            "tankWeight": 30.957,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.0180000000000002,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver', 'radioman'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 150,
+                            "tankOwner": 636355099412791332
+                        },
+                        "E 75 TS prototype": {
+                            "tankName": "E 75 TS prototype",
+                            "tankWeight": 49.415,
+                            "errorCount": 1,
+                            "valid": true,
+                            "tankWidth": 2.5540000000000003,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 0.799999952m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 165,
+                            "tankOwner": 800973577385148418
+                        },
+                        "Panther II Ausf.E": {
+                            "tankName": "Panther II Ausf.E",
+                            "tankWeight": 44.518,
+                            "errorCount": 1,
+                            "valid": true,
+                            "tankWidth": 3.29,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 160,
+                            "tankOwner": 139187907993796608
+                        },
+                        "Panzerkampfwagen Karakal Ausf.B": {
+                            "tankName": "Panzerkampfwagen Karakal Ausf.B",
+                            "tankWeight": 30.004,
+                            "errorCount": 1,
+                            "valid": true,
+                            "tankWidth": 2.89247036,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['loader'] \nCrew #2: 1.0m of space, roles: ['gunner'] \nCrew #3: 1.0m of space, roles: ['commander'] \nCrew #4: 1.0m of space, roles: ['driver'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 150,
+                            "tankOwner": 201755475388137473
+                        },
+                        "e 75 ts prototype": {
+                            "tankName": "e 75 ts prototype",
+                            "tankWeight": 41.197,
+                            "errorCount": 1,
+                            "valid": true,
+                            "tankWidth": 2.8240000000000003,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 0.799999952m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 165,
+                            "tankOwner": 800973577385148418
+                        },
+                        "VK 38.01 D": {
+                            "tankName": "VK 38.01 D",
+                            "tankWeight": 34.14,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 2.8499998800000004,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 0.6m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 150,
+                            "tankOwner": 819700392253980692
                         }
                     },
                     "contestName": "Watch on the Rhine"
@@ -381,7 +602,7 @@
                         },
                         "Panzerj\u00e4ger Ringerpferde Ausf. A ": {
                             "tankName": "Panzerj\u00e4ger Ringerpferde Ausf. A ",
-                            "tankWeight": 21.062,
+                            "tankWeight": 21.011,
                             "errorCount": 0,
                             "valid": true,
                             "tankWidth": 2.68609714,
@@ -394,10 +615,10 @@
                         },
                         "STG E30": {
                             "tankName": "STG E30",
-                            "tankWeight": 29.766,
+                            "tankWeight": 29.759,
                             "errorCount": 0,
                             "valid": true,
-                            "tankWidth": 3.964,
+                            "tankWidth": 3.9999000000000002,
                             "crewCount": 3,
                             "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander', 'driver'] \nCrew #2: 0.84m of space, roles: ['gunner'] \nCrew #3: 1.0m of space, roles: ['loader'] \n",
                             "turretCount": 0,
@@ -417,6 +638,45 @@
                             "GCMratioMin": 0,
                             "maxArmor": 145,
                             "tankOwner": 241963411234226176
+                        },
+                        "Sd.Kfz.178": {
+                            "tankName": "Sd.Kfz.178",
+                            "tankWeight": 29.589,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.45,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander', 'radioman'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 305603992384176128
+                        },
+                        "VK 18.03 Kreatur": {
+                            "tankName": "VK 18.03 Kreatur",
+                            "tankWeight": 18.026,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 2.664,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver', 'radioman'] \nCrew #3: 0.75m of space, roles: ['gunner'] \nCrew #4: 0.75m of space, roles: ['loader'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 135,
+                            "tankOwner": 636355099412791332
+                        },
+                        "Panzerj\u00e4ger Rotluchs Ausf.D": {
+                            "tankName": "Panzerj\u00e4ger Rotluchs Ausf.D",
+                            "tankWeight": 23.493,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 2.4299999999999997,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 201755475388137473
                         }
                     },
                     "contestName": "Watch on the Rhine"
@@ -459,7 +719,7 @@
                     "submissions": {
                         "Geier II B": {
                             "tankName": "Geier II B",
-                            "tankWeight": 54.604,
+                            "tankWeight": 54.655,
                             "errorCount": 0,
                             "valid": true,
                             "tankWidth": 3.1860000000000004,
@@ -469,6 +729,58 @@
                             "GCMratioMin": 0,
                             "maxArmor": 200,
                             "tankOwner": 713109100623429733
+                        },
+                        "Jagdpanzer VI ausf K (krokodil) ": {
+                            "tankName": "Jagdpanzer VI ausf K (krokodil) ",
+                            "tankWeight": 47.504,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.75035,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 0.95m of space, roles: ['gunner'] \nCrew #3: 1.0m of space, roles: ['loader'] \nCrew #4: 1.0m of space, roles: ['driver'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 150,
+                            "tankOwner": 793164012035637248
+                        },
+                        "VK 52.50 Deinotherium": {
+                            "tankName": "VK 52.50 Deinotherium",
+                            "tankWeight": 52.47,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.404,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 636355099412791332
+                        },
+                        "StuG V Ausf.A": {
+                            "tankName": "StuG V Ausf.A",
+                            "tankWeight": 46.841,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.29,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 180,
+                            "tankOwner": 139187907993796608
+                        },
+                        "Panzerj\u00e4ger L\u00f6we  Ausf.A": {
+                            "tankName": "Panzerj\u00e4ger L\u00f6we  Ausf.A",
+                            "tankWeight": 51.45,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.45,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['loader'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['commander'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 201755475388137473
                         }
                     },
                     "contestName": "Watch on the Rhine"
@@ -476,7 +788,7 @@
             },
             "submissions": {},
             "contestHost": 434451221978284074,
-            "acceptEntries": true
+            "acceptEntries": false
         },
         "Canadian Universal Tank Contest": {
             "contestName": "Canadian Universal Tank Contest",
@@ -520,18 +832,174 @@
                     "ATsafeMin": 25,
                     "armorMax": 200,
                     "hostChannel": 1079201481233813544,
-                    "submissions": {},
+                    "submissions": {
+                        "A37-B Covent": {
+                            "tankName": "A37-B Covent",
+                            "tankWeight": 39.435,
+                            "errorCount": 1,
+                            "valid": true,
+                            "tankWidth": 3.04,
+                            "crewCount": 3,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander', 'radioman'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 7.8m of space, roles: ['gunner', 'loader'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 255056032827441153
+                        },
+                        "Mk. 1 Pitbull": {
+                            "tankName": "Mk. 1 Pitbull",
+                            "tankWeight": 47.644,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.2380000000000004,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander', 'radioman'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 544562442408296448
+                        },
+                        "M-1A": {
+                            "tankName": "M-1A",
+                            "tankWeight": 52.163,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.73113,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: [] \n",
+                            "turretCount": 1,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 680819898540359703
+                        },
+                        "SLM8 - Tank, Combat, Cavalier MKII": {
+                            "tankName": "SLM8 - Tank, Combat, Cavalier MKII",
+                            "tankWeight": 25.998,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 2.31,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander', 'radioman'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 180,
+                            "tankOwner": 467708881011867648
+                        },
+                        " M54 Universal Tank": {
+                            "tankName": " M54 Universal Tank",
+                            "tankWeight": 39.222,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.609999924,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 193538065313169417
+                        },
+                        "FV5016- Tank, Mk. Tank, Camelot (A56)": {
+                            "tankName": "FV5016- Tank, Mk. Tank, Camelot (A56)",
+                            "tankWeight": 52.264,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.2060000000000004,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 288910405512724490
+                        },
+                        "CFV301 Constellation": {
+                            "tankName": "CFV301 Constellation",
+                            "tankWeight": 32.841,
+                            "errorCount": 0,
+                            "valid": true,
+                            "tankWidth": 3.11427974,
+                            "crewCount": 4,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 0,
+                            "maxArmor": 200,
+                            "tankOwner": 345584823181639681
+                        }
+                    },
                     "contestName": "Canadian Universal Tank Contest"
                 }
             },
             "submissions": {},
             "contestHost": 682990777814876312,
             "acceptEntries": true
+        },
+        "Soviet Universal Tank": {
+            "contestName": "Soviet Universal Tank",
+            "description": "Design a universal tank to resist the inevitable german invasion",
+            "rulesLink": "https://docs.google.com/document/d/1Xd-XoMN2xrG_d6XyANZGLdODjCzPalgAVy_84O0m048/edit?usp=sharing",
+            "startTimeStamp": 1703282400,
+            "endTimeStamp": 1703912340,
+            "categories": {
+                "tank": {
+                    "categoryName": "tank",
+                    "era": "latewar",
+                    "gameVersion": 0.127,
+                    "weightLimit": 100,
+                    "enforceGameVersion": "True",
+                    "errorTolerance": 1,
+                    "crewMaxSpace": 1.0,
+                    "crewMinSpace": 1.0,
+                    "crewMin": 3,
+                    "crewMax": 16,
+                    "turretRadiusMin": 1.32,
+                    "allowGCM": "True",
+                    "GCMratioMin": 65,
+                    "GCMtorqueMax": 200,
+                    "hullHeightMin": 1.1,
+                    "hullWidthMax": 3,
+                    "torsionBarLengthMin": 0.75,
+                    "useDynamicTBLength": "True",
+                    "allowHVSS": "False",
+                    "beltWidthMin": 100,
+                    "requireGroundPressure": "True",
+                    "groundPressureMax": 0.8,
+                    "litersPerDisplacement": 0,
+                    "litersPerTon": 15,
+                    "minEDPT": 0,
+                    "caliberLimit": 76,
+                    "propellantLimit": 560,
+                    "boreLimit": 4.93,
+                    "shellLimit": 1200,
+                    "armorMin": 15,
+                    "ATsafeMin": 15,
+                    "armorMax": 250,
+                    "hostChannel": 1187876307736989746,
+                    "submissions": {
+                        "T-52-76": {
+                            "tankName": "T-52-76",
+                            "tankWeight": 23.5,
+                            "errorCount": 1,
+                            "valid": true,
+                            "tankWidth": 2.88,
+                            "crewCount": 5,
+                            "crewReport": "Crew information: \nCrew #1: 1.0m of space, roles: ['commander'] \nCrew #2: 1.0m of space, roles: ['driver'] \nCrew #3: 1.0m of space, roles: ['gunner'] \nCrew #4: 1.0m of space, roles: ['loader'] \nCrew #5: 1.0m of space, roles: ['radioman'] \n",
+                            "turretCount": 0,
+                            "GCMratioMin": 65,
+                            "maxArmor": 76,
+                            "tankOwner": 1147406177827815516
+                        }
+                    },
+                    "contestName": "Soviet Universal Tank"
+                }
+            },
+            "submissions": {},
+            "contestHost": 241963411234226176,
+            "acceptEntries": true
         }
     },
     "loggingChannel": {
         "Dominion Challenge": 1184129476808953916,
         "Watch on the Rhine": 1184444654607937577,
-        "Canadian Universal Tank Contest": 1184534197654782003
+        "Canadian Universal Tank Contest": 1184534197654782003,
+        "Soviet Universal Tank": 1187876307736989746
     }
 }

@@ -63,11 +63,11 @@
         "origin": "shoisho",
         "stowage": "empty",
         "count": 0,
-        "miles_travelled": 600,
+        "miles_travelled": 0,
         "RNGpoint": 600,
-        "travel_goal": 100,
+        "travel_goal": 1200,
         "risk_factor": 0,
-        "status": "active",
+        "status": "idle",
         "riskLevel": 5
     },
     "Rat Race": {
@@ -217,6 +217,306 @@
         "status": "idle"
     },
     "Canadian war crimes": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "funny": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny2": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny3": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny4": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny5": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny6": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny7": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny8": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny9": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny10": {
+        "origin": "shoisho",
+        "stowage": "ZIK-MAT 10",
+        "count": 2,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny11": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny12": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny13": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny14": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny15": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funn16": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny17": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny18": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny19": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "funny20": {
+        "origin": "shoisho",
+        "stowage": "ZIK-Skout 10",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "loaded"
+    },
+    "hehe": {
+        "origin": "Zavark Industrial Kompany",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 1": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 2": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 3": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 4": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 5": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 6": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 7": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 8": {
+        "origin": "aina-kiko",
+        "stowage": "empty",
+        "count": 0,
+        "miles_travelled": 0,
+        "RNGpoint": 600,
+        "travel_goal": 1200,
+        "risk_factor": 0,
+        "status": "idle"
+    },
+    "Nunatuniq Express No. 9": {
         "origin": "aina-kiko",
         "stowage": "empty",
         "count": 0,
