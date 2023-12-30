@@ -219,6 +219,7 @@ weightLimit = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 9
 armorThickness = [50, 57, 65, 73, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 225, 230, 235, 240, 245, 250]
 GCMtorque = [200, 275, 350, 425, 500, 575, 650, 725, 800, 875, 950, 1025, 1100, 1175, 1250, 1325, 1400, 1475, 1550, 1625, 1700, 1775, 1850, 1925, 2000]
 GCMratio = [75, 73, 71, 69, 67, 65, 63, 61, 59, 57, 55, 53, 51, 49, 47, 45, 43, 41, 39, 37, 35, 33, 31, 29, 25]
+sanitizeKeywords = ["@", "/", "invalid_tank"]
 railwayGauges = ["narrow", "standard", "wide"]
 railwayGaugeLimits = [2.6, 3.2, 3.6]
 upgradeRailwayCostScalar = 120
@@ -248,6 +249,8 @@ industryCount = len(industryNames)
 
 industryTypes = ["Research Group", "Labs", "inc.", "Research Conglomerate", "University", "College", "Elementary School", "Preschool", "Laboratories", "Research", "Scopolamine Lab"]
 industryTypeCount = len(industryTypes)
+pingResponses = ["Leave me alone already!", "Bugoslavia is less annoying than you!", "**Warframe** is a free-to-play action role-playing third-person shooter multiplayer online game developed and published by Digital Extremes. In Warframe,tThe Tenno use their powered Warframes along with a variety of weapons to figure out why you did the most annoying thing ever done in the past 500 years by deciding to ping me in this Discord channel.", "", "Bro what","Amogus","Yo what is up you guys right now we’re at mcdonalds, and it is currently 3 in the morning and we just found out when you come to mcdonalds at 3 in the morning, you can order the among us happy meal you guys, that’s right, you heard, me, the among us happy meal, and there’s a toy inside of among us- you can either be a crewmate, or it can be an impostor and if you guys do not know what among us is, you must be living under a rock you guys, this game is insane, ok? so you can play with a bunch of friends ok? like 8, i- i- i think it’s up to 10 people you can play with, and there’s impostors, and there’s crewmates, and pretty much the impostor is trying to sabotage the whole game and trying to win. it’s insane you guys, once again, this- this video is not sponsored at all, but this game is insane. so we got so excited guys we love the game and we found that the mcdonalds is offering an among us happy meal, AND there’s a toy inside, but supposedly, when you get this happy meal you guys, something scary and weird with the impostor. now i don’t really believe it, but these videos i’ve been seeing on youtube have been insane, so that’s why we’re here right now, we’re gonna go through the drive through, and we’re gonna order the among us happy meal. But i need EVERYONE to like this video if you’re excited, ok? like this video with your knuckles right now, just smash, hit the like button, SUPER HARD you guys, on the count of 3 seconds i wanna see what you guys can do cuz i can’t do it, and if cole can’t do it, no one could like this video with their knuckles so let’s see if you guys can do it in 3 seconds. 3, 2, 1. OH HO!", "Every day we stray further from the days that you were mentally sane.", "Crazy? I was crazy once. They locked me in a room. A rubber room! A rubber room with you pinging me all the time, and you pinging me all the time makes me crazy.\nCrazy? I was crazy once. They locked me in a room. A rubber room! A rubber room with you pinging me all the time, and you pinging me all the time makes me crazy.\nCrazy? I was crazy once. They locked me in a room. A rubber room! A rubber room with you pinging me all the time, and you pinging me all the time makes me crazy.\n"]
+
 
 blimpSpeed = 150
 
@@ -441,7 +444,7 @@ async def advanceDay():
                         cost = -150000
                     lineInfo["currentTank"] = lineInfo["nextTank"]
                     lineInfo["currentTankWeight"] = lineInfo["nextTankWeight"]
-                    lineInfo["currentTankProgress"] = 0
+                    lineInfo["currentTankProgress"] = float(lineInfo["currentTankProgress"]) - 1.0
                     if lineInfo["currentTank"] == "":
                         lineInfo["status"] = "idle"
                     else:
@@ -493,7 +496,6 @@ async def advanceWeek():
                 variablesList[country][0]["populationHappiness"] = happiness - ((taxRate - 0.25)*1.5)
 
     await channel.send("## Finances have been updated for all countries.")
-
 
 @tasks.loop(time=times)
 async def daily_cycle():
@@ -766,6 +768,11 @@ async def deleteTank (ctx, tankDelete: str):
     await ctx.send("I have wiped the " + tankDelete + " from inventory.")
     await ctx.send("Note that no refunds were issued, " + ctx.channel.name + " just took them out on a parade tour and auctioned them off at the local for-charity event. \n  Take note that this probably shouldn't be ran for company tanks, once someone has already purchased them.")
 
+async def sanitize(inputPhrase: str):
+    outputPhrase = inputPhrase
+    for phrase in sanitizeKeywords:
+        outputPhrase = outputPhrase.replace(phrase, "")
+    return outputPhrase
 @bot.command()
 async def stopProduction (ctx, *, tankDelete):
     country = await getUserCountry(ctx)
@@ -949,6 +956,7 @@ async def resetAllCountries(ctx):
 
 @bot.command()
 async def registerCompany(ctx, *, companyName):
+    companyName = await sanitize(companyName)
     """Adds two numbers together."""
     channel = bot.get_channel(int(contractorsChat))
     thread = await channel.create_thread(
@@ -2197,8 +2205,11 @@ async def getFileType(ctx):
 async def tunePowertrain(ctx):
     import asyncio
     for attachment in ctx.message.attachments:
-        if "image" in attachment.content_type:
-            await ctx.reply("Your tank is very pretty, but maybe send me the **actual** blueprint that I can do stuff with? <:caatt:1151402846202376212>")
+        try:
+            if "image" in attachment.content_type:
+                await ctx.reply("Ah yes, I love eating random pictures instead of working with tank blueprints *like I was meant to do*! \n\n# <:caatt:1151402846202376212>")
+        except Exception:
+            pass
         blueprintData = json.loads(await attachment.read())
         name = blueprintData["header"]["name"]
         tankName = blueprintData["header"]["name"]
@@ -3131,6 +3142,7 @@ class approveTankToggle(discord.ui.View):
 
 @bot.command()
 async def registerTank(ctx):
+
     name = "invalid"
     weight = -1
     errors = 0
@@ -3139,7 +3151,7 @@ async def registerTank(ctx):
         configuration = await getZheifuBlueprintCheckerConfig(ctx)
         results = await runBlueprintCheck(ctx, attachment, configuration)
 
-        name = results["tankName"]
+        name = await sanitize(results["tankName"])
         weight = results["tankWeight"]
         valid = results["valid"]
         crewReport = results["crewReport"]
@@ -3444,6 +3456,7 @@ async def runBlueprintCheck(ctx, attachment, config):
         weight = float(blueprintData["header"]["mass"])/1000
         cost = round(pow((weight * costPerTon), 1.1))
         tankName = blueprintData["header"]["name"]
+        tankName = await sanitize(tankName)
         tankEra = blueprintData["header"]["era"]
         overallTankWidth = 0
         maxArmorOverall = 15 # this gets increased over time
@@ -4138,6 +4151,7 @@ async def registerContest(ctx):
     for attachment in ctx.message.attachments:
         fileData = json.loads(await attachment.read())
         contestName = fileData["contestName"]
+        contestName = await sanitize(contestName)
         allowWriting = True
         try:
             if contestsList["contests"][contestName]["contestHost"] != contestHostID:
@@ -4187,13 +4201,14 @@ async def registerContestCategory(ctx):
         return
     else:
         contestName = str(msg.content)
+        contestName = await sanitize(contestName)
     if contestsList["contests"][contestName]["contestHost"] != contestHostID:
         await ctx.reply("This isn't your contest!")
         return
     channel = bot.get_channel(ctx.channel.id)
     for attachment in ctx.message.attachments:
         fileData = json.loads(await attachment.read())
-        categoryName = fileData["categoryName"]
+        categoryName = await sanitize(fileData["categoryName"])
         # contestsList["contests"][contestName] = fileData
         contestsList["contests"][contestName]["categories"][categoryName] = fileData
         contestsList["contests"][contestName]["categories"][categoryName]["hostChannel"] = ctx.channel.id
@@ -4314,6 +4329,12 @@ async def submitTank(ctx):
         else:
             await ctx.send("The " + name + " needs fixes to the problems listed above before it can be registered.")
 
+@bot.listen('on_message')
+async def on_message(message):
+    if bot.user.mention in message.content.split():
+        response = pingResponses[int(len(pingResponses)*random())]
+        await message.channel.send(response)
+    return
 
 bot.run(token)
 

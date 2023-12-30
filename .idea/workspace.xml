@@ -6,16 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="9cea07c4-e001-4428-85f9-05c2e9eccbc5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blimpsInfo.json" beforeDir="false" afterPath="$PROJECT_DIR$/blimpsInfo.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/companyOperators.json" beforeDir="false" afterPath="$PROJECT_DIR$/companyOperators.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/contestInfo.json" beforeDir="false" afterPath="$PROJECT_DIR$/contestInfo.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/countries.json" beforeDir="false" afterPath="$PROJECT_DIR$/countries.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fun-facts.json" beforeDir="false" afterPath="$PROJECT_DIR$/fun-facts.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productionPaths.json" beforeDir="false" afterPath="$PROJECT_DIR$/productionPaths.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/research-in-progress.json" beforeDir="false" afterPath="$PROJECT_DIR$/research-in-progress.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tanksInfo.json" beforeDir="false" afterPath="$PROJECT_DIR$/tanksInfo.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tanksInventory.json" beforeDir="false" afterPath="$PROJECT_DIR$/tanksInventory.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tanktest.json" beforeDir="false" afterPath="$PROJECT_DIR$/tanktest.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,16 +80,5 @@
       <updated>1702859013018</updated>
     </task>
     <servers />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>2356</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
