@@ -26,16 +26,23 @@ This doesn't mean I won't help to ensure the contests are set up as intended tho
 ** **
 
 ### Contributors
+
 Overlord
 
 Azomer
 
-### Bug Hunters
+Hackstar
+
+Substep
+
+LoriJenkins
+
+Airmaster41
+
 0bihoernchen
 
 Hackstar
 
 Everyone in the **Zheifu Testing** server who has helped test the bot during development
 
-### Code Contributors
-*Be the first to put your name here!*
+
