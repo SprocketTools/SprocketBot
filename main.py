@@ -250,8 +250,8 @@ industryCount = len(industryNames)
 industryTypes = ["Research Group", "Labs", "inc.", "Research Conglomerate", "University", "College", "Elementary School", "Preschool", "Laboratories", "Research", "Scopolamine Lab"]
 industryTypeCount = len(industryTypes)
 pingResponses = ["Leave me alone already!", "Bugoslavia is less annoying than you!", "**Warframe** is a free-to-play action role-playing third-person shooter multiplayer online game developed and published by Digital Extremes. In Warframe,tThe Tenno use their powered Warframes along with a variety of weapons to figure out why you did the most annoying thing ever done in the past 500 years by deciding to ping me in this Discord channel.", "", "Bro what","Amogus","Yo what is up you guys right now we’re at mcdonalds, and it is currently 3 in the morning and we just found out when you come to mcdonalds at 3 in the morning, you can order the among us happy meal you guys, that’s right, you heard, me, the among us happy meal, and there’s a toy inside of among us- you can either be a crewmate, or it can be an impostor and if you guys do not know what among us is, you must be living under a rock you guys, this game is insane, ok? so you can play with a bunch of friends ok? like 8, i- i- i think it’s up to 10 people you can play with, and there’s impostors, and there’s crewmates, and pretty much the impostor is trying to sabotage the whole game and trying to win. it’s insane you guys, once again, this- this video is not sponsored at all, but this game is insane. so we got so excited guys we love the game and we found that the mcdonalds is offering an among us happy meal, AND there’s a toy inside, but supposedly, when you get this happy meal you guys, something scary and weird with the impostor. now i don’t really believe it, but these videos i’ve been seeing on youtube have been insane, so that’s why we’re here right now, we’re gonna go through the drive through, and we’re gonna order the among us happy meal. But i need EVERYONE to like this video if you’re excited, ok? like this video with your knuckles right now, just smash, hit the like button, SUPER HARD you guys, on the count of 3 seconds i wanna see what you guys can do cuz i can’t do it, and if cole can’t do it, no one could like this video with their knuckles so let’s see if you guys can do it in 3 seconds. 3, 2, 1. OH HO!", "Every day we stray further from the days that you were mentally sane.", "Crazy? I was crazy once. They locked me in a room. A rubber room! A rubber room with you pinging me all the time, and you pinging me all the time makes me crazy.\nCrazy? I was crazy once. They locked me in a room. A rubber room! A rubber room with you pinging me all the time, and you pinging me all the time makes me crazy.\nCrazy? I was crazy once. They locked me in a room. A rubber room! A rubber room with you pinging me all the time, and you pinging me all the time makes me crazy.\n"]
-
-
+covenanterResponses = ["The covenanter is the best tank ever built by a railroad company.", "The covenanter is real", "Yes", "Fake news"]
+listOfServers = ["Test Name", "Test Name 2"]
 blimpSpeed = 150
 
 async def advanceDay():
@@ -2201,9 +2201,12 @@ async def flipGeometry(ctx):
 async def getFileType(ctx):
     for attachment in ctx.message.attachments:
         await ctx.send(f"This is a {attachment.content_type}!")
+
 @bot.command()
 async def tunePowertrain(ctx):
     import asyncio
+    if not ctx.message.attachments:
+        await ctx.reply("**-tunePowertrain** configures your engine's transmission to use the most optimal setup for your tank!\nTo use this command, attach one or more .blueprint files when running the **-tunePowertrain** command.\nNote: it is recommended to use twin transmissions on all vehicle builds, due to the tendency of Sprocket AI to have terrible clutch braking skills.\n# <:caatt:1151402846202376212>")
     for attachment in ctx.message.attachments:
         try:
             if "image" in attachment.content_type:
@@ -2277,16 +2280,6 @@ async def tunePowertrain(ctx):
         print(topSpeed)
         import io
         await ctx.send(f"Your top speed should be about {round(topSpeed)} km/h. \nSet your upshift RPM to {int(idealRPM)}RPM and your maximum RPM to the highest setting available.\nEstimated max horsepower is {round(horsepower)}HP\n\nDownload the .blueprint attached below to get your updated transmission!")
-
-
-
-        # "GM1" = "number of gears" - 1
-        # "ideal flatness" = (("first gear"/"last gear")^(1/("GM1"))-1)*100
-        # "flatness" = "ideal flatness" * "scalar"
-        # "B-value" = ("first gear"/("last gear"*(1+"flatness"/100)^("GM1")))^(1/((("GM1")^2+("GM1"))/2))
-
-        # each gear ratio is:
-        # "previous gear" / ((1+("flatness"/100))*("B-value"^("number of gears" - "current gear")))
 
         gearCountM1 = gearCount - 1
         idealFlatness = ((initialGear/finalGear)**(1/(gearCountM1))-1)*100
@@ -3437,7 +3430,6 @@ async def runBlueprintCheck(ctx, attachment, config):
         requireGroundPressure = config["requireGroundPressure"]
         groundPressureMax = config["groundPressureMax"]
         litersPerDisplacement = config["litersPerDisplacement"]
-        minEDPT = config["minEDPT"]
         litersPerTon = config["litersPerTon"]
         caliberLimit = config["caliberLimit"]
         propellantLimit = config["propellantLimit"]
@@ -3657,7 +3649,7 @@ async def runBlueprintCheck(ctx, attachment, config):
 
                 if tooThickPlates > 0 or tooThinPlates > 0:
                     report = await addLine(report,
-                        f"{name} has {tooThickPlates} armor plates exceeding the {armorMax}mm armor limit, and {tooThinPlates} armor plates below the minimum 15mm requirement.")
+                        f"{name} has {tooThickPlates} armor plates exceeding the {armorMax}mm armor limit, and {tooThinPlates} armor plates below the minimum {armorMin}mm requirement.")
                     errorCount += 1
 
             if partName == "FLT":
@@ -3758,9 +3750,6 @@ async def runBlueprintCheck(ctx, attachment, config):
                     errorCount += 1
                 else:
                     report = await addLine(report, f"Engine \"{name}\" has {displacement} liters of displacement.")
-                if (displacement/weight) < minEDPT:
-                    report = await addLine(report, f"Engine \"{name}\" has a {round((displacement/weight), 2)} engine displacement per tonnage ratio.  This is too low - the minimum requirement is {minEDPT}.")
-                    errorCount += 1
             x += 1
 
         # print out minimum engine tech required
@@ -4329,12 +4318,65 @@ async def submitTank(ctx):
         else:
             await ctx.send("The " + name + " needs fixes to the problems listed above before it can be registered.")
 
+@bot.command()
+async def printSpreadsheet(ctx):
+    import asyncio
+    await ctx.send("Beginning processing now.")
+    contestName = ""
+    contestHostID = ctx.author.id
+    contestListText = ""
+    for contestTitle, contestInfo in contestsList["contests"].items():
+        print(contestInfo)
+        if contestInfo["contestHost"] == contestHostID:
+            contestListText = contestListText + f"\n{contestTitle}"
+    await ctx.send(f"What contest are you getting a spreadsheet for? Currently you are managing the following contests: {contestListText}")
+    def check(m: discord.Message):
+        return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+    try:
+        msg = await bot.wait_for('message', check=check, timeout=300.0)
+    except asyncio.TimeoutError:
+        await ctx.reply("Operation cancelled.")
+        return
+    else:
+        contestName = str(msg.content)
+        contestName = await sanitize(contestName)
+    if contestsList["contests"][contestName]["contestHost"] != contestHostID:
+        await ctx.reply("This isn't your contest!")
+        return
+    channel = bot.get_channel(ctx.channel.id)
+    import io
+    for category in contestsList["contests"][contestName]["categories"]:
+        printout = f"Tank Name,Submitter ID,Weight (T),Errors,Width,turretCount,Amount of crew,Max Armor Thickness,"
+        for tank, tankInfo in contestsList["contests"][contestName]["categories"][category]["submissions"].items():
+            printout = printout + (f"\n{tankInfo['tankName']},{tankInfo['tankOwner']},{tankInfo['tankWeight']},{tankInfo['errorCount']},{tankInfo['tankWidth']},{tankInfo['crewCount']},{tankInfo['turretCount']},{tankInfo['maxArmor']},")
+        data = io.BytesIO(printout.encode())
+        await ctx.send(file=discord.File(data, f'{category}.csv'))
+
+
+
+
+
+
+@bot.command()
+async def listMyServers(ctx):
+    for server in bot.guilds:
+        await ctx.send(f"{server.name}")
+
 @bot.listen('on_message')
-async def on_message(message):
-    if bot.user.mention in message.content.split():
+async def on_message(ctx):
+    if ctx.guild.id == 881892826986721280:
+        return
+    message = ctx.content.split()
+    if bot.user.mention in message:
         response = pingResponses[int(len(pingResponses)*random())]
-        await message.channel.send(response)
+        await ctx.channel.send(response)
+        return
+    if ctx.author.id == 220134579736936448 and "covenanter" in message:
+        await ctx.channel.send(covenanterResponses[int(len(covenanterResponses)*random())])
+    if random() > 0.999:
+        await ctx.channel.send(covenanterResponses[int(len(covenanterResponses)*random())])
     return
+
 
 bot.run(token)
 

@@ -787,7 +787,7 @@
                 }
             },
             "submissions": {},
-            "contestHost": 434451221978284074,
+            "contestHost": 712509599135301673,
             "acceptEntries": false
         },
         "Canadian Universal Tank Contest": {
@@ -964,7 +964,7 @@
                     "groundPressureMax": 0.8,
                     "litersPerDisplacement": 0,
                     "litersPerTon": 15,
-                    "minEDPT": 0,
+                    "minLFHP": 0,
                     "caliberLimit": 76,
                     "propellantLimit": 560,
                     "boreLimit": 4.93,
@@ -994,12 +994,63 @@
             "submissions": {},
             "contestHost": 241963411234226176,
             "acceptEntries": true
+        },
+        "Shoisho Heavy Tank Challenge": {
+            "contestName": "Shoisho Heavy Tank Challenge",
+            "description": "Defeat invaders of the Shoisho homeland!",
+            "rulesLink": "https://docs.google.com/document/d/13-U2KNjK7aKPqd11ErrEFt_adljIFKM-mgAxv7ls3IQ/edit?usp=sharing",
+            "startTimeStamp": 1704115860,
+            "endTimeStamp": 1704506340,
+            "categories": {
+                "Default Category": {
+                    "categoryName": "Default Category",
+                    "era": "latewar",
+                    "gameVersion": 0.127,
+                    "weightLimit": 42,
+                    "enforceGameVersion": "False",
+                    "errorTolerance": 0,
+                    "crewMaxSpace": 0.6,
+                    "crewMinSpace": 1.0,
+                    "crewMin": 4,
+                    "crewMax": 16,
+                    "turretRadiusMin": 1.6,
+                    "allowGCM": "True",
+                    "GCMratioMin": 60,
+                    "GCMtorqueMax": 2000,
+                    "hullHeightMin": 1.0,
+                    "hullWidthMax": 3,
+                    "torsionBarLengthMin": 0.795,
+                    "useDynamicTBLength": "False",
+                    "allowHVSS": "False",
+                    "beltWidthMin": 100,
+                    "requireGroundPressure": "True",
+                    "groundPressureMax": 1.0,
+                    "litersPerDisplacement": 0,
+                    "litersPerTon": 15,
+                    "minHPT": 20.98,
+                    "minLFHP": 1.2,
+                    "caliberLimit": 250,
+                    "propellantLimit": 1200,
+                    "boreLimit": 9,
+                    "shellLimit": 1700,
+                    "armorMin": 5,
+                    "ATsafeMin": 24,
+                    "armorMax": 500,
+                    "hostChannel": 1191375769012818003,
+                    "submissions": {},
+                    "contestName": "Shoisho Heavy Tank Challenge"
+                }
+            },
+            "submissions": {},
+            "contestHost": 712509599135301673,
+            "acceptEntries": true
         }
     },
     "loggingChannel": {
         "Dominion Challenge": 1184129476808953916,
         "Watch on the Rhine": 1184444654607937577,
         "Canadian Universal Tank Contest": 1184534197654782003,
-        "Soviet Universal Tank": 1187876307736989746
+        "Soviet Universal Tank": 1187876307736989746,
+        "Shoisho Heavy Tank Challenge": 1191375769012818003
     }
 }

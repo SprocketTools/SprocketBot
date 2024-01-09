@@ -47,7 +47,7 @@ The second one, `contestCategoryTemplate.json` is used to establish a category f
         "groundPressureMax": 1.0,				<< Ground pressure requirement
         "litersPerDisplacement": 28,				<< Minimum liters of internal fuel required per liter of engine displacement
         "litersPerTon": 1,					<< Minimum liters of internal fuel required per metric ton of vehicle weight
-	"minEDPT": 0.25,					<< Minimum engine displacement required per metric ton of vehicle weight
+		"minHPT": 1.2,						<< Amount of internal fuel liters required per unit of engine horsepower
         "caliberLimit": 128,					<< Gun caliber upper limit.  In-game limit is 250mm
         "propellantLimit": 600,					<< Propellant length limit in millimeters
         "boreLimit": 4,						<< Limit on cannon bore length (shell length + barrel length)
