@@ -11,7 +11,6 @@ Sprocket Bot is written purely in Python.  The attached .json files are usable a
 
 ## Warnings
 Sprocket bot is an **in-development** utility bot, developed by a college student during their free time.  I say "utility" because its capabilities are changing quite rapidly, and is nowhere near the end result I want it to be in.  As a result, 100% reliability in its services is not guaranteed.  
-- Granting Sprocket Bot administrator priveledges is not recommended.  It currently has no code that allows it to delete *anything* outsize Zheifu, but ask me about this in DMs on Discord.
 - I cannot keep the bot's entire source code public once administrative utilities and/or vehicle rating formulas are added.
 
 ## Requirements
