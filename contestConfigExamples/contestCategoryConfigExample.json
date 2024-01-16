@@ -1,5 +1,5 @@
 {
-        "contestName": "Contest Name Goes Here",
+        "categoryName": "Contest Name Goes Here",
         "era": "Midwar",
 	"gameVersion": 0.127,
         "enforceGameVersion": "True",
