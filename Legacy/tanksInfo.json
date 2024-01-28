@@ -3481,29 +3481,5 @@
         "licenseFee": 0,
         "importFee": 0,
         "buyoutFee": 0
-    },
-    "MK30 'Rodney Trailmaker'": {
-        "origin": "nunatuniq",
-        "originType": "country",
-        "status": "undetermined",
-        "weight": 8.997,
-        "width": 2.36,
-        "cost": 22362,
-        "buildTimeScalar": 1.3,
-        "licenseFee": 0,
-        "importFee": 0,
-        "buyoutFee": 0
-    },
-    "'Ceres' Motor Gun Carriage": {
-        "origin": "nunatuniq",
-        "originType": "country",
-        "status": "denied",
-        "weight": 15.187,
-        "width": 1.942,
-        "cost": 39776,
-        "buildTimeScalar": 1.3,
-        "licenseFee": 0,
-        "importFee": 0,
-        "buyoutFee": 0
     }
 }
