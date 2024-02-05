@@ -10,24 +10,27 @@ class imageTools(commands.Cog):
         imageLink = "https://sprockettools.github.io/textures/Scratched_Metal_2.png"
         attachments = ctx.message.attachments
 
-        await ctx.send("Send the url to your sprockettools.github.io or imgur 'modifier' image, or just specify 'default' if unsure.")
+        await ctx.send("Send the url to your modifier image (either from sprockettools.github.io or Imgur), or say 'default' to use the standard modifier.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
 
         try:
             msg = await self.bot.wait_for('message', check=check, timeout=90.0)
             imageInput = str(msg.content)
-            if imageInput == "default":
+            if imageInput.lower() == "default":
                 pass
             else:
                 if "https://i.imgur.com/9SAQYUm.png" in imageInput or "https://sprockettools.github.io/" in imageInput:
                     imageLink = imageInput
-                    await ctx.send("Beginning processing now.  This will take some time.")
         except asyncio.TimeoutError:
             await ctx.send("Operation cancelled.")
             return
+        await ctx.send("Beginning processing now.  This will take some time.")
         for item in attachments:
             # Brave AI actually works fairly decent
+            if int(item.size) > 3000000:
+                await ctx.send(f"Error: {item.filename} is too big!")
+
             response = requests.get(item.url)
             imageBase = Image.open(io.BytesIO(response.content)).convert('RGBA')
             response2 = requests.get(imageLink)
@@ -44,7 +47,7 @@ class imageTools(commands.Cog):
             byte_io = io.BytesIO()
             imageOut.save(byte_io, format='PNG')
             byte_io.seek(0)
-            file = discord.File(byte_io, filename='edited_image.png')
+            file = discord.File(byte_io, filename=f'edited_image.png')
             await ctx.send(file=file)
 
 

@@ -40,7 +40,7 @@ ownerID = int(config["settings"]["ownerID"])
 class Bot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all())
-        self.cogslist = ["cogs.registerFunctions", "cogs.SQLfunctions", "cogs.blueprintFunctions", "cogs.imageFunctions"]
+        self.cogslist = ["cogs.registerFunctions", "cogs.SQLfunctions", "cogs.blueprintFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.contestFunctions"]
 
     async def setup_hook(self):
         for ext in self.cogslist:

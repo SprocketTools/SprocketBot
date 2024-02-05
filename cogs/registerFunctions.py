@@ -11,7 +11,7 @@ class registerFunctions(commands.Cog):
     await ctx.send(content="Hello!")
 
   @commands.command(name="setupDatabase", description="Wipe literally everything.")
-  async def cog1(self, ctx):
+  async def cog2(self, ctx):
     await ctx.send(content="Hello!")
 
 

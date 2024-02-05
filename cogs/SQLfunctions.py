@@ -11,20 +11,20 @@ class SQLfunctions(commands.Cog):
     async def cog1(self, ctx):
         await ctx.send(content="Hello!")
 
-    async def databaseExecute(self, prompt):
+    async def databaseExecute(prompt: str):
         async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
             async with pool.acquire() as connection:
-                await connection.execute(prompt)
+                return await connection.execute(prompt)
 
-    async def databaseFetch(self, prompt):
+    async def databaseFetch(prompt: str):
         async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
             async with pool.acquire() as connection:
-                await connection.fetch(prompt)
+                return await connection.fetch(prompt)
 
-    async def databaseFetchrow(self, prompt):
+    async def databaseFetchrow(prompt: str):
         async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
             async with pool.acquire() as connection:
-                await connection.fetchrow(prompt)
+                return await connection.fetchrow(prompt)
 
     @commands.command(name="databaseTest", description="Sends hello!")
     async def databaseTest(self, ctx):
@@ -32,7 +32,7 @@ class SQLfunctions(commands.Cog):
             async with pool.acquire() as connection:
                 await connection.execute('''DROP TABLE tanks''')
                 await connection.execute('''CREATE TABLE IF NOT EXISTS tanks (
-                      tankName VARCHAR,
+                      tankName VARCHAR, 
                       tankOwnerID BIGINT,
                       hostEventID INT,
                       time INT,

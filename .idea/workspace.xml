@@ -5,39 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9cea07c4-e001-4428-85f9-05c2e9eccbc5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/cogs/SQLfunctions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cogs/blueprintFunctions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cogs/imageFunctions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cogs/textTools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cogs/campaignFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cogs/contestFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/blimpsInfo.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/companyOperators.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/config.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/contestCategoryTemplate.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/contestInfo.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/contestInfoTemplate.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/contestInfoTemplate2.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/countries.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/fun-facts.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/productionPaths.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/research-in-progress.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/tanksAssembly.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/tanksInfo.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/tanksInventory.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stock Config/tanktest.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/companyOperators.json" beforeDir="false" afterPath="$PROJECT_DIR$/companyOperators.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/contestConfigExamples/contestCategoryConfigExample.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/contestConfigExamples/contestInfoTemplate.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/contestInfo.json" beforeDir="false" afterPath="$PROJECT_DIR$/contestInfo.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/countries.json" beforeDir="false" afterPath="$PROJECT_DIR$/countries.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/everything.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/SQLfunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/SQLfunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/imageFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/imageFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/registerFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/registerFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oldContestCategoryExample.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/productionPaths.json" beforeDir="false" afterPath="$PROJECT_DIR$/productionPaths.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/research-in-progress.json" beforeDir="false" afterPath="$PROJECT_DIR$/research-in-progress.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tanksInfo.json" beforeDir="false" afterPath="$PROJECT_DIR$/tanksInfo.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tanksInventory.json" beforeDir="false" afterPath="$PROJECT_DIR$/tanksInventory.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tanktest.json" beforeDir="false" afterPath="$PROJECT_DIR$/tanktest.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
