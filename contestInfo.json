@@ -27,7 +27,7 @@
                     "useDynamicTBLength": "True",
                     "allowHVSS": "False",
                     "beltWidthMin": 100,
-                    "requireGroundPressure": "True",
+                    "requireGroundPressure": "True", 
                     "groundPressureMax": 1.0,
                     "litersPerDisplacement": 0.25,
                     "litersPerTon": 25,

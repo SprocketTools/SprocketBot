@@ -31,6 +31,7 @@ else:
 config = configparser.ConfigParser()
 config.read(configurationFilepath)
 config.sections()
+print(config)
 discordToken = config[f"settings.{botMode}"]["Token"]
 clientID = config[f"settings.{botMode}"]["clientID"]
 SQLsettings = config["SECURITY"]
@@ -40,7 +41,7 @@ ownerID = int(config["settings"]["ownerID"])
 class Bot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all())
-        self.cogslist = ["cogs.registerFunctions", "cogs.SQLfunctions", "cogs.blueprintFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.contestFunctions"]
+        self.cogslist = ["cogs.registerFunctions", "cogs.SQLfunctions", "cogs.blueprintFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.contestFunctions", "cogs.testingFunctions"]
 
     async def setup_hook(self):
         for ext in self.cogslist:

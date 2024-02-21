@@ -5,12 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9cea07c4-e001-4428-85f9-05c2e9eccbc5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/cogs/campaignFunctions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cogs/contestFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cogs/testingFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/ContestConfig.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/contestInfoTemplate.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cogs/SQLfunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/SQLfunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/imageFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/imageFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/registerFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/registerFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/contestFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/contestFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contestInfo.json" beforeDir="false" afterPath="$PROJECT_DIR$/contestInfo.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

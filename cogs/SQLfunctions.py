@@ -26,6 +26,31 @@ class SQLfunctions(commands.Cog):
             async with pool.acquire() as connection:
                 return await connection.fetchrow(prompt)
 
+    async def databaseFetchdict(prompt: str):
+        async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
+            async with pool.acquire() as connection:
+                await connection.fetchrow(prompt)
+                return connection.fetchall()
+
+    @commands.command(name="adminExecute", description="register a contest")
+    async def adminExecute(self, ctx: commands.Context, *, prompt):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        await ctx.send(await SQLfunctions.databaseExecute(prompt))
+
+    @commands.command(name="adminFetch", description="register a contest")
+    async def adminFetch(self, ctx: commands.Context, *, prompt):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+
+        result = await SQLfunctions.databaseFetch(prompt)
+        print(result)
+        await ctx.send(result)
+
     @commands.command(name="databaseTest", description="Sends hello!")
     async def databaseTest(self, ctx):
         async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
