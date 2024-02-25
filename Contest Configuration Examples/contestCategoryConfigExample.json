@@ -1,9 +1,11 @@
 {
-        "categoryName": "Default Category",		
+        "categoryName": "Default Category 2",		
         "era": "latewar",					
         "gameVersion": 0.127,					
         "weightLimit": 42,					
-        "enforceGameVersion": "False",				
+        "enforceGameVersion": "False",		
+		"useBattleRating": "False",
+		"requirePhotos": "True",
         "errorTolerance": 0,					
         "crewMaxSpace": 1.0,					
         "crewMinSpace": 0.6,				

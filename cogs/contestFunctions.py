@@ -5,17 +5,18 @@ import json, asyncio
 from pathlib import Path
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
-
+from cogs.blueprintFunctions import blueprintFunctions
+from cogs.discordUIfunctions import discordUIfunctions
 
 if platform.system() == "Windows":
     botMode = "development"
-    storageFilepath = "C:\\SprocketBot\\"
+    storageFilepath = "C:\\SprocketBot\\blueprint_vault\\"
     OSslashLine = "\\"
     prefix = "?"
 else:
     # default settings (running on Rasbian)
     botMode = "official"
-    storageFilepath = "/home/mumblepi/"
+    storageFilepath = "/home/mumblepi/blueprint_vault/"
     OSslashLine = "/"
     prefix = "-"
 
@@ -68,6 +69,8 @@ class contestFunctions(commands.Cog):
                                             gameVersion REAL,
                                             weightLimit REAL,
                                             enforceGameVersion BOOL,
+                                            useBattleRating BOOL,
+                                            requirePhotos BOOL,
                                             errorTolerance INT,
                                             crewMaxSpace REAL,
                                             crewMinSpace REAL,
@@ -101,17 +104,53 @@ class contestFunctions(commands.Cog):
         Path(storageFilepath).mkdir(parents=True, exist_ok=True)
         await ctx.send("Category datasheet wiped!")
 
-    @commands.command()
-    async def dropdown_test(self, ctx: commands.Context):
-        menu = discord.Menu(ctx)
-        options=[
-        ("Option 1", "value1"),
-        ("Option 2", "value2"),
-        ("Option 3", "value3")
-        ]
-
-        selected_option = await ctx.show_menu(menu)
-        print(f"Selected option: {selected_option}")
+    @commands.command(name="resetContestEntries", description="Reset all tanks entered.")
+    async def resetContestEntries(self, ctx: commands.Context):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        prompt = "DROP TABLE IF EXISTS contesttanks"
+        await SQLfunctions.databaseExecute(prompt)
+        prompt = ('''CREATE TABLE IF NOT EXISTS contesttanks (
+                                            tankName VARCHAR,
+                                            categoryName VARCHAR,
+                                            contestName VARCHAR,
+                                            ownerID BIGINT,
+                                            tankWeight REAL,
+                                            errorCount INT,
+                                            fileLocation VARCHAR,
+                                            valid BOOL,
+                                            tankWidth REAL,
+                                            crewCount INT,
+                                            armorBTRating INT,
+                                            cannonBTRating INT,
+                                            mobilityBTRating INT,
+                                            turretCount INT,
+                                            GCMratioMin INT,
+                                            maxArmor INT,
+                                            gameVersion VARCHAR,
+                                            gameEra VARCHAR,
+                                            GCMcount INT,
+                                            hullHeight REAL,
+                                            tankLength REAL,
+                                            torsionBarLength REAL,
+                                            suspensionType VARCHAR,
+                                            beltWidth REAL,
+                                            groundPressure REAL,
+                                            HP REAL,
+                                            HPT REAL,
+                                            litersPerDisplacement REAL,
+                                            litersPerTon REAL,
+                                            topSpeed REAL,
+                                            gunCount INT,
+                                            maxCaliber INT,
+                                            maxPropellant INT,
+                                            maxBore REAL,
+                                            maxShell INT,
+                                            minArmor INT);''')
+        await SQLfunctions.databaseExecute(prompt)
+        await ctx.send("Contest Entry datasheet wiped!")
 
     @commands.command(name="registerContest", description="register a contest")
     async def registerContest(self, ctx: commands.Context):
@@ -172,88 +211,65 @@ class contestFunctions(commands.Cog):
         await ctx.send("Beginning processing now.")
         contestHostID = ctx.author.id
         contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE ownerID = {contestHostID}')]
-        print(contestList)
-        await ctx.send("Select a contest below.")
-        view = contestView(contestList)
-        await ctx.send(view=view)
-        await view.wait()
-        contestNameOut = contestSelect().
-        await ctx.send("Let's get back to it.")
-        print(contestNameOut)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-
-        try:
-            msg = await self.bot.wait_for('message', check=check, timeout=90.0)
-            imageInput = str(msg.content)
-            if imageInput.lower() == "default":
-                pass
-            else:
-                if "https://i.imgur.com/9SAQYUm.png" in imageInput or "https://sprockettools.github.io/" in imageInput:
-                    imageLink = imageInput
-        except asyncio.TimeoutError:
-            await ctx.send("Operation cancelled.")
-            return
-        await ctx.send("Beginning processing now.  This will take some time.")
-
+        userPrompt = "Pick a contest you want to add your category to!"
+        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        await ctx.send(f"You selected the {contestName}!  Beginning processing now.")
+        contestConfig = [list(await SQLfunctions.databaseFetch(f"SELECT * FROM contests WHERE name = '{contestName}' AND ownerID = {contestHostID}"))]
         for attachment in ctx.message.attachments:
 
             config = json.loads(await attachment.read())
+            categoryName = config["categoryName"]
 
-            contestName = config["contestName"]
-            contestName = await textTools.sanitize(contestName)
-            contestDescription = config["contestDescription"]
-            contestRules = config["rulesLink"]
-            crossServer = False
-            if config["crossServer"].lower() == "true":
-                crossServer = True
-            startTimeStamp = config["startTimeStamp"]
-            endTimeStamp = config["endTimeStamp"]
-
-            contestName = str(await textTools.sanitize(contestName))
             allowWriting = True
-            # try:
-            existingContest = await SQLfunctions.databaseFetchrow(
-                f'''SELECT * FROM contests WHERE name = '{contestName}' ''')
-            contestData = dict(existingContest)
-            print(contestData)
+            try:
+                existingContestList = [list(await SQLfunctions.databaseFetch(f'''SELECT * FROM contestcategories WHERE categoryName = '{categoryName}' AND contestName = '{contestName}';'''))]
+                contestData = existingContestList[0]
+                print(contestData["categoryName"])
+                allowWriting = False
+                await ctx.send("You already have a category with this name!  Use the appropriate command to update an already-existing category.")
+            except Exception:
+                pass
+            if allowWriting == True:
+                try:
+                    submitDirectory = f"{storageFilepath}contests{OSslashLine}{contestName}"
+                    Path(submitDirectory).mkdir(parents=True, exist_ok=True)
+                    # create logging channel
+                    config["categoryName"] = await textTools.sanitize(categoryName)
+                    config["contestName"] = contestName
+                    config["ownerid"] = ctx.author.id
+                    promptVariableNames, promptValues = await textTools.getSQLprompt(config)
+                    await SQLfunctions.databaseExecute(f'''INSERT INTO contestcategories ({promptVariableNames}) VALUES ({promptValues}); ''')
+                    await ctx.send("Complete!")
+                except Exception:
+                    await ctx.send(f"There was an error in registering your category.")
 
-            if str(contestData["ownerid"]) != str(ctx.author.id):
-                await ctx.send(f"Someone else already has a contest registered under this name!")
-                allowWriting = False
-            if str(contestData["ownerid"]) == str(ctx.author.id):
-                await ctx.send(
-                    f"You already have a contest registered under this name!  Use a different command to update or remove your contest accordingly.")
-                allowWriting = False
+
+    @commands.command(name="updateContest", description="update a contest")
+    async def updateContest(self, ctx: commands.Context):
+        await ctx.send("Beginning processing now.")
+        contestHostID = ctx.author.id
+        for attachment in ctx.message.attachments:
+            config = json.loads(await attachment.read())
+            contestHostID = ctx.author.id
+            contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE ownerID = {contestHostID}')]
+            userPrompt = "What contest are you looking to update the configuration of?"
+            contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
 
             # except Exception:
             #     pass
-            if allowWriting == True:
-                submitDirectory = f"{storageFilepath}contests{OSslashLine}{contestName}"
-                Path(submitDirectory).mkdir(parents=True, exist_ok=True)
-                # create logging channel
-                channel = self.bot.get_channel(ctx.channel.id)
-                thread = await channel.create_thread(
-                    name=contestName,
-                    type=discord.ChannelType.private_thread
-                )
-                loggingChannelID = thread.id
-                await SQLfunctions.databaseExecute(f'''
-                    INSERT INTO contests (name, ownerID, description, rulesLink, startTimestamp, endTimestamp, acceptEntries, serverID, crossServer, loggingChannelID)
-                    VALUES ('{contestName}','{ctx.author.id}','{contestDescription}','{contestRules}','{startTimeStamp}','{endTimeStamp}','False', '{ctx.message.guild.id}', '{crossServer}','{loggingChannelID}'); ''')
-                await SQLfunctions.databaseFetch('SELECT * FROM tanks')
-                # await backupFiles()
-                await thread.send(
-                    f"<@{contestHostID}>, the {contestName} is now registered!  Submissions are turned off for now - enable them once you are ready.  Once you do enable submissions, they will be logged here.")
-                await ctx.send("Complete!")
+
+            contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE ownerID = {contestHostID} AND name = {contestName}')][0]
+            keystr, valuestr = await textTools.getSQLprompt(contestList)
+            print(keystr)
+            print(valuestr)
+            await SQLfunctions.databaseExecute(f'''UPDATE contests SET ({keystr}) VALUES ({valuestr}) WHERE ownerID = {contestHostID} AND name = {contestName};''')
+            await SQLfunctions.databaseFetch('SELECT * FROM tanks')
+            await ctx.send("Complete!")
 
 
-
-
-
-    @commands.command(name="listContests", description="register a contest")
+    @commands.command(name="listContests", description="list contests")
     async def listContests(self, ctx: commands.Context):
-        contestData = await SQLfunctions.databaseFetch('SELECT * FROM contests')
+        contestData = await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE serverID = {ctx.message.guild.id} OR crossServer = 'True';''')
         print(contestData)
         contestList = [dict(row) for row in contestData]
         print (contestList)
@@ -268,32 +284,139 @@ class contestFunctions(commands.Cog):
                               color=discord.Color.random())
         await ctx.send(embed=embed)
 
+    @commands.command(name="listCategories", description="list a contest's categories")
+    async def listCategories(self, ctx: commands.Context):
+        contestHostID = ctx.author.id
+        contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE serverID = {ctx.message.guild.id}')]
+        userPrompt = "What contest are you looking to get details on?"
+        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        categoryList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contestcategories WHERE contestname = '{contestName}';''')]
+
+        print (categoryList)
+        description = ""
+        serverID = str(ctx.message.guild.id)
+        for categoryInfo in categoryList:
+            appendation = f" ** {categoryInfo['categoryname']} ** \nWeight limit: {categoryInfo['weightlimit']}T\n \n"
+            description = description.__add__(appendation)
+        embed = discord.Embed(title=f"{contestName}'s submission categories",
+                              description=description,
+                              color=discord.Color.random())
+        await ctx.send(embed=embed)
+
+
 # Assistance from https://github.com/richardschwabe/discord-bot-2022-course/blob/main/initial_select.py
-class contestSelect(discord.ui.Select):
-    chosenContest = ""
-    def __init__(self, contestList):
-        options = []
-        self.contestlist = contestList
+    @commands.command(name="submitTank", description="submit a tank to a contest")
+    async def submitTank(self, ctx: commands.Context):
+        import asyncio
+        name = "invalid"
+        weight = -1
+        errors = 0
+        contestName = ""
+        contestListText = ""
+        allowEntry = True
+        contestType = await discordUIfunctions.getContestTypeChoice(ctx)
+        if contestType == "Global":
+            contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE crossServer = 'True';''')]
+        if contestType == "Server":
+            contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE serverID = {ctx.message.guild.id}')]
+        if len(contestList) < 1:
+            await ctx.send(f"There are no {contestType.lower()} contests running!")
+            return
+        userPrompt = "What contest are you submitting to?"
+        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        contestConfigList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE name = '{contestName}';''')]
+        contestConfig = contestConfigList[0]
 
-        i = 0
-        for contest in contestList:
-            options.append(discord.SelectOption(label=contest["name"], emoji='🏆', value=contest["name"]))
-            i += 1
-        super().__init__(placeholder='Pick a contest here', min_values=1, max_values=1, options=options)
+        # get the category
+        categoryList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contestcategories WHERE contestname = '{contestName}';''')]
+        if len(categoryList) == 3:
+            categoryName = categoryList[0]["categoryname"]
+        else:
+            userPrompt = "What category are you submitting to?"
+            categoryName = await discordUIfunctions.getCategoryChoice(ctx, categoryList, f'{userPrompt}')
+        await ctx.send(f"You are submitting to the {categoryName} category!")
+        configuration = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contestcategories WHERE contestname = '{contestName}' AND categoryname = '{categoryName}';''')]
+        config = configuration[0]
+        # run the blueprint checks
+        for attachment in ctx.message.attachments:
+            results = await blueprintFunctions.runBlueprintCheck(ctx, attachment, config)
+            await ctx.reply("Blueprint processing complete.")
+            name = results["tankName"]
+            weight = results["tankWeight"]
+            valid = results["valid"]
+            crewCount = results["crewCount"]
+            maxVehicleArmor = float(results["maxArmor"])
+            tankWidth = results["tankWidth"]
+            results["ownerid"] = ctx.author.id
 
-    async def callback(self, interaction: discord.Interaction):
-        chosenContest = self.values[0]
-        self.view.chosenContest = chosenContest
-        await interaction.response.send_message(f"{chosenContest} is chosen!")
+            existingSubsList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contestcategories WHERE contestname = '{contestName}' AND categoryname = '{categoryName}' AND ownerid != {ctx.author.id};''')]
+            if len(existingSubsList) > 0:
+                    await ctx.reply("Someone else has already submitted a tank with this name!  Please choose a different name.")
+                    valid = False
 
-class contestView(discord.ui.View):
-    def __init__(self, contestList):
-        super().__init__()
-        self.contestList = contestList
-        # Adds the dropdown to our view object.
-        self.add_item(contestSelect(contestList))
+            if valid == True:
+                if config["requirephotos"] == True:
+                    await ctx.send(f"## Attach the specified photos of the {name} here.  \n**Picture 1** needs to be a well-lit picture of the tank's front and side.\n**Picture 2** needs to be a well-lit picture of the tank's rear and side.\n**Picture 3** needs to be a front view of the tank using the \"Internals\" overlay **while looking at the ammunition rack editor.**\n**Picture 4** needs to be a top+side view of the tank using the \"Internals\" overlay **while looking at the ammunition rack editor.**\n### Note: at least one of your screenshots needs to include the full page and Sprocket UI.")
+                    def check(m: discord.Message):
+                        return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+                    try:
+                        msg = await self.bot.wait_for('message', check=check, timeout=5000.0)
+                    except asyncio.TimeoutError:
+                        await ctx.reply("Operation timed out due to no photos.  This vehicle has not been registered into the contest.")
+                        return
 
+                blueprintData = json.loads(await attachment.read())
+                json_output = json.dumps(blueprintData, indent=4)
+                file_location = f"{storageFilepath}{OSslashLine}{'contests'}{OSslashLine}{contestName}{OSslashLine}{categoryName}"
+                results["filelocation"] = file_location
+                from pathlib import Path
+                Path(file_location).mkdir(parents=True, exist_ok=True)
+                with open(str(file_location + "/" + str(name) + ".blueprint"), "w") as outfile:
+                    outfile.write(json_output)
 
+                # temporary
+                results["armorbtrating"] = 5000
+                results["cannonbtrating"] = 5000
+                results["mobilitybtrating"] = 5000
+                results["categoryname"] = categoryName
+                results["contestname"] = contestName
+
+                keystr, valuestr = await textTools.getSQLprompt(results)
+                print(keystr)
+                print(valuestr)
+                await SQLfunctions.databaseExecute(f'''INSERT INTO contesttanks ({keystr}) VALUES ({valuestr});''')
+                msg = ctx.message
+                url = msg.jump_url
+                chnl = self.bot.get_channel(int(contestConfig["loggingchannelid"]))
+
+                await chnl.send(f"### You have a new entry into the {contestName}! \nName: {name} \nCrew count: {crewCount} \n## Vehicle submission: [here]({url})")
+                await chnl.send(f"** ** \n\n** **")
+                await ctx.send(f"The {name} has been submitted!  Thanks for participating in the {contestName}!")
+            else:
+                await ctx.send(
+                    "The " + name + " needs fixes to the problems listed above before it can be registered.")
+
+    @commands.command(name="listSubmissions", description="list a contest's submissions")
+    async def listSubmissions(self, ctx: commands.Context):
+        contestHostID = ctx.author.id
+        contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE serverID = {ctx.message.guild.id}')]
+        userPrompt = "What contest are you looking to get a list of submissions for?"
+        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        categoryList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT categoryname FROM contestcategories WHERE contestname = '{contestName}';''')]
+        print(categoryList)
+        for categoryname in categoryList:
+            print(categoryname["categoryname"])
+            tanksList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contesttanks WHERE contestname = '{contestName}' AND categoryname = '{categoryname["categoryname"]}';''')]
+            print(tanksList)
+            if len(tanksList) > 0:
+                description = ""
+                for tank in tanksList:
+                    appendation = f''' **{tank["tankname"]}** \nContestant: {self.bot.get_user(int(tank["ownerid"]))}\nWeight: {round(float(tank["tankweight"]), 3)}T\n \n'''
+                    description = description.__add__(appendation)
+                embed = discord.Embed(title=f"{contestName}: {categoryname['categoryname']} Submissions",
+                                      description=description,
+                                      color=discord.Color.random())
+                await ctx.send(embed=embed)
 
 
 

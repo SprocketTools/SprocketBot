@@ -12,6 +12,20 @@ class textTools(commands.Cog):
           outputPhrase = outputPhrase.replace(phrase, "")
       return outputPhrase
 
+  async def getSQLprompt(inputList: list):
+      names = list(inputList.keys())
+      values = list(inputList.values())
+      names_string = str(names[0])
+      values_string = "'" + str(values[0]) + "'"
+      i = 1
+      while i < len(names):
+          names_string = names_string + f', {names[i]}'
+          values_string = values_string + f", '{values[i]}'"
+          i += 1
+      #print(names_string)
+      #print(values_string)
+      return names_string, values_string
+
   async def addLine(inputOne: str, inputTwo: str):
       return f"{inputOne}\n{inputTwo}"
 

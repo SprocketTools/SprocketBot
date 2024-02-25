@@ -5,7 +5,127 @@ from cogs.textTools import textTools
 class blueprintFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-    async def getPowertrainStats(self, attachment):
+
+    @commands.command(name="bakeGeometry", description="merge compartment geometry into itself.")
+    async def bakeGeometry(self, ctx: commands.Context):
+        import asyncio
+        # country = await getUserCountry(ctx)
+
+        # received if else statement from stackoverflow: https://stackoverflow.com/questions/65169339/download-csv-file-sent-by-user-discord-py
+        for attachment in ctx.message.attachments:
+
+            blueprintData = json.loads(await attachment.read())
+            blueprintDataSave = json.loads(await attachment.read())
+            name = blueprintData["header"]["name"]
+            x = 0
+            for iteration in blueprintData["blueprints"]:
+                partName = blueprintDataSave["blueprints"][x]["id"]
+                partString = blueprintDataSave["blueprints"][x]["data"]
+                partString.replace("\\", "")
+                partInfo = json.loads(partString)
+                clonePartInfo = copy.deepcopy(partInfo)
+                if partName == "Compartment" and partInfo["name"].lower() == "target":
+
+                    #print("Found a target!")
+                    y = 0
+                    for iteration in blueprintData["blueprints"]:
+
+                        partName = blueprintDataSave["blueprints"][x]["id"]
+                        partString = blueprintDataSave["blueprints"][x]["data"]
+                        partString.replace("\\", "")
+                        partInfo = json.loads(partString)
+                        clonePartInfo = copy.deepcopy(partInfo)
+
+                        basePartPoints = partInfo["compartment"]["points"]
+                        basePartPointsLength = len(basePartPoints)
+                        basePartSharedPoints = partInfo["compartment"]["sharedPoints"]
+                        basePartThicknessMap = partInfo["compartment"]["thicknessMap"]
+                        basePartFaceMap = partInfo["compartment"]["faceMap"]
+
+                        sourcePartName = blueprintDataSave["blueprints"][y]["id"]
+                        sourcePartString = blueprintDataSave["blueprints"][y]["data"]
+                        sourcePartString.replace("\\", "")
+                        sourcePartInfo = json.loads(sourcePartString)
+
+                        if sourcePartName == "Compartment" and sourcePartInfo["name"].lower() == "source":
+                            #print("Found a source!")
+                            import math
+                            sourcePartPosX = sourcePartInfo["pos"][0]
+                            sourcePartPosY = sourcePartInfo["pos"][1]
+                            sourcePartPosZ = sourcePartInfo["pos"][2]
+                            sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+                            sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+                            sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+                            sourcePartPoints = sourcePartInfo["compartment"]["points"]
+                            sourcePartPointsLength = len(sourcePartPoints)
+                            sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+                            sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+                            sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+
+                            # point positions (accounting for position + rotation)
+                            pos = 0
+                            # vector rotation
+                            while pos < sourcePartPointsLength:
+                                roundPoint = 6
+                                vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
+                                # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+                                angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
+
+                                newVector = braveRotateVector(vector, angles)
+
+                                # newVector = rotateVector(vector, angles)
+                                sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
+                                sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
+                                sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
+                                pos += 3
+
+                            # shared point lists (adjusted to not overlap with current faces)
+                            clonePartInfo["compartment"]["points"] = basePartPoints + sourcePartPoints
+
+                            for group in sourcePartSharedPoints:
+                                pos = 0
+                                while pos < len(group):
+                                    group[pos] = group[pos] + int(basePartPointsLength / 3)
+                                    pos += 1
+                            clonePartInfo["compartment"]["sharedPoints"] = basePartSharedPoints + sourcePartSharedPoints
+                            #print(sourcePartSharedPoints)
+                            #print(basePartSharedPoints)
+                            #print(clonePartInfo["compartment"]["sharedPoints"])
+                            # thickness maps (simply merged, it's how it works)
+                            clonePartInfo["compartment"]["thicknessMap"] = basePartThicknessMap + sourcePartThicknessMap
+
+                            # face map (adjusted to not overlap with current faces)
+
+                            for group in sourcePartFaceMap:
+                                pos = 0
+                                while pos < len(group):
+                                    group[pos] = group[pos] + int(basePartPointsLength / 3)
+                                    pos += 1
+                                # print(group)
+                            clonePartInfo["compartment"]["faceMap"] = basePartFaceMap + sourcePartFaceMap
+
+                            # save
+                            data0 = json.dumps(clonePartInfo)
+                            blueprintDataSave["blueprints"][x]["data"] = data0
+                        y += 1
+                x += 1
+            import io
+            await ctx.send("Done!")
+            # data0 = json.dumps(blueprintData[0]["data"])
+            # data1 = json.dumps(blueprintData[1]["data"])
+            # data0.replace("\\", "")
+            # data1.replace("\\", "")
+            # blueprintData[0]["data"] = data0
+            # blueprintData[1]["data"] = data1
+
+            # fileData[0]["data"] = blueprintData
+            stringOut = json.dumps(blueprintDataSave, indent=4)
+            data = io.BytesIO(stringOut.encode())
+            await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
+
+
+
+    async def getPowertrainStats(attachment):
         blueprintData = json.loads(await attachment.read())
         name = blueprintData["header"]["name"]
         tankName = blueprintData["header"]["name"]
@@ -72,39 +192,152 @@ class blueprintFunctions(commands.Cog):
             "topSpeed": topSpeed
         }
         return configuration
-    async def runBlueprintCheck(ctx, attachment, config):
+
+    @commands.command(name="tunePowertrain", description="merge compartment geometry into itself.")
+    async def tunePowertrain(self, ctx: commands.Context):
+        import asyncio
+        if not ctx.message.attachments:
+            await ctx.reply(
+                "**-tunePowertrain** configures your engine's transmission to use the most optimal setup for your tank!\nTo use this command, attach one or more .blueprint files when running the **-tunePowertrain** command.\nNote: it is recommended to use twin transmissions on all vehicle builds, due to the tendency of Sprocket AI to have terrible clutch braking skills.\n# <:caatt:1151402846202376212>")
+        for attachment in ctx.message.attachments:
+            try:
+                if "image" in attachment.content_type:
+                    await ctx.reply(
+                        "Ah yes, I love eating random pictures instead of working with tank blueprints *like I was meant to do*! \n\n# <:caatt:1151402846202376212>")
+            except Exception:
+                pass
+            blueprintData = json.loads(await attachment.read())
+            name = blueprintData["header"]["name"]
+            tankName = blueprintData["header"]["name"]
+            era = blueprintData["header"]["era"].lower()
+            weight = float(blueprintData["header"]["mass"]) / 1000
+            climbAngle = numpy.radians(45)
+            gearCount = 10
+            # eraBaseRPM is the ideal RPM when displacement is 1L/cyl
+            eraPowerMod = 1
+            flatnessScalar = 0.6
+            eraResistance = 1
+            eraBaseRPM = 4000
+            sprocketDiameter = 0.6
+            initialGear = 6.0
+            finalGear = 0.5
+            finalGearAdjustment = 1
+            # dispPerCyl = 0
+            if era == "midwar":
+                eraPowerMod = 0.92
+                eraResistance = 1.25
+                eraBaseRPM = 3800
+                gearCount = 9
+            if era == "earlywar":
+                eraPowerMod = 0.72
+                eraResistance = 1.5
+                eraBaseRPM = 3100
+                gearCount = 8
+            if era == "interwar":
+                eraPowerMod = 0.586
+                eraResistance = 3
+                eraBaseRPM = 2700
+                gearCount = 6
+            if era == "wwi":
+                eraPowerMod = 0.23
+                eraResistance = 4
+                eraBaseRPM = 1500
+                gearCount = 3
+                finalGearAdjustment = 0.95
+
+            x = 0
+            for iteration in blueprintData["blueprints"]:
+                partName = blueprintData["blueprints"][x]["id"]
+                partString = blueprintData["blueprints"][x]["data"]
+
+                partString.replace("\\", "")
+                partInfo = json.loads(partString)
+                clonePartInfo = copy.deepcopy(partInfo)
+                if partName == "ENG":
+                    name = partInfo["name"]
+                    displacement = round(float(partInfo["cylinders"]) * float(partInfo["cylinderDisplacement"]), 2)
+                    cylinders = int(partInfo["cylinders"])
+                    dispPerCyl = float(partInfo["cylinderDisplacement"])
+                    partInfo["targetMaxRPM"] = eraBaseRPM * (dispPerCyl ** -0.3)
+                    maxRPM = int(partInfo["targetMaxRPM"])
+                if partName == "TRK":
+                    sprocketDiameter = partInfo["wheels"][0]["diameter"]
+                    print(sprocketDiameter)
+
+                x += 1
+            idealRPM = eraBaseRPM * (dispPerCyl ** -0.3) / 1.01
+            horsepower = 40 * (dispPerCyl ** 0.7) * cylinders * eraPowerMod
+            topSpeed = (13.33 * (horsepower ** 0.5)) / ((eraResistance ** 0.8) * ((weight) ** 0.5))
+            Torque = 9.5492 * 746 * horsepower / idealRPM
+            initialGear = (11 * ((sprocketDiameter / 2) * (weight * 1000) * 9.81 * climbAngle) / Torque) / 100
+            finalGear = round(58 * numpy.pi * idealRPM * sprocketDiameter * finalGearAdjustment / (10000 * topSpeed), 3)
+            print(topSpeed)
+            import io
+            await ctx.send(
+                f"Your top speed should be about {round(topSpeed)} km/h. \nSet your upshift RPM to {int(idealRPM)}RPM and your maximum RPM to the highest setting available.\nEstimated max horsepower is {round(horsepower)}HP\n\nDownload the .blueprint attached below to get your updated transmission!")
+
+            gearCountM1 = gearCount - 1
+            idealFlatness = ((initialGear / finalGear) ** (1 / (gearCountM1)) - 1) * 100
+            flatness = idealFlatness * flatnessScalar
+            Bvalue = (initialGear / (finalGear * (1 + flatness / 100) ** (gearCountM1))) ** (
+                        1 / (((gearCountM1) ** 2 + (gearCountM1)) / 2))
+            transmissionGears = [initialGear]
+            x = 1
+            transmissionGears[0] = round(initialGear, 2)
+            while x < gearCount:
+                transmissionGears.append(
+                    round(float(transmissionGears[x - 1]) / ((1 + (flatness / 100)) * (Bvalue ** (gearCount - x))), 3))
+                x += 1
+            x = 0
+            for iteration in blueprintData["blueprints"]:
+                partName = blueprintData["blueprints"][x]["id"]
+                partString = blueprintData["blueprints"][x]["data"]
+                partString.replace("\\", "")
+                partInfo = json.loads(partString)
+                clonePartInfo = copy.deepcopy(partInfo)
+                if partName == "TSN":
+                    partInfo["d"] = list(transmissionGears)
+                    partInfo["r"] = list(transmissionGears)
+                blueprintData["blueprints"][x]["data"] = json.dumps(partInfo)
+                x += 1
+            stringOut = json.dumps(blueprintData, indent=4)
+            data = io.BytesIO(stringOut.encode())
+            await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
+
+    async def runBlueprintCheck(ctx: commands.Context, attachment, config):
         # importing data
-        contestName = config["contestName"]
+        print(config)
+        contestName = config["contestname"]
         era = config["era"]
-        gameVersion = config["gameVersion"]
-        enforceGameVersion = config["enforceGameVersion"]
-        errorTolerance = config["errorTolerance"]
-        weightLimit = config["weightLimit"]
-        crewMaxSpace = config["crewMaxSpace"]
-        crewMinSpace = config["crewMinSpace"]
-        crewMin = config["crewMin"]
-        crewMax = config["crewMax"]
-        turretRadiusMin = config["turretRadiusMin"]
-        allowGCM = config["allowGCM"]
-        GCMratioMin = config["GCMratioMin"]
-        GCMtorqueMax = config["GCMtorqueMax"]
-        hullHeightMin = config["hullHeightMin"]
-        hullWidthMax = config["hullWidthMax"]
-        torsionBarLengthMin = config["torsionBarLengthMin"]
-        useDynamicTBlength = config["useDynamicTBLength"]
-        allowHVSS = config["allowHVSS"]
-        beltWidthMin = config["beltWidthMin"]
-        requireGroundPressure = config["requireGroundPressure"]
-        groundPressureMax = config["groundPressureMax"]
-        litersPerDisplacement = config["litersPerDisplacement"]
-        litersPerTon = config["litersPerTon"]
-        caliberLimit = config["caliberLimit"]
-        propellantLimit = config["propellantLimit"]
-        boreLimit = config["boreLimit"]
-        shellLimit = config["shellLimit"]
-        armorMin = config["armorMin"]
-        ATsafeMin = config["ATsafeMin"]
-        armorMax = config["armorMax"]
+        gameVersion = round(float(config["gameversion"]), 5)
+        enforceGameVersion = config["enforcegameversion"]
+        errorTolerance = config["errortolerance"]
+        weightLimit = config["weightlimit"]
+        crewMaxSpace = config["crewmaxspace"]
+        crewMinSpace = config["crewminspace"]
+        crewMin = config["crewmin"]
+        crewMax = config["crewmax"]
+        turretRadiusMin = config["turretradiusmin"]
+        allowGCM = config["allowgcm"]
+        GCMratioMin = config["gcmratiomin"]
+        GCMtorqueMax = config["gcmtorquemax"]
+        hullHeightMin = config["hullheightmin"]
+        hullWidthMax = config["hullwidthmax"]
+        torsionBarLengthMin = config["torsionbarlengthmin"]
+        useDynamicTBlength = config["usedynamictblength"]
+        allowHVSS = config["allowhvss"]
+        beltWidthMin = config["beltwidthmin"]
+        requireGroundPressure = config["requiregroundpressure"]
+        groundPressureMax = config["groundpressuremax"]
+        litersPerDisplacement = config["litersperdisplacement"]
+        litersPerTon = config["litersperton"]
+        caliberLimit = config["caliberlimit"]
+        propellantLimit = config["propellantlimit"]
+        boreLimit = config["borelimit"]
+        shellLimit = config["shelllimit"]
+        armorMin = config["armormin"]
+        ATsafeMin = config["atsafemin"]
+        armorMax = config["armormax"]
 
         # declaring initial variables and opening data
         report = ""
@@ -120,7 +353,7 @@ class blueprintFunctions(commands.Cog):
         crewCount = 0
         turretCount = 0
         displacement = 1
-        fuelTankSize = 0
+        fuelTankSize = 0.0
         gunCount = 0
         maxCaliber = 0
         maxPropellant = 0
@@ -292,7 +525,7 @@ class blueprintFunctions(commands.Cog):
                             errorCount += 1
                         if width > hullWidthMax:
                             report = await textTools.addLine(report,
-                                f"{name} is {round(width, 2)} meters wide.  This is too wide for your railways, which can only support hulls up to {hullWidthMax} wide.")
+                                f"{name} is {round(width, 2)} meters wide.  This is wider than the {hullWidthMax} meter limit.")
                             errorCount += 1
                     else:
                         ringArmor = partInfo["turret"]["ringArmour"]
@@ -331,9 +564,9 @@ class blueprintFunctions(commands.Cog):
                             errorCount += 1
                         if float(ringRadius) <= turretRadiusMin:
                             report = await textTools.addLine(report,
-                                f"Warning: {name}'s turret ring is not wide enough to support crew.  Unless this is a cosmetic compartment or custom mentlet, please increase the turret ring diameter.")
+                                f"Warning: {name}'s turret ring is not wide enough to fit crew.  Increase the turret ring diameter if necessary.")
                         if ATpronePlates > 1:
-                            report = await textTools.addLine(report, f"Warning: this vehicle is prone to infantry rifles!  Make sure you are OK with this for your submission.")
+                            report = await textTools.addLine(report, f"Warning: this vehicle is prone to infantry rifles.")
 
 
                 if tooThickPlates > 0 or tooThinPlates > 0:
@@ -343,9 +576,9 @@ class blueprintFunctions(commands.Cog):
 
             if partName == "FLT":
                 requiredFLT = round(displacement*litersPerDisplacement * (1 + (litersPerTon*weight)), 2)
-                fuelTankSize = [partInfo["L"]]
-                if int(partInfo["L"]) < requiredFLT:
-                    report = await textTools.addLine(report,f"Your internal fuel tank has {int(partInfo['L'])}L of fuel, but needs {requiredFLT}L of fuel in order to perform adequately.")
+                fuelTankSize = int(partInfo["L"])
+                if partInfo["L"] < requiredFLT:
+                    report = await textTools.addLine(report,f"Your internal fuel tank has {partInfo['L']}L of fuel, but needs {requiredFLT}L of fuel in order to perform adequately.")
                     errorCount += 1
 
             if partName == "TRK":
@@ -398,11 +631,11 @@ class blueprintFunctions(commands.Cog):
                 print(partInfo["wheels"][1])
                 if round(beltWidth, 3) < beltWidthMin:
                     report = await textTools.addLine(report,
-                        f"Your tack belt is {beltWidth}mm wide.  This is too narrow and will lead to bad off-road performance.  Increase your track width to at least {beltWidthMin}mm.")
+                        f"Your track belt is {beltWidth}mm wide.  This is too narrow and will lead to bad off-road performance.  Increase your track width to at least {beltWidthMin}mm.")
                     errorCount += 1
                 if round(trackSystemWidth, 3) > hullWidthMax:
                     report = await textTools.addLine(report,
-                        f"Your tack system is {round(trackSystemWidth, 2)} meters wide.  This is too wide for your railways, which can only support vehicles up to {hullWidthMax} meters wide.")
+                        f"Your track system is {round(trackSystemWidth, 2)} meters wide.  This exceeds the {hullWidthMax} meter limit.")
                     errorCount += 1
                 if trackSystemWidth >= overallTankWidth:
                     overallTankWidth = round(trackSystemWidth, 3)
@@ -411,7 +644,7 @@ class blueprintFunctions(commands.Cog):
                     if useDynamicTBlength == True:
                         torsionBarLengthMin = torsionBarLengthMin * separation
                     if round(torsionBarLength, 3) < torsionBarLengthMin:
-                        report = await textTools.addLine(report, f"Your torsion bar is {torsionBarLength}m wide.  This is too short and will lead to bad off-road performance.  Increase your torsion bar length to at least {torsionBarLengthMin}m.")
+                        report = await textTools.addLine(report, f"Your torsion bar is {torsionBarLength}m wide.  This is below the {torsionBarLengthMin} meter requirement.")
                         errorCount += 1
 
                 except Exception:
@@ -486,11 +719,10 @@ class blueprintFunctions(commands.Cog):
             "valid": valid,
             "tankWidth": overallTankWidth,
             "crewCount": crewCount,
-            "crewReport": crewReport,
             "turretCount": turretCount,
-            "GCMratioMin": GCMratioMin,
+            "GCMratioMin": int(GCMratioMin),
             "maxArmor": maxArmorOverall,
-            "gameVersion": gameVersion,
+            "gameVersion": round(float(gameVersion), 5),
             "gameEra": era,
             "GCMcount": GCMcount,
             "hullHeight": height,
@@ -513,9 +745,51 @@ class blueprintFunctions(commands.Cog):
             }
         return results
 
+
     @commands.command(name="setupDatabase2", description="Wipe literally everything.")
     async def cog5(self, ctx):
         await ctx.send(content="Hello!")
+
+def braveRotateVector(vector, rot):
+    import numpy as np
+    rotX = rot[0]
+    rotY = rot[1]
+    rotZ = rot[2]
+    # Define the rotation matrices for each plane
+    matrixX = np.array([[1, 0, 0],
+                        [0, np.cos(rotX), -np.sin(rotX)],
+                        [0, np.sin(rotX), np.cos(rotX)]])
+
+    matrixY = np.array([[np.cos(rotY), 0, np.sin(rotY)],
+                        [0, 1, 0],
+                        [-np.sin(rotY), 0, np.cos(rotY)]])
+
+    matrixZ = np.array([[np.cos(rotZ), -np.sin(rotZ), 0],
+                        [np.sin(rotZ), np.cos(rotZ), 0],
+                        [0, 0, 1]])
+
+    # Define the original vector
+    # vector = np.array([1, 2, 3])
+
+    # Rotate the vector around the XY plane
+    # vector_xy = np.dot(vector, matrixX)
+
+    # Rotate the vector around the YZ plane
+    # vector_yz = np.dot(vector_xy, matrixY)
+
+    # Rotate the vector around the XZ plane
+    # vector_xz = np.dot(vector_yz, matrixZ)
+
+    # Z comes before X
+    # Y is not in the middle
+
+    vector_xz = np.dot(vector, matrixZ)
+
+    vector_xy = np.dot(vector_xz, matrixX)
+    vector_yz = np.dot(vector_xy, matrixY)
+
+    # Print the final rotated vector
+    return vector_yz
 
 async def setup(bot:commands.Bot) -> None:
   await bot.add_cog(blueprintFunctions(bot))
