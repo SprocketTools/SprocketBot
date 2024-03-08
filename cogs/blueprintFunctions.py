@@ -2,6 +2,7 @@ import discord, json, numpy, copy
 from discord.ext import commands
 from discord import app_commands
 from cogs.textTools import textTools
+from cogs.SQLfunctions import SQLfunctions
 class blueprintFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -10,7 +11,15 @@ class blueprintFunctions(commands.Cog):
     async def bakeGeometry(self, ctx: commands.Context):
         import asyncio
         # country = await getUserCountry(ctx)
-
+        serverID = (ctx.guild.id)
+        try:
+            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            if ctx.channel.id != channel:
+                await ctx.send(f"Utility commands are restricted to <#{channel}>")
+                return
+        except Exception:
+                await ctx.send(f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+                return
         # received if else statement from stackoverflow: https://stackoverflow.com/questions/65169339/download-csv-file-sent-by-user-discord-py
         for attachment in ctx.message.attachments:
 
@@ -199,6 +208,17 @@ class blueprintFunctions(commands.Cog):
         if not ctx.message.attachments:
             await ctx.reply(
                 "**-tunePowertrain** configures your engine's transmission to use the most optimal setup for your tank!\nTo use this command, attach one or more .blueprint files when running the **-tunePowertrain** command.\nNote: it is recommended to use twin transmissions on all vehicle builds, due to the tendency of Sprocket AI to have terrible clutch braking skills.\n# <:caatt:1151402846202376212>")
+
+        serverID = (ctx.guild.id)
+        try:
+            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            if ctx.channel.id != channel:
+                await ctx.send(f"Utility commands are restricted to <#{channel}>")
+                return
+        except Exception:
+                await ctx.send(f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+                return
+
         for attachment in ctx.message.attachments:
             try:
                 if "image" in attachment.content_type:

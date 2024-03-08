@@ -32,10 +32,8 @@ class imageTools(commands.Cog):
         imageLink = "https://sprockettools.github.io/textures/Scratch.png"
         attachments = ctx.message.attachments
         serverID = (ctx.guild.id)
-        print(serverID)
         try:
             channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
-            print(channel)
             if ctx.channel.id != channel:
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
