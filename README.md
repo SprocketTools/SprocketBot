@@ -1,8 +1,7 @@
 # Sprocket Bot
 ### The best Discord Utility bot for improving your Sprocket Tank Design experience!
-This bot's primary utility is to run the Zheifu campaign, while also incorporating several tools and utilities for manipulating vehicle blueprints.
 
-## Invite Sprocket Bot to your Discord server [here!](https://discord.com/api/oauth2/authorize?client_id=1137847253114040330&permissions=68169452355409&scope=bot%20applications.commands)
+### Invite Sprocket Bot to your Discord server [here!](https://discord.com/api/oauth2/authorize?client_id=1137847253114040330&permissions=68169452355409&scope=bot%20applications.commands)
 
 For documentation on Sprocket Bot's tools, check the [contest documentation](https://github.com/SprocketTools/SprocketBot/blob/main/CONTESTS.md) and [utilities documentation](https://github.com/SprocketTools/SprocketBot/blob/main/TOOLS.md).
 
@@ -14,8 +13,7 @@ Sprocket bot is an **in-development** utility bot, developed by a college studen
 - I cannot keep the bot's entire source code public once administrative utilities and/or vehicle rating formulas are added.
 
 ## Sprocket Bot is currently going under an extensive rewrite
-### Once the rewrite is complete and the new version is brought live, all running contests will be unsupported
-Please keep tabs with the bot owner through Discord for any contests that you intend to run during Feburary and March
+Expect features to change, break, or be modified during development.
 
 ## Requirements
 My responsibility for how contest hosts run their contests is extremely limited.  
@@ -24,6 +22,8 @@ Contest hosts may run whatever contests they'd like to with Sprocket Bot, except
 - The contest(s) cause excessive strain on the server or break it (which I would be impressed to actually see, no contest ever ran in Sprocket Official's history would have managed to do this *except the Ambushed! challenge*)
 
 This doesn't mean I won't help to ensure the contests are set up as intended though.  Should issues like these arise, please contact me through Discord for fastest response.
+
+### Note that this may change as Sprocket Bot is integrated with https://sprockettools.github.io in the near future.
 
 ##
 ** **

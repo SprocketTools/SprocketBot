@@ -8,56 +8,11 @@ Setting up contests is fairly straightforward.  You will need:
 
 Contests can have multiple categories, and you can re-register contests and categories under the same name (if you originally created it).  Be warned that saving over existing items you made before will clear everything except the .blueprint files of previous entries.
 
-Two configuration .json file examples are included above.  The first one, `contestInfoTemplate.json` is used to establish a contest:
-```
-{
-	"contestName": "Contest Name Goes Here",                << The name of your contest
-	"description": "A short description of the contest",    << Needs to be under 1000 characters
-	"rulesLink": "place a URL here",                        << Should be a link to Google Docs
-	"startTimeStamp": 2234779200,                           << use https://r.3v.fi/discord-timestamps/ to get the timestamp number 
-	"endTimeStamp": 2235845200                              << use https://r.3v.fi/discord-timestamps/ to get the timestamp number 
-}
-```
+Two configuration .json file examples are included in the `Contest Configuration Examples` folder.  The first one, `Contest Config.json` is used to establish a contest.
+
 Use the `-registerContest` command to register a contest, attaching the appropriate .json file while doing so.  Sprocket Bot will create a thread to log entries to.
 
-The second one, `contestCategoryTemplate.json` is used to establish a category for a contest:
-```
-{
-        "categoryName": "Contest Name Goes Here",		<< The name of your category
-        "era": "earlywar",					<< This must match the name of the target contest
-        "gameVersion": 0.127,					<< The game version you are analyzing entries with
-        "weightLimit": 28,					<< The weight limit of a tank in metric tons
-        "enforceGameVersion": "True",				<< Set to "True" or "False" to determine whether multiple game versions are allowed
-        "errorTolerance": 1,					<< The amount of violations a tank can have before it is denied
-        "crewMaxSpace": 1.0,					<< Limit on amount of space a crew member may have (in-game limit is 1.0)
-        "crewMinSpace": 0.8,					<< Minimum requirement for crew size (in-game limit is 0.6)
-        "crewMin": 3,						<< Minimum required amount of crew
-        "crewMax": 6,						<< Maximum allowed amount of crew (in-game limit is 16)
-        "turretRadiusMin": 0.8,					<< Required minimum turret radius (NOT Diameter)
-        "allowGCM": "True",					<< Allow "Geometric Custom Mantlets" A.K.A. GCMs A.K.A. sideways turrets.  *See note 1
-        "GCMratioMin": 65,					<< Minimum traverse ratio of GCMs 
-        "GCMtorqueMax": 150,					<< Maximum torque allowed for GCMs
-        "hullHeightMin": 0.98,					<< Minimum height requirement for hulls.  Drivers are usually 1 meter tall when sitting
-        "hullWidthMax": 2.85,					<< Maximum hull width in meters.  Accounts for geometry, tracks, and pre-made fenders
-        "torsionBarLengthMin": 0.5,				<< Minimum length for torsion bars.
-        "useDynamicTBLength": "True",				<< *See note 2
-        "allowHVSS": "False",					<< *See note 3
-        "beltWidthMin": 100,					<< Belt width requirement in millimeters
-        "requireGroundPressure": "True",			<< If enabled, checks for ground pressure
-        "groundPressureMax": 1.0,				<< Ground pressure requirement
-        "litersPerDisplacement": 28,				<< Minimum liters of internal fuel required per liter of engine displacement
-        "litersPerTon": 1,					<< Minimum liters of internal fuel required per metric ton of vehicle weight
-		"minHPT": 1.2,						<< Amount of internal fuel liters required per unit of engine horsepower
-        "caliberLimit": 128,					<< Gun caliber upper limit.  In-game limit is 250mm
-        "propellantLimit": 600,					<< Propellant length limit in millimeters
-        "boreLimit": 4,						<< Limit on cannon bore length (shell length + barrel length)
-        "shellLimit": 1200,					<< Limit on shell length (caliber*3 + propellant)
-        "armorMin": 8,						<< Minimum armor thickness requirement.  Checks all compartments and turret rings.
-        "ATsafeMin": 15,					<< *See note 4
-        "armorMax": 250						<< Upper armor limit.   In-game limit is 500mm (you can type numbers past the slider limit)
-    }
-```
-Use the `-registerContestCategory` command to register a contest category, attaching the appropriate .json file while doing so.  Sprocket Bot will ask you for the contest you wish to register it to.
+The second one, `contestCategoryConfigExampleV2.json` is used to establish a category for a contest.  Use the `-registerCategory` command to register a contest category, attaching the appropriate .json file while doing so.  Sprocket Bot will ask you for the contest you wish to register it to.
 
 To allow or disable entries, run the `-toggleContestEntries` command.  This will change whether participants (note: from all servers Sprocket Bot is in) to submit a tank to the contest.
 

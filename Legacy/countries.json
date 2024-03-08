@@ -5,7 +5,7 @@
             "type": "country",
             "channel": 1141147916434669579,
             "description": "A country built upon dozens of chained islands, home to rich agricultural land and diverse cultures.",
-            "money": 269600213,
+            "money": 255428565,
             "income": "100000",
             "land": "531558",
             "idealTonnage": "60",
@@ -134,7 +134,7 @@
             "type": "country",
             "channel": 1140969361184657438,
             "description": "Error: too lazy to describe this country's decription properly.",
-            "money": 216985253,
+            "money": 215485253,
             "income": "140000",
             "land": "652779",
             "idealTonnage": "60",
@@ -251,7 +251,7 @@
             "type": "country",
             "channel": 1142411807298949134,
             "description": "An interesting empire with an odd history and populace.",
-            "money": 38293172,
+            "money": 31271937,
             "income": "100000",
             "land": "464805",
             "idealTonnage": "60",
@@ -405,7 +405,7 @@
             "type": "country",
             "channel": 1142411858435915846,
             "description": "A diverse country with control of many important geographical areas around the world.",
-            "money": 134038425,
+            "money": 126138425,
             "income": "100000",
             "land": "894708",
             "idealTonnage": "60",
@@ -594,7 +594,7 @@
             "type": "country",
             "channel": 1140969320105648220,
             "description": "An older country with an impressive intellectual base. Many impressive technologies were invented here over the ages.",
-            "money": 160535393,
+            "money": 158635393,
             "income": "100000",
             "land": "1100574",
             "idealTonnage": "60",
@@ -636,7 +636,7 @@
             "type": "country",
             "channel": 1142411915688149133,
             "description": "A country with fertile agricultural lands and improtant trade routes.",
-            "money": 786988649,
+            "money": 781488649,
             "income": "100000",
             "land": "473868",
             "idealTonnage": "60",
@@ -649,7 +649,7 @@
             "averageIncome": 110,
             "taxRate": 16,
             "taxPercentToArmy": "16",
-            "engineTech": 17,
+            "engineTech": 18,
             "cannonTech": 7,
             "armorTech": 8,
             "suspensionTech": 8,
@@ -678,7 +678,7 @@
             "type": "country",
             "channel": 1142411952434446390,
             "description": "One of the largest countries in Zheifu, containing an impressive industrial landscape.",
-            "money": 974308556,
+            "money": 956258555,
             "income": "100000",
             "land": "1421550",
             "idealTonnage": "60",
@@ -702,7 +702,7 @@
             "securitySize": "10",
             "intelSize": "5",
             "autoBuild": "false",
-            "autoResearch": "false",
+            "autoResearch": "true",
             "railwayTech": 2,
             "focus": "building",
             "regiments": {
@@ -1182,7 +1182,7 @@
             "type": "country",
             "channel": 1142411987284938752,
             "description": "A country that has shrank significantly since when it was first founded.",
-            "money": 277565910,
+            "money": 272280200,
             "income": "100000",
             "land": "207144",
             "idealTonnage": "60",
@@ -2420,7 +2420,7 @@
             "type": "country",
             "channel": 1153859889932795934,
             "description": "One of the earliest known countries to have engaged in trade, Shoisho's history extends back for millenium.",
-            "money": 518102237,
+            "money": 511152237,
             "income": "100000",
             "land": "1299249",
             "idealTonnage": "60",
@@ -2653,20 +2653,20 @@
             "type": "company",
             "channel": 1166662029709414450,
             "contractors": 1,
-            "money": 25112798,
+            "money": 23362798,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 13,
-            "cannonTech": 11,
-            "armorTech": 12,
-            "suspensionTech": 10,
+            "engineTech": 14,
+            "cannonTech": 12,
+            "armorTech": 13,
+            "suspensionTech": 11,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "building",
+            "focus": "research",
             "regiments": {
                 "Bartkowicz Motor Works Defence Force": {
                     "name": "Bartkowicz Motor Works Defence Force",
@@ -2682,7 +2682,7 @@
             "type": "company",
             "channel": 1166662576130768967,
             "contractors": 1,
-            "money": 135836337,
+            "money": 134576880,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -2716,7 +2716,7 @@
                         },
                         "PT25-95": {
                             "name": "PT25-95",
-                            "deployedCount": 7
+                            "deployedCount": 14
                         },
                         "PT25-95-FLAT": {
                             "name": "PT25-95-FLAT",
@@ -2730,7 +2730,7 @@
                     "tanks": {
                         "B4-LL": {
                             "name": "B4-LL",
-                            "deployedCount": 3
+                            "deployedCount": 15
                         }
                     }
                 }
@@ -2859,7 +2859,7 @@
             "type": "company",
             "channel": 1166664084733841441,
             "contractors": 1,
-            "money": 236942631,
+            "money": 233512327,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": 2.8500000000000014,
@@ -3020,7 +3020,7 @@
             "type": "company",
             "channel": 1166664386539180122,
             "contractors": 1,
-            "money": 6850000,
+            "money": 7450000,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -3078,7 +3078,7 @@
             "type": "company",
             "channel": 1166664874156380181,
             "contractors": 1,
-            "money": 8152435083,
+            "money": 8150086757,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -3091,7 +3091,7 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "building",
+            "focus": "research",
             "regiments": {
                 "AVM Ltd. Defence Force": {
                     "name": "AVM Ltd. Defence Force",
@@ -3265,7 +3265,7 @@
             "type": "company",
             "channel": 1166665178142756864,
             "contractors": 1,
-            "money": -4434627,
+            "money": -3834627,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -3323,14 +3323,14 @@
             "type": "company",
             "channel": 1166669159694868542,
             "contractors": 1,
-            "money": 48765470,
+            "money": 35696096,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
-            "engineTech": 17,
-            "cannonTech": 17,
-            "armorTech": 17,
-            "suspensionTech": 16,
+            "engineTech": 18,
+            "cannonTech": 18,
+            "armorTech": 18,
+            "suspensionTech": 17,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
             "armorResearchFunding": 22000,
@@ -3381,7 +3381,7 @@
             "type": "company",
             "channel": 1167449273110114374,
             "contractors": 1,
-            "money": -4429059,
+            "money": -4743353,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -3410,7 +3410,7 @@
             "type": "company",
             "channel": 1168050035347443794,
             "contractors": 1,
-            "money": 73966801,
+            "money": 67934833,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -3551,6 +3551,64 @@
             }
         }
     ],
+    "<company name>": [
+        {
+            "displayName": "<company name>",
+            "type": "company",
+            "channel": 1168416506317635627,
+            "contractors": 0,
+            "money": 3000000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 4,
+            "cannonTech": 4,
+            "armorTech": 4,
+            "suspensionTech": 4,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "false",
+            "focus": "none",
+            "regiments": {
+                "<company name> Defence Force": {
+                    "name": "<company name> Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
+        }
+    ],
+    "<IronShield Defence Contractors>": [
+        {
+            "displayName": "<IronShield Defence Contractors>",
+            "type": "company",
+            "channel": 1168417874336034847,
+            "contractors": 0,
+            "money": 2600000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 4,
+            "cannonTech": 4,
+            "armorTech": 4,
+            "suspensionTech": 4,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "false",
+            "focus": "none",
+            "regiments": {
+                "<IronShield Defence Contractors> Defence Force": {
+                    "name": "<IronShield Defence Contractors> Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
+        }
+    ],
     "Ironshield Defence": [
         {
             "displayName": "Ironshield Defence",
@@ -3586,7 +3644,7 @@
             "type": "company",
             "channel": 1168427677221404732,
             "contractors": 0,
-            "money": 72651767,
+            "money": 71492940,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -3599,7 +3657,7 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "building",
+            "focus": "research",
             "regiments": {
                 "Aiko Motors Arsenal Defence Force": {
                     "name": "Aiko Motors Arsenal Defence Force",
@@ -3673,7 +3731,7 @@
             "type": "company",
             "channel": 1179360115720212522,
             "contractors": 0,
-            "money": 47512135,
+            "money": 47362135,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
@@ -3686,10 +3744,39 @@
             "armorResearchFunding": 22000,
             "autoBuild": "false",
             "autoResearch": "true",
-            "focus": "building",
+            "focus": "research",
             "regiments": {
                 "TEKKTH Productions Defence Force": {
                     "name": "TEKKTH Productions Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
+        }
+    ],
+    "<R.A.M>": [
+        {
+            "displayName": "<R.A.M>",
+            "type": "company",
+            "channel": 1179410541081546832,
+            "contractors": 0,
+            "money": 3000000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 0,
+            "cannonTech": 0,
+            "armorTech": 0,
+            "suspensionTech": 0,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "false",
+            "focus": "none",
+            "regiments": {
+                "<R.A.M> Defence Force": {
+                    "name": "<R.A.M> Defence Force",
                     "status": "unknown",
                     "tanks": {}
                 }
@@ -3841,6 +3928,35 @@
             }
         }
     ],
+    "<Goslingmetal>": [
+        {
+            "displayName": "<Goslingmetal>",
+            "type": "company",
+            "channel": 1186427182667538484,
+            "contractors": 0,
+            "money": 3000000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 0,
+            "cannonTech": 0,
+            "armorTech": 0,
+            "suspensionTech": 0,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "false",
+            "focus": "none",
+            "regiments": {
+                "<Goslingmetal> Defence Force": {
+                    "name": "<Goslingmetal> Defence Force",
+                    "status": "unknown",
+                    "tanks": {}
+                }
+            }
+        }
+    ],
     "Goslingmetal": [
         {
             "displayName": "Goslingmetal",
@@ -3876,13 +3992,13 @@
             "type": "company",
             "channel": 1186428226369753180,
             "contractors": 0,
-            "money": 2200000,
+            "money": 1800000,
             "idealTonnage": "50",
             "currentTonnage": "50",
             "unspentTonnage": "50",
             "engineTech": 0,
             "cannonTech": 0,
-            "armorTech": 1,
+            "armorTech": 2,
             "suspensionTech": 0,
             "engineResearchFunding": 22000,
             "cannonResearchFunding": 22000,
@@ -3897,6 +4013,50 @@
                     "tanks": {}
                 }
             }
+        }
+    ],
+    "C.A.T": [
+        {
+            "displayName": "C.A.T",
+            "type": "company",
+            "channel": 1190178992674844733,
+            "contractors": 0,
+            "money": 3000000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 0,
+            "cannonTech": 0,
+            "armorTech": 0,
+            "suspensionTech": 0,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "false",
+            "focus": "none"
+        }
+    ],
+    "TEKKTH Industries": [
+        {
+            "displayName": "TEKKTH Industries",
+            "type": "company",
+            "channel": 1191766855623397478,
+            "contractors": 0,
+            "money": 3000000,
+            "idealTonnage": "50",
+            "currentTonnage": "50",
+            "unspentTonnage": "50",
+            "engineTech": 0,
+            "cannonTech": 0,
+            "armorTech": 0,
+            "suspensionTech": 0,
+            "engineResearchFunding": 22000,
+            "cannonResearchFunding": 22000,
+            "armorResearchFunding": 22000,
+            "autoBuild": "false",
+            "autoResearch": "false",
+            "focus": "none"
         }
     ]
 }

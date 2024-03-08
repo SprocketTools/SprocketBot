@@ -171,7 +171,7 @@
         "A-K Giant Isopod": {
             "weight": 26.991,
             "type": "local",
-            "stored": 0,
+            "stored": 11.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -429,7 +429,7 @@
         "DT-obj-33": {
             "weight": 3.752,
             "type": "local",
-            "stored": 0,
+            "stored": 42.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -613,7 +613,7 @@
         "Z165 s": {
             "weight": 34.132,
             "type": "foreign",
-            "stored": 0,
+            "stored": 4.0,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -734,14 +734,14 @@
         "ZIK-AT 10.2": {
             "weight": 30.883,
             "type": "local",
-            "stored": 16,
+            "stored": 18.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-MAT 10": {
             "weight": 28.646,
             "type": "local",
-            "stored": 36.0,
+            "stored": 38.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -755,14 +755,14 @@
         "MSB-Z \u010d. 13-A": {
             "weight": 3.566,
             "type": "local",
-            "stored": 48.0,
+            "stored": 51.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "ZIK-Skout 10.2": {
             "weight": 17.87,
             "type": "local",
-            "stored": 27.0,
+            "stored": 28.0,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -1011,12 +1011,26 @@
         ".Nigelcore [AV]": {
             "weight": 48.735,
             "type": "local",
-            "stored": 0,
+            "stored": 11.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "Waffles cant aim [AV]": {
             "weight": 13.796,
+            "type": "local",
+            "stored": 0,
+            "deployed": 0,
+            "deployedAbroad": 0
+        },
+        "MK30 'Rodney Trailmaker'": {
+            "weight": 8.997,
+            "type": "local",
+            "stored": 0,
+            "deployed": 0,
+            "deployedAbroad": 0
+        },
+        "'Ceres' Motor Gun Carriage": {
+            "weight": 15.187,
             "type": "local",
             "stored": 0,
             "deployed": 0,
@@ -1363,7 +1377,7 @@
         "STG AS25": {
             "weight": 18.43,
             "type": "local",
-            "stored": 0,
+            "stored": 5.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1652,7 +1666,7 @@
         "ZIK-MAT 10": {
             "weight": 28.646,
             "type": "local",
-            "stored": 0,
+            "stored": 3.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1666,7 +1680,7 @@
         "ZIK-Skout 10": {
             "weight": 17.411,
             "type": "local",
-            "stored": 1,
+            "stored": 6.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1729,7 +1743,7 @@
         "Type 7 OH-NO": {
             "weight": 54.877,
             "type": "local",
-            "stored": 0,
+            "stored": 1.0,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -1794,7 +1808,7 @@
         "BMW CL - 6 S11": {
             "weight": 4.772,
             "type": "local",
-            "stored": 12.0,
+            "stored": 18.0,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -1859,7 +1873,7 @@
         "B4-LL": {
             "weight": 3.539,
             "type": "local",
-            "stored": 12.0,
+            "stored": 9.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1908,7 +1922,7 @@
         "PT25-95": {
             "weight": 26.157,
             "type": "local",
-            "stored": 7.0,
+            "stored": 0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -1984,7 +1998,7 @@
         "ZIK-BOI Skout": {
             "weight": 1.995,
             "type": "local",
-            "stored": 0,
+            "stored": 12.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2047,7 +2061,7 @@
         "ZIK-Skout 10.2": {
             "weight": 17.87,
             "type": "local",
-            "stored": 0,
+            "stored": 8.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2161,7 +2175,7 @@
         "7.5T Flatbed Transporter": {
             "weight": 7.5,
             "type": "foreign",
-            "stored": 80.0,
+            "stored": 84.0,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -2305,7 +2319,7 @@
         "AV 26L": {
             "weight": 2.512,
             "type": "local",
-            "stored": 13.0,
+            "stored": 39.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2384,7 +2398,7 @@
         "2.5T Transport Truck": {
             "weight": 2.5,
             "type": "foreign",
-            "stored": 65.0,
+            "stored": 77.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2513,14 +2527,14 @@
         "MSB-Z \u010d. 15-A Citadela": {
             "weight": 64.853,
             "type": "local",
-            "stored": 0,
+            "stored": 2.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
         "MSB-Z \u010d. 18-A": {
             "weight": 11.245,
             "type": "local",
-            "stored": 10.0,
+            "stored": 22.0,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -2565,7 +2579,7 @@
         "Sd.Kfz. 230 Ausf. A (d)": {
             "weight": 8.287,
             "type": "local",
-            "stored": 34.0,
+            "stored": 35.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2749,7 +2763,7 @@
         "Shoisho's chances at winning": {
             "weight": 9.556,
             "type": "local",
-            "stored": 0,
+            "stored": 16.0,
             "deployed": 0,
             "deployedAbroad": 0
         },
@@ -2913,7 +2927,7 @@
         "AMA C-3C": {
             "weight": 23.924,
             "type": "local",
-            "stored": 1.0,
+            "stored": 2.0,
             "deployed": 0,
             "deployedAbroad": 0
         }
@@ -3001,5 +3015,7 @@
     "Darwin mil agency": {},
     "<Goslingmetal>": {},
     "Goslingmetal": {},
-    "Goslingmetall": {}
+    "Goslingmetall": {},
+    "C.A.T": {},
+    "TEKKTH Industries": {}
 }
