@@ -134,6 +134,7 @@ class contestFunctions(commands.Cog):
                                             GCMcount INT,
                                             hullHeight REAL,
                                             tankLength REAL,
+                                            armorvolume REAL,
                                             torsionBarLength REAL,
                                             suspensionType VARCHAR,
                                             beltWidth REAL,
@@ -200,7 +201,6 @@ class contestFunctions(commands.Cog):
                 await SQLfunctions.databaseExecute(f'''
                 INSERT INTO contests (name, ownerID, description, rulesLink, startTimestamp, endTimestamp, acceptEntries, serverID, crossServer, loggingChannelID)
                 VALUES ('{contestName}','{ctx.author.id}','{contestDescription}','{contestRules}','{startTimeStamp}','{endTimeStamp}','False', '{ctx.message.guild.id}', '{crossServer}','{loggingChannelID}'); ''')
-                await SQLfunctions.databaseFetch('SELECT * FROM tanks')
                 # await backupFiles()
                 await thread.send(
                     f"<@{contestHostID}>, the {contestName} is now registered!  Submissions are turned off for now - enable them once you are ready.  Once you do enable submissions, they will be logged here.")
@@ -263,7 +263,6 @@ class contestFunctions(commands.Cog):
             print(keystr)
             print(valuestr)
             await SQLfunctions.databaseExecute(f'''UPDATE contests SET ({keystr}) VALUES ({valuestr}) WHERE ownerID = {contestHostID} AND name = {contestName};''')
-            await SQLfunctions.databaseFetch('SELECT * FROM tanks')
             await ctx.send("Complete!")
 
 
@@ -318,7 +317,7 @@ class contestFunctions(commands.Cog):
         if contestType == "Global":
             contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE crossServer = 'True';''')]
         if contestType == "Server":
-            contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE serverID = {ctx.message.guild.id}')]
+            contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE serverID = {ctx.message.guild.id} AND crossServer != 'True';''')]
         if len(contestList) < 1:
             await ctx.send(f"There are no {contestType.lower()} contests running!")
             return
@@ -349,7 +348,7 @@ class contestFunctions(commands.Cog):
             tankWidth = results["tankWidth"]
             results["ownerid"] = ctx.author.id
 
-            existingSubsList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contestcategories WHERE contestname = '{contestName}' AND categoryname = '{categoryName}' AND ownerid != {ctx.author.id};''')]
+            existingSubsList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contesttanks WHERE contestname = '{contestName}' AND tankname = '{name}' AND categoryname = '{categoryName}' AND ownerid = {ctx.author.id};''')]
             if len(existingSubsList) > 0:
                     await ctx.reply("Someone else has already submitted a tank with this name!  Please choose a different name.")
                     valid = False
@@ -373,11 +372,11 @@ class contestFunctions(commands.Cog):
                 Path(file_location).mkdir(parents=True, exist_ok=True)
                 with open(str(file_location + "/" + str(name) + ".blueprint"), "w") as outfile:
                     outfile.write(json_output)
-
+                armorBTRating, cannonBTRating, mobilityBTRating = await blueprintFunctions.getBattleRating(results)
                 # temporary
-                results["armorbtrating"] = 5000
-                results["cannonbtrating"] = 5000
-                results["mobilitybtrating"] = 5000
+                results["armorbtrating"] = int(armorBTRating)
+                results["cannonbtrating"] = int(cannonBTRating)
+                results["mobilitybtrating"] = int(mobilityBTRating)
                 results["categoryname"] = categoryName
                 results["contestname"] = contestName
 

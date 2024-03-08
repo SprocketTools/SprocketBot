@@ -41,7 +41,7 @@ ownerID = int(config["settings"]["ownerID"])
 class Bot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all())
-        self.cogslist = ["cogs.registerFunctions", "cogs.SQLfunctions", "cogs.blueprintFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.contestFunctions", "cogs.testingFunctions"]
+        self.cogslist = ["cogs.registerFunctions", "cogs.SQLfunctions", "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.githubTools", "cogs.contestFunctions", "cogs.testingFunctions"]
 
     async def setup_hook(self):
         for ext in self.cogslist:
@@ -51,6 +51,16 @@ class Bot(commands.Bot):
         await channel.send("I am now online!")
         print(f'Logged in as {bot.user} (ID: {bot.user.id})')
         print('------')
+
+    @commands.command(name="reloadCogs", description="reload all extensions")
+    async def reloadCogs(self, ctx: commands.Context):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        for cog in self.cogslist:
+            await bot.reload_extension(cog)
+        await ctx.send("Reloaded!")
 
 bot = Bot()
 bot.run(discordToken)
@@ -64,3 +74,5 @@ async def sanitize(inputPhrase: str):
 
 async def addLine(inputOne: str, inputTwo: str):
     return f"{inputOne}\n{inputTwo}"
+
+

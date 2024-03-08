@@ -5,14 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9cea07c4-e001-4428-85f9-05c2e9eccbc5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/cogs/discordUIfunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cogs/githubTools.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/Contest Config 2.json" beforeDir="false" afterPath="$PROJECT_DIR$/Contest Configuration Examples/Contest Config 2.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/contestCategoryConfigExample.json" beforeDir="false" afterPath="$PROJECT_DIR$/Contest Configuration Examples/contestCategoryConfigExample.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cogs/blueprintFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/blueprintFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/campaignFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/campaignFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cogs/contestFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/contestFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/testingFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/testingFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/textTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/textTools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/discordUIfunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/discordUIfunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/imageFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/imageFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tanktest.json" beforeDir="false" afterPath="$PROJECT_DIR$/tanktest.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -171,5 +172,15 @@
       <updated>1702859013018</updated>
     </task>
     <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/cogs/SQLfunctions.py</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

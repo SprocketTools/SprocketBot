@@ -48,6 +48,19 @@ class discordUIfunctions(commands.Cog):
         else:
             return "Server"
 
+    async def getChoiceFromList(ctx: commands.Context, categoryList: list, userPrompt: str):
+        chosen = False
+        int = 0
+        while chosen == False:
+            categoryListSlice = categoryList[int:int+20]
+            int = int + 20
+            view = listChoiceDropdownView(categoryListSlice)
+            await ctx.send(content=userPrompt, view=view)
+            await view.wait()
+            result = view.result
+            if result != "Next page":
+                return result
+
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(discordUIfunctions(bot))
@@ -121,4 +134,27 @@ class categoryDropdownView(discord.ui.View):
         self.contestList = categoryList
         self.add_item(categoryDropdown(categoryList))
 
+class listChoiceDropdown(discord.ui.Select):
+    def __init__(self, itemList):
+        self.categoryList = itemList
+        i = 0
+        options = []
+        for item in itemList:
+            options.append(discord.SelectOption(label=item, emoji='⚫', value=item))
+            i += 1
+        if len(options) > 19:
+            options.append(discord.SelectOption(label="Next page", emoji='➡️', value="Next page"))
+        super().__init__(placeholder='Select an option here...', min_values=1, max_values=1,
+                         options=options)
 
+    async def callback(self, interaction: discord.Interaction):
+        # promptResponses[self.authorID] = self.values[0]
+        self.view.result = self.values[0]
+        await interaction.response.defer()
+        self.view.stop()
+
+class listChoiceDropdownView(discord.ui.View):
+    def __init__(self, categoryList):
+        super().__init__()
+        self.contestList = categoryList
+        self.add_item(listChoiceDropdown(categoryList))

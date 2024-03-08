@@ -304,6 +304,16 @@ class blueprintFunctions(commands.Cog):
             data = io.BytesIO(stringOut.encode())
             await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
 
+    async def getBattleRating(config):
+        armorBTRating = float(config["armorVolume"])*1000
+        cannonBTRating = float(config["maxCaliber"])*float(config["maxPropellant"])
+        mobilityBTRating = float(config["HPT"])*float(config["litersPerTon"])
+        return armorBTRating, cannonBTRating, mobilityBTRating
+
+
+
+
+
     async def runBlueprintCheck(ctx: commands.Context, attachment, config):
         # importing data
         print(config)
@@ -360,6 +370,7 @@ class blueprintFunctions(commands.Cog):
         maxBore = 0
         maxShell = 0
         minArmor = 0
+        armorVolume = 0.0
         crewReport = "Crew information: \n"
         suspensionType = "torsion bar"
 
@@ -464,6 +475,7 @@ class blueprintFunctions(commands.Cog):
 
             if partName == "Compartment" and partInfo["name"] != "US Tanker Sitting Angled 1 (Zheifu Variant)":
                 name = partInfo["name"]
+                armorVolume += float(partInfo["armourVolume"])
                 # displacement = float(partInfo["cylinders"])*float(partInfo["cylinderDisplacement"])
                 # print(country)
                 tooThinPlates = 0
@@ -537,7 +549,9 @@ class blueprintFunctions(commands.Cog):
                             turretCount += 1
                         if ringRadius > overallTankWidth:
                             overallTankWidth = ringRadius
+                        isGCM = False
                         if abs(int(partInfo["rot"][2])) > 20 and ringRadius >= turretRadiusMin:
+                            isGCM = True
                             GCMcount += 1
                             if allowGCM == False:
                                 report = await textTools.addLine(report, f"GCMs (including compartment \"{name}\") are not allowed in this contest.")
@@ -562,7 +576,7 @@ class blueprintFunctions(commands.Cog):
                             report = await textTools.addLine(report,
                                 f"{name} has been file edited and cannot be accepted.  Reason: turret volume is invalid.")
                             errorCount += 1
-                        if float(ringRadius) <= turretRadiusMin:
+                        if float(ringRadius) <= turretRadiusMin and isGCM == False:
                             report = await textTools.addLine(report,
                                 f"Warning: {name}'s turret ring is not wide enough to fit crew.  Increase the turret ring diameter if necessary.")
                         if ATpronePlates > 1:
@@ -721,6 +735,7 @@ class blueprintFunctions(commands.Cog):
             "crewCount": crewCount,
             "turretCount": turretCount,
             "GCMratioMin": int(GCMratioMin),
+            "armorVolume": armorVolume,
             "maxArmor": maxArmorOverall,
             "gameVersion": round(float(gameVersion), 5),
             "gameEra": era,
