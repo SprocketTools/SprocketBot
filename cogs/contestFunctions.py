@@ -1,4 +1,4 @@
-import os, platform, discord, configparser, ast, json
+import os, platform, discord, configparser, ast, json, csv
 from discord.ext import commands
 from discord import app_commands
 import json, asyncio
@@ -7,6 +7,7 @@ from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
 from cogs.blueprintFunctions import blueprintFunctions
 from cogs.discordUIfunctions import discordUIfunctions
+from cogs.githubTools import githubTools
 
 if platform.system() == "Windows":
     botMode = "development"
@@ -154,7 +155,15 @@ class contestFunctions(commands.Cog):
         await ctx.send("Contest Entry datasheet wiped!")
 
     @commands.command(name="registerContest", description="register a contest")
+
+
     async def registerContest(self, ctx: commands.Context):
+        contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+        print(contestList["contestmanagerroleid"])
+        print(ctx.author.roles)
+        if str(contestList["contestmanagerroleid"]) not in str(ctx.author.roles):
+            await ctx.send(await textTools.retrieveError(ctx))
+            return
         await ctx.send("Beginning processing now.")
         contestHostID = ctx.author.id
         for attachment in ctx.message.attachments:
@@ -394,6 +403,32 @@ class contestFunctions(commands.Cog):
             else:
                 await ctx.send(
                     "The " + name + " needs fixes to the problems listed above before it can be registered.")
+
+    @commands.command(name="getContestCSV", description="list a contest's submissions")
+    async def getContestCSV(self, ctx: commands.Context):
+        contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+        print(contestList["contestmanagerroleid"])
+        print(ctx.author.roles)
+        if str(contestList["contestmanagerroleid"]) not in str(ctx.author.roles):
+            await ctx.send("Unfortunately you are not authorized to do this.")
+            return
+        contestHostID = ctx.author.id
+        contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE ownerID = {contestHostID}')]
+        userPrompt = "What contest are you looking to get a list of submissions for?"
+        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+
+        file_location = f"{storageFilepath}{OSslashLine}{'contests'}{OSslashLine}{contestName}{OSslashLine}{contestName}Entries.csv"
+        tanksList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contesttanks WHERE contestname = '{contestName}';''')]
+        i = 0
+        for tank in tanksList:
+            del tanksList[i]['filelocation']
+            i += 1
+        with open(file_location, 'w', newline='\n') as file:
+            writer = csv.DictWriter(file, fieldnames=tanksList[0].keys())
+            writer.writeheader()
+            writer.writerows(tanksList)
+
+        await ctx.send(file=discord.File(file_location))
 
     @commands.command(name="listSubmissions", description="list a contest's submissions")
     async def listSubmissions(self, ctx: commands.Context):

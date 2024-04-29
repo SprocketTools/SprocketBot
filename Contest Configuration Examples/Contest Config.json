@@ -1,8 +1,8 @@
 {
-    "contestName": "Contest Name Goes Here", 
-	"contestDescription": "A short description of the contest",
+    "contestName": "Example Contest", 
+	"contestDescription": "Used to demonstrate the system",
 	"rulesLink": "place a URL here",
-	"startTimeStamp": 2234779200,
-	"endTimeStamp": 2235845200,
+	"startTimeStamp": 1714358009,
+	"endTimeStamp": 1714789980,
 	"crossServer": "True"
 }

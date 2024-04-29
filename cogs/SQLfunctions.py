@@ -16,10 +16,20 @@ class SQLfunctions(commands.Cog):
             async with pool.acquire() as connection:
                 return await connection.execute(prompt)
 
+    async def databaseExecuteDynamic(prompt: str, values: list):
+        async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
+            async with pool.acquire() as connection:
+                return await connection.execute(prompt, *values)
+
     async def databaseFetch(prompt: str):
         async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
             async with pool.acquire() as connection:
                 return await connection.fetch(prompt)
+
+    async def databaseFetchDynamic(prompt: str, values: list):
+        async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
+            async with pool.acquire() as connection:
+                return await connection.fetch(prompt, *values)
 
     async def databaseFetchrow(prompt: str):
         async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
@@ -31,6 +41,12 @@ class SQLfunctions(commands.Cog):
             async with pool.acquire() as connection:
                 await connection.fetchrow(prompt)
                 return connection.fetchall()
+
+    async def databaseGetCSV(prompt: str, keys: list):
+        async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
+            async with pool.acquire() as connection:
+                await connection.copy_from_query(prompt, output=result)
+                return result
 
     @commands.command(name="adminExecute", description="register a contest")
     async def adminExecute(self, ctx: commands.Context, *, prompt):

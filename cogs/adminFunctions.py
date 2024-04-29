@@ -33,9 +33,15 @@ class adminFunctions(commands.Cog):
                               managerchannelID BIGINT,
                               serverboosterroleID BIGINT,
                               contestmanagerroleID BIGINT,
+                              botmanagerroleID BIGINT,
                               campaignmanagerroleID BIGINT);''')
         await SQLfunctions.databaseExecute(prompt)
         await ctx.send("Done!  Now go DM everyone that their config was reset.")
+
+    @commands.command(name="listMyServers", description="List all my servers.")
+    async def listMyServers(self, ctx: commands.Context):
+        for server in self.bot.guilds:
+            await ctx.send(f"{server.name}")
 
     @commands.command(name="sendGlobalUpdate", description="Send a global update to all servers.")
     async def sendGlobalUpdate(self, ctx: commands.Context):
@@ -64,14 +70,14 @@ class adminFunctions(commands.Cog):
                     await serverOwner.send(message_out_text)
         else:
             for server in self.bot.guilds:
-                channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {server.id}')][0][result.lower()])
-                if channel < 5:
-                    if server.owner.id != 123105882102824960:
-                        serverOwner = self.bot.get_user(server.owner.id)
-                        await serverOwner.send(message_out_text)
-                else:
+                try:
+                    channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {server.id}')][0][result.lower()])
                     serverChannel = self.bot.get_channel(channel)
                     await serverChannel.send(message_out_text)
+                except Exception:
+                    serverOwner = self.bot.get_user(server.owner.id)
+                    await serverOwner.send(message_out_text)
+
 
         await ctx.send("## Delivered!")
 
@@ -83,6 +89,14 @@ class adminFunctions(commands.Cog):
             return
         os.system("systemctl reboot -i")
 
+    @commands.command(name="setBotStatus", description="setup the server")
+    async def setBotStatus(self, ctx: commands.Context, *, nameIn: str):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        await self.bot.change_presence(activity=discord.Game(name=nameIn))
+
     @commands.command(name="setup", description="setup the server")
     async def setup(self, ctx: commands.Context):
         if ctx.author.guild_permissions.administrator == True:
@@ -92,8 +106,8 @@ class adminFunctions(commands.Cog):
         responses = {}
         responses["serverid"] = ctx.guild.id
         responses["ownerid"] = ctx.guild.owner.id
-
-        await ctx.send("Before we begin: it is recommended to run this command in an admin channel, as you will be asked to ping up to three roles.  Reply with 'continue' if this is an appropriate channel.")
+        await ctx.send("This is the setup command, which will configure Sprocket Bot to work with your server.  You will be asked to ping a role or channel in reply to messages; make sure you are running this in an admin channel.  If your server only has one channel and one role, just repeatedly ping them instead")
+        await ctx.send("Reply with 'continue' if this is an appropriate channel.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         try:
@@ -106,7 +120,7 @@ class adminFunctions(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
 
-        await ctx.send("Awesome!  Let's get started. \n\nWhat is your server's general chat?  Reply to this message with a mention of that channel.")
+        await ctx.send("Awesome!  Let's get started. \n\nWhat is your server's general chat?  A.K.A. the channel that your community uses as the primary discussion chat.  Reply to this message with a mention of that channel.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         try:
@@ -146,6 +160,13 @@ class adminFunctions(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
 
+        @commands.command(name="exit", description="send a message wherever you want")
+        async def exit(self, ctx: commands.Context):
+            if ctx.author.id != 712509599135301673:
+                await ctx.send(await textTools.retrieveError(ctx))
+                return
+            await exit(1)
+
         await ctx.send("What is your server booster role?  Reply to this message with a ping of that role.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -176,7 +197,20 @@ class adminFunctions(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
 
-        await ctx.send("Sprocket Bot can interact with users in your general chat!  Do you wish to enable the fun module for exclusively your general chat?")
+        await ctx.send(
+            "What role do you want to grant permissions to edit Sprocket Bot's settings?  Reply to this message with a ping of that role.")
+
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
+            responses["botmanagerroleID"] = msg.role_mentions[0].id
+        except asyncio.TimeoutError:
+            await ctx.send("Operation cancelled.")
+            return
+
+        await ctx.send("Sprocket Bot can interact with users in your general chat!  Do you wish to enable the fun module for exclusively your general chat?  Reply with 'yes' or 'no'.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
 
@@ -194,11 +228,11 @@ class adminFunctions(commands.Cog):
         keystr, valuestr = await textTools.getSQLprompt(responses)
         await SQLfunctions.databaseExecute(f'''DELETE FROM serverconfig WHERE serverid = {ctx.guild.id};''')
         await SQLfunctions.databaseExecute(f'''INSERT INTO serverconfig ({keystr}) VALUES ({valuestr});''')
-        await ctx.send("## Done!")
+        await ctx.send("## Done! \nYour server is now configured and can fully utilize its commands.")
 
     @commands.command(name="troll", description="send a message wherever you want")
     async def troll(self, ctx: commands.Context, channelin: str, *, message):
-        if ctx.author.id == 712509599135301673:
+        if ctx.author.id == 712509599135301673 or ctx.author.id == 682990777814876312:
             import re
             channelin = int(re.sub(r'[^0-9]', '', channelin))
             print(channelin)
@@ -208,6 +242,17 @@ class adminFunctions(commands.Cog):
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")
+
+    @commands.command(name="DM", description="send a message to anyone's DM")
+    async def DM(self, ctx: commands.Context, userID: str, *, message):
+        if ctx.author.id == 712509599135301673 or ctx.author.id == 682990777814876312:
+            import re
+            await ctx.send("Message is en route.")
+            recipient = self.bot.get_user(int(userID))
+            await recipient.send(message)
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await recipient.send(file=file, content="")
 
 
 

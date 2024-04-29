@@ -26,6 +26,11 @@ class blueprintFunctions(commands.Cog):
             blueprintData = json.loads(await attachment.read())
             blueprintDataSave = json.loads(await attachment.read())
             name = blueprintData["header"]["name"]
+            version = blueprintData["header"]["gameVersion"]
+            if "0.12" not in version:
+                errorText = await textTools.retrieveError(ctx)
+                await ctx.reply(f"{errorText}\n\nThis command does not support the Geometric Internals build yet.")
+
             x = 0
             for iteration in blueprintData["blueprints"]:
                 partName = blueprintDataSave["blueprints"][x]["id"]
@@ -202,6 +207,246 @@ class blueprintFunctions(commands.Cog):
         }
         return configuration
 
+    async def tunePowertrain200(ctx: commands.Context, attachment):
+        blueprintData = json.loads(await attachment.read())
+        name = blueprintData["header"]["name"]
+        tankName = blueprintData["header"]["name"]
+        era = blueprintData["header"]["era"].lower()
+        weight = float(blueprintData["header"]["mass"]) / 1000
+        climbAngle = numpy.radians(60)
+        gearCount = 8
+        dispPerCyl = 1
+        cylinders = 1
+        # eraBaseRPM is the ideal RPM when displacement is 1L/cyl
+        eraPowerMod = 1
+        flatnessScalar = 0.8
+        eraResistance = 0.7
+        eraBaseRPM = 4000
+        sprocketDiameter = 0.6
+        initialGear = 6.0
+        finalGear = 0.5
+        finalGearAdjustment = 1
+        # dispPerCyl = 0
+        if era == "midwar":
+            eraPowerMod = 0.92
+            eraResistance = 1.25
+            eraBaseRPM = 3800
+            gearCount = 6
+        if era == "earlywar":
+            eraPowerMod = 0.72
+            eraResistance = 1.5
+            eraBaseRPM = 3100
+            gearCount = 6
+        if era == "interwar":
+            eraPowerMod = 0.586
+            eraResistance = 3
+            eraBaseRPM = 2700
+            gearCount = 4
+        if era == "wwi":
+            eraPowerMod = 0.23
+            eraResistance = 4
+            eraBaseRPM = 1500
+            gearCount = 3
+            finalGearAdjustment = 0.95
+
+
+
+        await ctx.send(f" How many gears do you want to use?  For this vehicle era, it's recommended to use {gearCount} gears.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=200.0)
+            gearCount = int(msg.content)
+        except Exception:
+            await ctx.send("This number was invalid!  Using the recommended value...")
+
+        await ctx.send(f"Specify the desired climbing angle in degrees.  Note: bigger climbing angles also improve your neutral steer setting.  \nRecommended values are between 45 and 75.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=200.0)
+            climbAngle = numpy.radians(int(msg.content))
+            if int(msg.content) > 90 or int(msg.content) < 1:
+                await ctx.send("This number was invalid!  Using the recommended value...")
+                climbAngle = numpy.radians(60)
+
+        except Exception:
+            await ctx.send("This number was invalid!  Using the recommended value...")
+
+        x = 0
+        for partInfo in blueprintData["blueprints"]:
+            partID = partInfo["id"]
+            if partID == 12:
+                cylinders = int(partInfo["blueprint"]["cylinders"])
+                dispPerCyl = float(partInfo["blueprint"]["cylinderDisplacement"])
+                partInfo["targetMaxRPM"] = eraBaseRPM * (dispPerCyl ** -0.3)
+            if partID == 72:
+                sprocketDiameter = partInfo["blueprint"]["diameter"]
+                print(sprocketDiameter)
+            x += 1
+        print(cylinders)
+        print(dispPerCyl)
+
+        idealRPM = eraBaseRPM * (dispPerCyl ** -0.3) / 1.01
+        horsepower = 40 * (dispPerCyl ** 0.7) * cylinders * eraPowerMod
+        topSpeed = (13.33 * (horsepower ** 0.5)) / ((eraResistance ** 0.8) * ((weight) ** 0.5))
+
+        await ctx.send(f"Your vehicle's top speed is estimated to be {round(topSpeed, 1)}km/h.  Specify your intended top speed, or just say 'skip'.\n- A lower top speed will improve acceleration.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=60.0)
+            topSpeed = int(msg.content)
+        except Exception:
+            pass
+
+        await ctx.send(f"[Advanced] What curve modifier do you wish to use?  Recommended values are between 0.5 and 1.5, while the default is 0.8.\n- A smaller number will improve acceleration near the final gear\n- A larger number will improve acceleration near the first gear")
+
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=60.0)
+            flatnessScalar = round(float(msg.content), 3)
+        except Exception:
+            pass
+
+        Torque = 9.5492 * 746 * horsepower / idealRPM
+        initialGear = (11 * ((sprocketDiameter / 2) * (weight * 1000) * 9.81 * climbAngle) / Torque) / 100
+        finalGear = round(58 * numpy.pi * idealRPM * sprocketDiameter * finalGearAdjustment / (10000 * topSpeed), 3)
+        print(topSpeed)
+        import io
+        await ctx.send(f"Your top speed should be about {round(topSpeed)} km/h. \nSet your upshift RPM to {int(idealRPM)}RPM and your maximum RPM to the highest setting available.\nEstimated max horsepower is {round(horsepower)}HP\n\nDownload the .blueprint attached below to get your updated transmission!")
+
+        gearCountM1 = gearCount - 1
+        idealFlatness = ((initialGear / finalGear) ** (1 / (gearCountM1)) - 1) * 100
+        flatness = idealFlatness * flatnessScalar
+        Bvalue = (initialGear / (finalGear * (1 + flatness / 100) ** (gearCountM1))) ** (
+                    1 / (((gearCountM1) ** 2 + (gearCountM1)) / 2))
+        transmissionGears = [initialGear]
+        x = 1
+        transmissionGears[0] = round(initialGear, 2)
+        while x < gearCount:
+            transmissionGears.append(
+                round(float(transmissionGears[x - 1]) / ((1 + (flatness / 100)) * (Bvalue ** (gearCount - x))), 3))
+            x += 1
+        x = 0
+        blueprintData["header"]["name"] = f'{tankName}-tuned'
+        for partInfo in blueprintData["blueprints"]:
+            partID = partInfo["id"]
+            print(partID)
+            if partID == 26:
+                blueprintData["blueprints"][x]["blueprint"]["d"] = list(transmissionGears)
+                blueprintData["blueprints"][x]["blueprint"]["r"] = list(transmissionGears[0:2])
+            if partID == 12:
+                blueprintData["blueprints"][x]["blueprint"]["targetMaxRPM"] = int(idealRPM)
+                blueprintData["blueprints"][x]["blueprint"]["targetMinRPM"] = int(idealRPM/2)
+            x += 1
+
+        stringOut = json.dumps(blueprintData, indent=4)
+        data = io.BytesIO(stringOut.encode())
+        await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
+    async def tunePowertrain127(ctx: commands.Context, attachment):
+        blueprintData = json.loads(await attachment.read())
+        name = blueprintData["header"]["name"]
+        tankName = blueprintData["header"]["name"]
+        era = blueprintData["header"]["era"].lower()
+        weight = float(blueprintData["header"]["mass"]) / 1000
+        climbAngle = numpy.radians(45)
+        gearCount = 10
+        # eraBaseRPM is the ideal RPM when displacement is 1L/cyl
+        eraPowerMod = 1
+        flatnessScalar = 0.6
+        eraResistance = 1
+        eraBaseRPM = 4000
+        sprocketDiameter = 0.6
+        initialGear = 6.0
+        finalGear = 0.5
+        finalGearAdjustment = 1
+        # dispPerCyl = 0
+        if era == "midwar":
+            eraPowerMod = 0.92
+            eraResistance = 1.25
+            eraBaseRPM = 3800
+            gearCount = 9
+        if era == "earlywar":
+            eraPowerMod = 0.72
+            eraResistance = 1.5
+            eraBaseRPM = 3100
+            gearCount = 8
+        if era == "interwar":
+            eraPowerMod = 0.586
+            eraResistance = 3
+            eraBaseRPM = 2700
+            gearCount = 6
+        if era == "wwi":
+            eraPowerMod = 0.23
+            eraResistance = 4
+            eraBaseRPM = 1500
+            gearCount = 3
+            finalGearAdjustment = 0.95
+
+        x = 0
+        for iteration in blueprintData["blueprints"]:
+            partName = blueprintData["blueprints"][x]["id"]
+            partString = blueprintData["blueprints"][x]["data"]
+
+            partString.replace("\\", "")
+            partInfo = json.loads(partString)
+            clonePartInfo = copy.deepcopy(partInfo)
+            if partName == "ENG":
+                name = partInfo["name"]
+                displacement = round(float(partInfo["cylinders"]) * float(partInfo["cylinderDisplacement"]), 2)
+                cylinders = int(partInfo["cylinders"])
+                dispPerCyl = float(partInfo["cylinderDisplacement"])
+                partInfo["targetMaxRPM"] = eraBaseRPM * (dispPerCyl ** -0.3)
+                maxRPM = int(partInfo["targetMaxRPM"])
+            if partName == "TRK":
+                sprocketDiameter = partInfo["wheels"][0]["diameter"]
+                print(sprocketDiameter)
+
+            x += 1
+        idealRPM = eraBaseRPM * (dispPerCyl ** -0.3) / 1.01
+        horsepower = 40 * (dispPerCyl ** 0.7) * cylinders * eraPowerMod
+        topSpeed = (13.33 * (horsepower ** 0.5)) / ((eraResistance ** 0.8) * ((weight) ** 0.5))
+        Torque = 9.5492 * 746 * horsepower / idealRPM
+        initialGear = (11 * ((sprocketDiameter / 2) * (weight * 1000) * 9.81 * climbAngle) / Torque) / 100
+        finalGear = round(58 * numpy.pi * idealRPM * sprocketDiameter * finalGearAdjustment / (10000 * topSpeed), 3)
+        print(topSpeed)
+        import io
+        await ctx.send(f"Your top speed should be about {round(topSpeed)} km/h. \nSet your upshift RPM to {int(idealRPM)}RPM and your maximum RPM to the highest setting available.\nEstimated max horsepower is {round(horsepower)}HP\n\nDownload the .blueprint attached below to get your updated transmission!")
+
+        gearCountM1 = gearCount - 1
+        idealFlatness = ((initialGear / finalGear) ** (1 / (gearCountM1)) - 1) * 100
+        flatness = idealFlatness * flatnessScalar
+        Bvalue = (initialGear / (finalGear * (1 + flatness / 100) ** (gearCountM1))) ** (
+                    1 / (((gearCountM1) ** 2 + (gearCountM1)) / 2))
+        transmissionGears = [initialGear]
+        x = 1
+        transmissionGears[0] = round(initialGear, 2)
+        while x < gearCount:
+            transmissionGears.append(
+                round(float(transmissionGears[x - 1]) / ((1 + (flatness / 100)) * (Bvalue ** (gearCount - x))), 3))
+            x += 1
+        x = 0
+        for iteration in blueprintData["blueprints"]:
+            partName = blueprintData["blueprints"][x]["id"]
+            partString = blueprintData["blueprints"][x]["data"]
+            partString.replace("\\", "")
+            partInfo = json.loads(partString)
+            clonePartInfo = copy.deepcopy(partInfo)
+            if partName == "TSN":
+                partInfo["d"] = list(transmissionGears)
+                partInfo["r"] = list(transmissionGears)
+            blueprintData["blueprints"][x]["data"] = json.dumps(partInfo)
+            x += 1
+        stringOut = json.dumps(blueprintData, indent=4)
+        data = io.BytesIO(stringOut.encode())
+        await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
+
     @commands.command(name="tunePowertrain", description="merge compartment geometry into itself.")
     async def tunePowertrain(self, ctx: commands.Context):
         import asyncio
@@ -216,113 +461,29 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-                await ctx.send(f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+                error = await textTools.retrieveError(ctx)
+                await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
 
         for attachment in ctx.message.attachments:
+            print(attachment.content_type)
             try:
                 if "image" in attachment.content_type:
-                    await ctx.reply(
-                        "Ah yes, I love eating random pictures instead of working with tank blueprints *like I was meant to do*! \n\n# <:caatt:1151402846202376212>")
+                    errorStr = await textTools.retrieveError(ctx)
+                    await ctx.reply(errorStr)
+                    #await ctx.reply("Ah yes, I love eating random pictures instead of working with tank blueprints *like I was meant to do*! \n\n# <:caatt:1151402846202376212>")
+                    return
             except Exception:
                 pass
             blueprintData = json.loads(await attachment.read())
-            name = blueprintData["header"]["name"]
-            tankName = blueprintData["header"]["name"]
-            era = blueprintData["header"]["era"].lower()
-            weight = float(blueprintData["header"]["mass"]) / 1000
-            climbAngle = numpy.radians(45)
-            gearCount = 10
-            # eraBaseRPM is the ideal RPM when displacement is 1L/cyl
-            eraPowerMod = 1
-            flatnessScalar = 0.6
-            eraResistance = 1
-            eraBaseRPM = 4000
-            sprocketDiameter = 0.6
-            initialGear = 6.0
-            finalGear = 0.5
-            finalGearAdjustment = 1
-            # dispPerCyl = 0
-            if era == "midwar":
-                eraPowerMod = 0.92
-                eraResistance = 1.25
-                eraBaseRPM = 3800
-                gearCount = 9
-            if era == "earlywar":
-                eraPowerMod = 0.72
-                eraResistance = 1.5
-                eraBaseRPM = 3100
-                gearCount = 8
-            if era == "interwar":
-                eraPowerMod = 0.586
-                eraResistance = 3
-                eraBaseRPM = 2700
-                gearCount = 6
-            if era == "wwi":
-                eraPowerMod = 0.23
-                eraResistance = 4
-                eraBaseRPM = 1500
-                gearCount = 3
-                finalGearAdjustment = 0.95
+            version = 0.127
+            if "0.2" in blueprintData["header"]["gameVersion"]:
+                await ctx.send("Detected a 0.2 blueprint.")
+                await blueprintFunctions.tunePowertrain200(ctx, attachment)
+            elif float(blueprintData["header"]["gameVersion"]) < 0.128:
+                await ctx.send(f"Detected a legacy {blueprintData['header']['gameVersion']} blueprint.")
+                await blueprintFunctions.tunePowertrain127(ctx, attachment)
 
-            x = 0
-            for iteration in blueprintData["blueprints"]:
-                partName = blueprintData["blueprints"][x]["id"]
-                partString = blueprintData["blueprints"][x]["data"]
-
-                partString.replace("\\", "")
-                partInfo = json.loads(partString)
-                clonePartInfo = copy.deepcopy(partInfo)
-                if partName == "ENG":
-                    name = partInfo["name"]
-                    displacement = round(float(partInfo["cylinders"]) * float(partInfo["cylinderDisplacement"]), 2)
-                    cylinders = int(partInfo["cylinders"])
-                    dispPerCyl = float(partInfo["cylinderDisplacement"])
-                    partInfo["targetMaxRPM"] = eraBaseRPM * (dispPerCyl ** -0.3)
-                    maxRPM = int(partInfo["targetMaxRPM"])
-                if partName == "TRK":
-                    sprocketDiameter = partInfo["wheels"][0]["diameter"]
-                    print(sprocketDiameter)
-
-                x += 1
-            idealRPM = eraBaseRPM * (dispPerCyl ** -0.3) / 1.01
-            horsepower = 40 * (dispPerCyl ** 0.7) * cylinders * eraPowerMod
-            topSpeed = (13.33 * (horsepower ** 0.5)) / ((eraResistance ** 0.8) * ((weight) ** 0.5))
-            Torque = 9.5492 * 746 * horsepower / idealRPM
-            initialGear = (11 * ((sprocketDiameter / 2) * (weight * 1000) * 9.81 * climbAngle) / Torque) / 100
-            finalGear = round(58 * numpy.pi * idealRPM * sprocketDiameter * finalGearAdjustment / (10000 * topSpeed), 3)
-            print(topSpeed)
-            import io
-            await ctx.send(
-                f"Your top speed should be about {round(topSpeed)} km/h. \nSet your upshift RPM to {int(idealRPM)}RPM and your maximum RPM to the highest setting available.\nEstimated max horsepower is {round(horsepower)}HP\n\nDownload the .blueprint attached below to get your updated transmission!")
-
-            gearCountM1 = gearCount - 1
-            idealFlatness = ((initialGear / finalGear) ** (1 / (gearCountM1)) - 1) * 100
-            flatness = idealFlatness * flatnessScalar
-            Bvalue = (initialGear / (finalGear * (1 + flatness / 100) ** (gearCountM1))) ** (
-                        1 / (((gearCountM1) ** 2 + (gearCountM1)) / 2))
-            transmissionGears = [initialGear]
-            x = 1
-            transmissionGears[0] = round(initialGear, 2)
-            while x < gearCount:
-                transmissionGears.append(
-                    round(float(transmissionGears[x - 1]) / ((1 + (flatness / 100)) * (Bvalue ** (gearCount - x))), 3))
-                x += 1
-            x = 0
-            for iteration in blueprintData["blueprints"]:
-                partName = blueprintData["blueprints"][x]["id"]
-                partString = blueprintData["blueprints"][x]["data"]
-                partString.replace("\\", "")
-                partInfo = json.loads(partString)
-                clonePartInfo = copy.deepcopy(partInfo)
-                if partName == "TSN":
-                    partInfo["d"] = list(transmissionGears)
-                    partInfo["r"] = list(transmissionGears)
-                blueprintData["blueprints"][x]["data"] = json.dumps(partInfo)
-                x += 1
-            stringOut = json.dumps(blueprintData, indent=4)
-            data = io.BytesIO(stringOut.encode())
-            await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
 
     async def getBattleRating(config):
         armorBTRating = float(config["armorVolume"])*1000
@@ -494,6 +655,454 @@ class blueprintFunctions(commands.Cog):
                         maxShell = calculatedShell
 
             if partName == "Compartment" and partInfo["name"] != "US Tanker Sitting Angled 1 (Zheifu Variant)":
+                name = partInfo["name"]
+                armorVolume += float(partInfo["armourVolume"])
+                # displacement = float(partInfo["cylinders"])*float(partInfo["cylinderDisplacement"])
+                # print(country)
+                tooThinPlates = 0
+                tooThickPlates = 0
+                ATpronePlates = 0
+                if partInfo["genID"] == "VSH":
+                    width = float(partInfo["genData"]["shape"][1]) + 2 * float(partInfo["genData"]["shape"][6])
+                    # print(str(width) + " aaaaaaaaaaaaaaaaaaaaa")
+                    for thickness in partInfo["genData"]["armour"]:
+                        # print(thickness)
+                        if thickness < armorMin:
+                            tooThinPlates += 1
+                        if thickness > armorMax:
+                            tooThickPlates += 1
+                        if thickness > maxArmorOverall:
+                            maxArmorOverall = thickness
+                else:
+                    # print(len(partInfo["compartment"]["points"]))
+                    tooThinPlates = 0
+                    tooThickPlates = 0
+                    for thickness in partInfo["compartment"]["thicknessMap"]:
+                        # print(thickness)
+                        if thickness < armorMin:
+                            tooThinPlates += 1
+                        if thickness < ATsafeMin:
+                            ATpronePlates += 1
+                        if thickness > armorMax:
+                            tooThickPlates += 1
+                        if thickness > maxArmorOverall:
+                            maxArmorOverall = thickness
+                        if thickness < minArmor:
+                            minArmor = thickness
+                    xmin = 0
+                    ymin = 0
+                    zmin = 0
+                    xmax = 0
+                    ymax = 0
+                    zmax = 0
+                    min = [0, 0, 0]
+                    max = [0, 0, 0]
+                    if partInfo["ID"] == 0:
+                        alternator = 0
+                        for point in partInfo["compartment"]["points"]:
+                            if alternator == 3:
+                                alternator = 0
+                            if point > max[alternator]:
+                                max[alternator] = point
+                            if point < min[alternator]:
+                                min[alternator] = point
+                            alternator += 1
+                        # print(f"max {max[2]}   min {min[2]}")
+                        height = max[1] - min[1]
+                        width = max[0] - min[0]
+                        hullLength = max[2] - min[2]
+                        if width > overallTankWidth:
+                            overallTankWidth = width
+                        if height < hullHeightMin:
+                            report = await textTools.addLine(report, f"{name} is {round(height, 2)} meters tall.  This won't fit any crew.")
+                            errorCount += 1
+                        if width > hullWidthMax:
+                            report = await textTools.addLine(report,
+                                f"{name} is {round(width, 2)} meters wide.  This is wider than the {hullWidthMax} meter limit.")
+                            errorCount += 1
+                    else:
+                        ringArmor = partInfo["turret"]["ringArmour"]
+                        basketVolume = partInfo["turret"]["basketVolume"]
+                        torque = partInfo["turret"]["traverse"]["torque"]
+                        ratio = partInfo["turret"]["traverse"]["ratio"]
+                        ringRadius = float(partInfo["turret"]["radius"])
+                        if ringRadius >= turretRadiusMin:
+                            turretCount += 1
+                        if ringRadius > overallTankWidth:
+                            overallTankWidth = ringRadius
+                        isGCM = False
+                        if abs(int(partInfo["rot"][2])) > 20 and ringRadius >= turretRadiusMin:
+                            isGCM = True
+                            GCMcount += 1
+                            if allowGCM == False:
+                                report = await textTools.addLine(report, f"GCMs (including compartment \"{name}\") are not allowed in this contest.")
+                                errorCount += 1
+                            # custom mantlet checks
+                            if torque > GCMtorqueMax:
+                                errorCount += 1
+                                report = await textTools.addLine(report, f"GCM \"{name}\" uses a torque setting above the {GCMtorqueMax}N limit!")
+                            if ratio < GCMratioMin:
+                                errorCount += 1
+                                report = await textTools.addLine(report, f"GCM \"{name}\" has a traverse ratio below the required minimum ratio of {GCMtorqueMax}!")
+                        if ringArmor < armorMin:
+                            report = await textTools.addLine(report, f"{name}'s turret ring is below the 15mm armor requirement!")
+                            errorCount += 1
+                        if ringArmor < ATsafeMin:
+                            ATpronePlates += 1
+                        if ringArmor < minArmor:
+                            minArmor = ringArmor
+                        if ringArmor > maxArmorOverall:
+                            maxArmorOverall = ringArmor
+                        if basketVolume < 0 or basketVolume > 5:
+                            report = await textTools.addLine(report,
+                                f"{name} has been file edited and cannot be accepted.  Reason: turret volume is invalid.")
+                            errorCount += 1
+                        if float(ringRadius) <= turretRadiusMin and isGCM == False:
+                            report = await textTools.addLine(report,
+                                f"Warning: {name}'s turret ring is not wide enough to fit crew.  Increase the turret ring diameter if necessary.")
+                        if ATpronePlates > 1:
+                            report = await textTools.addLine(report, f"Warning: this vehicle is prone to infantry rifles.")
+
+
+                if tooThickPlates > 0 or tooThinPlates > 0:
+                    report = await textTools.addLine(report,
+                        f"{name} has {tooThickPlates} armor plates exceeding the {armorMax}mm armor limit, and {tooThinPlates} armor plates below the minimum {armorMin}mm requirement.")
+                    errorCount += 1
+
+            if partName == "FLT":
+                requiredFLT = round(displacement*litersPerDisplacement * (1 + (litersPerTon*weight)), 2)
+                fuelTankSize = int(partInfo["L"])
+                if partInfo["L"] < requiredFLT:
+                    report = await textTools.addLine(report,f"Your internal fuel tank has {partInfo['L']}L of fuel, but needs {requiredFLT}L of fuel in order to perform adequately.")
+                    errorCount += 1
+
+            if partName == "TRK":
+                separation = float(partInfo["separation"])
+                trackWidthTot = 0.002 * float(partInfo["belt"]["x"])
+                trackSystemWidth = separation + trackWidthTot + 0.2
+                beltWidth = int(partInfo["belt"]["x"])
+                sprocketIndex = 0
+                idlerIndex = 1
+                # Ground Pressure
+                if partInfo["frontalTransmission"] == True:
+                    sprocketIndex = 0
+                    idlerIndex = 1
+
+                trackSystemLength = float(partInfo["length"])
+                sprocketForward = float(partInfo["wheels"][sprocketIndex]["zOffset"])
+                idlerForward = float(partInfo["wheels"][idlerIndex]["zOffset"])
+                roadwheelForward = float(partInfo["wheels"][2]["zOffset"])
+                sprocketDiameter = float(partInfo["wheels"][sprocketIndex]["diameter"])
+                idlerDiameter = float(partInfo["wheels"][idlerIndex]["diameter"])
+                roadwheelDiameter = float(partInfo["wheels"][2]["diameter"])
+                roadwheelSpacing = float(partInfo["roadSpacing"])
+                if partInfo["frontalTransmission"] == True:
+                    sprocketForward = -1*float(partInfo["wheels"][sprocketIndex]["zOffset"])
+                    # await ctx.send("frontal transmission detected!")
+                    #if sprocketForward > 0:
+                    #    sprocketForward = 0
+                else:
+                    idlerForward = -1 * float(partInfo["wheels"][idlerIndex]["zOffset"])
+                    # if idlerForward > 0:
+                    #     idlerForward = 0
+
+                Mgcl = trackSystemLength - idlerForward - sprocketForward - (idlerDiameter + sprocketDiameter)/2 - roadwheelDiameter - roadwheelForward
+                if trackSystemLength > hullLength:
+                    hullLength = trackSystemLength
+                # await ctx.send(f"MGCL: {Mgcl}")
+                roadwheelCount = ((Mgcl + roadwheelSpacing + roadwheelDiameter)/(roadwheelDiameter+roadwheelSpacing))
+                # await ctx.send(f"Roadwheel Count: {roadwheelCount}")
+                roadwheelCount = int(roadwheelCount)
+                realContactLength = (roadwheelCount - 1)*(roadwheelDiameter+roadwheelSpacing)
+                # await ctx.send(f"Real™️: {realContactLength}")
+                surfaceAreaCM = (realContactLength * 100) * (beltWidth / 10) * 2
+                groundPressure = weight*1000 / surfaceAreaCM
+                # await ctx.send(f"Ground pressure: {groundPressure}kg/cm²")
+
+                if groundPressure > groundPressureMax and requireGroundPressure == True:
+                    report = await textTools.addLine(report, f"Your track ground pressure is {round(groundPressure, 2)}kg/cm², but cannot exceed {groundPressureMax}kg/cm².  Increase your track contact area with the ground, or lighten your vehicle to improve ground pressure.")
+                    errorCount += 1
+
+                print(partInfo["wheels"][1])
+                if round(beltWidth, 3) < beltWidthMin:
+                    report = await textTools.addLine(report,
+                        f"Your track belt is {beltWidth}mm wide.  This is too narrow and will lead to bad off-road performance.  Increase your track width to at least {beltWidthMin}mm.")
+                    errorCount += 1
+                if round(trackSystemWidth, 3) > hullWidthMax:
+                    report = await textTools.addLine(report,
+                        f"Your track system is {round(trackSystemWidth, 2)} meters wide.  This exceeds the {hullWidthMax} meter limit.")
+                    errorCount += 1
+                if trackSystemWidth >= overallTankWidth:
+                    overallTankWidth = round(trackSystemWidth, 3)
+                try:
+                    torsionBarLength = float(partInfo["suspensions"]["TBLength"])
+                    if useDynamicTBlength == True:
+                        torsionBarLengthMin = torsionBarLengthMin * separation
+                    if round(torsionBarLength, 3) < torsionBarLengthMin:
+                        report = await textTools.addLine(report, f"Your torsion bar is {torsionBarLength}m wide.  This is below the {torsionBarLengthMin} meter requirement.")
+                        errorCount += 1
+
+                except Exception:
+                    suspensionType = "HVSS"
+                    if allowHVSS == False:
+                        report = await textTools.addLine(report, f"This vehicle uses HVSS suspension, which is not permitted in {contestName}")
+                        errorCount += 1
+
+
+            if partName == "FDR":
+                separation = 2 * float(partInfo["f"][3])
+                sectWidth = 2 * float(partInfo["f"][9])
+                totalWidth = separation + sectWidth
+                if totalWidth > round(hullWidthMax, 2):
+                    report = await textTools.addLine(report,
+                        f"Your fenders are {totalWidth} meters wide.  This is too wide - the maximum width is {hullWidthMax} meters.")
+                    errorCount += 1
+                if totalWidth > overallTankWidth:
+                    overallTankWidth = totalWidth
+
+            if partName == "ENG":
+                name = partInfo["name"]
+                displacement = round(float(partInfo["cylinders"]) * float(partInfo["cylinderDisplacement"]), 2)
+                # print(country)
+                engineLimit = 80
+                if (float(engineLimit) + 0.01) < float(displacement):
+                    report = await textTools.addLine(report,
+                        f"Engine \"{name}\" displacement is invalid!  This engine is: {displacement} liters, while the limit is {engineLimit}.")
+                    errorCount += 1
+                else:
+                    report = await textTools.addLine(report, f"Engine \"{name}\" has {displacement} liters of displacement.")
+
+
+
+            x += 1
+
+        litersPerTon = round(fuelTankSize/weight, 2)
+        litersPerDisplacement = round(fuelTankSize / displacement, 2)
+
+        blueprintDataOut = json.dumps(blueprintData, indent=4)
+
+        if len(report) > 2000:
+            reportLines = report.split("\n")
+            reportLength = len(reportLines)
+            reportSpot = 0
+            reportBlock = ""
+            await ctx.send(f"Your report was too long, at {len(report)} characters & {reportLength} lines.  Breaking it up into several lines.")
+            while reportSpot < reportLength:
+                if len(reportLines[reportSpot]) > 2000:
+                    reportBlock = await textTools.addLine(reportBlock, "One section has been skipped due to exceeding the character limit.  Consider using shorter names for your compartments.")
+                if len(reportLines[reportSpot]) + len(reportBlock) < 2000:
+                    reportBlock = await textTools.addLine(reportBlock, reportLines[reportSpot])
+                else:
+                    await ctx.send(reportBlock)
+                    reportBlock = ""
+                reportSpot += 1
+            await ctx.send(reportBlock)
+        else:
+            await ctx.send(report)
+
+        # Writing to sample.json
+        with open("tanktest.json", "w") as outfile:
+            outfile.write(blueprintDataOut)
+        valid = True
+        if errorCount > errorTolerance:
+            valid = False
+        powertrainStats = await blueprintFunctions.getPowertrainStats(attachment)
+        results = {
+            "tankName": tankName,
+            "tankWeight": weight,
+            "errorCount": errorCount,
+            "valid": valid,
+            "tankWidth": overallTankWidth,
+            "crewCount": crewCount,
+            "turretCount": turretCount,
+            "GCMratioMin": int(GCMratioMin),
+            "armorVolume": armorVolume,
+            "maxArmor": maxArmorOverall,
+            "gameVersion": round(float(gameVersion), 5),
+            "gameEra": era,
+            "GCMcount": GCMcount,
+            "hullHeight": height,
+            "tankLength": hullLength,
+            "torsionBarLength": torsionBarLength,
+            "suspensionType": suspensionType,
+            "beltWidth": beltWidth,
+            "groundPressure": groundPressure,
+            "HP": powertrainStats["HP"],
+            "HPT": powertrainStats["HPT"],
+            "litersPerDisplacement": litersPerDisplacement,
+            "litersPerTon": litersPerTon,
+            "topSpeed": powertrainStats["topSpeed"],
+            "gunCount": gunCount,
+            "maxCaliber": maxCaliber,
+            "maxPropellant": maxPropellant,
+            "maxBore": maxBore,
+            "maxShell": maxShell,
+            "minArmor": minArmor
+            }
+        return results
+
+    async def runBlueprintCheck200(ctx: commands.Context, attachment, config):
+        # importing data
+        print(config)
+        contestName = config["contestname"]
+        era = config["era"]
+        gameVersion = round(float(config["gameversion"]), 5)
+        enforceGameVersion = config["enforcegameversion"]
+        errorTolerance = config["errortolerance"]
+        weightLimit = config["weightlimit"]
+        crewMaxSpace = config["crewmaxspace"]
+        crewMinSpace = config["crewminspace"]
+        crewMin = config["crewmin"]
+        crewMax = config["crewmax"]
+        turretRadiusMin = config["turretradiusmin"]
+        allowGCM = config["allowgcm"]
+        GCMratioMin = config["gcmratiomin"]
+        GCMtorqueMax = config["gcmtorquemax"]
+        hullHeightMin = config["hullheightmin"]
+        hullWidthMax = config["hullwidthmax"]
+        torsionBarLengthMin = config["torsionbarlengthmin"]
+        useDynamicTBlength = config["usedynamictblength"]
+        allowHVSS = config["allowhvss"]
+        beltWidthMin = config["beltwidthmin"]
+        requireGroundPressure = config["requiregroundpressure"]
+        groundPressureMax = config["groundpressuremax"]
+        litersPerDisplacement = config["litersperdisplacement"]
+        litersPerTon = config["litersperton"]
+        caliberLimit = config["caliberlimit"]
+        propellantLimit = config["propellantlimit"]
+        boreLimit = config["borelimit"]
+        shellLimit = config["shelllimit"]
+        armorMin = config["armormin"]
+        ATsafeMin = config["atsafemin"]
+        armorMax = config["armormax"]
+
+        # declaring initial variables and opening data
+        report = ""
+
+        blueprintData = json.loads(await attachment.read())
+        blueprintData = json.loads(await attachment.read())
+        errorCount = 0
+        GCMcount = 0
+        weight = float(blueprintData["header"]["mass"])/1000
+        tankName = blueprintData["header"]["name"]
+        tankName = await textTools.sanitize(tankName)
+        tankEra = blueprintData["header"]["era"]
+        overallTankWidth = 0
+        maxArmorOverall = 0 # this gets increased over time
+        crewCount = 0
+        turretCount = 0
+        displacement = 1
+        fuelTankSize = 0.0
+        gunCount = 0
+        maxCaliber = 0
+        maxPropellant = 0
+        maxBore = 0
+        maxShell = 0
+        minArmor = 0
+        armorVolume = 0.0
+        crewReport = "Crew information: \n"
+        suspensionType = "torsion bar"
+
+        fileGameVersion = float(blueprintData["header"]["gameVersion"])
+        if fileGameVersion != gameVersion and enforceGameVersion == True:
+            #report = await textTools.addLine(report, )
+            report = await textTools.addLine(report, f"This vehicle was made in {fileGameVersion}, while it is required to be in {fileGameVersion}.  Please update your game and then readjust your tank to fit the new version.")
+            errorCount += 1
+        if fileGameVersion != gameVersion and enforceGameVersion == False:
+            report = await textTools.addLine(report, f"Warning! This vehicle was made in {fileGameVersion}, while it should be made in {gameVersion}.  Check with a {contestName} host or manager to ensure this is acceptable.")
+        report = await textTools.addLine(report, "This tank was made in Sprocket version " + blueprintData["header"]["gameVersion"] + "\nVehicle weight: " + str(weight) + " tons.")
+        if era.lower() != tankEra.lower():
+            report = await textTools.addLine(report,f"This vehicle was made in the {tankEra} period, but needs to be sent as a {era} tank.  Please update your vehicle to use the proper era.")
+            errorCount += 1
+        if weight > weightLimit + 0.01:
+            errorCount += 1
+            report = await textTools.addLine(report,f"This vehicle is overweight!  Please reduce its weight to no more than {weightLimit}T and resend it.")
+
+        # x = 0
+        # for iteration in blueprintData["ext"]:
+        #     partName = blueprintData["ext"][x]["REF"]
+        #     partInfo = blueprintData["ext"][x]["DAT"]
+        #     #partString.replace("\\", "")
+        #     #partInfo = json.loads(partString)
+        #     try:
+        #         userLimit = json.loads(partInfo[1]["data"])
+        #         thickness = userLimit["thickness"][0]
+        #         #print(json.dumps(userLimit, indent=4))
+        #         print(thickness)
+        #         #except Exception:
+        #         #pass
+        #         if thickness > armorMax:
+        #             errorCount += 1
+        #             report = await textTools.addLine(report,f"This vehicle has mantlet face armor above the {armorMax}mm armor limit!  Please resend with a corrected version.")
+        #         if thickness < minArmor:
+        #             minArmor = thickness
+        #     except Exception:
+        #         pass
+        #     # print(partInfo)
+        #     x += 1
+
+        x = 0
+        for partData in blueprintData["blueprints"]:
+            partType = partData["type"]
+            partString = blueprintData["blueprints"][x]["data"]
+            partString.replace("\\", "")
+            partInfo = json.loads(partString)
+            if partType == "crewSeat":
+                crewSpot = 0
+                for crew in partInfo["seats"]:
+                    crewSpace = float(crew["spaceAlloc"])
+                    if crewSpace > crewMaxSpace or crewSpace < crewMinSpace:
+                        report = await textTools.addLine(report, f"This vehicle has crew outside of {contestName}'s limits, and cannot be accepted until this is fixed.")
+                        errorCount += 1
+                    crewCount += 1
+                    crewSpot += 1
+                    crewStats = f"Crew #{crewSpot}: {crew['spaceAlloc']}m of space, roles: {crew['roles']} \n"
+                    crewReport = crewReport + crewStats
+                if crewCount < crewMin:
+                    report = await textTools.addLine(report,f"This vehicle needs to have at least {crewMin} crew members, but only has {crewCount} crew.")
+                    errorCount += 1
+                if crewCount > crewMax:
+                    report = await textTools.addLine(report,f"This vehicle needs to have at most {crewMax} crew members, but it has {crewCount} crew.")
+                    errorCount += 1
+                print(crewReport)
+
+            partName = ""
+            if partName == "CNN":
+                gunCount += 1
+                for cannon in partInfo["blueprints"]:
+                    caliber = int(cannon["caliber"])
+                    if caliber > maxCaliber:
+                        maxCaliber = caliber
+                    propellant = int(cannon["breechLength"])
+                    if propellant > maxPropellant:
+                        maxPropellant = propellant
+                    calculatedShell = (3 * caliber) + propellant
+                    calculatedBore = calculatedShell / 1000
+                    errorCount += 1
+                    for segment in partInfo["blueprints"][0]["segments"]:
+                        calculatedBore += float(segment['len'])
+                    if calculatedShell > shellLimit:
+                        report = await textTools.addLine(report,
+                            f"The \"{cannon['name']}\" is invalid!  This cannon uses a {calculatedShell}mm shell, while the limit for shell length is {shellLimit}mm.")
+                    if calculatedBore > boreLimit:
+                        report = await textTools.addLine(report,
+                            f"The \"{cannon['name']}\" is invalid!  This cannon uses a {calculatedBore}m bore length, while the limit is {boreLimit}m.")
+                    if propellant > propellantLimit:
+                        report = await textTools.addLine(report,
+                            f"The \"{cannon['name']}\" is invalid!  This cannon uses {propellant}mm of propellant, while the limit is {propellantLimit}mm.")
+                    if caliber > caliberLimit:
+                        report = await textTools.addLine(report,
+                            f"The \"{cannon['name']}\" is invalid!  This cannon is {caliber}mm, while the caliber limit is {caliberLimit}mm.")
+                    else:
+                        report = await textTools.addLine(report,
+                            f"\"{cannon['name']}\": {caliber}x{calculatedShell}mm with a {calculatedBore}m bore length.")
+                        errorCount += -1
+                    if calculatedBore > maxBore:
+                        maxBore = calculatedBore
+                    if calculatedShell > maxShell:
+                        maxShell = calculatedShell
+
+            if partName == "Compartment":
                 name = partInfo["name"]
                 armorVolume += float(partInfo["armourVolume"])
                 # displacement = float(partInfo["cylinders"])*float(partInfo["cylinderDisplacement"])

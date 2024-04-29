@@ -1,44 +1,6 @@
 {
-<<<<<<< HEAD:Contest Configuration Examples/contestCategoryConfigExample.json
-        "categoryName": "Submission Category",		
-        "era": "latewar",					
-        "gameVersion": 0.127,					
-        "weightLimit": 42,					
-        "enforceGameVersion": "False",		
-		"useBattleRating": "False",
-		"requirePhotos": "True",
-        "errorTolerance": 0,					
-        "crewMaxSpace": 1.0,					
-        "crewMinSpace": 0.6,				
-        "crewMin": 3,						
-        "crewMax": 16,						
-        "turretRadiusMin": 1.6,					
-        "allowGCM": "True",					
-        "GCMratioMin": 60,					
-        "GCMtorqueMax": 2000,					
-        "hullHeightMin": 1.0,					
-        "hullWidthMax": 3,					
-        "torsionBarLengthMin": 0.395,				
-        "useDynamicTBLength": "False",				
-        "allowHVSS": "False",					
-        "beltWidthMin": 100,					
-        "requireGroundPressure": "True",			
-        "groundPressureMax": 1.0,				
-        "litersPerDisplacement": 0,				
-        "litersPerTon": 15,	
-		"minHPT": 12.0,
-		"minLFHP": 1.2,					
-        "caliberLimit": 120,					
-        "propellantLimit": 800,					
-        "boreLimit": 6,						
-        "shellLimit": 1700,					
-        "armorMin": 5,						
-        "ATsafeMin": 24,					
-        "armorMax": 500						
-    }
-=======
-        "categoryName": "Contest Name Goes Here",
-        "era": "Midwar",
+    "categoryName": "Contest Name Goes Here",
+    "era": "Midwar",
 	"gameVersion": 0.127,
         "enforceGameVersion": "True",
         "errorTolerance": 0,
@@ -68,5 +30,4 @@
         "armorMin": 12,
         "ATsafeMin": 24,
         "armorMax": 500					
-    }
->>>>>>> 68e13860fe24c4d404fd30e7aee512e443d56e8e:contestConfigExamples/contestCategoryConfigExample.json
+}

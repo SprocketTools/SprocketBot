@@ -140,7 +140,7 @@ class listChoiceDropdown(discord.ui.Select):
         i = 0
         options = []
         for item in itemList:
-            options.append(discord.SelectOption(label=item, emoji='⚫', value=item))
+            options.append(discord.SelectOption(label=item, emoji='🟩', value=item))
             i += 1
         if len(options) > 19:
             options.append(discord.SelectOption(label="Next page", emoji='➡️', value="Next page"))
