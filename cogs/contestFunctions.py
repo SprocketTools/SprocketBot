@@ -7,7 +7,7 @@ from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
 from cogs.blueprintFunctions import blueprintFunctions
 from cogs.discordUIfunctions import discordUIfunctions
-from cogs.githubTools import githubTools
+# from cogs.githubTools import githubTools
 
 if platform.system() == "Windows":
     botMode = "development"

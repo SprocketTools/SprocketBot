@@ -6,31 +6,33 @@ from git import Repo
 
 # Github config
 from PIL import Image, ImageChops
+
+import main
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 imageCategoryList = ["Featured", "Chalk", "Inscriptions", "Labels", "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Textures", "Weathering", "Welding"]
-
+GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
+username = 'SprocketTools'
+password = main.githubPAT
 if platform.system() == "Windows":
-    GithubURL = "https://github.com/SprocketTools/SprocketTools.github.io"
+
     GithubDirectory = "C:\\Users\\colson\\Documents\\GitHub\\SprocketTools.github.io"
     OSslashLine = "\\"
 
 else:
     # default settings (running on Rasbian)
-    GithubURL = "https://github.com/SprocketTools/SprocketTools.github.io"
-    GithubDirectory = "/home/mumblepi/SprocketTools.github.io"
+    GithubDirectory = "/home/mumblepi/repository/SprocketTools.github.io"
     OSslashLine = "/"
 imgCatalogFolder = "img"
 imgDisplayFolder = "imgbin"
 
 Path(GithubDirectory).mkdir(parents=True, exist_ok=True)
-try:
-    repo = Repo.clone_from(GithubURL, GithubDirectory)
-except Exception:
-    repo = Repo(GithubDirectory)
-    
-print("GitHub successfully cloned!")
+Repo.clone_from(GithubURL, GithubDirectory)
+operatingRepo = Repo(GithubDirectory)
+origin = operatingRepo.remote('origin')
+origin.fetch()
+origin.pull(origin.refs[0].remote_head)
 
 class githubTools(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -145,7 +147,7 @@ class githubTools(commands.Cog):
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!')
                     await ctx.send("## Approved!")
-                    repo.index.add(imageCatalogFilepath)
+                    operatingRepo.index.add(imageCatalogFilepath)
                 else:
                     values = [decalInfo['strippedname']]
                     await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''', values)
@@ -230,7 +232,7 @@ class githubTools(commands.Cog):
             print(saveDirectory)
             with open(saveDirectory, "w") as outfile:
                 outfile.write(HTMLdoc)
-            repo.index.add(saveDirectory)
+            operatingRepo.index.add(saveDirectory)
 
         # specialized entry for the contribution directory
         HTMLdoccontribute = f'''<html>
@@ -280,14 +282,14 @@ class githubTools(commands.Cog):
         print(saveDirectory)
         with open(saveDirectory, "w") as outfile:
             outfile.write(HTMLdoccontribute)
-        repo.index.add(saveDirectory)
+        operatingRepo.index.add(saveDirectory)
         await githubTools.updateActiveContests(self)
         await ctx.send("Done!")
         try:
-            repo.git.add(update=True)
-            repo.index.commit("Automated decal updating sequence")
-            origin = repo.remote(name='origin')
-            origin.push()
+            operatingRepo.git.add(update=True)
+            operatingRepo.index.commit("Automated decal updating sequence")
+            origin = operatingRepo.remote(name='origin')
+            origin.push().raise_if_error()
             await ctx.send("Decals are now pushed to GitHub!")
         except:
             await ctx.send("Some error occurred pushing the decals to GitHub.")
@@ -360,7 +362,7 @@ class githubTools(commands.Cog):
         print(saveDirectory)
         with open(saveDirectory, "w") as outfile:
             outfile.write(startHTML)
-        repo.index.add(saveDirectory)
+        operatingRepo.index.add(saveDirectory)
 
 
 
