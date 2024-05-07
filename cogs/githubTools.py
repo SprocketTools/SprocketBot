@@ -1,3 +1,5 @@
+import shutil
+
 import discord, os, platform, time, asyncio, requests, io, datetime
 from pathlib import Path
 from discord.ext import commands
@@ -11,7 +13,7 @@ import main
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
-imageCategoryList = ["Featured", "Chalk", "Inscriptions", "Labels", "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Textures", "Weathering", "Welding"]
+imageCategoryList = ["Featured", "Chalk", "Fictional Insignia", "Historical Insignia", "Inscriptions", "Labels", "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures", "Weathering", "Welding"]
 GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
 username = 'SprocketTools'
 password = main.githubPAT
@@ -22,13 +24,15 @@ if platform.system() == "Windows":
 
 else:
     # default settings (running on Rasbian)
-    GithubDirectory = "/home/mumblepi/repository/SprocketTools.github.io"
+    GithubDirectory = "/home/mumblepi/Github/SprocketTools.github.io"
     OSslashLine = "/"
 imgCatalogFolder = "img"
 imgDisplayFolder = "imgbin"
-
 Path(GithubDirectory).mkdir(parents=True, exist_ok=True)
-Repo.clone_from(GithubURL, GithubDirectory)
+try:
+    Repo.clone_from(GithubURL, GithubDirectory)
+except Exception:
+    pass
 operatingRepo = Repo(GithubDirectory)
 origin = operatingRepo.remote('origin')
 origin.fetch()
@@ -37,6 +41,17 @@ origin.pull(origin.refs[0].remote_head)
 class githubTools(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    @commands.command(name="pullRepository", description="Reload the repository onto the Pi")
+    async def pullRepository(self, ctx: commands.Context):
+        if ctx.author.id != 712509599135301673:
+            await ctx.send(await textTools.retrieveError(ctx))
+            return
+        operatingRepo = Repo(GithubDirectory)
+        origin = operatingRepo.remote('origin')
+        origin.fetch()
+        origin.pull(origin.refs[0].remote_head)
+        await ctx.reply("# Done!")
 
     @commands.command(name="resetImageCatalog", description="Reset the image catalog")
     async def resetImageCatalog(self, ctx: commands.Context):
@@ -55,14 +70,20 @@ class githubTools(commands.Cog):
                                       category VARCHAR);''')
         await SQLfunctions.databaseExecute(prompt)
         imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}"
-        Path(imageCatalogFilepath).mkdir(parents=True, exist_ok=True)
         imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}"
+
+        shutil.rmtree(imageCatalogFilepath)
+        shutil.rmtree(imageDisplayFilepath)
+
+        Path(imageCatalogFilepath).mkdir(parents=True, exist_ok=True)
         Path(imageDisplayFilepath).mkdir(parents=True, exist_ok=True)
+        operatingRepo.index.add(f'{GithubDirectory}{OSslashLine}{"imgbin"}')
+        operatingRepo.index.add(f'{GithubDirectory}{OSslashLine}{"img"}')
         await ctx.send("Done!")
 
     @commands.command(name="submitDecal", description="Submit a decal to the SprocketTools website")
     async def submitDecal(self, ctx):
-        imageCategoryListTemp = imageCategoryList
+        imageCategoryListTemp = imageCategoryList.copy()
         if ctx.author.id != 712509599135301673:
             imageCategoryListTemp.remove("Featured")
         userPrompt = "What category should the image(s) go into?"
@@ -117,6 +138,8 @@ class githubTools(commands.Cog):
                     imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{strippedname}"
                     imageOut.save(imageDisplayFilepath, optimize=True, quality=80)
                     imageBase.save(imageCatalogFilepath, optimize=True, quality=95)
+                    operatingRepo.index.add(imageDisplayFilepath)
+                    operatingRepo.index.add(imageCatalogFilepath)
                     # byte_io = io.BytesIO()
                     # imageOut.save(byte_io, format='PNG')
                     # byte_io.seek(0)
@@ -126,6 +149,33 @@ class githubTools(commands.Cog):
                     values = [name, tags, strippedname, 'Pending', str(self.bot.get_user(ctx.author.id)), ctx.author.id, category]
                     await SQLfunctions.databaseExecuteDynamic(f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''', values)
                     await ctx.send(f"### The image {strippedname} has been sent off for approval!")
+
+    @commands.command(name="removeDecal", description="Remove a decal from the SprocketTools website")
+    async def removeDecal(self, ctx):
+        if ctx.author.id != 712509599135301673:
+            await ctx.send(await textTools.retrieveError(ctx))
+            return
+        await ctx.send(f"Reply with the stripped name of the decal you wish to remove.  Ex: `6_side_circle.png`")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
+            delete = await textTools.sanitize(msg.content.lower())
+        except asyncio.TimeoutError:
+            await ctx.send("Operation cancelled.")
+            return
+
+        try:
+            values = [delete]
+            imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{delete}"
+            imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{delete}"
+            await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''', values)
+            os.remove(imageCatalogFilepath)
+            os.remove(imageDisplayFilepath)
+            await ctx.send("Removed!")
+            await githubTools.updateHTML(self, ctx)
+        except Exception as out:
+            await ctx.send(f"There appears to have been an error: \n{out}")
 
     @commands.command(name="processDecals", description="Submit a decal to the SprocketTools website")
     async def processDecals(self, ctx):
@@ -139,7 +189,7 @@ class githubTools(commands.Cog):
                 imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{decalInfo['strippedname']}"
                 await ctx.send(file=discord.File(imageCatalogFilepath))
                 userPrompt = f"Do you want to approve this decal? \nName: {decalInfo['name']}\nFilename: {decalInfo['strippedname']}\nOwner: {decalInfo['ownername']} (<@{decalInfo['ownerid']}>)\nCategory: {decalInfo['category']}"
-                responseList = ["Yes", "Too inappropriate", "Invalid category", "Inadequate image quality", "No"]
+                responseList = ["Too inappropriate", "Invalid category", "Inadequate image quality", "Image descriptions are not consistent", "Rejection was requested by submitter", "Other", "No", "Override Name", "Override Category", "Yes"]
                 answer = await discordUIfunctions.getChoiceFromList(ctx, responseList, userPrompt)
                 if answer == "Yes":
                     values = [decalInfo['strippedname']]
@@ -148,6 +198,38 @@ class githubTools(commands.Cog):
                     await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!')
                     await ctx.send("## Approved!")
                     operatingRepo.index.add(imageCatalogFilepath)
+                    operatingRepo.index.add(imageDisplayFilepath)
+                elif answer == "Override Category":
+                    userPrompt = f"Alright then, pick a new category to use with this decal."
+                    values = [decalInfo['strippedname']]
+                    newCategory = await discordUIfunctions.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
+                    values = [newCategory, decalInfo['strippedname']]
+                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
+                    recipient = self.bot.get_user(int(decalInfo['ownerid']))
+                    await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the category was changed to "{newCategory}."')
+                    await ctx.send("## Approved! \n(with a category change)")
+                    operatingRepo.index.add(imageCatalogFilepath)
+                    operatingRepo.index.add(imageDisplayFilepath)
+                elif answer == "Override Name":
+                    await ctx.send(f"Alright then, pick a new name to use with this decal.")
+                    values = [decalInfo['strippedname']]
+                    def check(m: discord.Message):
+                        return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+                    try:
+                        msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
+                        newName = await textTools.sanitize(msg.content.lower())
+                    except asyncio.TimeoutError:
+                        await ctx.send("Operation cancelled.")
+                        return
+                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
+                    values = [newName, decalInfo['strippedname']]
+                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
+                    recipient = self.bot.get_user(int(decalInfo['ownerid']))
+                    await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the image name was changed to "{newName}."')
+                    await ctx.send("## Approved! \n(with a name change)")
+                    operatingRepo.index.add(imageCatalogFilepath)
+                    operatingRepo.index.add(imageDisplayFilepath)
                 else:
                     values = [decalInfo['strippedname']]
                     await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''', values)
@@ -219,12 +301,13 @@ class githubTools(commands.Cog):
                 </div>
                 <ul class="decals">'''
             HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
-            decalList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}';''')]
+            decalList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' ORDER BY name;''')]
             for decalInfo in decalList:
                 print("Hi!")
                 decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" />
                 <h4>{decalInfo['name']}</h4>
                 <h5>https://sprockettools.github.io/img/{decalInfo['strippedname']}</h5>
+                <h6>Uploaded by: {decalInfo['ownername']}</h6>
                 <h6>Tags: {decalInfo['tags']}</h6></li>'''
                 HTMLdoc = f'{HTMLdoc}{decalLI}'
             HTMLdoc = HTMLdoc + HTMLending
@@ -294,6 +377,54 @@ class githubTools(commands.Cog):
         except:
             await ctx.send("Some error occurred pushing the decals to GitHub.")
 
+    @commands.command(name="changeDecalCategory", description="change a decal category from the SprocketTools website")
+    async def changeDecalCategory(self, ctx):
+        if ctx.author.id != 712509599135301673:
+            await ctx.send(await textTools.retrieveError(ctx))
+            return
+        await ctx.send(f"Reply with the stripped name of the decal you wish to change.  Ex: `6_side_circle.png`")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
+            decalName = await textTools.sanitize(msg.content.lower())
+        except asyncio.TimeoutError:
+            await ctx.send("Operation cancelled.")
+            return
+        userPrompt = f"Alright then, pick a new category to use with this decal."
+        newCategory = await discordUIfunctions.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+        values = [newCategory, decalName]
+        await SQLfunctions.databaseExecuteDynamic(
+            f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
+        await ctx.send("## Config updated!")
+
+    @commands.command(name="changeDecalName", description="change a decal name from the SprocketTools website")
+    async def changeDecalName(self, ctx):
+        if ctx.author.id != 712509599135301673:
+            await ctx.send(await textTools.retrieveError(ctx))
+            return
+        await ctx.send(f"Reply with the stripped name of the decal you wish to change.  Ex: `6_side_circle.png`")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
+            decalName = await textTools.sanitize(msg.content.lower())
+        except asyncio.TimeoutError:
+            await ctx.send("Operation cancelled.")
+            return
+        await ctx.send(f"Alright then, pick a new name to use with this decal.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
+            newName = await textTools.sanitize(msg.content.lower())
+        except asyncio.TimeoutError:
+            await ctx.send("Operation cancelled.")
+            return
+        values = [newName, decalName]
+        await SQLfunctions.databaseExecuteDynamic(
+            f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
+        await ctx.send("## Config updated!")
     async def updateActiveContests(self):
         currentTime = int(time.time())
         contests = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE starttimestamp < '{currentTime}' AND endtimestamp > '{currentTime}' AND crossServer = 'True';''')]

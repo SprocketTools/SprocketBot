@@ -13,10 +13,6 @@ Sprocket Bot is written purely in Python.  The attached .json files are usable a
 Sprocket bot is an **in-development** utility bot, developed by a college student during their free time.  I say "utility" because its capabilities are changing quite rapidly, and is nowhere near the end result I want it to be in.  As a result, 100% reliability in its services is not guaranteed.  
 - I cannot keep the bot's entire source code public once administrative utilities and/or vehicle rating formulas are added.
 
-## Sprocket Bot is currently going under an extensive rewrite
-### Once the rewrite is complete and the new version is brought live, all running contests will be unsupported
-Please keep tabs with the bot owner through Discord for any contests that you intend to run during Feburary and March
-
 ## Requirements
 My responsibility for how contest hosts run their contests is extremely limited.  
 Contest hosts may run whatever contests they'd like to with Sprocket Bot, except in the following circumstances:  

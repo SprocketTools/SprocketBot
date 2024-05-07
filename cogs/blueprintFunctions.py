@@ -1,8 +1,9 @@
-import discord, json, numpy, copy
+import discord, json, numpy, copy, io
 from discord.ext import commands
 from discord import app_commands
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
+from cogs.discordUIfunctions import discordUIfunctions
 class blueprintFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -1388,6 +1389,119 @@ class blueprintFunctions(commands.Cog):
             "minArmor": minArmor
             }
         return results
+
+    @commands.command(name="importMesh", description="Sorry Argore")
+    async def importMesh(self, ctx:commands.Context):
+        await ctx.send(content="Upload the mesh you wish to import.  Must be a .obj file with no faces exceeding 4 points.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=200.0)
+        except Exception:
+            await ctx.send(await textTools.retrieveError(ctx))
+            return
+
+        armorThickness = 1
+        await ctx.send(content="Specify the desired armor thickness to apply to all points (in mm)")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg2 = await ctx.bot.wait_for('message', check=check, timeout=200.0)
+            armorThickness = int(msg2.content)
+        except Exception:
+            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send("This number was invalid!  Using the recommended value...")
+            return
+
+        verticesList = []
+        thicknessList = []
+        facesList = []
+
+        for attachment in msg.attachments:
+            attachment = await attachment.read()
+            print(attachment)
+            dataList = str(attachment).split("\\n")
+            print(dataList)
+            print(dataList[0])
+
+            for data in dataList:
+                if data[0:2] == "v ":
+                    points = data.split(" ")[1:4]
+                    points[0] = -1*float(points[0])
+                    for point in points:
+                        verticesList.append(round(float(point), 5))
+                if data[0:2] == "f ":
+                    faceDataIn = data.split(" ")[1:]
+                    faceSet = []
+                    for face in faceDataIn:
+                        point = int(face.split("/")[0]) - 1
+                        faceSet.append(point)
+                    thicknessSet = [armorThickness] * len(faceSet)
+                    if len(faceSet) > 4:
+                        await ctx.send("### Your model is not triangulated properly!\n")
+                    facesList.append(faceSet)
+                    thicknessList.append(thicknessSet)
+            pointsK = [16777215, 16777215, 0, -16777215, -16777215, 0]
+            for point in pointsK:
+                verticesList.append(round(float(point), 5))
+            print(verticesList)
+            print(facesList)
+            print(thicknessList)
+
+        ftList = []
+        for i in range(len(facesList)):
+            data = {}
+            data["v"] = facesList[i]
+            data["t"] = thicknessList[i]
+            ftList.append(data)
+
+        await ctx.send("Mesh processed!  Now upload the .blueprint you wish to import into.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=200.0)
+        except Exception:
+            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send("Gonna need a blueprint file next time.")
+            return
+
+        for attachment in msg.attachments:
+            blueprintData = json.loads(await attachment.read())
+            structureList = []
+            structureVuidList = {}
+            tankName = blueprintData["header"]["name"]
+            i = 0
+            for component in blueprintData["blueprints"]:
+                if blueprintData["blueprints"][i]["blueprint"]["name"] is None:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = "null"
+                if blueprintData["blueprints"][i]["blueprint"]["description"] is None:
+                    blueprintData["blueprints"][i]["blueprint"]["description"] = "null"
+                if component["type"] == "structure":
+                    if not component["blueprint"]["name"]:
+                        component["blueprint"]["name"] = "Hull"
+                    structureList.append(component["blueprint"]["name"])
+                    structureVuidList[component["blueprint"]["name"]] = int(component["blueprint"]["bodyMeshVuid"])
+                i += 1
+
+            userPrompt = "Pick the name of the compartment you wish to apply the mesh to."
+            print(structureList)
+            answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+            Vuid = structureVuidList[answer]
+            i = 0
+            for meshBase in blueprintData["meshes"]:
+                if meshBase["vuid"] == Vuid:
+                    blueprintData["meshes"][i]["meshData"]["mesh"]["vertices"] = verticesList
+                    blueprintData["meshes"][i]["meshData"]["mesh"]["faces"] = ftList
+                i += 1
+
+            await ctx.send("## Done!")
+            stringOut = json.dumps(blueprintData, indent=4)
+            data = io.BytesIO(stringOut.encode())
+            await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
+            await ctx.send("### Note:\nWhen opening the model, make sure to select all of your faces and invert them, so that the geometry displays the correct way.")
+
+
+
 
 
     @commands.command(name="setupDatabase2", description="Wipe literally everything.")

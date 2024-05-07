@@ -5,15 +5,83 @@ from discord.ext import commands
 from discord import app_commands
 import json, asyncio
 from pathlib import Path
+
+import main
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
 from cogs.blueprintFunctions import blueprintFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from discord import app_commands
 from cogs.textTools import textTools
+
+serverConfig = {}
+userStrikes = {}
+nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "plug", "leak", "sususmogus"]
+scamFlags = ["$", "steam", "asdfghjkl"]
+linkFlags = ["steamcommunity.com", "bit.ly", "sc.link", "discord.gg"]
+strikethreshold = 3
+
 class adminFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    async def updateServerConfig(self):
+        for guild in self.bot.guilds:
+            try:
+                serverConfig[guild.id] = [dict(row) for row in await SQLfunctions.databaseFetch(
+                f'SELECT * FROM serverconfig WHERE serverid = {guild.id}')][0]
+            except Exception:
+                pass
+        await adminFunctions.printServerConfig(self)
+    async def printServerConfig(self):
+        print(serverConfig)
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+        if serverConfig == {}:
+            await adminFunctions.updateServerConfig(self)
+        messageParse = message.content.lower()
+        nudeTrigger = 0
+        scamTrigger = 0
+        linkTrigger = 0
+        for flag in nudeFlags:
+            if flag in messageParse:
+                nudeTrigger += 1
+        for flag in scamFlags:
+            if flag in messageParse:
+                scamTrigger += 1
+        for flag in linkFlags:
+            if flag in messageParse:
+                linkTrigger += 1
+
+        if linkTrigger == 0 and (nudeTrigger == 0 or scamTrigger == 0):
+            userStrikes[message.author.id] = 0
+        if linkTrigger > 0 and (nudeTrigger > 0 or scamTrigger > 0):
+            print(f"{nudeTrigger}{scamTrigger}{linkTrigger}")
+            logChannel = self.bot.get_channel(1152377925916688484)
+            try:
+                userStrikes[message.author.id] = int(userStrikes[message.author.id]) + 1
+            except Exception:
+                userStrikes[message.author.id] = 1
+            preppedMessage = f"This message matches the criteria set for a hacked account:\nUser ID: {message.author.id}\nUser ping: <@{message.author.id}>\nMessage content:\n{message.content}"
+            if userStrikes[message.author.id] > strikethreshold:
+                preppedMessage = f"<@&{serverConfig[message.guild.id]['botmanagerroleid']}> This message matches the criteria set for a hacked account:\nUser ID: {message.author.id}\nUser ping: <@{message.author.id}>\nMessage content:\n{message.content}"
+            await logChannel.send(preppedMessage)
+            if serverConfig[message.guild.id]['allowfunny'] == True and userStrikes[message.author.id] > strikethreshold:
+                channel = self.bot.get_channel(serverConfig[message.guild.id]['managerchannelid'])
+                await channel.send(preppedMessage)
+
+
+
+
+
+
+
+
+
+
 
     @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
     async def resetServerConfig(self, ctx: commands.Context):
@@ -37,6 +105,35 @@ class adminFunctions(commands.Cog):
                               campaignmanagerroleID BIGINT);''')
         await SQLfunctions.databaseExecute(prompt)
         await ctx.send("Done!  Now go DM everyone that their config was reset.")
+
+    @commands.command(name="viewServerConfig", description="View my server configurations")
+    async def viewServerConfig(self, ctx: commands.Context):
+        if ctx.author.guild_permissions.administrator == False and ctx.author.id != main.ownerID:
+            await ctx.send(await textTools.retrieveError(ctx))
+        else:
+            try:
+                serverData = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+                description = f'''
+                General chat:         <#{serverData['updateschannelid']}>
+                Bot commands chat:    <#{serverData['commandschannelid']}>
+                Server managers chat: <#{serverData['managerchannelid']}>
+                
+                Server booster role:   {ctx.guild.get_role(int(serverData['serverboosterroleid']))}
+                Contest managers role: {ctx.guild.get_role(int(serverData['contestmanagerroleid']))}
+                Bot manager role:      {ctx.guild.get_role(int(serverData['botmanagerroleid']))}
+                Campaign manager role: {ctx.guild.get_role(int(serverData['campaignmanagerroleid']))}
+                
+                Allow the bot to try and be funny: {serverData['allowfunny']}
+                '''
+                embed = discord.Embed(title=f"Server Config: {ctx.guild.name}",
+                                      description=description,
+                                      color=discord.Color.random())
+                embed.set_thumbnail(url=ctx.guild.icon)
+                await ctx.send(embed=embed)
+            except Exception:
+                await ctx.send(await textTools.retrieveError(ctx))
+                await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
+
 
     @commands.command(name="listMyServers", description="List all my servers.")
     async def listMyServers(self, ctx: commands.Context):
