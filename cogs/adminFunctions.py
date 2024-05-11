@@ -1,4 +1,5 @@
-import discord
+import discord, datetime
+from datetime import timedelta
 from discord.ext import commands
 import os, platform, discord, configparser, ast, json
 from discord.ext import commands
@@ -36,6 +37,16 @@ class adminFunctions(commands.Cog):
     async def printServerConfig(self):
         print(serverConfig)
 
+    @commands.command(name="reloadCogs", description="reload all extensions")
+    async def reloadCogs(self, ctx: commands.Context):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        for cog in main.cogsList:
+            await self.bot.reload_extension(cog)
+        await ctx.send("Reloaded!")
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
@@ -65,46 +76,94 @@ class adminFunctions(commands.Cog):
                 userStrikes[message.author.id] = int(userStrikes[message.author.id]) + 1
             except Exception:
                 userStrikes[message.author.id] = 1
+            action = serverConfig[message.guild.id]['flagaction']
+            pingAction = serverConfig[message.guild.id]['flagping']
             preppedMessage = f"This message matches the criteria set for a hacked account:\nUser ID: {message.author.id}\nUser ping: <@{message.author.id}>\nMessage content:\n{message.content}"
-            if userStrikes[message.author.id] > strikethreshold:
-                preppedMessage = f"<@&{serverConfig[message.guild.id]['botmanagerroleid']}> This message matches the criteria set for a hacked account:\nUser ID: {message.author.id}\nUser ping: <@{message.author.id}>\nMessage content:\n{message.content}"
-            await logChannel.send(preppedMessage)
-            if serverConfig[message.guild.id]['allowfunny'] == True and userStrikes[message.author.id] > strikethreshold:
+            embed = discord.Embed(title=f"A hacked account has been detected!", color=discord.Color.blurple())
+            if userStrikes[message.author.id] >= int(serverConfig[message.guild.id]['flagthreshold']):
+                embed = discord.Embed(title=f"Action taken on a hacked account", color=discord.Color.red())
+                embed.set_footer(text=f"Action taken: {action}")
+            embed.add_field(name="Username", value=f"{message.author.name}", inline=False)
+            embed.add_field(name="A.K.A.", value=f"{message.author.display_name}", inline=False)
+            embed.add_field(name="User ID", value=f"{message.author.id}", inline=False)
+            embed.add_field(name="User ping", value=f"<@{message.author.id}>", inline=False)
+            await logChannel.send(embed=embed)
+            await logChannel.send(f'Message content:\n`{message.content}`')
+            if userStrikes[message.author.id] >= int(serverConfig[message.guild.id]['flagthreshold']):
+                if action == "kick":
+                    await message.author.send(f"You have been kicked from {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \nThis is not a ban - rejoin once you gain control of your account again and have 2FA enabled.\nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
+                    await message.author.kick(reason="Hacked account")
+                if action == "timeout for 12 hours":
+                    await message.author.send(f"You have been timed out in {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
+                    delta = (datetime.datetime.now().astimezone() + datetime.timedelta(hours=12))
+                    await message.author.timeout(delta, reason="Hacked account")
                 channel = self.bot.get_channel(serverConfig[message.guild.id]['managerchannelid'])
-                await channel.send(preppedMessage)
+                await channel.send(embed=embed)
+                await channel.send(f'Message content:\n`{message.content}`')
+                if pingAction == "nobody":
+                    pass
+                elif pingAction == "custom":
+                    await channel.send(f"<@&{serverConfig[message.guild.id]['flagpingid']}>")
+                else:
+                    await channel.send(f"@{serverConfig[message.guild.id]['flagping']}")
 
+    # @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
+    # async def resetServerConfig(self, ctx: commands.Context):
+    #     if ctx.author.id == 712509599135301673:
+    #         pass
+    #     else:
+    #         return
+    #     prompt = "DROP TABLE IF EXISTS serverconfig"
+    #     await SQLfunctions.databaseExecute(prompt)
+    #     prompt = ('''CREATE TABLE IF NOT EXISTS serverconfig (
+    #                           serverid BIGINT,
+    #                           ownerID BIGINT,
+    #                           generalchannelID BIGINT,
+    #                           allowfunny BOOL,
+    #                           updateschannelID BIGINT,
+    #                           commandschannelID BIGINT,
+    #                           managerchannelID BIGINT,
+    #                           serverboosterroleID BIGINT,
+    #                           contestmanagerroleID BIGINT,
+    #                           botmanagerroleID BIGINT,
+    #                           campaignmanagerroleID BIGINT,
+    #                           flagthreshold INT,
+    #                           flagaction VARCHAR,
+    #                           flagping VARCHAR,
+    #                           flagpingid BIGINT);''')
+    #     await SQLfunctions.databaseExecute(prompt)
+    #     await ctx.send("Done!  Now go DM everyone that their config was reset.")
 
-
-
-
-
-
-
-
-
-
-    @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
-    async def resetServerConfig(self, ctx: commands.Context):
+    @commands.command(name="addScamConfig", description="Reset everyone's server configurations")
+    async def resetScamConfig(self, ctx: commands.Context):
         if ctx.author.id == 712509599135301673:
             pass
         else:
             return
-        prompt = "DROP TABLE IF EXISTS serverconfig"
+        prompt = ('''ALTER TABLE serverconfig 
+                              ADD COLUMN IF NOT EXISTS flagthreshold INT,
+                              ADD COLUMN IF NOT EXISTS flagaction VARCHAR,
+                              ADD COLUMN IF NOT EXISTS flagping VARCHAR,
+                              ADD COLUMN IF NOT EXISTS flagpingid BIGINT;''')
         await SQLfunctions.databaseExecute(prompt)
-        prompt = ('''CREATE TABLE IF NOT EXISTS serverconfig (
-                              serverid BIGINT, 
-                              ownerID BIGINT,
-                              generalchannelID BIGINT,
-                              allowfunny BOOL,
-                              updateschannelID BIGINT,
-                              commandschannelID BIGINT,
-                              managerchannelID BIGINT,
-                              serverboosterroleID BIGINT,
-                              contestmanagerroleID BIGINT,
-                              botmanagerroleID BIGINT,
-                              campaignmanagerroleID BIGINT);''')
-        await SQLfunctions.databaseExecute(prompt)
-        await ctx.send("Done!  Now go DM everyone that their config was reset.")
+        await ctx.send("Done!")
+        await adminFunctions.updateServerConfig(self)
+
+    @commands.command(name="help", description="View all the bot commands")
+    async def help(self, ctx: commands.Context):
+        embed = discord.Embed(title=f"**Sprocket Bot Commands**",
+                              description="*Sprocket Bot's prefix is* `-`\n",
+                              color=discord.Color.random())
+        embed.add_field(name="", value="", inline=False)
+        embed.add_field(name="SprocketHelp", value="Get help with building in Sprocket", inline=False)
+        embed.add_field(name="bakeGeometry", value="Bake 0.127 compartments together", inline=False)
+        embed.add_field(name="importMesh ", value="Import .obj files into 0.2 tanks", inline=False)
+        embed.add_field(name="tunePowertrain", value="Calibrate your tank's powertrain", inline=False)
+        embed.add_field(name="submitTank", value="Submit a tank to an ongoing contest", inline=False)
+        embed.add_field(name="submitDecal", value="Submit decals to the SprocketTools decal repository", inline=False)
+        embed.add_field(name="weather", value="Apply wear and tear effects to attached photos", inline=False)
+        embed.add_field(name="help", value="Shows this message", inline=False)
+        await ctx.send(embed=embed)
 
     @commands.command(name="viewServerConfig", description="View my server configurations")
     async def viewServerConfig(self, ctx: commands.Context):
@@ -171,9 +230,15 @@ class adminFunctions(commands.Cog):
                     channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {server.id}')][0][result.lower()])
                     serverChannel = self.bot.get_channel(channel)
                     await serverChannel.send(message_out_text)
+                    for attachment in msg.attachments:
+                        file = await attachment.to_file()
+                        await serverChannel.send(file=file, content="")
                 except Exception:
                     serverOwner = self.bot.get_user(server.owner.id)
                     await serverOwner.send(message_out_text)
+                    for attachment in msg.attachments:
+                        file = await attachment.to_file()
+                        await serverOwner.send(file=file, content="")
 
 
         await ctx.send("## Delivered!")
@@ -257,13 +322,6 @@ class adminFunctions(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
 
-        @commands.command(name="exit", description="send a message wherever you want")
-        async def exit(self, ctx: commands.Context):
-            if ctx.author.id != 712509599135301673:
-                await ctx.send(await textTools.retrieveError(ctx))
-                return
-            await exit(1)
-
         await ctx.send("What is your server booster role?  Reply to this message with a ping of that role.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -294,8 +352,40 @@ class adminFunctions(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
 
-        await ctx.send(
-            "What role do you want to grant permissions to edit Sprocket Bot's settings?  Reply to this message with a ping of that role.")
+        await ctx.send("## Next up: scam protection.\n\nHow many consecutive scam messages do you want an account to send before Sprocket Bot considers it as hacked?\nRecommended values are between 3 and 6.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
+            responses["flagthreshold"] = int(msg.content)
+        except asyncio.TimeoutError:
+            await ctx.send("Operation cancelled.")
+            return
+
+        scamActionPrompt = "What action do you want Sprocket Bot to take, if any?"
+        scamActionList = ["nothing", "timeout for 12 hours", "kick"]
+        scamAction = await discordUIfunctions.getChoiceFromList(ctx, scamActionList, scamActionPrompt)
+        responses["flagaction"] = scamAction
+
+        scamPingPrompt = "What do you want Sprocket Bot to ping when it detects a hacked account?  \n\nThese pings will be sent into the management channel you defined previously, with some information about the hacked account."
+        scamPingList = ["nobody", "everyone", "here", "custom"]
+        scamPing = await discordUIfunctions.getChoiceFromList(ctx, scamPingList, scamPingPrompt)
+        responses["flagping"] = scamPing
+        if scamPing == "custom":
+            await ctx.send("What role do you want to designate to be pinged when a hacked account is detected?  Reply to this message with a ping of that role.")
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            try:
+                msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
+                pingRoleID = msg.role_mentions[0].id
+            except asyncio.TimeoutError:
+                await ctx.send("Operation cancelled.")
+                return
+            responses["flagpingid"] = pingRoleID
+        else:
+            responses["flagpingid"] = 0
+
+        await ctx.send("What role do you want to grant permissions to edit (some of) Sprocket Bot's settings?  Reply to this message with a ping of that role.")
 
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -307,7 +397,7 @@ class adminFunctions(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
 
-        await ctx.send("Sprocket Bot can interact with users in your general chat!  Do you wish to enable the fun module for exclusively your general chat?  Reply with 'yes' or 'no'.")
+        await ctx.send("In the future, Sprocket Bot may be able to interact with users in your general chat.  Do you wish to enable the fun module for exclusively your general chat?  Reply with 'yes' or 'no'.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
 
@@ -325,7 +415,15 @@ class adminFunctions(commands.Cog):
         keystr, valuestr = await textTools.getSQLprompt(responses)
         await SQLfunctions.databaseExecute(f'''DELETE FROM serverconfig WHERE serverid = {ctx.guild.id};''')
         await SQLfunctions.databaseExecute(f'''INSERT INTO serverconfig ({keystr}) VALUES ({valuestr});''')
+        await adminFunctions.updateServerConfig(self)
         await ctx.send("## Done! \nYour server is now configured and can fully utilize its commands.")
+
+    @commands.command(name="hey_alexa_kill_the_lights", description="send a message wherever you want")
+    async def exit(self, ctx: commands.Context):
+        if ctx.author.id != 712509599135301673:
+            await ctx.send(await textTools.retrieveError(ctx))
+            return
+        await exit(1)
 
     @commands.command(name="troll", description="send a message wherever you want")
     async def troll(self, ctx: commands.Context, channelin: str, *, message):
@@ -336,6 +434,19 @@ class adminFunctions(commands.Cog):
             channel = self.bot.get_channel(channelin)
             await ctx.send("Message is en route.")
             await channel.send(message)
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await channel.send(file=file, content="")
+
+    @commands.command(name="sendError", description="send a message wherever you want")
+    async def sendError(self, ctx: commands.Context, channelin: str):
+        if ctx.author.id == 712509599135301673 or ctx.author.id == 682990777814876312:
+            import re
+            channelin = int(re.sub(r'[^0-9]', '', channelin))
+            print(channelin)
+            channel = self.bot.get_channel(channelin)
+            await ctx.send("Message is en route.")
+            await channel.send(await textTools.retrieveError(ctx))
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")

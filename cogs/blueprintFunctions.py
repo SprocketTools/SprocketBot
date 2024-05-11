@@ -1,7 +1,10 @@
 import discord, json, numpy, copy, io
 from discord.ext import commands
 from discord import app_commands
+
+import main
 from cogs.textTools import textTools
+from PIL import Image, ImageChops
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 class blueprintFunctions(commands.Cog):
@@ -15,7 +18,7 @@ class blueprintFunctions(commands.Cog):
         serverID = (ctx.guild.id)
         try:
             channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
-            if ctx.channel.id != channel:
+            if ctx.channel.id != channel and ctx.author.id != main.ownerID:
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
@@ -25,120 +28,288 @@ class blueprintFunctions(commands.Cog):
         for attachment in ctx.message.attachments:
 
             blueprintData = json.loads(await attachment.read())
-            blueprintDataSave = json.loads(await attachment.read())
             name = blueprintData["header"]["name"]
-            version = blueprintData["header"]["gameVersion"]
-            if "0.12" not in version:
-                errorText = await textTools.retrieveError(ctx)
-                await ctx.reply(f"{errorText}\n\nThis command does not support the Geometric Internals build yet.")
-
-            x = 0
-            for iteration in blueprintData["blueprints"]:
-                partName = blueprintDataSave["blueprints"][x]["id"]
-                partString = blueprintDataSave["blueprints"][x]["data"]
-                partString.replace("\\", "")
-                partInfo = json.loads(partString)
-                clonePartInfo = copy.deepcopy(partInfo)
-                if partName == "Compartment" and partInfo["name"].lower() == "target":
-
-                    #print("Found a target!")
-                    y = 0
-                    for iteration in blueprintData["blueprints"]:
-
-                        partName = blueprintDataSave["blueprints"][x]["id"]
-                        partString = blueprintDataSave["blueprints"][x]["data"]
-                        partString.replace("\\", "")
-                        partInfo = json.loads(partString)
-                        clonePartInfo = copy.deepcopy(partInfo)
-
-                        basePartPoints = partInfo["compartment"]["points"]
-                        basePartPointsLength = len(basePartPoints)
-                        basePartSharedPoints = partInfo["compartment"]["sharedPoints"]
-                        basePartThicknessMap = partInfo["compartment"]["thicknessMap"]
-                        basePartFaceMap = partInfo["compartment"]["faceMap"]
-
-                        sourcePartName = blueprintDataSave["blueprints"][y]["id"]
-                        sourcePartString = blueprintDataSave["blueprints"][y]["data"]
-                        sourcePartString.replace("\\", "")
-                        sourcePartInfo = json.loads(sourcePartString)
-
-                        if sourcePartName == "Compartment" and sourcePartInfo["name"].lower() == "source":
-                            #print("Found a source!")
-                            import math
-                            sourcePartPosX = sourcePartInfo["pos"][0]
-                            sourcePartPosY = sourcePartInfo["pos"][1]
-                            sourcePartPosZ = sourcePartInfo["pos"][2]
-                            sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
-                            sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
-                            sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
-                            sourcePartPoints = sourcePartInfo["compartment"]["points"]
-                            sourcePartPointsLength = len(sourcePartPoints)
-                            sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
-                            sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
-                            sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
-
-                            # point positions (accounting for position + rotation)
-                            pos = 0
-                            # vector rotation
-                            while pos < sourcePartPointsLength:
-                                roundPoint = 6
-                                vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
-                                # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
-                                angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
-
-                                newVector = braveRotateVector(vector, angles)
-
-                                # newVector = rotateVector(vector, angles)
-                                sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
-                                sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
-                                sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
-                                pos += 3
-
-                            # shared point lists (adjusted to not overlap with current faces)
-                            clonePartInfo["compartment"]["points"] = basePartPoints + sourcePartPoints
-
-                            for group in sourcePartSharedPoints:
-                                pos = 0
-                                while pos < len(group):
-                                    group[pos] = group[pos] + int(basePartPointsLength / 3)
-                                    pos += 1
-                            clonePartInfo["compartment"]["sharedPoints"] = basePartSharedPoints + sourcePartSharedPoints
-                            #print(sourcePartSharedPoints)
-                            #print(basePartSharedPoints)
-                            #print(clonePartInfo["compartment"]["sharedPoints"])
-                            # thickness maps (simply merged, it's how it works)
-                            clonePartInfo["compartment"]["thicknessMap"] = basePartThicknessMap + sourcePartThicknessMap
-
-                            # face map (adjusted to not overlap with current faces)
-
-                            for group in sourcePartFaceMap:
-                                pos = 0
-                                while pos < len(group):
-                                    group[pos] = group[pos] + int(basePartPointsLength / 3)
-                                    pos += 1
-                                # print(group)
-                            clonePartInfo["compartment"]["faceMap"] = basePartFaceMap + sourcePartFaceMap
-
-                            # save
-                            data0 = json.dumps(clonePartInfo)
-                            blueprintDataSave["blueprints"][x]["data"] = data0
-                        y += 1
-                x += 1
-            import io
-            await ctx.send("Done!")
-            # data0 = json.dumps(blueprintData[0]["data"])
-            # data1 = json.dumps(blueprintData[1]["data"])
-            # data0.replace("\\", "")
-            # data1.replace("\\", "")
-            # blueprintData[0]["data"] = data0
-            # blueprintData[1]["data"] = data1
-
-            # fileData[0]["data"] = blueprintData
+            version = 0.127
+            if "0.2" in blueprintData["header"]["gameVersion"]:
+                await ctx.send("Detected a 0.2 blueprint.")
+                blueprintDataSave = await blueprintFunctions.bakeGeometry200(ctx, attachment)
+            elif float(blueprintData["header"]["gameVersion"]) < 0.128:
+                await ctx.send(f"Detected a legacy {blueprintData['header']['gameVersion']} blueprint.")
+                blueprintDataSave = await blueprintFunctions.bakeGeometry127(ctx, attachment)
             stringOut = json.dumps(blueprintDataSave, indent=4)
             data = io.BytesIO(stringOut.encode())
             await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
 
 
+    async def bakeGeometry200(ctx: commands.Context, attachment):
+        blueprintData = json.loads(await attachment.read())
+        blueprintDataSave = json.loads(await attachment.read())
+        name = blueprintData["header"]["name"]
+        version = blueprintData["header"]["gameVersion"]
+        compartmentList = {}
+
+        i = 0
+        for component in blueprintData["blueprints"]:
+            if component["type"] == "structure":
+                if blueprintData["blueprints"][i]["blueprint"]["name"] is None:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = "Hull"
+                nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+                if nameOut in compartmentList:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = f"{nameOut} (Vuid {i})"
+                positionID = blueprintData["blueprints"][i]["id"]
+                meshID = blueprintData["blueprints"][i]["blueprint"]["bodyMeshVuid"]
+                compartmentList[positionID] = {"positionID": positionID, "meshID": meshID}
+                for object in blueprintData["objects"]:
+                    try:
+                        if object["structureBlueprintVuid"] == positionID:
+                            compartmentList[positionID]["transform"] = object["transform"]
+                            compartmentList[positionID]["pvuid"] = int(object["pvuid"])
+                    except Exception:
+                        pass
+                for object in blueprintData["objects"]:
+                    for compartment in compartmentList:
+                        if int(object["vuid"]) == int(compartment["pvuid"]):
+                            print("Hi!")
+                            positionID = compartment["positionID"]
+                            compartmentList[positionID]["transform"]["pos"] = numpy.add(object["transform"]["pos"], compartmentList[positionID]["transform"]["pos"])
+                            compartmentList[positionID]["transform"]["rot"] = numpy.add(object["transform"]["rot"], compartmentList[positionID]["transform"]["rot"])
+                            compartmentList[positionID]["transform"]["scale"] = numpy.multiply(object["transform"]["scale"], compartmentList[positionID]["transform"]["scale"])
+
+
+            i += 1
+        print(compartmentList)
+
+        return
+
+        #     print(component)
+        #     if component["type"] == "structure":
+        #         nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+        #         if nameOut in structureList and dupeStatus == False:
+        #             await ctx.send(await textTools.retrieveError(ctx))
+        #             await ctx.send(
+        #                 f"Note: you have multiple compartments named {nameOut}.  To make things easier for yourself later, it's recommended to through your blueprint and give your compartments unique names.")
+        #             dupeStatus = True
+        #             nameOut = f"{nameOut} (Vuid {i})"
+        #         structureList.append(nameOut)
+        #         structureVuidList[blueprintData["blueprints"][i]["blueprint"]["name"]] = int(
+        #             component["blueprint"]["bodyMeshVuid"])
+        #     i += 1
+        #
+        # userPrompt = f"Pick the name of the compartment you wish to apply {attachmentin.filename} to."
+        # print(structureList)
+        # answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+        # Vuid = structureVuidList[answer]
+        #
+        #
+        # x = 0
+        # for iteration in blueprintData["blueprints"]:
+        #     partName = blueprintDataSave["blueprints"][x]["id"]
+        #     partString = blueprintDataSave["blueprints"][x]["data"]
+        #     partString.replace("\\", "")
+        #     partInfo = json.loads(partString)
+        #     clonePartInfo = copy.deepcopy(partInfo)
+        #     if partName == "Compartment" and partInfo["name"].lower() == "target":
+        #
+        #         #print("Found a target!")
+        #         y = 0
+        #         for iteration in blueprintData["blueprints"]:
+        #
+        #             partName = blueprintDataSave["blueprints"][x]["id"]
+        #             partString = blueprintDataSave["blueprints"][x]["data"]
+        #             partString.replace("\\", "")
+        #             partInfo = json.loads(partString)
+        #             clonePartInfo = copy.deepcopy(partInfo)
+        #
+        #             basePartPoints = partInfo["compartment"]["points"]
+        #             basePartPointsLength = len(basePartPoints)
+        #             basePartSharedPoints = partInfo["compartment"]["sharedPoints"]
+        #             basePartThicknessMap = partInfo["compartment"]["thicknessMap"]
+        #             basePartFaceMap = partInfo["compartment"]["faceMap"]
+        #
+        #             sourcePartName = blueprintDataSave["blueprints"][y]["id"]
+        #             sourcePartString = blueprintDataSave["blueprints"][y]["data"]
+        #             sourcePartString.replace("\\", "")
+        #             sourcePartInfo = json.loads(sourcePartString)
+        #
+        #             if sourcePartName == "Compartment" and sourcePartInfo["name"].lower() == "source":
+        #                 #print("Found a source!")
+        #                 import math
+        #                 sourcePartPosX = sourcePartInfo["pos"][0]
+        #                 sourcePartPosY = sourcePartInfo["pos"][1]
+        #                 sourcePartPosZ = sourcePartInfo["pos"][2]
+        #                 sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+        #                 sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+        #                 sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+        #                 sourcePartPoints = sourcePartInfo["compartment"]["points"]
+        #                 sourcePartPointsLength = len(sourcePartPoints)
+        #                 sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+        #                 sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+        #                 sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+        #
+        #                 # point positions (accounting for position + rotation)
+        #                 pos = 0
+        #                 # vector rotation
+        #                 while pos < sourcePartPointsLength:
+        #                     roundPoint = 6
+        #                     vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
+        #                     # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+        #                     angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
+        #
+        #                     newVector = braveRotateVector(vector, angles)
+        #
+        #                     # newVector = rotateVector(vector, angles)
+        #                     sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
+        #                     sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
+        #                     sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
+        #                     pos += 3
+        #
+        #                 # shared point lists (adjusted to not overlap with current faces)
+        #                 clonePartInfo["compartment"]["points"] = basePartPoints + sourcePartPoints
+        #
+        #                 for group in sourcePartSharedPoints:
+        #                     pos = 0
+        #                     while pos < len(group):
+        #                         group[pos] = group[pos] + int(basePartPointsLength / 3)
+        #                         pos += 1
+        #                 clonePartInfo["compartment"]["sharedPoints"] = basePartSharedPoints + sourcePartSharedPoints
+        #                 #print(sourcePartSharedPoints)
+        #                 #print(basePartSharedPoints)
+        #                 #print(clonePartInfo["compartment"]["sharedPoints"])
+        #                 # thickness maps (simply merged, it's how it works)
+        #                 clonePartInfo["compartment"]["thicknessMap"] = basePartThicknessMap + sourcePartThicknessMap
+        #
+        #                 # face map (adjusted to not overlap with current faces)
+        #
+        #                 for group in sourcePartFaceMap:
+        #                     pos = 0
+        #                     while pos < len(group):
+        #                         group[pos] = group[pos] + int(basePartPointsLength / 3)
+        #                         pos += 1
+        #                     # print(group)
+        #                 clonePartInfo["compartment"]["faceMap"] = basePartFaceMap + sourcePartFaceMap
+        #
+        #                 # save
+        #                 data0 = json.dumps(clonePartInfo)
+        #                 blueprintDataSave["blueprints"][x]["data"] = data0
+        #             y += 1
+        #     x += 1
+        # import io
+        # await ctx.send("Done!")
+        # # data0 = json.dumps(blueprintData[0]["data"])
+        # # data1 = json.dumps(blueprintData[1]["data"])
+        # # data0.replace("\\", "")
+        # # data1.replace("\\", "")
+        # # blueprintData[0]["data"] = data0
+        # # blueprintData[1]["data"] = data1
+        #
+        # # fileData[0]["data"] = blueprintData
+        # return blueprintDataSave
+
+    async def bakeGeometry127(ctx: commands.Context, attachment):
+        blueprintData = json.loads(await attachment.read())
+        blueprintDataSave = json.loads(await attachment.read())
+        name = blueprintData["header"]["name"]
+        version = blueprintData["header"]["gameVersion"]
+        if "0.12" not in version:
+            errorText = await textTools.retrieveError(ctx)
+            await ctx.reply(f"{errorText}\n\nThis command does not support the Geometric Internals build yet.")
+
+        x = 0
+        for iteration in blueprintData["blueprints"]:
+            partName = blueprintDataSave["blueprints"][x]["id"]
+            partString = blueprintDataSave["blueprints"][x]["data"]
+            partString.replace("\\", "")
+            partInfo = json.loads(partString)
+            clonePartInfo = copy.deepcopy(partInfo)
+            if partName == "Compartment" and partInfo["name"].lower() == "target":
+
+                #print("Found a target!")
+                y = 0
+                for iteration in blueprintData["blueprints"]:
+
+                    partName = blueprintDataSave["blueprints"][x]["id"]
+                    partString = blueprintDataSave["blueprints"][x]["data"]
+                    partString.replace("\\", "")
+                    partInfo = json.loads(partString)
+                    clonePartInfo = copy.deepcopy(partInfo)
+
+                    basePartPoints = partInfo["compartment"]["points"]
+                    basePartPointsLength = len(basePartPoints)
+                    basePartSharedPoints = partInfo["compartment"]["sharedPoints"]
+                    basePartThicknessMap = partInfo["compartment"]["thicknessMap"]
+                    basePartFaceMap = partInfo["compartment"]["faceMap"]
+
+                    sourcePartName = blueprintDataSave["blueprints"][y]["id"]
+                    sourcePartString = blueprintDataSave["blueprints"][y]["data"]
+                    sourcePartString.replace("\\", "")
+                    sourcePartInfo = json.loads(sourcePartString)
+
+                    if sourcePartName == "Compartment" and sourcePartInfo["name"].lower() == "source":
+                        #print("Found a source!")
+                        import math
+                        sourcePartPosX = sourcePartInfo["pos"][0]
+                        sourcePartPosY = sourcePartInfo["pos"][1]
+                        sourcePartPosZ = sourcePartInfo["pos"][2]
+                        sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+                        sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+                        sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+                        sourcePartPoints = sourcePartInfo["compartment"]["points"]
+                        sourcePartPointsLength = len(sourcePartPoints)
+                        sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+                        sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+                        sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+
+                        # point positions (accounting for position + rotation)
+                        pos = 0
+                        # vector rotation
+                        while pos < sourcePartPointsLength:
+                            roundPoint = 6
+                            vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
+                            # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+                            angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
+
+                            newVector = braveRotateVector(vector, angles)
+
+                            # newVector = rotateVector(vector, angles)
+                            sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
+                            sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
+                            sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
+                            pos += 3
+
+                        # shared point lists (adjusted to not overlap with current faces)
+                        clonePartInfo["compartment"]["points"] = basePartPoints + sourcePartPoints
+
+                        for group in sourcePartSharedPoints:
+                            pos = 0
+                            while pos < len(group):
+                                group[pos] = group[pos] + int(basePartPointsLength / 3)
+                                pos += 1
+                        clonePartInfo["compartment"]["sharedPoints"] = basePartSharedPoints + sourcePartSharedPoints
+                        #print(sourcePartSharedPoints)
+                        #print(basePartSharedPoints)
+                        #print(clonePartInfo["compartment"]["sharedPoints"])
+                        # thickness maps (simply merged, it's how it works)
+                        clonePartInfo["compartment"]["thicknessMap"] = basePartThicknessMap + sourcePartThicknessMap
+
+                        # face map (adjusted to not overlap with current faces)
+
+                        for group in sourcePartFaceMap:
+                            pos = 0
+                            while pos < len(group):
+                                group[pos] = group[pos] + int(basePartPointsLength / 3)
+                                pos += 1
+                            # print(group)
+                        clonePartInfo["compartment"]["faceMap"] = basePartFaceMap + sourcePartFaceMap
+
+                        # save
+                        data0 = json.dumps(clonePartInfo)
+                        blueprintDataSave["blueprints"][x]["data"] = data0
+                    y += 1
+            x += 1
+        import io
+        await ctx.send("Done!")
+
+        return blueprintDataSave
 
     async def getPowertrainStats(attachment):
         blueprintData = json.loads(await attachment.read())
@@ -207,6 +378,12 @@ class blueprintFunctions(commands.Cog):
             "topSpeed": topSpeed
         }
         return configuration
+
+
+    async def drawCompartment(ctx: commands.Context, attachment):
+
+        blueprintData = json.loads(await attachment.read())
+
 
     async def tunePowertrain200(ctx: commands.Context, attachment):
         blueprintData = json.loads(await attachment.read())
@@ -1392,107 +1569,133 @@ class blueprintFunctions(commands.Cog):
 
     @commands.command(name="importMesh", description="Sorry Argore")
     async def importMesh(self, ctx:commands.Context):
-        await ctx.send(content="Upload the mesh you wish to import.  Must be a .obj file with no faces exceeding 4 points.")
+        await ctx.send("Upload the .blueprint you wish to import into.  Note: you can only import to freeform compartments.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         try:
-            msg = await ctx.bot.wait_for('message', check=check, timeout=200.0)
+            msgBP = await ctx.bot.wait_for('message', check=check, timeout=200.0)
+        except Exception:
+            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send("Gonna need a blueprint file next time.")
+            return
+
+        await ctx.send(content="Upload the meshes you wish to import.  They must be a .obj file with no faces exceeding 4 points.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=240.0)
         except Exception:
             await ctx.send(await textTools.retrieveError(ctx))
             return
 
         armorThickness = 1
-        await ctx.send(content="Specify the desired armor thickness to apply to all points (in mm)")
+        await ctx.send(content=f"Specify the desired armor thickness to use on everything (in mm)")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         try:
-            msg2 = await ctx.bot.wait_for('message', check=check, timeout=200.0)
+            msg2 = await ctx.bot.wait_for('message', check=check, timeout=240.0)
             armorThickness = int(msg2.content)
         except Exception:
             await ctx.send(await textTools.retrieveError(ctx))
             await ctx.send("This number was invalid!  Using the recommended value...")
             return
 
-        verticesList = []
-        thicknessList = []
-        facesList = []
-
-        for attachment in msg.attachments:
-            attachment = await attachment.read()
-            print(attachment)
-            dataList = str(attachment).split("\\n")
-            print(dataList)
-            print(dataList[0])
-
-            for data in dataList:
-                if data[0:2] == "v ":
-                    points = data.split(" ")[1:4]
-                    points[0] = -1*float(points[0])
-                    for point in points:
-                        verticesList.append(round(float(point), 5))
-                if data[0:2] == "f ":
-                    faceDataIn = data.split(" ")[1:]
-                    faceSet = []
-                    for face in faceDataIn:
-                        point = int(face.split("/")[0]) - 1
-                        faceSet.append(point)
-                    thicknessSet = [armorThickness] * len(faceSet)
-                    if len(faceSet) > 4:
-                        await ctx.send("### Your model is not triangulated properly!\n")
-                    facesList.append(faceSet)
-                    thicknessList.append(thicknessSet)
-            pointsK = [16777215, 16777215, 0, -16777215, -16777215, 0]
-            for point in pointsK:
-                verticesList.append(round(float(point), 5))
-            print(verticesList)
-            print(facesList)
-            print(thicknessList)
-
-        ftList = []
-        for i in range(len(facesList)):
-            data = {}
-            data["v"] = facesList[i]
-            data["t"] = thicknessList[i]
-            ftList.append(data)
-
-        await ctx.send("Mesh processed!  Now upload the .blueprint you wish to import into.")
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        try:
-            msg = await ctx.bot.wait_for('message', check=check, timeout=200.0)
-        except Exception:
-            await ctx.send(await textTools.retrieveError(ctx))
-            await ctx.send("Gonna need a blueprint file next time.")
-            return
-
-        for attachment in msg.attachments:
-            blueprintData = json.loads(await attachment.read())
+        for attachmentBP in msgBP.attachments:
+            blueprintData = json.loads(await attachmentBP.read())
             structureList = []
             structureVuidList = {}
             tankName = blueprintData["header"]["name"]
-            i = 0
-            for component in blueprintData["blueprints"]:
-                if blueprintData["blueprints"][i]["blueprint"]["name"] is None:
-                    blueprintData["blueprints"][i]["blueprint"]["name"] = "null"
-                if blueprintData["blueprints"][i]["blueprint"]["description"] is None:
-                    blueprintData["blueprints"][i]["blueprint"]["description"] = "null"
-                if component["type"] == "structure":
-                    if not component["blueprint"]["name"]:
-                        component["blueprint"]["name"] = "Hull"
-                    structureList.append(component["blueprint"]["name"])
-                    structureVuidList[component["blueprint"]["name"]] = int(component["blueprint"]["bodyMeshVuid"])
-                i += 1
 
-            userPrompt = "Pick the name of the compartment you wish to apply the mesh to."
-            print(structureList)
-            answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
-            Vuid = structureVuidList[answer]
-            i = 0
-            for meshBase in blueprintData["meshes"]:
-                if meshBase["vuid"] == Vuid:
-                    blueprintData["meshes"][i]["meshData"]["mesh"]["vertices"] = verticesList
-                    blueprintData["meshes"][i]["meshData"]["mesh"]["faces"] = ftList
-                i += 1
+            for attachmentin in msg.attachments:
+                try:
+                    attachment = await attachmentin.read()
+                    print(attachment)
+                    dataList = str(attachment).split("\\n")
+                    print(dataList)
+                    print(dataList[0])
+                    structureList = []
+                    verticesList = []
+                    thicknessList = []
+                    facesList = []
+
+                    for data in dataList:
+                        if data[0:2] == "v ":
+                            points = data.split(" ")[1:4]
+                            points[0] = -1*float(points[0])
+                            for point in points:
+                                verticesList.append(round(float(point), 5))
+                        if data[0:2] == "f ":
+                            faceDataIn = data.split(" ")[1:]
+                            faceSet = []
+                            for face in faceDataIn:
+                                point = int(face.split("/")[0]) - 1
+                                faceSet.append(point)
+                            thicknessSet = [armorThickness] * len(faceSet)
+                            if len(faceSet) > 4:
+                                await ctx.send(await textTools.retrieveError(ctx))
+                                await ctx.send("### Your model is not triangulated properly!\n Open your mesh in Blender and apply a **Triangulate** modifier, using these settings.  Export it as a .obj file, then run the command again.")
+                                await ctx.send("https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/blender-settings.png")
+                                return
+                            facesList.append(faceSet)
+                            thicknessList.append(thicknessSet)
+                    pointsK = [16777215, 16777215, 0, -16777215, -16777215, 0]
+                    for point in pointsK:
+                        verticesList.append(round(float(point), 5))
+                    print(verticesList)
+                    print(facesList)
+                    print(thicknessList)
+
+                    ftList = []
+                    for i in range(len(facesList)):
+                        data = {}
+                        data["v"] = facesList[i]
+                        data["t"] = thicknessList[i]
+                        ftList.append(data)
+                    dupeStatus = False
+                    i = 0
+                    for component in blueprintData["blueprints"]:
+                        if component["type"] == "structure":
+                            if blueprintData["blueprints"][i]["blueprint"]["name"] is None:
+                                blueprintData["blueprints"][i]["blueprint"]["name"] = "Hull"
+                            if blueprintData["blueprints"][i]["blueprint"]["description"] is None:
+                                blueprintData["blueprints"][i]["blueprint"]["description"] = "null"
+                        try:
+                            if blueprintData["blueprints"][i]["blueprint"]["name"] is None:
+                                blueprintData["blueprints"][i]["blueprint"]["name"] = "null"
+                            if blueprintData["blueprints"][i]["blueprint"]["description"] is None:
+                                blueprintData["blueprints"][i]["blueprint"]["description"] = "null"
+                        except Exception:
+                            pass
+                        print(component)
+                        if component["type"] == "structure":
+                            nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+                            if nameOut in structureList and dupeStatus == False:
+                                await ctx.send(await textTools.retrieveError(ctx))
+                                await ctx.send(f"Note: you have multiple compartments named {nameOut}.  To make things easier for yourself later, it's recommended to through your blueprint and give your compartments unique names.")
+                                dupeStatus = True
+                                nameOut = f"{nameOut} (Vuid {i})"
+                            structureList.append(nameOut)
+                            structureVuidList[blueprintData["blueprints"][i]["blueprint"]["name"]] = int(component["blueprint"]["bodyMeshVuid"])
+                        i += 1
+
+                    userPrompt = f"Pick the name of the compartment you wish to apply {attachmentin.filename} to."
+                    print(structureList)
+                    answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+                    Vuid = structureVuidList[answer]
+                    i = 0
+                    for meshBase in blueprintData["meshes"]:
+                        if meshBase["vuid"] == Vuid:
+                            if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
+                                await ctx.send(await textTools.retrieveError(ctx))
+                                await ctx.send("Generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
+                                return
+                            blueprintData["meshes"][i]["meshData"]["mesh"]["vertices"] = verticesList
+                            blueprintData["meshes"][i]["meshData"]["mesh"]["faces"] = ftList
+                        i += 1
+                except Exception as error:
+                    await ctx.send(await textTools.retrieveError(ctx))
+                    await ctx.send(f"## The mesh import failed!  \n\n### Reason: \n{error}")
+                    return
 
             await ctx.send("## Done!")
             stringOut = json.dumps(blueprintData, indent=4)

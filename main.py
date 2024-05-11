@@ -37,11 +37,11 @@ SQLsettings = config["SECURITY"]
 SQLsettings["database"] = config[f"settings.{botMode}"]["database"]
 ownerID = int(config["settings"]["ownerID"])
 githubPAT = str(config["settings"]["githubPAT"])
-
+cogsList = ["cogs.registerFunctions", "cogs.SQLfunctions", "cogs.autoResponderFunctions", "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.githubTools", "cogs.textTools", "cogs.SprocketOfficialFunctions", "cogs.contestFunctions", "cogs.testingFunctions"]
 class Bot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all())
-        self.cogslist = ["cogs.registerFunctions", "cogs.SQLfunctions", "cogs.autoResponderFunctions", "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.githubTools", "cogs.textTools", "cogs.SprocketOfficialFunctions", "cogs.contestFunctions", "cogs.testingFunctions"]
+        super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all()) #
+        self.cogslist = cogsList
 
     async def setup_hook(self):
         for ext in self.cogslist:
@@ -62,9 +62,11 @@ class Management:
             pass
         else:
             return
-        for cog in self.cogslist:
+        for cog in self.bot.cogslist:
             await bot.reload_extension(cog)
         await ctx.send("Reloaded!")
+
+
 
 sanitizeKeywords = ["@", "/", "invalid_tank"]
 async def sanitize(inputPhrase: str):
