@@ -1,0 +1,1541 @@
+{
+  "v": "2.0",
+  "header": {
+    "name": "G-417",
+    "gameVersion": "0.2.4",
+    "mass": 10555,
+    "era": "Late WWII",
+    "class": "",
+    "desc": ""
+  },
+  "blueprints": [
+    {
+      "id": 0,
+      "type": "paintJobRegister",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "paintJobIDs": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "type": "paintJob",
+      "blueprint": {
+        "v": "2.0",
+        "name": "Primary",
+        "description": "",
+        "colourMapUrl": "",
+        "scale": 0.5,
+        "roughness": 0.5,
+        "metallic": 0.0,
+        "r": 0.75,
+        "g": 0.75,
+        "b": 0.75,
+        "saturation": 0.5,
+        "condition": 0.4,
+        "grime": 0.0
+      }
+    },
+    {
+      "id": 2,
+      "type": "paintJob",
+      "blueprint": {
+        "v": "2.0",
+        "name": "Powertrain",
+        "description": "",
+        "colourMapUrl": "821c5c82-a326-46ca-bfd0-bd2a75830ed7",
+        "scale": 0.5,
+        "roughness": 0.5,
+        "metallic": 0.0,
+        "r": 0.25,
+        "g": 0.4,
+        "b": 0.5,
+        "saturation": 0.75,
+        "condition": 0.75,
+        "grime": 0.0
+      }
+    },
+    {
+      "id": 3,
+      "type": "chassis",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "length": 6000,
+        "width": 2000,
+        "groundClearance": 400
+      }
+    },
+    {
+      "id": 7,
+      "type": "structure",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "armourVolume": 0.5144197,
+        "bodyMeshVuid": 4,
+        "partRepositioning": true
+      }
+    },
+    {
+      "id": 8,
+      "type": "verticalSplitHull",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "generationData": {
+          "v": "0.1",
+          "dataVersion": "0.0",
+          "shape": [
+            6.0,
+            2.0,
+            0.5,
+            0.3,
+            0.3,
+            0.9,
+            0.5,
+            0.399999976,
+            0.0,
+            15.0,
+            45.0,
+            0.0,
+            0.0,
+            45.0,
+            45.0,
+            0.0,
+            0.0,
+            0.5,
+            0.0
+          ],
+          "armour": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "shapeFlags": 31
+        }
+      }
+    },
+    {
+      "id": 16,
+      "type": "engine",
+      "blueprint": {
+        "v": "0.4",
+        "name": "Unnamed Engine",
+        "description": null,
+        "cylinders": 6,
+        "idleRPM": 800,
+        "cylinderDisplacement": 1.5,
+        "tech": 1.0,
+        "targetMinRPM": 1500,
+        "targetMaxRPM": 2500,
+        "torqueCoeff": 1.0,
+        "revLimit": -1
+      }
+    },
+    {
+      "id": 21,
+      "type": "transmission",
+      "blueprint": {
+        "v": "0.1",
+        "name": "Unnamed Transmission",
+        "description": null,
+        "autoInputTorque": true,
+        "maxInputTorque": 667.3586,
+        "autoResistanceTorque": true,
+        "maxResistanceTorque": 1334.71716,
+        "d": [
+          6.0,
+          2.5,
+          1.5,
+          1.0
+        ],
+        "r": [
+          4.0
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "type": "track",
+      "blueprint": {
+        "v": "1.0",
+        "name": null,
+        "description": null,
+        "separation": 1900,
+        "length": 6000,
+        "rrCoeff": 1.0,
+        "brake": 200,
+        "autoBrake": true,
+        "rollersEnabled": true,
+        "matchChassis": true,
+        "frontalTransmission": false
+      }
+    },
+    {
+      "id": 29,
+      "type": "trackWheelMount",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "mountID": "25261a10-1c39-4191-9378-b6108d71cbf1",
+        "scale": 1.0,
+        "x": 0,
+        "y": 450,
+        "z": -20,
+        "rearFacing": false
+      }
+    },
+    {
+      "id": 30,
+      "type": "trackWheel",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "wheelID": "ed05e419-9705-41ac-801c-11a0a0dd0700",
+        "perAxle": 2,
+        "spacingOnAxle": 0.05,
+        "xOffset": 0.05,
+        "diameter": 0.6,
+        "width": 0.14
+      }
+    },
+    {
+      "id": 38,
+      "type": "trackWheelMount",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "mountID": "97844d15-24a8-4feb-9548-668e2bb81ce6",
+        "scale": 1.0,
+        "x": 0,
+        "y": 450,
+        "z": -50,
+        "rearFacing": true
+      }
+    },
+    {
+      "id": 39,
+      "type": "trackWheel",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "wheelID": "8b31d0e4-3946-4a3a-81ef-b2bbf3a84989",
+        "perAxle": 1,
+        "spacingOnAxle": 0.0,
+        "xOffset": 0.07000001,
+        "diameter": 0.75,
+        "width": 0.403000027
+      }
+    },
+    {
+      "id": 47,
+      "type": "trackWheelArray",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "spacing": 1300,
+        "length": 6000,
+        "interleaveOverlapFraction": 0.0,
+        "groupSpacing": 0,
+        "perGroup": 1,
+        "groupingOffset": 0,
+        "zOrigin": 0,
+        "yOrigin": 0,
+        "xOrigin": -3000,
+        "zOffset": 0,
+        "yOffset": 680,
+        "xOffset": 350,
+        "syncLengthEnabled": true,
+        "angle": 0.0,
+        "lockAngle": false
+      }
+    },
+    {
+      "id": 48,
+      "type": "trackWheelMount",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "mountID": "062b2d20-13d5-4dec-9d1c-b2855fdccfac",
+        "scale": 0.5,
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "rearFacing": true
+      }
+    },
+    {
+      "id": 49,
+      "type": "trackWheel",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "wheelID": "50907d5b-dde1-451c-a0be-07c69d2fc886",
+        "perAxle": 2,
+        "spacingOnAxle": 0.05,
+        "xOffset": 0.05,
+        "diameter": 0.2,
+        "width": 0.14
+      }
+    },
+    {
+      "id": 52,
+      "type": "trackWheelArray",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "spacing": 135,
+        "length": 6000,
+        "interleaveOverlapFraction": 0.0,
+        "groupSpacing": 50,
+        "perGroup": 1,
+        "groupingOffset": 0,
+        "zOrigin": 0,
+        "yOrigin": 0,
+        "xOrigin": -3000,
+        "zOffset": 0,
+        "yOffset": 25,
+        "xOffset": 200,
+        "syncLengthEnabled": true,
+        "angle": 0.0,
+        "lockAngle": false
+      }
+    },
+    {
+      "id": 53,
+      "type": "trackWheelMount",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "mountID": "6b0a1425-3943-491b-ad87-f56d8b811e19",
+        "scale": 0.6,
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "rearFacing": true
+      }
+    },
+    {
+      "id": 54,
+      "type": "trackWheel",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "wheelID": "98283b0c-eeeb-436d-8f9a-4b59da236d2f",
+        "perAxle": 2,
+        "spacingOnAxle": 0.05,
+        "xOffset": 0.05,
+        "diameter": 0.75,
+        "width": 0.14
+      }
+    },
+    {
+      "id": 57,
+      "type": "trackBelt",
+      "blueprint": {
+        "v": "1.0",
+        "name": null,
+        "description": null,
+        "segmentID": "625f3a65-30f6-4180-a719-f3af1e2bacfe",
+        "x": 520,
+        "y": 50,
+        "z": 300,
+        "pitch": 170
+      }
+    },
+    {
+      "id": 128,
+      "type": "suspension",
+      "blueprint": {
+        "v": "0.5",
+        "name": null,
+        "description": null,
+        "suspensionID": null,
+        "targetAngle": -5.0,
+        "upTravelLimit": 1000.0,
+        "damper": 200.0,
+        "armLength": 500
+      }
+    },
+    {
+      "id": 129,
+      "type": "torsionBar",
+      "blueprint": {
+        "v": "0.0",
+        "name": null,
+        "description": null,
+        "torsionBarLength": 1500,
+        "torsionBarDiameter": 60
+      }
+    },
+    {
+      "id": 309,
+      "type": "structure",
+      "blueprint": {
+        "v": "0.0",
+        "name": "Middle Man",
+        "description": null,
+        "armourVolume": 0.0368930027,
+        "bodyMeshVuid": 310,
+        "partRepositioning": true
+      }
+    },
+    {
+      "id": 316,
+      "type": "structure",
+      "blueprint": {
+        "v": "0.0",
+        "name": "Hat on Top",
+        "description": null,
+        "armourVolume": 0.0300000031,
+        "bodyMeshVuid": 317,
+        "partRepositioning": true
+      }
+    }
+  ],
+  "objects": [
+    {
+      "guid": "7f8a9d20-eb45-482e-b149-014c964c4e2c",
+      "vuid": 5,
+      "pvuid": -1,
+      "flags": 2,
+      "plateStructure": 6,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "structureBlueprintVuid": 7
+    },
+    {
+      "guid": "6192f19f-4029-4686-9b92-57261096a362",
+      "vuid": 12,
+      "pvuid": 5,
+      "flags": 2,
+      "twinTransmission": 13,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "powertrainBlueprint": {
+        "v": "0.1",
+        "controlVuid": 10,
+        "layout": {
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "modules": [
+            {
+              "id": 0,
+              "flags": 0,
+              "type": 1,
+              "behaviourID": 19,
+              "mirrorID": -1
+            },
+            {
+              "id": 1,
+              "flags": 112,
+              "type": 4,
+              "behaviourID": -1,
+              "mirrorID": -1
+            },
+            {
+              "id": 2,
+              "flags": 2,
+              "type": 2,
+              "behaviourID": 24,
+              "mirrorID": 3
+            },
+            {
+              "id": 3,
+              "flags": 4,
+              "type": 2,
+              "behaviourID": 27,
+              "mirrorID": 2
+            },
+            {
+              "id": 6,
+              "flags": 6160,
+              "type": 4,
+              "behaviourID": -1,
+              "mirrorID": 7
+            },
+            {
+              "id": 7,
+              "flags": 6160,
+              "type": 4,
+              "behaviourID": -1,
+              "mirrorID": 6
+            },
+            {
+              "id": 4,
+              "flags": 10,
+              "type": 8,
+              "behaviourID": 60,
+              "mirrorID": 5
+            },
+            {
+              "id": 5,
+              "flags": 12,
+              "type": 8,
+              "behaviourID": 94,
+              "mirrorID": 4
+            }
+          ],
+          "ports": [
+            {
+              "id": 8,
+              "flags": 0,
+              "moduleID": 0
+            },
+            {
+              "id": 9,
+              "flags": 3,
+              "moduleID": 1
+            },
+            {
+              "id": 11,
+              "flags": 3,
+              "moduleID": 1
+            },
+            {
+              "id": 12,
+              "flags": 0,
+              "moduleID": 2
+            },
+            {
+              "id": 14,
+              "flags": 0,
+              "moduleID": 2
+            },
+            {
+              "id": 15,
+              "flags": 3,
+              "moduleID": 6
+            },
+            {
+              "id": 17,
+              "flags": 0,
+              "moduleID": 6
+            },
+            {
+              "id": 18,
+              "flags": 0,
+              "moduleID": 4
+            },
+            {
+              "id": 20,
+              "flags": 3,
+              "moduleID": 1
+            },
+            {
+              "id": 21,
+              "flags": 0,
+              "moduleID": 3
+            },
+            {
+              "id": 23,
+              "flags": 0,
+              "moduleID": 3
+            },
+            {
+              "id": 24,
+              "flags": 3,
+              "moduleID": 7
+            },
+            {
+              "id": 26,
+              "flags": 0,
+              "moduleID": 7
+            },
+            {
+              "id": 27,
+              "flags": 0,
+              "moduleID": 5
+            }
+          ],
+          "connections": [
+            {
+              "id": 10,
+              "flags": 0,
+              "providerID": 8,
+              "receiverID": 9
+            },
+            {
+              "id": 13,
+              "flags": 0,
+              "providerID": 11,
+              "receiverID": 12
+            },
+            {
+              "id": 16,
+              "flags": 0,
+              "providerID": 14,
+              "receiverID": 15
+            },
+            {
+              "id": 19,
+              "flags": 1,
+              "providerID": 17,
+              "receiverID": 18
+            },
+            {
+              "id": 22,
+              "flags": 0,
+              "providerID": 20,
+              "receiverID": 21
+            },
+            {
+              "id": 25,
+              "flags": 0,
+              "providerID": 23,
+              "receiverID": 24
+            },
+            {
+              "id": 28,
+              "flags": 1,
+              "providerID": 26,
+              "receiverID": 27
+            }
+          ],
+          "modulePositions": [
+            0.0,
+            0.13,
+            -2.0,
+            0.0,
+            0.300616741,
+            -2.75,
+            -0.3,
+            0.25,
+            -2.75,
+            0.3,
+            0.25,
+            -2.75,
+            -0.950000048,
+            0.358332157,
+            -2.75,
+            0.950000048,
+            0.358332157,
+            -2.75,
+            -0.950000048,
+            0.0,
+            0.0,
+            0.950000048,
+            0.0,
+            0.0
+          ],
+          "moduleRotations": [
+            0.0,
+            180.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            270.0,
+            0.0,
+            0.0,
+            90.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "portOffsets": [
+            0.0,
+            0.187030479,
+            0.315359324,
+            -4.554678E-09,
+            0.00271165371,
+            0.07180548,
+            0.07185669,
+            0.0,
+            0.0,
+            0.0,
+            0.0506167263,
+            -0.4,
+            0.0,
+            0.108332142,
+            0.5025,
+            0.08595723,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -2.23517418E-08,
+            0.450000018,
+            -3.05000019,
+            -0.07185669,
+            0.0,
+            0.0,
+            0.0,
+            0.0506167263,
+            -0.4,
+            0.0,
+            0.108332142,
+            0.5025,
+            -0.08595723,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            2.23517418E-08,
+            0.450000018,
+            -3.05000019
+          ],
+          "portDirections": [
+            0.0,
+            0.0,
+            1.0,
+            -6.338558E-08,
+            0.0377370529,
+            0.999287665,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -1.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            0.0,
+            0.0,
+            -1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -1.0,
+            0.0,
+            0.0,
+            1.0,
+            -1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            -1.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "twinTransmissionBlueprint": {
+        "v": "0.0",
+        "engineID": 0,
+        "leftTransmissionID": 2,
+        "rightTransmissionID": 3,
+        "leftPropulsionID": 4,
+        "rightPropulsionID": 5
+      }
+    },
+    {
+      "guid": "fbbe2fd4-9092-46c6-8657-8d5fbcd8186d",
+      "vuid": 9,
+      "pvuid": 12,
+      "flags": 3,
+      "powertrainSteering": 10,
+      "model": 11,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          -0.5,
+          0.5,
+          2.5
+        ],
+        "rot": [
+          315.0,
+          180.0,
+          180.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "guid": "ebcf5eda-e50b-4f18-a063-0138a9d630e0",
+      "vuid": 17,
+      "pvuid": 12,
+      "flags": 2,
+      "engine": 18,
+      "powertrainNode": 19,
+      "fuelReserve": 20,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.0,
+          0.13,
+          -2.0
+        ],
+        "rot": [
+          0.0,
+          180.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "engineBlueprintVuid": 16
+    },
+    {
+      "guid": "7a508b04-0d69-40d3-9f4c-92c02346b9de",
+      "vuid": 22,
+      "pvuid": 12,
+      "flags": 3,
+      "transmission": 23,
+      "powertrainNode": 24,
+      "transform": {
+        "mirrorVuid": 25,
+        "pos": [
+          -0.3,
+          0.25,
+          -2.75
+        ],
+        "rot": [
+          0.0,
+          270.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "transmissionBlueprintVuid": 21
+    },
+    {
+      "guid": "7a508b04-0d69-40d3-9f4c-92c02346b9de",
+      "vuid": 25,
+      "pvuid": 12,
+      "flags": 2,
+      "transmission": 26,
+      "powertrainNode": 27,
+      "transform": {
+        "mirrorVuid": 22,
+        "pos": [
+          0.3,
+          0.25,
+          -2.75
+        ],
+        "rot": [
+          0.0,
+          90.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "transmissionBlueprintVuid": 21
+    },
+    {
+      "guid": "ef551781-05bc-4aff-902a-372bdf0b3621",
+      "vuid": 58,
+      "pvuid": 12,
+      "flags": 3,
+      "track": 59,
+      "powertrainNode": 60,
+      "belt": 61,
+      "transform": {
+        "mirrorVuid": 92,
+        "pos": [
+          -0.950000048,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "trackBlueprintVuid": 28,
+      "trackInstanceInfo": {
+        "v": "0.0",
+        "beltVuid": 61,
+        "leftSide": false,
+        "position": -1,
+        "frontMountVuid": 32,
+        "rearMountVuid": 41,
+        "rollerArrayVuid": 51,
+        "roadwheelArrayVuid": 56
+      },
+      "beltBlueprintVuid": 57
+    },
+    {
+      "guid": "a57b9148-c567-46a9-a0c4-83c1d501e292",
+      "vuid": 31,
+      "pvuid": 58,
+      "flags": 3,
+      "wheelMount": 32,
+      "mountModel": 33,
+      "axle": 34,
+      "axleRod": 35,
+      "wheelArray": 36,
+      "axleModel": 37,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          -0.1,
+          0.450000018,
+          2.98000026
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "wheelMountBlueprintVuid": 29,
+      "wheelBlueprintVuid": 30
+    },
+    {
+      "guid": "a57b9148-c567-46a9-a0c4-83c1d501e292",
+      "vuid": 40,
+      "pvuid": 58,
+      "flags": 3,
+      "wheelMount": 41,
+      "mountModel": 42,
+      "axle": 43,
+      "axleRod": 44,
+      "wheelArray": 45,
+      "axleModel": 46,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          -0.1,
+          0.450000018,
+          -3.05000019
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "wheelMountBlueprintVuid": 38,
+      "wheelBlueprintVuid": 39
+    },
+    {
+      "guid": "7cbbe780-762f-4dde-98c5-4f2d0c97589c",
+      "vuid": 50,
+      "pvuid": 58,
+      "flags": 2,
+      "wheelMountArray": 51,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.0,
+          0.68,
+          -2.65
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "wheelMountArrayBlueprintVuid": 47,
+      "sharedWheelMountBlueprintVuid": 48,
+      "sharedWheelBlueprintVuid": 49
+    },
+    {
+      "guid": "7cbbe780-762f-4dde-98c5-4f2d0c97589c",
+      "vuid": 55,
+      "pvuid": 58,
+      "flags": 2,
+      "wheelMountArray": 56,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.0,
+          0.025,
+          -2.80000019
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "wheelMountArrayBlueprintVuid": 52,
+      "sharedWheelMountBlueprintVuid": 53,
+      "sharedWheelBlueprintVuid": 54
+    },
+    {
+      "guid": "ef551781-05bc-4aff-902a-372bdf0b3621",
+      "vuid": 92,
+      "pvuid": 12,
+      "flags": 2,
+      "track": 93,
+      "powertrainNode": 94,
+      "belt": 95,
+      "transform": {
+        "mirrorVuid": 58,
+        "pos": [
+          0.950000048,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "trackBlueprintVuid": 28,
+      "trackInstanceInfo": {
+        "v": "0.0",
+        "beltVuid": 95,
+        "leftSide": false,
+        "position": 2,
+        "frontMountVuid": 66,
+        "rearMountVuid": 75,
+        "rollerArrayVuid": 85,
+        "roadwheelArrayVuid": 90
+      },
+      "beltBlueprintVuid": 57
+    },
+    {
+      "guid": "a57b9148-c567-46a9-a0c4-83c1d501e292",
+      "vuid": 65,
+      "pvuid": 92,
+      "flags": 2,
+      "wheelMount": 66,
+      "mountModel": 67,
+      "axle": 68,
+      "axleRod": 69,
+      "wheelArray": 70,
+      "axleModel": 71,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.1,
+          0.450000018,
+          2.98000026
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "wheelMountBlueprintVuid": 29,
+      "wheelBlueprintVuid": 30
+    },
+    {
+      "guid": "a57b9148-c567-46a9-a0c4-83c1d501e292",
+      "vuid": 74,
+      "pvuid": 92,
+      "flags": 2,
+      "wheelMount": 75,
+      "mountModel": 76,
+      "axle": 77,
+      "axleRod": 78,
+      "wheelArray": 79,
+      "axleModel": 80,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.1,
+          0.450000018,
+          -3.05000019
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "wheelMountBlueprintVuid": 38,
+      "wheelBlueprintVuid": 39
+    },
+    {
+      "guid": "7cbbe780-762f-4dde-98c5-4f2d0c97589c",
+      "vuid": 84,
+      "pvuid": 92,
+      "flags": 2,
+      "wheelMountArray": 85,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.0,
+          0.68,
+          -2.65
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "wheelMountArrayBlueprintVuid": 47,
+      "sharedWheelMountBlueprintVuid": 48,
+      "sharedWheelBlueprintVuid": 49
+    },
+    {
+      "guid": "7cbbe780-762f-4dde-98c5-4f2d0c97589c",
+      "vuid": 89,
+      "pvuid": 92,
+      "flags": 2,
+      "wheelMountArray": 90,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.0,
+          0.025,
+          -2.80000019
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "wheelMountArrayBlueprintVuid": 52,
+      "sharedWheelMountBlueprintVuid": 53,
+      "sharedWheelBlueprintVuid": 54
+    },
+    {
+      "guid": "8f8a9d20-eb45-482e-b149-014c964c4e2c",
+      "vuid": 307,
+      "pvuid": 5,
+      "flags": 2,
+      "plateStructure": 308,
+      "transform": {
+        "mirrorVuid": -1,
+        "pos": [
+          0.0,
+          1.20000052,
+          0.505174041
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "structureBlueprintVuid": 309
+    }
+  ],
+  "meshes": [
+    {
+      "vuid": 4,
+      "type": "plateStructureMesh",
+      "meshData": {
+        "v": "0.0",
+        "smoothAngle": 0,
+        "gridSize": 1,
+        "format": "VSH",
+        "generationBlueprintVuid": 8
+      }
+    },
+    {
+      "vuid": 310,
+      "type": "plateStructureMesh",
+      "meshData": {
+        "v": "0.0",
+        "smoothAngle": 0,
+        "gridSize": 1,
+        "format": "freeform",
+        "mesh": {
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "vertices": [
+            -0.5,
+            0.0,
+            -0.5,
+            -0.5,
+            0.0,
+            0.5,
+            0.5,
+            0.0,
+            0.5,
+            0.5,
+            0.0,
+            -0.5,
+            -0.669,
+            1.0,
+            -0.5,
+            -0.655000031,
+            1.0,
+            0.782000065,
+            0.655000031,
+            1.0,
+            0.782000065,
+            0.669,
+            1.0,
+            -0.5
+          ],
+          "faces": [
+            {
+              "v": [
+                0,
+                3,
+                2,
+                1
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                0,
+                1,
+                5,
+                4
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                1,
+                2,
+                6,
+                5
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                2,
+                3,
+                7,
+                6
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                3,
+                0,
+                4,
+                7
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "vuid": 317,
+      "type": "plateStructureMesh",
+      "meshData": {
+        "v": "0.0",
+        "smoothAngle": 0,
+        "gridSize": 1,
+        "format": "freeform",
+        "mesh": {
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "vertices": [
+            -0.5,
+            0.0,
+            -0.5,
+            -0.5,
+            0.0,
+            0.5,
+            0.5,
+            0.0,
+            0.5,
+            0.5,
+            0.0,
+            -0.5,
+            -0.5,
+            1.0,
+            -0.5,
+            -0.5,
+            1.0,
+            0.5,
+            0.5,
+            1.0,
+            0.5,
+            0.5,
+            1.0,
+            -0.5
+          ],
+          "faces": [
+            {
+              "v": [
+                0,
+                3,
+                2,
+                1
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                0,
+                1,
+                5,
+                4
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                1,
+                2,
+                6,
+                5
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                2,
+                3,
+                7,
+                6
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            {
+              "v": [
+                3,
+                0,
+                4,
+                7
+              ],
+              "t": [
+                5,
+                5,
+                5,
+                5
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
