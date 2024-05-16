@@ -1,5 +1,6 @@
-import discord, json, numpy, copy, io
+import discord, json, math, numpy, copy, io
 from discord.ext import commands
+import cv2 as cv
 from discord import app_commands
 
 import main
@@ -41,13 +42,14 @@ class blueprintFunctions(commands.Cog):
             await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
 
 
-    async def bakeGeometry200(ctx: commands.Context, attachment):
+    async def bakeGeometry200old(ctx: commands.Context, attachment):
         blueprintData = json.loads(await attachment.read())
         blueprintDataSave = json.loads(await attachment.read())
         name = blueprintData["header"]["name"]
         version = blueprintData["header"]["gameVersion"]
         compartmentList = {}
 
+        # add all compartments to a list that can be called back from later
         i = 0
         for component in blueprintData["blueprints"]:
             if component["type"] == "structure":
@@ -58,28 +60,102 @@ class blueprintFunctions(commands.Cog):
                     blueprintData["blueprints"][i]["blueprint"]["name"] = f"{nameOut} (Vuid {i})"
                 positionID = blueprintData["blueprints"][i]["id"]
                 meshID = blueprintData["blueprints"][i]["blueprint"]["bodyMeshVuid"]
-                compartmentList[positionID] = {"positionID": positionID, "meshID": meshID}
+                compartmentList[positionID] = {"PositionID": positionID, "meshID": meshID}
                 for object in blueprintData["objects"]:
-                    try:
+                    if "structureBlueprintVuid" in object:
                         if object["structureBlueprintVuid"] == positionID:
                             compartmentList[positionID]["transform"] = object["transform"]
                             compartmentList[positionID]["pvuid"] = int(object["pvuid"])
-                    except Exception:
-                        pass
+                            compartmentList[positionID]["vuid"] = int(object["vuid"])
+
+                # usage of this is questionable
                 for object in blueprintData["objects"]:
-                    for compartment in compartmentList:
-                        if int(object["vuid"]) == int(compartment["pvuid"]):
-                            print("Hi!")
-                            positionID = compartment["positionID"]
-                            compartmentList[positionID]["transform"]["pos"] = numpy.add(object["transform"]["pos"], compartmentList[positionID]["transform"]["pos"])
-                            compartmentList[positionID]["transform"]["rot"] = numpy.add(object["transform"]["rot"], compartmentList[positionID]["transform"]["rot"])
-                            compartmentList[positionID]["transform"]["scale"] = numpy.multiply(object["transform"]["scale"], compartmentList[positionID]["transform"]["scale"])
+                    if "basketBlueprintVuid" in object:
+                        if object["compartmentBodyID"]["structureVuid"] == compartmentList[positionID]["vuid"]:
+                            compartmentList[positionID]["transform"] = numpy.add(object["transform"]["pos"], compartmentList[positionID]["transform"]["pos"]).tolist()
+                            compartmentList[positionID]["pvuid"] = int(object["pvuid"])
+                            compartmentList[positionID]["vuid"] = int(object["vuid"])
 
-
+                # for object in blueprintData["objects"]:
+                #     for compartment in compartmentList:
+                #         if int(object["vuid"]) == int(compartment["pvuid"]):
+                #             print("Hi!")
+                #             positionID = compartment["positionID"]
+                #             compartmentList[positionID]["transform"]["pos"] = numpy.add(object["transform"]["pos"], compartmentList[positionID]["transform"]["pos"])
+                #             compartmentList[positionID]["transform"]["rot"] = numpy.add(object["transform"]["rot"], compartmentList[positionID]["transform"]["rot"])
+                #             compartmentList[positionID]["transform"]["scale"] = numpy.multiply(object["transform"]["scale"], compartmentList[positionID]["transform"]["scale"])
             i += 1
-        print(compartmentList)
+        # i = 0
+        # # apply offsets to have all compartments centered at [0,0,0]
 
-        return
+
+
+
+        print(compartmentList)
+        #copy all the meshes over to the hull
+        verticesList = []
+        facesList = []
+        verticesOffset = 0
+        for component in blueprintData["blueprints"]:
+            if component["type"] == "structure":
+                objectID = component["id"]
+                relevantBodyMeshID = component["blueprint"]["bodyMeshVuid"]
+                sourcePartInfo = compartmentList[objectID]["transform"]
+                for meshData in blueprintData["meshes"]:
+
+                    if meshData["vuid"] == relevantBodyMeshID:
+                        print("Hi!")
+
+
+                        sourcePartPosX = sourcePartInfo["pos"][0]
+                        sourcePartPosY = sourcePartInfo["pos"][1]
+                        sourcePartPosZ = sourcePartInfo["pos"][2]
+                        sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+                        sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+                        sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+                        sourcePartPoints = meshData["meshData"]["mesh"]["vertices"]
+                        sourcePartPointsLength = len(sourcePartPoints)
+                        netPartPointsLength = len(verticesList)
+                        netPartPointCount = int(netPartPointsLength)/3
+                        # sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+                        # sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+                        # sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+                        # point positions (accounting for position + rotation)
+                        pos = 0
+                        # vector rotation
+                        while pos < sourcePartPointsLength:
+                            roundPoint = 6
+                            vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
+                            # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+                            angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
+
+                            newVector = braveRotateVector(vector, angles)
+
+                            # newVector = rotateVector(vector, angles)
+                            sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
+                            sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
+                            sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
+                            pos += 3
+                        # shared point lists (adjusted to not overlap with current faces)
+                        verticesList = verticesList + sourcePartPoints
+                        for facein in meshData["meshData"]["mesh"]["faces"]:
+                            face = copy.deepcopy(facein)
+                            i = 0
+                            for facepoint in face["v"]:
+                                face["v"][i] = int(int(face["v"][i]) + int(netPartPointCount))
+                                #print(face["v"][i])
+                                i += 1
+                            facesList.append(face)
+                        print(facesList)
+
+        print(verticesList)
+        blueprintData["meshes"][0]["meshData"]["mesh"]["vertices"] = verticesList
+        blueprintData["meshes"][0]["meshData"]["mesh"]["faces"] = facesList
+        netPartPointsLength = len(verticesList)
+        netPartPointCount = max(int(netPartPointsLength) / 3 - 1, 0)
+        print(f"There is {netPartPointsLength} vector elements and {netPartPointCount} points.")
+
+        return blueprintData
 
         #     print(component)
         #     if component["type"] == "structure":
@@ -205,6 +281,119 @@ class blueprintFunctions(commands.Cog):
         # # fileData[0]["data"] = blueprintData
         # return blueprintDataSave
 
+    async def bakeGeometry200(ctx: commands.Context, attachment):
+        blueprintData = json.loads(await attachment.read())
+        blueprintDataSave = json.loads(await attachment.read())
+        name = blueprintData["header"]["name"]
+        version = blueprintData["header"]["gameVersion"]
+        compartmentList = {}
+
+        # add all compartments to a list that can be called back from later
+        i = 0
+        for component in blueprintData["blueprints"]:
+            if component["type"] == "structure":
+                if blueprintData["blueprints"][i]["blueprint"]["name"] is None:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = "Hull"
+                nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+                if nameOut in compartmentList:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = f"{nameOut} (Vuid {i})"
+                positionID = blueprintData["blueprints"][i]["id"]
+                meshID = blueprintData["blueprints"][i]["blueprint"]["bodyMeshVuid"]
+                compartmentList[positionID] = {"PositionID": positionID, "meshID": meshID}
+                for object in blueprintData["objects"]:
+                    if "structureBlueprintVuid" in object:
+                        if object["structureBlueprintVuid"] == positionID:
+                            compartmentList[positionID]["transform"] = object["transform"]
+                            compartmentList[positionID]["pvuid"] = int(object["pvuid"])
+                            compartmentList[positionID]["vuid"] = int(object["vuid"])
+
+                # usage of this is questionable
+                # for object in blueprintData["objects"]:
+                #     if "basketBlueprintVuid" in object:
+                #         if object["compartmentBodyID"]["structureVuid"] == compartmentList[positionID]["vuid"]:
+                #             compartmentList[positionID]["transform"] = numpy.add(object["transform"]["pos"],
+                #                                                                  compartmentList[positionID][
+                #                                                                      "transform"]["pos"]).tolist()
+                #             compartmentList[positionID]["pvuid"] = int(object["pvuid"])
+                #             compartmentList[positionID]["vuid"] = int(object["vuid"])
+
+                # for object in blueprintData["objects"]:
+                #     for compartment in compartmentList:
+                #         if int(object["vuid"]) == int(compartment["pvuid"]):
+                #             print("Hi!")
+                #             positionID = compartment["positionID"]
+                #             compartmentList[positionID]["transform"]["pos"] = numpy.add(object["transform"]["pos"], compartmentList[positionID]["transform"]["pos"])
+                #             compartmentList[positionID]["transform"]["rot"] = numpy.add(object["transform"]["rot"], compartmentList[positionID]["transform"]["rot"])
+                #             compartmentList[positionID]["transform"]["scale"] = numpy.multiply(object["transform"]["scale"], compartmentList[positionID]["transform"]["scale"])
+            i += 1
+        # i = 0
+        # # apply offsets to have all compartments centered at [0,0,0]
+
+        print(compartmentList)
+        # copy all the meshes over to the hull
+        verticesList = []
+        facesList = []
+        verticesOffset = 0
+        for component in blueprintData["blueprints"]:
+            if component["type"] == "structure":
+                objectID = component["id"]
+                relevantBodyMeshID = component["blueprint"]["bodyMeshVuid"]
+                sourcePartInfo = compartmentList[objectID]["transform"]
+                for meshData in blueprintData["meshes"]:
+
+                    if meshData["vuid"] == relevantBodyMeshID:
+                        print("Hi!")
+
+                        sourcePartPosX = sourcePartInfo["pos"][0]
+                        sourcePartPosY = sourcePartInfo["pos"][1]
+                        sourcePartPosZ = sourcePartInfo["pos"][2]
+                        sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+                        sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+                        sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+                        sourcePartPoints = meshData["meshData"]["mesh"]["vertices"]
+                        sourcePartPointsLength = len(sourcePartPoints)
+                        netPartPointsLength = len(verticesList)
+                        netPartPointCount = int(netPartPointsLength) / 3
+                        # sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+                        # sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+                        # sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+                        # point positions (accounting for position + rotation)
+                        pos = 0
+                        # vector rotation
+                        while pos < sourcePartPointsLength:
+                            roundPoint = 6
+                            vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
+                            # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+                            angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
+
+                            newVector = braveRotateVector(vector, angles)
+
+                            # newVector = rotateVector(vector, angles)
+                            sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
+                            sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
+                            sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
+                            pos += 3
+                        # shared point lists (adjusted to not overlap with current faces)
+                        verticesList = verticesList + sourcePartPoints
+                        for facein in meshData["meshData"]["mesh"]["faces"]:
+                            face = copy.deepcopy(facein)
+                            i = 0
+                            for facepoint in face["v"]:
+                                face["v"][i] = int(int(face["v"][i]) + int(netPartPointCount))
+                                # print(face["v"][i])
+                                i += 1
+                            facesList.append(face)
+                        print(facesList)
+
+        print(verticesList)
+        blueprintData["meshes"][0]["meshData"]["mesh"]["vertices"] = verticesList
+        blueprintData["meshes"][0]["meshData"]["mesh"]["faces"] = facesList
+        netPartPointsLength = len(verticesList)
+        netPartPointCount = max(int(netPartPointsLength) / 3 - 1, 0)
+        print(f"There is {netPartPointsLength} vector elements and {netPartPointCount} points.")
+
+        return blueprintData
+
     async def bakeGeometry127(ctx: commands.Context, attachment):
         blueprintData = json.loads(await attachment.read())
         blueprintDataSave = json.loads(await attachment.read())
@@ -310,6 +499,163 @@ class blueprintFunctions(commands.Cog):
         await ctx.send("Done!")
 
         return blueprintDataSave
+
+    @commands.command(name="drawFrame", description="merge compartment geometry into itself.")
+    async def drawFrame(self, ctx: commands.Context):
+        import asyncio
+
+        for attachment in ctx.message.attachments:
+            blueprintData = json.loads(await attachment.read())
+            name = blueprintData["header"]["name"]
+            version = 0.127
+            if "0.2" in blueprintData["header"]["gameVersion"]:
+                await ctx.send("Detected a 0.2 blueprint.")
+                blueprintDataSave = await blueprintFunctions.bakeGeometry200(ctx, attachment)
+            else:
+                return
+            blueprintData = blueprintDataSave
+            meshData = blueprintData["meshes"][0]["meshData"]["mesh"]
+            verticesList = meshData["vertices"]
+            faceList = meshData["faces"]
+            verticesXlist = []
+            verticesYlist = []
+            verticesZlist = []
+
+            rotationX = 0.00
+            rotationY = -0.2
+            rotationZ = 0.1
+
+            # image settings
+            imageScale = 500
+            imagePadding = 100
+            lineThickness = 10
+
+
+            angles = [-1 * rotationX, -1 * rotationY, -1 * rotationZ]
+            ## rotate all the vertices
+            pos = 0
+            while pos < len(verticesList):
+                roundPoint = 6
+                vector = [verticesList[pos], verticesList[pos + 1], verticesList[pos + 2]]
+                # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+
+                newVector = braveRotateVector(vector, angles)
+
+                # newVector = rotateVector(vector, angles)
+                verticesList[pos] = round(newVector[0], roundPoint)
+                verticesXlist.append(newVector[0])
+                verticesList[pos + 1] = round(newVector[1], roundPoint)
+                verticesYlist.append(newVector[1])
+                verticesList[pos + 2] = round(newVector[2], roundPoint)
+                verticesZlist.append(newVector[2])
+
+                pos += 3
+
+            print(verticesList)
+
+            # conversion from 3D to 2D
+            imageXlist = verticesZlist
+            imageYlist = verticesYlist
+
+            # scale up the points
+            i = 0
+            while i < len(imageXlist):
+                imageXlist[i] = imageXlist[i]*imageScale
+                imageYlist[i] = imageYlist[i]*imageScale
+                i += 1
+
+            imageXbottom = min(imageXlist)
+            imageXtop = max(imageXlist)
+            imageYbottom = min(imageYlist)
+            imageYtop = max(imageYlist)
+
+            # center the points
+            i = 0
+            while i < len(imageXlist):
+                imageXlist[i] = (imageXlist[i] - imageXbottom + imagePadding)
+                imageYlist[i] = (imageYlist[i] - imageYbottom + imagePadding)
+                i += 1
+
+            imageXbottom = min(imageXlist)
+            imageXtop = max(imageXlist)
+            imageYbottom = min(imageYlist)
+            imageYtop = max(imageYlist)
+
+            print(min(imageXlist))
+            print(min(imageYlist))
+            print(imageXlist)
+            print(imageYlist)
+
+            imageX = imageXtop - imageXbottom + 2*imagePadding
+            imageY = imageYtop - imageYbottom + 2*imagePadding
+            print(imageX)
+            print(imageY)
+
+            # flip the points
+            i = 0
+            while i < len(imageXlist):
+                imageXlist[i] = imageX - imageXlist[i]
+                imageYlist[i] = imageY - imageYlist[i]
+                i += 1
+            # create a list of lines to plug into an image program
+            startingCoords = []
+            endingCoords = []
+            for face in faceList:
+                faceData = face["v"]
+                i = 0
+                while i < len(faceData):
+                    startingCoords.append([imageXlist[faceData[i]], imageYlist[faceData[i]]])
+                    endingCoords.append([imageXlist[faceData[(i + 1) % len(faceData)]], imageYlist[faceData[(i + 1) % len(faceData)]]])
+                    i += 1
+
+
+            print(f"X top is {imageXtop}, bottom is {imageXbottom}.  Y top is {imageYtop}, bottom is {imageYbottom}")
+
+            # initialize the image
+            imageBase = numpy.zeros((int(imageY), int(imageX), 3), numpy.uint8)
+            i = 0
+            while i < len(startingCoords):
+                cv.line(imageBase, (round(startingCoords[i][0]), round(startingCoords[i][1])), (round(endingCoords[i][0]), round(endingCoords[i][1])), (100, 200, 255), lineThickness)
+                i += 1
+
+            # send the image
+            # bytes_io = io.BytesIO()
+            img_encode = cv.imencode('.png', imageBase)[1]
+            data_encode = numpy.array(img_encode)
+            byte_encode = data_encode.tobytes()
+            byteImage = io.BytesIO(byte_encode)
+            imageOut = discord.File(byteImage, filename='image.png')
+            await ctx.send(file=imageOut)
+
+            # bytes_io = io.BytesIO()
+            # cv.imencode('.png', imageBase)[1].tofile(bytes_io)
+            # file = discord.File(bytes_io, 'image_out.png')
+            # await ctx.send(file=file)
+
+            # byte_io = io.BytesIO()
+            # imageBase.save(byte_io, format='PNG')
+            # byte_io.seek(0)
+            # file = discord.File(byte_io, filename=f'edited_image.png')
+            # await ctx.send(file=file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            stringOut = json.dumps(blueprintDataSave, indent=4)
+            data = io.BytesIO(stringOut.encode())
+            await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
 
     async def getPowertrainStats(attachment):
         blueprintData = json.loads(await attachment.read())
