@@ -327,7 +327,64 @@ class blueprintFunctions(commands.Cog):
                 #             compartmentList[positionID]["transform"]["scale"] = numpy.multiply(object["transform"]["scale"], compartmentList[positionID]["transform"]["scale"])
             i += 1
         # i = 0
-        # # apply offsets to have all compartments centered at [0,0,0]
+
+        # # apply structure offsets to have all compartments centered at [0,0,0] and save their meshes to the base vehicle
+        for compartment in compartmentList:
+            print(compartmentList)
+            print(compartment)
+            relevantObjectID = compartmentList[compartment]["PositionID"]
+
+            for object in blueprintData["objects"]:
+                if "structureBlueprintVuid" in object:
+                    if object["structureBlueprintVuid"] == relevantObjectID:
+                        # this is the structure we need to relocate
+                        # start by setting its base position to zero
+
+                        compartmentList[relevantObjectID]["transform"]["pos"] = numpy.add(object["transform"]["pos"],compartmentList[relevantObjectID]["transform"]["pos"])
+                        compartmentList[relevantObjectID]["transform"]["rot"] = numpy.add(object["transform"]["rot"], compartmentList[relevantObjectID]["transform"]["rot"])
+                        compartmentList[relevantObjectID]["transform"]["scale"] = numpy.multiply(object["transform"]["scale"], compartmentList[relevantObjectID]["transform"]["scale"])
+
+                        relevantBodyMeshID = compartmentList[relevantObjectID]["meshID"]
+                        i = 0
+                        for meshData in blueprintData["meshes"]:
+
+                            if meshData["vuid"] == relevantBodyMeshID:
+                                newPoints = await blueprintFunctions.runMeshTranslation(ctx, blueprintData["meshes"][i], object["transform"])
+                                blueprintData["meshes"][i]["meshData"]["mesh"]["vertices"] = newPoints
+                                print("incremental update!")
+                            i += 1
+
+                        # objects with a pvuid of x are attached to a vuid of x.  Loop until the pvuid = -1
+                        activeVuid = object["vuid"]
+                        activePvuid = object["pvuid"]
+                        print(activeVuid)
+                        print(activePvuid)
+                        while int(activePvuid) > -1:
+                            for subobject in blueprintData["objects"]:
+                                if subobject["vuid"] == activePvuid:
+                                    transform = {}
+                                    compartmentList[relevantObjectID]["transform"]["pos"] = numpy.add(subobject["transform"]["pos"], compartmentList[relevantObjectID]["transform"]["pos"])
+                                    compartmentList[relevantObjectID]["transform"]["rot"] = numpy.add(subobject["transform"]["rot"], compartmentList[relevantObjectID]["transform"]["rot"])
+                                    compartmentList[relevantObjectID]["transform"]["scale"] = numpy.multiply(subobject["transform"]["scale"], compartmentList[relevantObjectID]["transform"]["scale"])
+
+                                    relevantBodyMeshID = compartmentList[relevantObjectID]["meshID"]
+                                    i = 0
+                                    for meshData in blueprintData["meshes"]:
+
+                                        if meshData["vuid"] == relevantBodyMeshID:
+                                            newPoints = await blueprintFunctions.runMeshTranslation(ctx, blueprintData["meshes"][i], subobject["transform"])
+                                            blueprintData["meshes"][i]["meshData"]["mesh"]["vertices"] = newPoints
+                                            print("incremental update!")
+                                        i += 1
+
+
+                                    activeVuid = subobject["vuid"]
+                                    activePvuid = subobject["pvuid"]
+                                    print(activeVuid)
+                                    print(activePvuid)
+
+
+
 
         print(compartmentList)
         # copy all the meshes over to the hull
@@ -359,20 +416,24 @@ class blueprintFunctions(commands.Cog):
                         # sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
                         # point positions (accounting for position + rotation)
                         pos = 0
-                        # vector rotation
-                        while pos < sourcePartPointsLength:
-                            roundPoint = 6
-                            vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
-                            # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
-                            angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
 
-                            newVector = braveRotateVector(vector, angles)
 
-                            # newVector = rotateVector(vector, angles)
-                            sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
-                            sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
-                            sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
-                            pos += 3
+                        # # vector rotation
+                        # while pos < sourcePartPointsLength:
+                        #     roundPoint = 6
+                        #     vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
+                        #     # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+                        #     angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
+                        #
+                        #     newVector = braveRotateVector(vector, angles)
+                        #
+                        #     # newVector = rotateVector(vector, angles)
+                        #     sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
+                        #     sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
+                        #     sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
+                        #     pos += 3
+
+
                         # shared point lists (adjusted to not overlap with current faces)
                         verticesList = verticesList + sourcePartPoints
                         for facein in meshData["meshData"]["mesh"]["faces"]:
@@ -500,6 +561,42 @@ class blueprintFunctions(commands.Cog):
 
         return blueprintDataSave
 
+    async def runMeshTranslation(ctx:commands.Context, meshData, sourcePartInfo):
+        print("Hi!")
+
+        sourcePartPosX = sourcePartInfo["pos"][0]
+        sourcePartPosY = sourcePartInfo["pos"][1]
+        sourcePartPosZ = sourcePartInfo["pos"][2]
+        sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+        sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+        sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+        sourcePartPoints = meshData["meshData"]["mesh"]["vertices"]
+        sourcePartPointsLength = len(sourcePartPoints)
+
+        # sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+        # sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+        # sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+        # point positions (accounting for position + rotation)
+        pos = 0
+        # vector rotation
+        while pos < sourcePartPointsLength:
+            roundPoint = 6
+            vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
+            # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+            angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
+
+            newVector = braveRotateVector(vector, angles)
+
+            # newVector = rotateVector(vector, angles)
+            sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
+            sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
+            sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
+            pos += 3
+        # shared point lists (adjusted to not overlap with current faces)
+        return sourcePartPoints
+
+
+
     @commands.command(name="drawFrame", description="merge compartment geometry into itself.")
     async def drawFrame(self, ctx: commands.Context):
         import asyncio
@@ -522,13 +619,13 @@ class blueprintFunctions(commands.Cog):
             verticesZlist = []
 
             rotationX = 0.00
-            rotationY = -0.2
+            rotationY = -0.5
             rotationZ = 0.1
 
             # image settings
             imageScale = 500
             imagePadding = 100
-            lineThickness = 10
+            lineThickness = 6
 
 
             angles = [-1 * rotationX, -1 * rotationY, -1 * rotationZ]
