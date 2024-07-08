@@ -12,8 +12,8 @@ To set up this tool, run through the -setup command.  While running the setup co
 - What do you want Sprocket Bot to ping when it detects a hacked account?
 
 ### Notes:
-This tool will not work properly if other bots or automated systems will punish users before Sprocket Bot detects the accounts.  For example, if another bot will time out a user for sending two links in 1 second, then the bot won't kick them from the server.
-All messages and actions flagged by the bot are logged to an internal debug channel, so that I can ensure false positives are being avoided.   These logs do not show what server the action originates from.
+This tool will not work properly if other bots or automated systems will punish users before Sprocket Bot detects the accounts.  For example, if another bot will timeout a user for sending two links in 1 second, and Sprocket Bot is configured to timeout at 4 flagged messages, then Sprocket Bot won't be effective at detecting the accounts.
+All messages and actions flagged by the bot are logged to an internal debug channel, so that I can ensure false positives are being avoided.  These logs do not show what server the action originates from.
 
 Updated on July 8th, 2024
 
