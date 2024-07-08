@@ -8,7 +8,7 @@ To ensure that false positives are avoided, flags on an account are removed the 
 To set up this tool, run through the -setup command.  While running the setup command, you will be asked for the following settings:
 - How many consecutive scam messages do you want an account to send before Sprocket Bot considers it as hacked?
 - What action do you want Sprocket Bot to take, if any?
- - If set to "kick," the bot will also delete messages sent by the user in the previous 10 minutes.  
+	- If set to "kick," the bot will also delete messages sent by the user in the previous 10 minutes.  
 - What do you want Sprocket Bot to ping when it detects a hacked account?
 
 ### Notes:
