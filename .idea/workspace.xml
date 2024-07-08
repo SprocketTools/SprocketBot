@@ -6,8 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="9cea07c4-e001-4428-85f9-05c2e9eccbc5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/G-427.blueprint" beforeDir="false" afterPath="$PROJECT_DIR$/G-427.blueprint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/adminFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/adminFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cogs/blueprintFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/blueprintFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/githubTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/githubTools.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -181,6 +182,10 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
           <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/cogs/blueprintFunctions.py</url>
+          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

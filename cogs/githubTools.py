@@ -246,15 +246,19 @@ class githubTools(commands.Cog):
 
         # Update all the main pages first
         for category in imageCategoryList:
+            inText = category
+            if category == "Featured":
+                inText = "Decal Catalog"
             HTMLdoc = f'''<html>
                 <head>
-                    <title>{category}</title>
+                    <title>{inText}</title>
                     <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
                     <link rel="icon" type="image/x-icon" href="SprocketToolsLogo.png">
                     <link rel="stylesheet" href="styles_testing.css">
                 </head>
             <body>
             <div class="navbar">
+            	<img src="SprocketToolsLogo.png"/>
                 <a href="index.html">Home</a>
                 <a href="TopGearCalculator.html">Gear Calculator</a>
                 <a href="ContestsList.html">Contests</a>
@@ -265,7 +269,9 @@ class githubTools(commands.Cog):
                 <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
                 <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
             </div>
-            
+            <div class="container">
+                    <h1 class="text-center">{inText}</h1>
+                </div>
             <div>
                 <ul class="decal-menu">'''
             for subcategory in imageCategoryList:
@@ -281,10 +287,9 @@ class githubTools(commands.Cog):
                     </div>
                 </div>
                 <div class="container">
-                    <h1 class="text-center">Decal Catalog</h1>
                     <center>
                         <h4>Welcome to the biggest community collection of URL-embeddable decals!</h4> 
-                        <h5>Each decal includes a URL listed below it.  Copy the decal's URL, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h5>
+                        <h5>Copy the decal's URL, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h5>
                         <h5>Your decals will now automatically download and apply wherever you share your tank!</h5>
                 </div>
                 <ul class="decals">'''
@@ -295,7 +300,6 @@ class githubTools(commands.Cog):
                     </div>
                 </div>
                 <div class="container">
-                    <h1 class="text-center">{category}</h1>
                     <center>
                         <h5>Copy the decal's URL, select a decal in Sprocket Tank Design, and paste the link into the URL field.</h5>   
                 </div>

@@ -599,8 +599,6 @@ class blueprintFunctions(commands.Cog):
 
     @commands.command(name="drawFrame", description="merge compartment geometry into itself.")
     async def drawFrame(self, ctx: commands.Context):
-        import asyncio
-
         for attachment in ctx.message.attachments:
             blueprintData = json.loads(await attachment.read())
             name = blueprintData["header"]["name"]
@@ -618,9 +616,9 @@ class blueprintFunctions(commands.Cog):
             verticesYlist = []
             verticesZlist = []
 
-            rotationX = 0.00
-            rotationY = -0.5
-            rotationZ = 0.1
+            rotationX = math.pi/32*0
+            rotationY = math.pi/32*0
+            rotationZ = math.pi/32*0
 
             # image settings
             imageScale = 500
@@ -635,16 +633,16 @@ class blueprintFunctions(commands.Cog):
                 roundPoint = 6
                 vector = [verticesList[pos], verticesList[pos + 1], verticesList[pos + 2]]
                 # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+                if vector[0] < 1000 and vector[1] < 1000 and vector[2] < 1000:
+                    newVector = braveRotateVector(vector, angles)
 
-                newVector = braveRotateVector(vector, angles)
-
-                # newVector = rotateVector(vector, angles)
-                verticesList[pos] = round(newVector[0], roundPoint)
-                verticesXlist.append(newVector[0])
-                verticesList[pos + 1] = round(newVector[1], roundPoint)
-                verticesYlist.append(newVector[1])
-                verticesList[pos + 2] = round(newVector[2], roundPoint)
-                verticesZlist.append(newVector[2])
+                    # newVector = rotateVector(vector, angles)
+                    verticesList[pos] = round(newVector[0], roundPoint)
+                    verticesXlist.append(newVector[0])
+                    verticesList[pos + 1] = round(newVector[1], roundPoint)
+                    verticesYlist.append(newVector[1])
+                    verticesList[pos + 2] = round(newVector[2], roundPoint)
+                    verticesZlist.append(newVector[2])
 
                 pos += 3
 
@@ -721,6 +719,7 @@ class blueprintFunctions(commands.Cog):
             data_encode = numpy.array(img_encode)
             byte_encode = data_encode.tobytes()
             byteImage = io.BytesIO(byte_encode)
+            #cv.imwrite(f"{name}Edited.png", imageBase)
             imageOut = discord.File(byteImage, filename='image.png')
             await ctx.send(file=imageOut)
 
@@ -750,9 +749,10 @@ class blueprintFunctions(commands.Cog):
 
 
 
-            stringOut = json.dumps(blueprintDataSave, indent=4)
-            data = io.BytesIO(stringOut.encode())
-            await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
+
+            # stringOut = json.dumps(blueprintDataSave, indent=4)
+            # data = io.BytesIO(stringOut.encode())
+            # await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
 
     async def getPowertrainStats(attachment):
         blueprintData = json.loads(await attachment.read())
@@ -2048,7 +2048,8 @@ class blueprintFunctions(commands.Cog):
             structureList = []
             structureVuidList = {}
             tankName = blueprintData["header"]["name"]
-
+            string = "0.2.3"
+            blueprintData["header"]["gameVersion"] = "0.2.3"
             for attachmentin in msg.attachments:
                 try:
                     attachment = await attachmentin.read()
@@ -2074,11 +2075,11 @@ class blueprintFunctions(commands.Cog):
                                 point = int(face.split("/")[0]) - 1
                                 faceSet.append(point)
                             thicknessSet = [armorThickness] * len(faceSet)
-                            if len(faceSet) > 4:
-                                await ctx.send(await textTools.retrieveError(ctx))
-                                await ctx.send("### Your model is not triangulated properly!\n Open your mesh in Blender and apply a **Triangulate** modifier, using these settings.  Export it as a .obj file, then run the command again.")
-                                await ctx.send("https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/blender-settings.png")
-                                return
+                            # if len(faceSet) > 4:
+                            #     await ctx.send(await textTools.retrieveError(ctx))
+                            #     await ctx.send("### Your model is not triangulated properly!\n Open your mesh in Blender and apply a **Triangulate** modifier, using these settings.  Export it as a .obj file, then run the command again.")
+                            #     await ctx.send("https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/blender-settings.png")
+                            #     return
                             facesList.append(faceSet)
                             thicknessList.append(thicknessSet)
                     pointsK = [16777215, 16777215, 0, -16777215, -16777215, 0]

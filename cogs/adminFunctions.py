@@ -17,9 +17,9 @@ from cogs.textTools import textTools
 
 serverConfig = {}
 userStrikes = {}
-nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "plug", "leak", "sususmogus"]
+nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "leak", "sususmogus"]
 scamFlags = ["$", "steam", "asdfghjkl"]
-linkFlags = ["steamcommunity.com", "bit.ly", "sc.link", "discord.gg"]
+linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "discord.gg", "discord.com/invite"]
 strikethreshold = 3
 
 class adminFunctions(commands.Cog):
@@ -89,10 +89,14 @@ class adminFunctions(commands.Cog):
             embed.add_field(name="User ping", value=f"<@{message.author.id}>", inline=False)
             await logChannel.send(embed=embed)
             await logChannel.send(f'Message content:\n`{message.content}`')
+            if userStrikes[message.author.id] == int(serverConfig[message.guild.id]['flagthreshold']) - 1:
+                await message.author.send(
+                    f"## Warning: you are triggering Sprocket Bot's anti scam functions and risk a {action} in *{message.guild.name}.*  \nSend a message that does not contain a link or questionable words, such as \"a\". \nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
             if userStrikes[message.author.id] >= int(serverConfig[message.guild.id]['flagthreshold']):
                 if action == "kick":
-                    await message.author.send(f"You have been kicked from {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \nThis is not a ban - rejoin once you gain control of your account again and have 2FA enabled.\nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
-                    await message.author.kick(reason="Hacked account")
+                    await message.author.send(f"You have been kicked from {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \n This is not a permanent ban - rejoin the server once you gain control of your account again and have 2FA enabled.\nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
+                    await message.author.ban(reason="Automated anti-scam functions", delete_message_seconds=600)
+                    await message.author.unban(reason="Automated anti-scam functions")
                 if action == "timeout for 12 hours":
                     await message.author.send(f"You have been timed out in {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
                     delta = (datetime.datetime.now().astimezone() + datetime.timedelta(hours=12))
