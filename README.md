@@ -8,14 +8,13 @@ For documentation on Sprocket Bot's tools, check the [contest documentation](htt
 
 ## Important commands
 `-help` - prints out a list of useful commands
+
 `-SprocketHelp` - drops down a menu of useful prompts
+
 `-setup` - allows the server staff to set up the bot
 
-## Contributing Code
-Contributions are welcome!  Sprocket Bot is written purely in Python.  The attached .json files are usable as examples, and do not reflect the current campaign level.  It is recommended to use Github to download and update the files.
-
 ## Warnings
-Sprocket bot is an **in-development** utility bot, developed by a college student during their free time.  I say "utility" because its capabilities are changing quite rapidly, and is nowhere near the end result I want it to be in.  As a result, 100% reliability in its services is not guaranteed.  
+Sprocket bot is an **in-development** utility bot.  Its capabilities are changing quite rapidly, and is nowhere near the end result I want it to be in.  As a result, 100% reliability in its services is not guaranteed.  
 - I cannot keep the bot's entire source code public once administrative utilities and/or vehicle rating formulas are added.
 
 ## Requirements
@@ -25,6 +24,10 @@ Contest hosts may run whatever contests they'd like to with Sprocket Bot, except
 - The contest(s) cause excessive strain on the server or break it (which I would be impressed to actually see, no contest ever ran in Sprocket Official's history would have managed to do this *except the Ambushed! challenge*)
 
 This doesn't mean I won't help to ensure the contests are set up as intended though.  Should issues like these arise, please contact me through Discord for fastest response.
+
+## Contributing Code
+Contributions are welcome!  Sprocket Bot is ran on Python 3.11.  
+Setting up your own bot to run will require filling in data for the `configuration.ini` file and placing it into `C:\SprocketBot`.  Ensure that you have a PostgreSQL server to connect to as well.
 
 ##
 ** **
