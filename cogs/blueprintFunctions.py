@@ -8,6 +8,31 @@ from cogs.textTools import textTools
 from PIL import Image, ImageChops
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
+
+addonStructureBaseFile = '''{
+  "v": "0.0",
+  "guid": "9f8a9d20-eb45-482e-b149-014c964c4e2c",
+  "name": "cubePlateStructure",
+  "tags": [
+    "plateStructurePrefab"
+  ],
+  "transform": 'null',
+  "components": [
+    {
+      "fileID": "plateStructurePrefab",
+      "type": "plateStructurePrefab",
+      "info": {"v": "0.0", "mesh": {}} 
+    }
+    }
+    ]
+    }
+'''
+
+
+
+
+
+
 class blueprintFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -594,6 +619,55 @@ class blueprintFunctions(commands.Cog):
             pos += 3
         # shared point lists (adjusted to not overlap with current faces)
         return sourcePartPoints
+
+    @commands.command(name="getAddon", description="merge compartment geometry into itself.")
+    async def getAddon(self, ctx: commands.Context):
+        for attachment in ctx.message.attachments:
+            blueprintData = json.loads(await attachment.read())
+            structureList = []
+            structureVuidList = {}
+            compartmentData = {}
+            tankName = blueprintData["header"]["name"]
+            try:
+                i = 0
+                dupeStatus = False
+                for component in blueprintData["blueprints"]:
+                    print(component)
+                    if component["type"] == "structure":
+                        nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+                        if nameOut in structureList and dupeStatus == False:
+                            await ctx.send(await textTools.retrieveError(ctx))
+                            await ctx.send(f"Note: you have multiple compartments named {nameOut}.  To make things easier for yourself later, it's recommended to through your blueprint and give your compartments unique names.")
+                            dupeStatus = True
+                            nameOut = f"{nameOut} (Vuid {i})"
+                        structureList.append(nameOut)
+                        structureVuidList[blueprintData["blueprints"][i]["blueprint"]["name"]] = int(component["blueprint"]["bodyMeshVuid"])
+                    i += 1
+
+                userPrompt = f"Pick the name of the compartment you wish to make an addon structure out of."
+                print(structureList)
+                answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+                Vuid = structureVuidList[answer]
+                i = 0
+                for meshBase in blueprintData["meshes"]:
+                    if meshBase["vuid"] == Vuid:
+                        if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
+                            await ctx.send(await textTools.retrieveError(ctx))
+                            await ctx.send("Generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
+                            return
+                        compartmentData = blueprintData["meshes"][i]["meshData"]
+                    i += 1
+
+            except Exception as error:
+                await ctx.send(await textTools.retrieveError(ctx))
+                await ctx.send(f"## The mesh import failed!  \n\n### Reason: \n{error}")
+                return
+
+            await ctx.send("## Done!")
+            stringOut = json.dumps(blueprintData, indent=4)
+            data = io.BytesIO(stringOut.encode())
+            await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
+            await ctx.send("### Note:\nWhen opening the model, make sure to select all of your faces and invert them, so that the geometry displays the correct way.")
 
 
 

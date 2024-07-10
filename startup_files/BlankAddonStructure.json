@@ -1,0 +1,18 @@
+{
+  "v": "0.0",
+  "tags": [
+    "plateStructurePrefab"
+  ],
+  "transform": null,
+  "components": [
+    {
+      "fileID": "plateStructurePrefab",
+      "type": "plateStructurePrefab",
+      "info": {
+        "v": "0.0",
+        "mesh": {
+        }
+      }
+    }
+  ]
+}
