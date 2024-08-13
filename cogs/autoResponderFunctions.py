@@ -4,6 +4,7 @@ from discord import app_commands
 from cogs.SQLfunctions import SQLfunctions
 from cogs.textTools import textTools
 from cogs.discordUIfunctions import discordUIfunctions
+from cogs.errorFunctions import errorFunctions
 class autoResponderFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -27,7 +28,7 @@ class autoResponderFunctions(commands.Cog):
     async def addHelpResponse(self, ctx: commands.Context):
         contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
         if str(contestList["botmanagerroleid"]) not in str(ctx.author.roles):
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         await ctx.send("What will the help entry be titled?")
         def check(m: discord.Message):
@@ -36,7 +37,7 @@ class autoResponderFunctions(commands.Cog):
             msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
             promptMessage = msg.content.lower()
         except asyncio.TimeoutError:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
 
         await ctx.send("What is your response message going to be?")
@@ -47,7 +48,7 @@ class autoResponderFunctions(commands.Cog):
             responseMessage = msg.content
             print(responseMessage)
         except asyncio.TimeoutError:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
 
         values = [promptMessage, ctx.guild.id, responseMessage]
@@ -61,7 +62,7 @@ class autoResponderFunctions(commands.Cog):
         contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT botmanagerroleid FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
         print(contestList)
         if str(contestList["botmanagerroleid"]) not in str(ctx.author.roles):
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         helpList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM sprockethelplist')]
         helpPrompts = []

@@ -1,0 +1,102 @@
+2024-07-28 04:06:16.934 PDT [724] LOG:  checkpoint starting: time
+2024-07-28 04:06:17.128 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.177 s, sync=0.004 s, total=0.195 s; sync files=2, longest=0.003 s, average=0.002 s; distance=7 kB, estimate=7 kB; lsn=0/2B7AAE0, redo lsn=0/2B7AAA8
+2024-07-28 04:16:16.329 PDT [724] LOG:  checkpoint starting: time
+2024-07-28 04:16:16.524 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.178 s, sync=0.004 s, total=0.196 s; sync files=2, longest=0.003 s, average=0.002 s; distance=7 kB, estimate=7 kB; lsn=0/2B7C868, redo lsn=0/2B7C830
+2024-07-28 04:26:16.725 PDT [724] LOG:  checkpoint starting: time
+2024-07-28 04:26:16.926 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.185 s, sync=0.003 s, total=0.202 s; sync files=2, longest=0.003 s, average=0.002 s; distance=7 kB, estimate=7 kB; lsn=0/2B7E6F8, redo lsn=0/2B7E6C0
+2024-07-28 04:56:17.453 PDT [724] LOG:  checkpoint starting: time
+2024-07-28 04:56:17.646 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.174 s, sync=0.004 s, total=0.193 s; sync files=2, longest=0.003 s, average=0.002 s; distance=5 kB, estimate=7 kB; lsn=0/2B7FBD0, redo lsn=0/2B7FB98
+2024-07-30 00:32:05.465 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 00:32:12.491 PDT [724] LOG:  checkpoint complete: wrote 70 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=6.997 s, sync=0.014 s, total=7.027 s; sync files=44, longest=0.003 s, average=0.001 s; distance=415 kB, estimate=415 kB; lsn=0/2BE7AF8, redo lsn=0/2BE7AC0
+2024-07-30 00:52:05.659 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 00:52:09.072 PDT [724] LOG:  checkpoint complete: wrote 34 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=3.386 s, sync=0.009 s, total=3.414 s; sync files=26, longest=0.004 s, average=0.001 s; distance=194 kB, estimate=393 kB; lsn=0/2C18388, redo lsn=0/2C18350
+2024-07-30 00:57:05.172 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 00:57:09.288 PDT [724] LOG:  checkpoint complete: wrote 41 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.096 s, sync=0.006 s, total=4.116 s; sync files=23, longest=0.004 s, average=0.001 s; distance=189 kB, estimate=373 kB; lsn=0/2C479D8, redo lsn=0/2C479A0
+2024-07-30 01:02:05.388 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 01:02:09.632 PDT [724] LOG:  checkpoint complete: wrote 42 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.194 s, sync=0.035 s, total=4.244 s; sync files=25, longest=0.032 s, average=0.002 s; distance=210 kB, estimate=356 kB; lsn=0/2C7C438, redo lsn=0/2C7C400
+2024-07-30 01:07:05.689 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 01:07:12.110 PDT [724] LOG:  checkpoint complete: wrote 64 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=6.396 s, sync=0.011 s, total=6.422 s; sync files=34, longest=0.003 s, average=0.001 s; distance=370 kB, estimate=370 kB; lsn=0/2CD8D28, redo lsn=0/2CD8CF0
+2024-07-30 02:27:06.468 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 02:27:06.974 PDT [724] LOG:  checkpoint complete: wrote 5 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.486 s, sync=0.005 s, total=0.507 s; sync files=5, longest=0.004 s, average=0.001 s; distance=24 kB, estimate=335 kB; lsn=0/2CDEE20, redo lsn=0/2CDEDE8
+2024-07-30 02:32:07.075 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 02:32:08.386 PDT [724] LOG:  checkpoint complete: wrote 13 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.291 s, sync=0.006 s, total=1.312 s; sync files=11, longest=0.003 s, average=0.001 s; distance=44 kB, estimate=306 kB; lsn=0/2CEA088, redo lsn=0/2CEA050
+2024-07-30 03:34:27.653 PDT [45201] postgres@sprocketbotdevelopment ERROR:  table "campaigns" does not exist
+2024-07-30 03:34:27.653 PDT [45201] postgres@sprocketbotdevelopment STATEMENT:  DROP TABLE campaigns
+2024-07-30 03:37:08.688 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 03:37:12.504 PDT [724] LOG:  checkpoint complete: wrote 38 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=3.794 s, sync=0.009 s, total=3.816 s; sync files=36, longest=0.002 s, average=0.001 s; distance=248 kB, estimate=300 kB; lsn=0/2D28180, redo lsn=0/2D28148
+2024-07-30 03:47:08.704 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 03:47:09.203 PDT [724] LOG:  checkpoint complete: wrote 5 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.480 s, sync=0.005 s, total=0.500 s; sync files=4, longest=0.003 s, average=0.002 s; distance=0 kB, estimate=270 kB; lsn=0/2D28400, redo lsn=0/2D283C8
+2024-07-30 03:52:08.304 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 03:52:08.497 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.177 s, sync=0.003 s, total=0.193 s; sync files=2, longest=0.003 s, average=0.002 s; distance=5 kB, estimate=244 kB; lsn=0/2D29928, redo lsn=0/2D298F0
+2024-07-30 08:07:13.266 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 08:07:13.457 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.174 s, sync=0.003 s, total=0.192 s; sync files=2, longest=0.003 s, average=0.002 s; distance=4 kB, estimate=220 kB; lsn=0/2D2AB38, redo lsn=0/2D2AB00
+2024-07-30 08:12:13.558 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 08:12:13.753 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.178 s, sync=0.003 s, total=0.196 s; sync files=2, longest=0.003 s, average=0.002 s; distance=5 kB, estimate=198 kB; lsn=0/2D2C040, redo lsn=0/2D2BFF0
+2024-07-30 11:12:15.705 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 11:12:15.897 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.175 s, sync=0.003 s, total=0.193 s; sync files=2, longest=0.003 s, average=0.002 s; distance=6 kB, estimate=179 kB; lsn=0/2D2DA18, redo lsn=0/2D2D9E0
+2024-07-30 18:52:20.697 PDT [724] LOG:  checkpoint starting: time
+2024-07-30 18:52:20.893 PDT [724] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.179 s, sync=0.004 s, total=0.196 s; sync files=2, longest=0.003 s, average=0.002 s; distance=6 kB, estimate=162 kB; lsn=0/2D2F3B0, redo lsn=0/2D2F378
+2024-07-31 03:02:28.057 PDT [724] LOG:  checkpoint starting: time
+2024-07-31 03:02:28.429 PDT [724] LOG:  checkpoint complete: wrote 4 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.356 s, sync=0.004 s, total=0.372 s; sync files=4, longest=0.004 s, average=0.001 s; distance=6 kB, estimate=146 kB; lsn=0/2D30E70, redo lsn=0/2D30E38
+2024-07-31 04:03:59.721 PDT [715] LOG:  received fast shutdown request
+2024-07-31 04:03:59.724 PDT [715] LOG:  aborting any active transactions
+2024-07-31 04:03:59.731 PDT [715] LOG:  background worker "logical replication launcher" (PID 729) exited with exit code 1
+2024-07-31 04:03:59.736 PDT [724] LOG:  shutting down
+2024-07-31 04:03:59.739 PDT [724] LOG:  checkpoint starting: shutdown immediate
+2024-07-31 04:03:59.804 PDT [724] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.053 s, sync=0.001 s, total=0.068 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=131 kB; lsn=0/2D30F20, redo lsn=0/2D30F20
+2024-07-31 04:03:59.836 PDT [715] LOG:  database system is shut down
+2024-07-31 04:04:05.848 PDT [704] LOG:  starting PostgreSQL 16.1 (Debian 16.1-1.pgdg120+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2024-07-31 04:04:05.849 PDT [704] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2024-07-31 04:04:05.849 PDT [704] LOG:  listening on IPv6 address "::", port 5432
+2024-07-31 04:04:05.851 PDT [704] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2024-07-31 04:04:05.867 PDT [716] LOG:  database system was shut down at 2024-07-31 04:03:59 PDT
+2024-07-31 04:04:05.886 PDT [704] LOG:  database system is ready to accept connections
+2024-07-31 04:09:21.460 PDT [714] LOG:  checkpoint starting: time
+2024-07-31 04:09:21.540 PDT [714] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.064 s, sync=0.003 s, total=0.081 s; sync files=2, longest=0.002 s, average=0.002 s; distance=0 kB, estimate=0 kB; lsn=0/2D31008, redo lsn=0/2D30FD0
+2024-07-31 04:09:49.346 PDT [704] LOG:  received fast shutdown request
+2024-07-31 04:09:49.350 PDT [704] LOG:  aborting any active transactions
+2024-07-31 04:09:49.357 PDT [704] LOG:  background worker "logical replication launcher" (PID 719) exited with exit code 1
+2024-07-31 04:09:49.358 PDT [714] LOG:  shutting down
+2024-07-31 04:09:49.360 PDT [714] LOG:  checkpoint starting: shutdown immediate
+2024-07-31 04:09:49.424 PDT [714] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.053 s, sync=0.001 s, total=0.067 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=0 kB; lsn=0/2D310B8, redo lsn=0/2D310B8
+2024-07-31 04:09:49.454 PDT [704] LOG:  database system is shut down
+2024-07-31 04:09:56.392 PDT [723] LOG:  starting PostgreSQL 16.1 (Debian 16.1-1.pgdg120+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2024-07-31 04:09:56.392 PDT [723] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2024-07-31 04:09:56.393 PDT [723] LOG:  listening on IPv6 address "::", port 5432
+2024-07-31 04:09:56.395 PDT [723] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2024-07-31 04:09:56.411 PDT [728] LOG:  database system was shut down at 2024-07-31 04:09:49 PDT
+2024-07-31 04:09:56.430 PDT [723] LOG:  database system is ready to accept connections
+2024-07-31 04:15:11.909 PDT [726] LOG:  checkpoint starting: time
+2024-07-31 04:15:11.990 PDT [726] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.067 s, sync=0.002 s, total=0.082 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/2D311A0, redo lsn=0/2D31168
+2024-07-31 05:14:53.918 PDT [723] LOG:  received fast shutdown request
+2024-07-31 05:14:53.922 PDT [723] LOG:  aborting any active transactions
+2024-07-31 05:14:53.929 PDT [723] LOG:  background worker "logical replication launcher" (PID 731) exited with exit code 1
+2024-07-31 05:14:53.932 PDT [726] LOG:  shutting down
+2024-07-31 05:14:53.935 PDT [726] LOG:  checkpoint starting: shutdown immediate
+2024-07-31 05:14:53.999 PDT [726] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.052 s, sync=0.001 s, total=0.067 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=0 kB; lsn=0/2D31250, redo lsn=0/2D31250
+2024-07-31 05:14:54.034 PDT [723] LOG:  database system is shut down
+2024-07-31 05:15:00.079 PDT [732] LOG:  starting PostgreSQL 16.1 (Debian 16.1-1.pgdg120+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2024-07-31 05:15:00.080 PDT [732] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2024-07-31 05:15:00.080 PDT [732] LOG:  listening on IPv6 address "::", port 5432
+2024-07-31 05:15:00.082 PDT [732] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2024-07-31 05:15:00.098 PDT [735] LOG:  database system was shut down at 2024-07-31 05:14:53 PDT
+2024-07-31 05:15:00.119 PDT [732] LOG:  database system is ready to accept connections
+2024-07-31 05:20:15.114 PDT [733] LOG:  checkpoint starting: time
+2024-07-31 05:20:15.225 PDT [733] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.094 s, sync=0.002 s, total=0.112 s; sync files=2, longest=0.002 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/2D31338, redo lsn=0/2D31300
+2024-07-31 05:49:06.449 PDT [1706] postgres@postgres ERROR:  relation "post" does not exist at character 23
+2024-07-31 05:49:06.449 PDT [1706] postgres@postgres STATEMENT:  EXPLAIN SELECT * FROM post LIMIT 50;
+2024-07-31 05:49:28.309 PDT [1706] postgres@postgres ERROR:  relation "serverconfig" does not exist at character 23
+2024-07-31 05:49:28.309 PDT [1706] postgres@postgres STATEMENT:  EXPLAIN SELECT * FROM serverconfig LIMIT 50;
+2024-07-31 13:08:43.616 PDT [4244] postgres@sprocketbot ERROR:  relation "foo" does not exist at character 37
+2024-07-31 13:08:43.616 PDT [4244] postgres@sprocketbot STATEMENT:  EXPLAIN (FORMAT JSON) SELECT * FROM foo;
+2024-07-31 13:09:29.156 PDT [4258] postgres@sprocketbot ERROR:  syntax error at or near "FORMAT" at character 18
+2024-07-31 13:09:29.156 PDT [4258] postgres@sprocketbot STATEMENT:  EXPLAIN ANALYZE (FORMAT JSON) SELECT * FROM contests;
+2024-07-31 14:41:06.867 PDT [732] LOG:  received fast shutdown request
+2024-07-31 14:41:06.869 PDT [732] LOG:  aborting any active transactions
+2024-07-31 14:41:06.878 PDT [732] LOG:  background worker "logical replication launcher" (PID 738) exited with exit code 1
+2024-07-31 14:41:06.880 PDT [733] LOG:  shutting down
+2024-07-31 14:41:06.884 PDT [733] LOG:  checkpoint starting: shutdown immediate
+2024-07-31 14:41:06.946 PDT [733] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.051 s, sync=0.001 s, total=0.066 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=0 kB; lsn=0/2D313E8, redo lsn=0/2D313E8
+2024-07-31 14:41:06.977 PDT [732] LOG:  database system is shut down
+2024-07-31 14:41:14.945 PDT [716] LOG:  redirecting log output to logging collector process
+2024-07-31 14:41:14.945 PDT [716] HINT:  Future log output will appear in directory "log".

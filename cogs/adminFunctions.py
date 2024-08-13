@@ -1,4 +1,4 @@
-import discord, datetime
+import discord, datetime, time
 from datetime import timedelta
 from discord.ext import commands
 import os, platform, discord, configparser, ast, json
@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord import app_commands
 import json, asyncio
 from pathlib import Path
+from cogs.errorFunctions import errorFunctions
 
 import main
 from cogs.textTools import textTools
@@ -17,9 +18,9 @@ from cogs.textTools import textTools
 
 serverConfig = {}
 userStrikes = {}
-nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "leak", "sususmogus"]
+nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "free gifts", "leak", "executor roblox", "roblox executor"]
 scamFlags = ["$", "steam", "asdfghjkl"]
-linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "discord.gg", "discord.com/invite"]
+linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "https://temu.com/s/", "discord.gg", "discord.com/invite"]
 strikethreshold = 3
 
 class adminFunctions(commands.Cog):
@@ -36,6 +37,38 @@ class adminFunctions(commands.Cog):
         await adminFunctions.printServerConfig(self)
     async def printServerConfig(self):
         print(serverConfig)
+
+    @commands.command(name="testLatency", description="test the bot's latency")
+    async def testLatency(self, ctx: commands.Context):
+        start_time = time.time()
+        await SQLfunctions.databaseExecute("SELECT * FROM serverconfig")
+        time2 = time.time()
+        await ctx.send("Simple database selecting: --- %.10s seconds ---" % (time2 - start_time))
+
+        start_time = time.time()
+        await SQLfunctions.databaseFetchdict("SELECT * FROM serverconfig")
+        time2 = time.time()
+        await ctx.send("Database dict selecting: --- %.10s seconds ---" % (time2 - start_time))
+
+        start_time = time.time()
+        await SQLfunctions.databaseExecute("UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
+        time2 = time.time()
+        await ctx.send("Blank database updating: --- %.10s seconds ---" % (time2 - start_time))
+
+        start_time = time.time()
+        await SQLfunctions.databaseExecute("SELECT * FROM serverconfig; SELECT * FROM serverconfig; UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
+        time2 = time.time()
+        await ctx.send("All 3 queries at once: --- %.10s seconds ---" % (time2 - start_time))
+
+        start_time = time.time()
+        await SQLfunctions.databaseFetchFast("SELECT * FROM serverconfig;")
+        time2 = time.time()
+        await ctx.send("Non-pooled database updating: --- %.10s seconds ---" % (time2 - start_time))
+
+        start_time = time.time()
+        await SQLfunctions.databaseMultiFetch("SELECT * FROM serverconfig; SELECT * FROM serverconfig; UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
+        time2 = time.time()
+        await ctx.send("multi-fetch pooled database updating: --- %.10s seconds ---" % (time2 - start_time))
 
     @commands.command(name="reloadCogs", description="reload all extensions")
     async def reloadCogs(self, ctx: commands.Context):
@@ -160,8 +193,9 @@ class adminFunctions(commands.Cog):
                               color=discord.Color.random())
         embed.add_field(name="", value="", inline=False)
         embed.add_field(name="SprocketHelp", value="Get help with building in Sprocket", inline=False)
+        embed.add_field(name="getAddon", value="Make an addon structure out of a tank blueprint", inline=False)
         embed.add_field(name="bakeGeometry", value="Bake 0.127 compartments together", inline=False)
-        embed.add_field(name="importMesh ", value="Import .obj files into 0.2 tanks", inline=False)
+        embed.add_field(name="importMesh", value="Import .obj files into 0.2.3 tanks", inline=False)
         embed.add_field(name="tunePowertrain", value="Calibrate your tank's powertrain", inline=False)
         embed.add_field(name="submitTank", value="Submit a tank to an ongoing contest", inline=False)
         embed.add_field(name="submitDecal", value="Submit decals to the SprocketTools decal repository", inline=False)
@@ -172,7 +206,7 @@ class adminFunctions(commands.Cog):
     @commands.command(name="viewServerConfig", description="View my server configurations")
     async def viewServerConfig(self, ctx: commands.Context):
         if ctx.author.guild_permissions.administrator == False and ctx.author.id != main.ownerID:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
         else:
             try:
                 serverData = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
@@ -194,23 +228,25 @@ class adminFunctions(commands.Cog):
                 embed.set_thumbnail(url=ctx.guild.icon)
                 await ctx.send(embed=embed)
             except Exception:
-                await ctx.send(await textTools.retrieveError(ctx))
+                await ctx.send(await errorFunctions.retrieveError(ctx))
                 await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
 
 
     @commands.command(name="listMyServers", description="List all my servers.")
     async def listMyServers(self, ctx: commands.Context):
+        i = 0
+        serverList = "Your server list:"
         for server in self.bot.guilds:
-            await ctx.send(f"{server.name}")
+            serverList = serverList + f"\n{server.name}"
+            i+= 1
+        await ctx.send(serverList)
+        await ctx.send(f"count: {i} servers!")
 
     @commands.command(name="sendGlobalUpdate", description="Send a global update to all servers.")
     async def sendGlobalUpdate(self, ctx: commands.Context):
         view = globalSendDropdownView()
         await ctx.send(content="Where are you sending today's update to?", view=view)
         await view.wait()
-        await ctx.send("You will be sending a message to:")
-        for server in self.bot.guilds:
-            await ctx.send(f"{server.name}")
         result = view.result
         await ctx.send("Type your message here!")
         # get the message that is to be sent
@@ -254,6 +290,34 @@ class adminFunctions(commands.Cog):
         else:
             return
         os.system("systemctl reboot -i")
+
+    @commands.command(name="adminAddColumn", description="add a column to a SQL table")
+    async def adminAddColumn(self, ctx: commands.Context):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        tablename = await errorFunctions.getResponse(ctx,"Whatis the table name?")
+        columnname = await errorFunctions.getResponse(ctx, "What will the column be named?  Use all lowercase letters with no spaces.")
+        options = ["VARCHAR", "BIGINT", "REAL"]
+        prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, while REALs are for floats."
+        varType = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
+
+        defaultVal = await errorFunctions.getResponse(ctx,"What will the default value be?")
+        try:
+            await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType} DEFAULT {defaultVal};''')
+            await ctx.send("Operation successful!")
+        except Exception:
+            await ctx.send("Something was incorrect.")
+
+    @commands.command(name="adminGetTable", description="add a column to a SQL table")
+    async def adminGetTable(self, ctx: commands.Context):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        tablename = await errorFunctions.getResponse(ctx, "Whatis the table name?")
+        await ctx.send(await SQLfunctions.databaseFetchdict(f"SELECT * FROM {tablename};"))
 
     @commands.command(name="setBotStatus", description="setup the server")
     async def setBotStatus(self, ctx: commands.Context, *, nameIn: str):
@@ -425,7 +489,7 @@ class adminFunctions(commands.Cog):
     @commands.command(name="hey_alexa_kill_the_lights", description="send a message wherever you want")
     async def exit(self, ctx: commands.Context):
         if ctx.author.id != 712509599135301673:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         await exit(1)
 
@@ -450,7 +514,7 @@ class adminFunctions(commands.Cog):
             print(channelin)
             channel = self.bot.get_channel(channelin)
             await ctx.send("Message is en route.")
-            await channel.send(await textTools.retrieveError(ctx))
+            await channel.send(await errorFunctions.retrieveError(ctx))
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")

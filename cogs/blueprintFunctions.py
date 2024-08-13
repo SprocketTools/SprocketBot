@@ -1,37 +1,15 @@
-import discord, json, math, numpy, copy, io
+import random
+
+import discord, json, math, numpy, copy, io, requests
 from discord.ext import commands
 import cv2 as cv
 from discord import app_commands
-
+from cogs.errorFunctions import errorFunctions
 import main
 from cogs.textTools import textTools
 from PIL import Image, ImageChops
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
-
-addonStructureBaseFile = '''{
-  "v": "0.0",
-  "guid": "9f8a9d20-eb45-482e-b149-014c964c4e2c",
-  "name": "cubePlateStructure",
-  "tags": [
-    "plateStructurePrefab"
-  ],
-  "transform": 'null',
-  "components": [
-    {
-      "fileID": "plateStructurePrefab",
-      "type": "plateStructurePrefab",
-      "info": {"v": "0.0", "mesh": {}} 
-    }
-    }
-    ]
-    }
-'''
-
-
-
-
-
 
 class blueprintFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -186,7 +164,7 @@ class blueprintFunctions(commands.Cog):
         #     if component["type"] == "structure":
         #         nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
         #         if nameOut in structureList and dupeStatus == False:
-        #             await ctx.send(await textTools.retrieveError(ctx))
+        #             await ctx.send(await errorFunctions.retrieveError(ctx))
         #             await ctx.send(
         #                 f"Note: you have multiple compartments named {nameOut}.  To make things easier for yourself later, it's recommended to through your blueprint and give your compartments unique names.")
         #             dupeStatus = True
@@ -486,7 +464,7 @@ class blueprintFunctions(commands.Cog):
         name = blueprintData["header"]["name"]
         version = blueprintData["header"]["gameVersion"]
         if "0.12" not in version:
-            errorText = await textTools.retrieveError(ctx)
+            errorText = await errorFunctions.retrieveError(ctx)
             await ctx.reply(f"{errorText}\n\nThis command does not support the Geometric Internals build yet.")
 
         x = 0
@@ -622,52 +600,238 @@ class blueprintFunctions(commands.Cog):
 
     @commands.command(name="getAddon", description="merge compartment geometry into itself.")
     async def getAddon(self, ctx: commands.Context):
+        serverID = (ctx.guild.id)
+        try:
+            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            if ctx.channel.id != channel:
+                await ctx.send(f"Utility commands are restricted to <#{channel}>")
+                return
+        except Exception:
+                error = await errorFunctions.retrieveError(ctx)
+                await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+                return
         for attachment in ctx.message.attachments:
             blueprintData = json.loads(await attachment.read())
-            structureList = []
+            structureList = ["All of them"]
             structureVuidList = {}
             compartmentData = {}
+            compartmentNameData = {}
             tankName = blueprintData["header"]["name"]
-            try:
-                i = 0
-                dupeStatus = False
-                for component in blueprintData["blueprints"]:
-                    print(component)
-                    if component["type"] == "structure":
-                        nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
-                        if nameOut in structureList and dupeStatus == False:
-                            await ctx.send(await textTools.retrieveError(ctx))
-                            await ctx.send(f"Note: you have multiple compartments named {nameOut}.  To make things easier for yourself later, it's recommended to through your blueprint and give your compartments unique names.")
-                            dupeStatus = True
-                            nameOut = f"{nameOut} (Vuid {i})"
+            i = 0
+            for component in blueprintData["blueprints"]:
+
+                if component["type"] == "structure":
+                    bmID = component["blueprint"]["bodyMeshVuid"]
+                    compartmentNameData[int(bmID)] = component["blueprint"]["name"]
+                    if blueprintData["blueprints"][i]["blueprint"]["name"] is None or len(blueprintData["blueprints"][i]["blueprint"]["name"]) < 1:
+                        blueprintData["blueprints"][i]["blueprint"]["name"] = f"This might be your hull? ({i})"
+                        if random.random() < 0.005:
+                            blueprintData["blueprints"][i]["blueprint"]["name"] = "Sprocket Chan"
+                    nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+                    if nameOut not in structureList:
+                        print(nameOut)
                         structureList.append(nameOut)
                         structureVuidList[blueprintData["blueprints"][i]["blueprint"]["name"]] = int(component["blueprint"]["bodyMeshVuid"])
-                    i += 1
+                i += 1
 
-                userPrompt = f"Pick the name of the compartment you wish to make an addon structure out of."
-                print(structureList)
-                answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+            userPrompt = "Pick the name of the compartment you wish to make an addon structure out of.  Note: unnamed structures are not listed"
+            print(structureList)
+            answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+
+            # get info on grid snap
+            gridSnap = 1
+            userPrompt = "Specify your desired grid snap setting"
+            gridSnapOptions = ['0mm (disables grid snap)', '1mm (default)']
+            answer2 = await discordUIfunctions.getChoiceFromList(ctx, gridSnapOptions, userPrompt)
+            print(compartmentNameData)
+            if answer == "All of them":
+                i = 0
+                for meshBase in blueprintData["meshes"]:
+                    if compartmentNameData[meshBase["vuid"]] != "Unnamed Structure":
+                        if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
+                            await ctx.send(await errorFunctions.retrieveError(ctx))
+                            await ctx.send(
+                                "Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
+                            return
+                        compartmentData = blueprintData["meshes"][i]["meshData"]
+
+                        url = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/startup_files/BlankAddonStructure.json"
+                        response = requests.get(url)
+                        if response.status_code == 200:
+                            addonStructureData = json.loads(response.text)
+                            addonStructureData['guid'] = f"9f8a9d20-eb45-482e-b149-{random.random() * 100000000000}"
+                            addonStructureData['name'] = compartmentNameData[meshBase["vuid"]]
+                            addonStructureData['components'][0]['info']['mesh'] = compartmentData
+
+                            if answer2 == gridSnapOptions[0]:
+                                gridSnap = 0
+                            if answer2 == gridSnapOptions[1]:
+                                gridSnap = 1
+                            addonStructureData['components'][0]['info']['mesh']['gridSize'] = gridSnap
+                            stringOut = json.dumps(addonStructureData, indent=4)
+                            data = io.BytesIO(stringOut.encode())
+                            await ctx.send(file=discord.File(data, f'{compartmentNameData[meshBase["vuid"]]}.json'))
+
+                        else:
+                            await ctx.send(await errorFunctions.retrieveError(ctx))
+                            await ctx.send(
+                                "I was unable to download the base .json file needed to create the compartment.  Maybe the GitHub servers are down or something.")
+                        i += 1
+                await ctx.send("Place these models into `C:\Program Files (x86)\Steam\steamapps\common\Sprocket\Sprocket_Data\StreamingAssets\Parts` and reload the game for it to appear.")
+
+            else:
                 Vuid = structureVuidList[answer]
                 i = 0
                 for meshBase in blueprintData["meshes"]:
                     if meshBase["vuid"] == Vuid:
                         if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                            await ctx.send(await textTools.retrieveError(ctx))
-                            await ctx.send("Generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
+                            await ctx.send(await errorFunctions.retrieveError(ctx))
+                            await ctx.send("Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                             return
                         compartmentData = blueprintData["meshes"][i]["meshData"]
+
+                        url = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/startup_files/BlankAddonStructure.json"
+                        response = requests.get(url)
+                        if response.status_code == 200:
+                            addonStructureData = json.loads(response.text)
+                            addonStructureData['guid'] = f"9f8a9d20-eb45-482e-b149-{random.random()*100000000000}"
+                            addonStructureData['name'] = answer
+                            addonStructureData['components'][0]['info']['mesh'] = compartmentData
+
+
+                            if answer2 == gridSnapOptions[0]:
+                                gridSnap = 0
+                            if answer2 == gridSnapOptions[1]:
+                                gridSnap = 1
+                            addonStructureData['components'][0]['info']['mesh']['gridSize'] = gridSnap
+                            await ctx.send("## Done!")
+                            stringOut = json.dumps(addonStructureData, indent=4)
+                            data = io.BytesIO(stringOut.encode())
+                            await ctx.send(file=discord.File(data, f'{answer}.json'))
+                            await ctx.send("Place this model into `C:\Program Files (x86)\Steam\steamapps\common\Sprocket\Sprocket_Data\StreamingAssets\Parts` and reload the game for it to appear.")
+                        else:
+                            await ctx.send(await errorFunctions.retrieveError(ctx))
+                            await ctx.send("I was unable to download the base .json file needed to create the compartment.  Maybe the GitHub servers are down or something.")
+
                     i += 1
 
-            except Exception as error:
-                await ctx.send(await textTools.retrieveError(ctx))
-                await ctx.send(f"## The mesh import failed!  \n\n### Reason: \n{error}")
+    @commands.command(name="transplant", description="Transplant a compartment onto another tank.")
+    async def transplant(self, ctx: commands.Context):
+        serverID = (ctx.guild.id)
+        try:
+            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(
+                f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            if ctx.channel.id != channel:
+                await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
+        except Exception:
+            error = await errorFunctions.retrieveError(ctx)
+            await ctx.send(
+                f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+            return
+        sourceFile = await textTools.getFileResponse(ctx, "Upload the first .blueprint that contains your compartment.  Note: unnamed structures will not be listed, so make sure your source compartment has a unique name.")
+        targetFile = await textTools.getFileResponse(ctx,"Upload the second .blueprint that you wish to modify.  Note: your target structure will not be listed if it does not have a unique name.")
 
-            await ctx.send("## Done!")
-            stringOut = json.dumps(blueprintData, indent=4)
-            data = io.BytesIO(stringOut.encode())
-            await ctx.send(file=discord.File(data, f'{tankName}-tuned.blueprint'))
-            await ctx.send("### Note:\nWhen opening the model, make sure to select all of your faces and invert them, so that the geometry displays the correct way.")
+        blueprintData = json.loads(await sourceFile.read())
+        structureList = []
+        structureVuidList = {}
+        compartmentData = {}
+        compartmentNameData = {}
+        tankName = blueprintData["header"]["name"]
+        i = 0
+
+        # get data for the first compartment
+        for component in blueprintData["blueprints"]:
+            if component["type"] == "structure":
+                bmID = component["blueprint"]["bodyMeshVuid"]
+                compartmentNameData[int(bmID)] = component["blueprint"]["name"]
+                if blueprintData["blueprints"][i]["blueprint"]["name"] is None or len(
+                        blueprintData["blueprints"][i]["blueprint"]["name"]) < 1:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = f"This might be your hull? ({i})"
+                    if random.random() < 0.005:
+                        blueprintData["blueprints"][i]["blueprint"]["name"] = "Sprocket Chan"
+                nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+                if nameOut not in structureList:
+                    print(nameOut)
+                    structureList.append(nameOut)
+                    structureVuidList[blueprintData["blueprints"][i]["blueprint"]["name"]] = int(component["blueprint"]["bodyMeshVuid"])
+            i += 1
+
+        userPrompt = "Pick the name of the source compartment.  Note: unnamed structures are not listed."
+        print(structureList)
+        sourceCompartmentAnswer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+
+        i = 0
+        Vuid = structureVuidList[sourceCompartmentAnswer]
+        for meshBase in blueprintData["meshes"]:
+            if meshBase["vuid"] == Vuid:
+                if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
+                    await ctx.send(await errorFunctions.retrieveError(ctx))
+                    await ctx.send(
+                        "Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
+                    return
+                compartmentData = blueprintData["meshes"][i]["meshData"]
+            i += 1
+
+        # get data for the second compartment
+        blueprintData = json.loads(await targetFile.read())
+        structureList = []
+        structureVuidList = {}
+        compartmentNameData = {}
+        i = 0
+        for component in blueprintData["blueprints"]:
+            if component["type"] == "structure":
+                bmID = component["blueprint"]["bodyMeshVuid"]
+                compartmentNameData[int(bmID)] = component["blueprint"]["name"]
+                if blueprintData["blueprints"][i]["blueprint"]["name"] is None or len(
+                        blueprintData["blueprints"][i]["blueprint"]["name"]) < 1:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = f"This might be your hull? ({i})"
+                    if random.random() < 0.005:
+                        blueprintData["blueprints"][i]["blueprint"]["name"] = "Sprocket Chan"
+                nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+                if nameOut not in structureList:
+                    print(nameOut)
+                    structureList.append(nameOut)
+                    structureVuidList[blueprintData["blueprints"][i]["blueprint"]["name"]] = int(component["blueprint"]["bodyMeshVuid"])
+            i += 1
+
+        userPrompt = "Pick the name of the target compartment.  Note: unnamed structures are not listed."
+        print(structureList)
+        targetCompartmentAnswer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+
+        # get info on grid snap
+        gridSnap = 1
+        userPrompt = "Specify your desired grid snap setting for the resultant compartment"
+        gridSnapOptions = ['0mm (disables grid snap)', '1mm (default)']
+        gridSnapAnswer = await discordUIfunctions.getChoiceFromList(ctx, gridSnapOptions, userPrompt)
+        print(compartmentNameData)
+
+        Vuid = structureVuidList[targetCompartmentAnswer]
+
+        i = 0
+        for meshBase in blueprintData["meshes"]:
+            if meshBase["vuid"] == Vuid:
+                if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
+                    await ctx.send(await errorFunctions.retrieveError(ctx))
+                    await ctx.send(
+                        "Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
+                    return
+                blueprintData["meshes"][i]["meshData"] = compartmentData
+
+                if gridSnapAnswer == gridSnapOptions[0]:
+                    gridSnap = 0
+                if gridSnapAnswer == gridSnapOptions[1]:
+                    gridSnap = 1
+                blueprintData["meshes"][i]["meshData"]['gridSize'] = gridSnap
+                await ctx.send("## Done!")
+                stringOut = json.dumps(blueprintData, indent=4)
+                data = io.BytesIO(stringOut.encode())
+                await ctx.send(file=discord.File(data, f'{tankName}-transplanted.blueprint'))
+                await ctx.send(
+                    "Place this model into `C:\Program Files (x86)\Steam\steamapps\common\Sprocket\Sprocket_Data\StreamingAssets\Parts` and reload the game for it to appear.")
+            i += 1
+
+
 
 
 
@@ -944,70 +1108,68 @@ class blueprintFunctions(commands.Cog):
             gearCount = 3
             finalGearAdjustment = 0.95
 
+        Prompt = "What profile do you want to use?"
+        optionList = ["Top speed", "Rough terrain", "Custom"]
+        profileChoice = await discordUIfunctions.getChoiceFromList(ctx, optionList, Prompt)
 
-
-        await ctx.send(f" How many gears do you want to use?  For this vehicle era, it's recommended to use {gearCount} gears.")
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-
-        try:
-            msg = await ctx.bot.wait_for('message', check=check, timeout=200.0)
-            gearCount = int(msg.content)
-        except Exception:
-            await ctx.send("This number was invalid!  Using the recommended value...")
-
-        await ctx.send(f"Specify the desired climbing angle in degrees.  Note: bigger climbing angles also improve your neutral steer setting.  \nRecommended values are between 45 and 75.")
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-
-        try:
-            msg = await ctx.bot.wait_for('message', check=check, timeout=200.0)
-            climbAngle = numpy.radians(int(msg.content))
-            if int(msg.content) > 90 or int(msg.content) < 1:
-                await ctx.send("This number was invalid!  Using the recommended value...")
-                climbAngle = numpy.radians(60)
-
-        except Exception:
-            await ctx.send("This number was invalid!  Using the recommended value...")
+        if profileChoice == "Rough terrain":
+            eraPowerMod = eraPowerMod * 0.8
+            climbAngle = 1
 
         x = 0
         for partInfo in blueprintData["blueprints"]:
-            partID = partInfo["id"]
-            if partID == 12:
+            validDiameter = False
+            partID = partInfo["type"]
+            if partID == "engine":
                 cylinders = int(partInfo["blueprint"]["cylinders"])
                 dispPerCyl = float(partInfo["blueprint"]["cylinderDisplacement"])
                 partInfo["targetMaxRPM"] = eraBaseRPM * (dispPerCyl ** -0.3)
-            if partID == 72:
+            if partID == "trackWheel" and validDiameter == False:
+                validDiameter = True
                 sprocketDiameter = partInfo["blueprint"]["diameter"]
-                print(sprocketDiameter)
+            if partID == "transmission":
+                gearCount = len(blueprintData["blueprints"][x]["blueprint"]["d"])
             x += 1
-        print(cylinders)
-        print(dispPerCyl)
 
+        if profileChoice == "Custom":
+            try:
+                gearCount = int(await textTools.getResponse(ctx, f"How many gears do you want to use?  For this vehicle era, it's recommended to use {gearCount} gears."))
+            except Exception:
+                await ctx.send("This number was invalid!  Using the recommended value...")
+
+            climbAngle = numpy.radians(int(await textTools.getResponse(ctx, "Specify the desired climbing angle in degrees.  Note: bigger climbing angles also improve your neutral steer setting.  \nRecommended values are between 45 and 75.")))
+            if climbAngle > 2 or climbAngle < 0.05:
+                await ctx.send("This number was invalid!  Using the recommended value...")
+                climbAngle = numpy.radians(60)
+
+
+
+        # start the math
         idealRPM = eraBaseRPM * (dispPerCyl ** -0.3) / 1.01
         horsepower = 40 * (dispPerCyl ** 0.7) * cylinders * eraPowerMod
         topSpeed = (13.33 * (horsepower ** 0.5)) / ((eraResistance ** 0.8) * ((weight) ** 0.5))
 
-        await ctx.send(f"Your vehicle's top speed is estimated to be {round(topSpeed, 1)}km/h.  Specify your intended top speed, or just say 'skip'.\n- A lower top speed will improve acceleration.")
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        if profileChoice == "Custom":
+            await ctx.send(f"Your vehicle's top speed is estimated to be {round(topSpeed, 1)}km/h.  Specify your intended top speed, or just say 'skip'.\n- A lower top speed will improve acceleration.")
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
 
-        try:
-            msg = await ctx.bot.wait_for('message', check=check, timeout=60.0)
-            topSpeed = int(msg.content)
-        except Exception:
-            pass
+            try:
+                msg = await ctx.bot.wait_for('message', check=check, timeout=60.0)
+                topSpeed = int(msg.content)
+            except Exception:
+                pass
 
-        await ctx.send(f"[Advanced] What curve modifier do you wish to use?  Recommended values are between 0.5 and 1.5, while the default is 0.8.\n- A smaller number will improve acceleration near the final gear\n- A larger number will improve acceleration near the first gear")
+            await ctx.send(f"[Advanced] What curve modifier do you wish to use?  Recommended values are between 0.5 and 1.5, while the default is 0.8.\n- A smaller number will improve acceleration near the final gear\n- A larger number will improve acceleration near the first gear")
 
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
 
-        try:
-            msg = await ctx.bot.wait_for('message', check=check, timeout=60.0)
-            flatnessScalar = round(float(msg.content), 3)
-        except Exception:
-            pass
+            try:
+                msg = await ctx.bot.wait_for('message', check=check, timeout=60.0)
+                flatnessScalar = round(float(msg.content), 3)
+            except Exception:
+                pass
 
         Torque = 9.5492 * 746 * horsepower / idealRPM
         initialGear = (11 * ((sprocketDiameter / 2) * (weight * 1000) * 9.81 * climbAngle) / Torque) / 100
@@ -1156,7 +1318,7 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-                error = await textTools.retrieveError(ctx)
+                error = await errorFunctions.retrieveError(ctx)
                 await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
 
@@ -1164,7 +1326,7 @@ class blueprintFunctions(commands.Cog):
             print(attachment.content_type)
             try:
                 if "image" in attachment.content_type:
-                    errorStr = await textTools.retrieveError(ctx)
+                    errorStr = await errorFunctions.retrieveError(ctx)
                     await ctx.reply(errorStr)
                     #await ctx.reply("Ah yes, I love eating random pictures instead of working with tank blueprints *like I was meant to do*! \n\n# <:caatt:1151402846202376212>")
                     return
@@ -1173,10 +1335,10 @@ class blueprintFunctions(commands.Cog):
             blueprintData = json.loads(await attachment.read())
             version = 0.127
             if "0.2" in blueprintData["header"]["gameVersion"]:
-                await ctx.send("Detected a 0.2 blueprint.")
+                await ctx.send("Detected a 0.2 blueprint.  Beginning processing now.")
                 await blueprintFunctions.tunePowertrain200(ctx, attachment)
             elif float(blueprintData["header"]["gameVersion"]) < 0.128:
-                await ctx.send(f"Detected a legacy {blueprintData['header']['gameVersion']} blueprint.")
+                await ctx.send(f"Detected a legacy {blueprintData['header']['gameVersion']} blueprint.  Starting processing now.")
                 await blueprintFunctions.tunePowertrain127(ctx, attachment)
 
 
@@ -1652,7 +1814,7 @@ class blueprintFunctions(commands.Cog):
         turretRadiusMin = config["turretradiusmin"]
         allowGCM = config["allowgcm"]
         GCMratioMin = config["gcmratiomin"]
-        GCMtorqueMax = config["gcmtorquemax"]
+        torqueMax = config["torquemax"]
         hullHeightMin = config["hullheightmin"]
         hullWidthMax = config["hullwidthmax"]
         torsionBarLengthMin = config["torsionbarlengthmin"]
@@ -1675,7 +1837,6 @@ class blueprintFunctions(commands.Cog):
         report = ""
 
         blueprintData = json.loads(await attachment.read())
-        blueprintData = json.loads(await attachment.read())
         errorCount = 0
         GCMcount = 0
         weight = float(blueprintData["header"]["mass"])/1000
@@ -1695,6 +1856,13 @@ class blueprintFunctions(commands.Cog):
         maxShell = 0
         minArmor = 0
         armorVolume = 0.0
+        startingLength = 5289
+        wheelDiameter = 700
+        wheelSpacing = 30
+        groupSize = 2
+        groupOffset = 1
+        groupSpacing = 500
+        fuelTankCatalog = {}
         crewReport = "Crew information: \n"
         suspensionType = "torsion bar"
 
@@ -1713,93 +1881,192 @@ class blueprintFunctions(commands.Cog):
             errorCount += 1
             report = await textTools.addLine(report,f"This vehicle is overweight!  Please reduce its weight to no more than {weightLimit}T and resend it.")
 
-        # x = 0
-        # for iteration in blueprintData["ext"]:
-        #     partName = blueprintData["ext"][x]["REF"]
-        #     partInfo = blueprintData["ext"][x]["DAT"]
-        #     #partString.replace("\\", "")
-        #     #partInfo = json.loads(partString)
-        #     try:
-        #         userLimit = json.loads(partInfo[1]["data"])
-        #         thickness = userLimit["thickness"][0]
-        #         #print(json.dumps(userLimit, indent=4))
-        #         print(thickness)
-        #         #except Exception:
-        #         #pass
-        #         if thickness > armorMax:
-        #             errorCount += 1
-        #             report = await textTools.addLine(report,f"This vehicle has mantlet face armor above the {armorMax}mm armor limit!  Please resend with a corrected version.")
-        #         if thickness < minArmor:
-        #             minArmor = thickness
-        #     except Exception:
-        #         pass
-        #     # print(partInfo)
-        #     x += 1
-
+        # begin looping through all the parts
         x = 0
         for partData in blueprintData["blueprints"]:
+            partID = partData["id"]
             partType = partData["type"]
-            partString = blueprintData["blueprints"][x]["data"]
-            partString.replace("\\", "")
-            partInfo = json.loads(partString)
+            partInfo = partData["blueprint"]
+            partName = partData["name"]
+
             if partType == "crewSeat":
-                crewSpot = 0
-                for crew in partInfo["seats"]:
-                    crewSpace = float(crew["spaceAlloc"])
-                    if crewSpace > crewMaxSpace or crewSpace < crewMinSpace:
-                        report = await textTools.addLine(report, f"This vehicle has crew outside of {contestName}'s limits, and cannot be accepted until this is fixed.")
-                        errorCount += 1
-                    crewCount += 1
-                    crewSpot += 1
-                    crewStats = f"Crew #{crewSpot}: {crew['spaceAlloc']}m of space, roles: {crew['roles']} \n"
-                    crewReport = crewReport + crewStats
-                if crewCount < crewMin:
-                    report = await textTools.addLine(report,f"This vehicle needs to have at least {crewMin} crew members, but only has {crewCount} crew.")
-                    errorCount += 1
-                if crewCount > crewMax:
-                    report = await textTools.addLine(report,f"This vehicle needs to have at most {crewMax} crew members, but it has {crewCount} crew.")
-                    errorCount += 1
-                print(crewReport)
+                crewCount += 1
 
-            partName = ""
-            if partName == "CNN":
+            if partType == "cannon":
                 gunCount += 1
-                for cannon in partInfo["blueprints"]:
-                    caliber = int(cannon["caliber"])
-                    if caliber > maxCaliber:
-                        maxCaliber = caliber
-                    propellant = int(cannon["breechLength"])
-                    if propellant > maxPropellant:
-                        maxPropellant = propellant
-                    calculatedShell = (3 * caliber) + propellant
-                    calculatedBore = calculatedShell / 1000
+                caliber = int(partData["caliber"])
+                if caliber > maxCaliber:
+                    maxCaliber = caliber
+                propellant = int(partData["breechLength"])
+                if propellant > maxPropellant:
+                    maxPropellant = propellant
+                calculatedShell = (3 * caliber) + propellant
+                calculatedBore = calculatedShell / 1000
+                for segment in partInfo["blueprints"][0]["segments"]:
+                    calculatedBore += float(segment['len'])
+                if calculatedShell > shellLimit:
+                    report = await textTools.addLine(report,f"The \"{partName}\" is invalid!  This cannon uses a {calculatedShell}mm shell, while the limit for shell length is {shellLimit}mm.")
                     errorCount += 1
-                    for segment in partInfo["blueprints"][0]["segments"]:
-                        calculatedBore += float(segment['len'])
-                    if calculatedShell > shellLimit:
-                        report = await textTools.addLine(report,
-                            f"The \"{cannon['name']}\" is invalid!  This cannon uses a {calculatedShell}mm shell, while the limit for shell length is {shellLimit}mm.")
-                    if calculatedBore > boreLimit:
-                        report = await textTools.addLine(report,
-                            f"The \"{cannon['name']}\" is invalid!  This cannon uses a {calculatedBore}m bore length, while the limit is {boreLimit}m.")
-                    if propellant > propellantLimit:
-                        report = await textTools.addLine(report,
-                            f"The \"{cannon['name']}\" is invalid!  This cannon uses {propellant}mm of propellant, while the limit is {propellantLimit}mm.")
-                    if caliber > caliberLimit:
-                        report = await textTools.addLine(report,
-                            f"The \"{cannon['name']}\" is invalid!  This cannon is {caliber}mm, while the caliber limit is {caliberLimit}mm.")
-                    else:
-                        report = await textTools.addLine(report,
-                            f"\"{cannon['name']}\": {caliber}x{calculatedShell}mm with a {calculatedBore}m bore length.")
-                        errorCount += -1
-                    if calculatedBore > maxBore:
-                        maxBore = calculatedBore
-                    if calculatedShell > maxShell:
-                        maxShell = calculatedShell
+                if calculatedBore > boreLimit:
+                    report = await textTools.addLine(report,f"The \"{partName}\" is invalid!  This cannon uses a {calculatedBore}m bore length, while the limit is {boreLimit}m.")
+                    errorCount += 1
+                if propellant > propellantLimit:
+                    report = await textTools.addLine(report,f"The \"{partName}\" is invalid!  This cannon uses {propellant}mm of propellant, while the limit is {propellantLimit}mm.")
+                    errorCount += 1
+                if caliber > caliberLimit:
+                    report = await textTools.addLine(report,f"The \"{partName}\" is invalid!  This cannon is {caliber}mm, while the caliber limit is {caliberLimit}mm.")
+                    errorCount += 1
+                else:
+                    report = await textTools.addLine(report,f"\"{partName}\": {caliber}x{calculatedShell}mm with a {calculatedBore}m bore length.")
+                    errorCount += -1
+                if calculatedBore > maxBore:
+                    maxBore = calculatedBore
+                if calculatedShell > maxShell:
+                    maxShell = calculatedShell
 
-            if partName == "Compartment":
-                name = partInfo["name"]
+            if partType == "structure":
                 armorVolume += float(partInfo["armourVolume"])
+
+            if partType == "motor":
+                if int(partInfo["torque"]) > torqueMax:
+                    errorCount += 1
+                    report = await textTools.addLine(report,f"Turret \"{partName}\" uses a torque setting above the {torqueMax}N limit!")
+
+            if partType == "fuelTank":
+                fuelTankID = partID
+                tankVolume = int(int(partInfo["x"])*int(partInfo["y"])*int(partInfo["z"])*0.000001)
+                fuelTankCatalog[fuelTankID] = tankVolume
+
+            if partType == "motor":
+                if int(partInfo["ringThickness"]) > armorMax:
+                    errorCount += 1
+                    report = await textTools.addLine(report,f"You have a turret ring exceeding the armor limit of your vehicle.")
+
+            if partType == "FLT":
+                requiredFLT = round(displacement*litersPerDisplacement * (1 + (litersPerTon*weight)), 2)
+                fuelTankSize = int(partInfo["L"])
+                if partInfo["L"] < requiredFLT:
+                    report = await textTools.addLine(report,f"Your internal fuel tank has {partInfo['L']}L of fuel, but needs {requiredFLT}L of fuel in order to perform adequately.")
+                    errorCount += 1
+
+            if partType == "TRK":
+                separation = float(partInfo["separation"])
+                trackWidthTot = 0.002 * float(partInfo["belt"]["x"])
+                trackSystemWidth = separation + trackWidthTot + 0.2
+                beltWidth = int(partInfo["belt"]["x"])
+                sprocketIndex = 0
+                idlerIndex = 1
+                # Ground Pressure
+                if partInfo["frontalTransmission"] == True:
+                    sprocketIndex = 0
+                    idlerIndex = 1
+
+                trackSystemLength = float(partInfo["length"])
+                sprocketForward = float(partInfo["wheels"][sprocketIndex]["zOffset"])
+                idlerForward = float(partInfo["wheels"][idlerIndex]["zOffset"])
+                roadwheelForward = float(partInfo["wheels"][2]["zOffset"])
+                sprocketDiameter = float(partInfo["wheels"][sprocketIndex]["diameter"])
+                idlerDiameter = float(partInfo["wheels"][idlerIndex]["diameter"])
+                roadwheelDiameter = float(partInfo["wheels"][2]["diameter"])
+                roadwheelSpacing = float(partInfo["roadSpacing"])
+                if partInfo["frontalTransmission"] == True:
+                    sprocketForward = -1*float(partInfo["wheels"][sprocketIndex]["zOffset"])
+                    # await ctx.send("frontal transmission detected!")
+                    #if sprocketForward > 0:
+                    #    sprocketForward = 0
+                else:
+                    idlerForward = -1 * float(partInfo["wheels"][idlerIndex]["zOffset"])
+                    # if idlerForward > 0:
+                    #     idlerForward = 0
+
+                Mgcl = trackSystemLength - idlerForward - sprocketForward - (idlerDiameter + sprocketDiameter)/2 - roadwheelDiameter - roadwheelForward
+                if trackSystemLength > hullLength:
+                    hullLength = trackSystemLength
+                # await ctx.send(f"MGCL: {Mgcl}")
+                roadwheelCount = ((Mgcl + roadwheelSpacing + roadwheelDiameter)/(roadwheelDiameter+roadwheelSpacing))
+                # await ctx.send(f"Roadwheel Count: {roadwheelCount}")
+                roadwheelCount = int(roadwheelCount)
+                realContactLength = (roadwheelCount - 1)*(roadwheelDiameter+roadwheelSpacing)
+                # await ctx.send(f"Real™️: {realContactLength}")
+                surfaceAreaCM = (realContactLength * 100) * (beltWidth / 10) * 2
+                groundPressure = weight*1000 / surfaceAreaCM
+                # await ctx.send(f"Ground pressure: {groundPressure}kg/cm²")
+
+                if groundPressure > groundPressureMax and requireGroundPressure == True:
+                    report = await textTools.addLine(report, f"Your track ground pressure is {round(groundPressure, 2)}kg/cm², but cannot exceed {groundPressureMax}kg/cm².  Increase your track contact area with the ground, or lighten your vehicle to improve ground pressure.")
+                    errorCount += 1
+
+                print(partInfo["wheels"][1])
+                if round(beltWidth, 3) < beltWidthMin:
+                    report = await textTools.addLine(report,
+                        f"Your track belt is {beltWidth}mm wide.  This is too narrow and will lead to bad off-road performance.  Increase your track width to at least {beltWidthMin}mm.")
+                    errorCount += 1
+                if round(trackSystemWidth, 3) > hullWidthMax:
+                    report = await textTools.addLine(report,
+                        f"Your track system is {round(trackSystemWidth, 2)} meters wide.  This exceeds the {hullWidthMax} meter limit.")
+                    errorCount += 1
+                if trackSystemWidth >= overallTankWidth:
+                    overallTankWidth = round(trackSystemWidth, 3)
+                try:
+                    torsionBarLength = float(partInfo["suspensions"]["TBLength"])
+                    if useDynamicTBlength == True:
+                        torsionBarLengthMin = torsionBarLengthMin * separation
+                    if round(torsionBarLength, 3) < torsionBarLengthMin:
+                        report = await textTools.addLine(report, f"Your torsion bar is {torsionBarLength}m wide.  This is below the {torsionBarLengthMin} meter requirement.")
+                        errorCount += 1
+
+                except Exception:
+                    suspensionType = "HVSS"
+                    if allowHVSS == False:
+                        report = await textTools.addLine(report, f"This vehicle uses HVSS suspension, which is not permitted in {contestName}")
+                        errorCount += 1
+
+
+            if partType == "AutoGenFenders":
+                separation = 2 * float(partInfo["f"][3])
+                sectWidth = 2 * float(partInfo["f"][9])
+                totalWidth = separation + sectWidth
+                if totalWidth > round(hullWidthMax, 2):
+                    report = await textTools.addLine(report,
+                        f"Your fenders are {totalWidth} meters wide.  This is too wide - the maximum width is {hullWidthMax} meters.")
+                    errorCount += 1
+                if totalWidth > overallTankWidth:
+                    overallTankWidth = totalWidth
+
+            if partType == "ENG":
+                name = partInfo["name"]
+                displacement = round(float(partInfo["cylinders"]) * float(partInfo["cylinderDisplacement"]), 2)
+                # print(country)
+                engineLimit = 80
+                if (float(engineLimit) + 0.01) < float(displacement):
+                    report = await textTools.addLine(report,
+                        f"Engine \"{name}\" displacement is invalid!  This engine is: {displacement} liters, while the limit is {engineLimit}.")
+                    errorCount += 1
+                else:
+                    report = await textTools.addLine(report, f"Engine \"{name}\" has {displacement} liters of displacement.")
+            x += 1
+
+        for objectData in blueprintData["objects"]:
+            # add to the guel tank count
+            pGuid = objectData["guid"]
+            try:
+                fuelTankID = objectData["fuelTankBlueprintVuid"]
+                if pGuid == "5e8ab5c7-e9f1-4c64-a04a-29efc78b1918":
+                    fuelTankSize += fuelTankCatalog[fuelTankID]
+                if pGuid == "ecd3341c-f605-4816-946c-591eaa7e4f7d":
+                    fuelTankSize += int(fuelTankCatalog[fuelTankID]*math.pi/4)
+            except Exception:
+                pass
+
+
+        for partData in blueprintData["meshes"]:
+            partType = partData["type"]
+            partInfo = partData["blueprint"]
+            partName = partData["name"]
+
+            if partType == "Compartment":
+                name = partInfo["name"]
+
                 # displacement = float(partInfo["cylinders"])*float(partInfo["cylinderDisplacement"])
                 # print(country)
                 tooThinPlates = 0
@@ -1881,12 +2148,12 @@ class blueprintFunctions(commands.Cog):
                                 report = await textTools.addLine(report, f"GCMs (including compartment \"{name}\") are not allowed in this contest.")
                                 errorCount += 1
                             # custom mantlet checks
-                            if torque > GCMtorqueMax:
+                            if torque > torqueMax:
                                 errorCount += 1
-                                report = await textTools.addLine(report, f"GCM \"{name}\" uses a torque setting above the {GCMtorqueMax}N limit!")
+                                report = await textTools.addLine(report, f"GCM \"{name}\" uses a torque setting above the {torqueMax}N limit!")
                             if ratio < GCMratioMin:
                                 errorCount += 1
-                                report = await textTools.addLine(report, f"GCM \"{name}\" has a traverse ratio below the required minimum ratio of {GCMtorqueMax}!")
+                                report = await textTools.addLine(report, f"GCM \"{name}\" has a traverse ratio below the required minimum ratio of {torqueMax}!")
                         if ringArmor < armorMin:
                             report = await textTools.addLine(report, f"{name}'s turret ring is below the 15mm armor requirement!")
                             errorCount += 1
@@ -1912,112 +2179,31 @@ class blueprintFunctions(commands.Cog):
                         f"{name} has {tooThickPlates} armor plates exceeding the {armorMax}mm armor limit, and {tooThinPlates} armor plates below the minimum {armorMin}mm requirement.")
                     errorCount += 1
 
-            if partName == "FLT":
-                requiredFLT = round(displacement*litersPerDisplacement * (1 + (litersPerTon*weight)), 2)
-                fuelTankSize = int(partInfo["L"])
-                if partInfo["L"] < requiredFLT:
-                    report = await textTools.addLine(report,f"Your internal fuel tank has {partInfo['L']}L of fuel, but needs {requiredFLT}L of fuel in order to perform adequately.")
-                    errorCount += 1
-
-            if partName == "TRK":
-                separation = float(partInfo["separation"])
-                trackWidthTot = 0.002 * float(partInfo["belt"]["x"])
-                trackSystemWidth = separation + trackWidthTot + 0.2
-                beltWidth = int(partInfo["belt"]["x"])
-                sprocketIndex = 0
-                idlerIndex = 1
-                # Ground Pressure
-                if partInfo["frontalTransmission"] == True:
-                    sprocketIndex = 0
-                    idlerIndex = 1
-
-                trackSystemLength = float(partInfo["length"])
-                sprocketForward = float(partInfo["wheels"][sprocketIndex]["zOffset"])
-                idlerForward = float(partInfo["wheels"][idlerIndex]["zOffset"])
-                roadwheelForward = float(partInfo["wheels"][2]["zOffset"])
-                sprocketDiameter = float(partInfo["wheels"][sprocketIndex]["diameter"])
-                idlerDiameter = float(partInfo["wheels"][idlerIndex]["diameter"])
-                roadwheelDiameter = float(partInfo["wheels"][2]["diameter"])
-                roadwheelSpacing = float(partInfo["roadSpacing"])
-                if partInfo["frontalTransmission"] == True:
-                    sprocketForward = -1*float(partInfo["wheels"][sprocketIndex]["zOffset"])
-                    # await ctx.send("frontal transmission detected!")
-                    #if sprocketForward > 0:
-                    #    sprocketForward = 0
-                else:
-                    idlerForward = -1 * float(partInfo["wheels"][idlerIndex]["zOffset"])
-                    # if idlerForward > 0:
-                    #     idlerForward = 0
-
-                Mgcl = trackSystemLength - idlerForward - sprocketForward - (idlerDiameter + sprocketDiameter)/2 - roadwheelDiameter - roadwheelForward
-                if trackSystemLength > hullLength:
-                    hullLength = trackSystemLength
-                # await ctx.send(f"MGCL: {Mgcl}")
-                roadwheelCount = ((Mgcl + roadwheelSpacing + roadwheelDiameter)/(roadwheelDiameter+roadwheelSpacing))
-                # await ctx.send(f"Roadwheel Count: {roadwheelCount}")
-                roadwheelCount = int(roadwheelCount)
-                realContactLength = (roadwheelCount - 1)*(roadwheelDiameter+roadwheelSpacing)
-                # await ctx.send(f"Real™️: {realContactLength}")
-                surfaceAreaCM = (realContactLength * 100) * (beltWidth / 10) * 2
-                groundPressure = weight*1000 / surfaceAreaCM
-                # await ctx.send(f"Ground pressure: {groundPressure}kg/cm²")
-
-                if groundPressure > groundPressureMax and requireGroundPressure == True:
-                    report = await textTools.addLine(report, f"Your track ground pressure is {round(groundPressure, 2)}kg/cm², but cannot exceed {groundPressureMax}kg/cm².  Increase your track contact area with the ground, or lighten your vehicle to improve ground pressure.")
-                    errorCount += 1
-
-                print(partInfo["wheels"][1])
-                if round(beltWidth, 3) < beltWidthMin:
-                    report = await textTools.addLine(report,
-                        f"Your track belt is {beltWidth}mm wide.  This is too narrow and will lead to bad off-road performance.  Increase your track width to at least {beltWidthMin}mm.")
-                    errorCount += 1
-                if round(trackSystemWidth, 3) > hullWidthMax:
-                    report = await textTools.addLine(report,
-                        f"Your track system is {round(trackSystemWidth, 2)} meters wide.  This exceeds the {hullWidthMax} meter limit.")
-                    errorCount += 1
-                if trackSystemWidth >= overallTankWidth:
-                    overallTankWidth = round(trackSystemWidth, 3)
-                try:
-                    torsionBarLength = float(partInfo["suspensions"]["TBLength"])
-                    if useDynamicTBlength == True:
-                        torsionBarLengthMin = torsionBarLengthMin * separation
-                    if round(torsionBarLength, 3) < torsionBarLengthMin:
-                        report = await textTools.addLine(report, f"Your torsion bar is {torsionBarLength}m wide.  This is below the {torsionBarLengthMin} meter requirement.")
-                        errorCount += 1
-
-                except Exception:
-                    suspensionType = "HVSS"
-                    if allowHVSS == False:
-                        report = await textTools.addLine(report, f"This vehicle uses HVSS suspension, which is not permitted in {contestName}")
-                        errorCount += 1
 
 
-            if partName == "FDR":
-                separation = 2 * float(partInfo["f"][3])
-                sectWidth = 2 * float(partInfo["f"][9])
-                totalWidth = separation + sectWidth
-                if totalWidth > round(hullWidthMax, 2):
-                    report = await textTools.addLine(report,
-                        f"Your fenders are {totalWidth} meters wide.  This is too wide - the maximum width is {hullWidthMax} meters.")
-                    errorCount += 1
-                if totalWidth > overallTankWidth:
-                    overallTankWidth = totalWidth
+        # start finalizing data
+        if crewCount < crewMin:
+            report = await textTools.addLine(report,f"This vehicle needs to have at least {crewMin} crew members, but only has {crewCount} crew.")
+            errorCount += 1
+        if crewCount > crewMax:
+            report = await textTools.addLine(report,f"This vehicle needs to have at most {crewMax} crew members, but it has {crewCount} crew.")
+            errorCount += 1
 
-            if partName == "ENG":
-                name = partInfo["name"]
-                displacement = round(float(partInfo["cylinders"]) * float(partInfo["cylinderDisplacement"]), 2)
-                # print(country)
-                engineLimit = 80
-                if (float(engineLimit) + 0.01) < float(displacement):
-                    report = await textTools.addLine(report,
-                        f"Engine \"{name}\" displacement is invalid!  This engine is: {displacement} liters, while the limit is {engineLimit}.")
-                    errorCount += 1
-                else:
-                    report = await textTools.addLine(report, f"Engine \"{name}\" has {displacement} liters of displacement.")
-
-
-
-            x += 1
+        # calculate contact length for ground pressure (all values in mm)
+        maxLength = startingLength + wheelSpacing + groupSpacing - wheelDiameter
+        wheel = 1
+        currentLength = -1 * wheelSpacing
+        wheelGroupPos = groupOffset
+        finalLength = 0
+        while currentLength <= maxLength:
+            finalLength = currentLength
+            currentLength += wheelDiameter + wheelSpacing
+            wheel += 1
+            wheelGroupPos += 1
+            if wheelGroupPos == groupSize:
+                currentLength += groupSpacing
+                wheelGroupPos -= groupSize
+        groundContactLength = finalLength + wheelSpacing
 
         litersPerTon = round(fuelTankSize/weight, 2)
         litersPerDisplacement = round(fuelTankSize / displacement, 2)
@@ -2092,7 +2278,7 @@ class blueprintFunctions(commands.Cog):
         try:
             msgBP = await ctx.bot.wait_for('message', check=check, timeout=200.0)
         except Exception:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             await ctx.send("Gonna need a blueprint file next time.")
             return
 
@@ -2102,7 +2288,7 @@ class blueprintFunctions(commands.Cog):
         try:
             msg = await ctx.bot.wait_for('message', check=check, timeout=240.0)
         except Exception:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
 
         armorThickness = 1
@@ -2113,7 +2299,7 @@ class blueprintFunctions(commands.Cog):
             msg2 = await ctx.bot.wait_for('message', check=check, timeout=240.0)
             armorThickness = int(msg2.content)
         except Exception:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             await ctx.send("This number was invalid!  Using the recommended value...")
             return
 
@@ -2150,7 +2336,7 @@ class blueprintFunctions(commands.Cog):
                                 faceSet.append(point)
                             thicknessSet = [armorThickness] * len(faceSet)
                             # if len(faceSet) > 4:
-                            #     await ctx.send(await textTools.retrieveError(ctx))
+                            #     await ctx.send(await errorFunctions.retrieveError(ctx))
                             #     await ctx.send("### Your model is not triangulated properly!\n Open your mesh in Blender and apply a **Triangulate** modifier, using these settings.  Export it as a .obj file, then run the command again.")
                             #     await ctx.send("https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/blender-settings.png")
                             #     return
@@ -2188,7 +2374,7 @@ class blueprintFunctions(commands.Cog):
                         if component["type"] == "structure":
                             nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
                             if nameOut in structureList and dupeStatus == False:
-                                await ctx.send(await textTools.retrieveError(ctx))
+                                await ctx.send(await errorFunctions.retrieveError(ctx))
                                 await ctx.send(f"Note: you have multiple compartments named {nameOut}.  To make things easier for yourself later, it's recommended to through your blueprint and give your compartments unique names.")
                                 dupeStatus = True
                                 nameOut = f"{nameOut} (Vuid {i})"
@@ -2204,14 +2390,14 @@ class blueprintFunctions(commands.Cog):
                     for meshBase in blueprintData["meshes"]:
                         if meshBase["vuid"] == Vuid:
                             if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                                await ctx.send(await textTools.retrieveError(ctx))
+                                await ctx.send(await errorFunctions.retrieveError(ctx))
                                 await ctx.send("Generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                                 return
                             blueprintData["meshes"][i]["meshData"]["mesh"]["vertices"] = verticesList
                             blueprintData["meshes"][i]["meshData"]["mesh"]["faces"] = ftList
                         i += 1
                 except Exception as error:
-                    await ctx.send(await textTools.retrieveError(ctx))
+                    await ctx.send(await errorFunctions.retrieveError(ctx))
                     await ctx.send(f"## The mesh import failed!  \n\n### Reason: \n{error}")
                     return
 

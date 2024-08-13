@@ -1,26 +1,12 @@
 import discord, configparser, random, platform, asyncio
 from discord.ext import commands
+from cogs.errorFunctions import errorFunctions
 from discord import app_commands
-from cogs.SQLfunctions import SQLfunctions
-errorList = ["I was not expecting to be served *this* conglomeration of exceptionally confused atomic matter."]
-
-
-
 class textTools(commands.Cog):
+    errorList = []
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # @commands.Cog.listener()
-    # async def on_message(self, message: discord.Message):
-    #     if message.author.id == self.bot.user.id:
-    #         return
-    #     try:
-    #         # output = [dict(row) for row in await SQLfunctions.databaseFetch(f"SELECT response FROM autoresponderlist WHERE serverid = '{message.guild.id}' AND prompt = '{await textTools.sanitize(message.content.lower())}'")][0]["response"]
-    #         valuesIn = [message.guild.id, message.content.lower()]
-    #         output = await SQLfunctions.databaseFetchDynamic(f"SELECT response FROM autoresponderlist WHERE serverid = $1 AND prompt = $2 LIMIT 1", valuesIn)
-    #         await message.channel.send(output[0]["response"])
-    #     except Exception:
-    #         pass
     async def sanitize(inputPhrase: str):
         sanitizeKeywords = ["@", "/", ";", "invalid_tank"]
         outputPhrase = inputPhrase
@@ -49,49 +35,59 @@ class textTools(commands.Cog):
         #print(values_string)
         return names_string, values_string
 
-    @commands.command(name="resetErrorConfig", description="Reset everyone's server configurations")
-    async def resetErrorConfig(self, ctx: commands.Context):
-        if ctx.author.id == 712509599135301673:
-            pass
-        else:
-            return
-        prompt = "DROP TABLE IF EXISTS errorlist"
-        await SQLfunctions.databaseExecute(prompt)
-        prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (
-                              error TEXT);''')
-        await SQLfunctions.databaseExecute(prompt)
-        await ctx.send("Done!  Now go add some errors in.")
-
-    @commands.command(name="addError", description="higdffffffffffff")
-    async def addError(self, ctx: commands.Context):
-
-        if ctx.author.id == 712509599135301673:
-            pass
-        else:
-            return
-        responseMessage = "This is not supposed to happen!"
-        await ctx.send("Type out your error message and send it.")
+    async def getResponse(ctx: commands.Context, prompt):
+        await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         try:
-            msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
-            responseMessage = msg.content
-            print(responseMessage)
-        except asyncio.TimeoutError:
-            await ctx.send("Operation cancelled.")
-            return
-        values = [responseMessage]
-        await SQLfunctions.databaseExecuteDynamic(f'INSERT INTO errorlist VALUES ($1);', values)
-        await ctx.send("## Done!")
+            msg = await ctx.bot.wait_for('message', check=check)
+            return msg.content
+        except Exception:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
 
-    async def retrieveError(ctx: commands.Context):
-        errorDict = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT error FROM errorlist')]
-        print(errorDict)
-        errorList = []
-        for error in errorDict:
-            errorList.append(error["error"])
-        return random.choice(errorList)
+    async def getIntResponse(ctx: commands.Context, prompt):
+        await ctx.send(prompt)
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await ctx.bot.wait_for('message', check=check)
+            return int(msg.content)
+        except Exception:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
 
+    async def getFileResponse(ctx: commands.Context, prompt):
+        await ctx.send(prompt)
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await ctx.bot.wait_for('message', check=check)
+            return msg.attachments[0]
+        except Exception:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
+
+    async def getResponseThenDelete(ctx: commands.Context, prompt):
+        messageOut = await ctx.send(prompt)
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await ctx.bot.wait_for('message', check=check)
+            outVal = msg.content
+            await msg.delete()
+            return outVal
+        except Exception:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
+        await messageOut.delete()
+
+    async def generateCampaignKey(self, ctx: commands.Context):
+        await ctx.send(f"Type out the campaign key you wish to use.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await ctx.bot.wait_for('message', check=check)
+            return msg.content
+        except Exception:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
+            return ""
 
     async def addLine(inputOne: str, inputTwo: str):
         return f"{inputOne}\n{inputTwo}"

@@ -2,7 +2,7 @@ import random
 
 import discord, asyncio, requests, io, base64
 from discord.ext import commands
-from main import SQLsettings
+from cogs.errorFunctions import errorFunctions
 import asyncpg, platform
 
 from discord import app_commands
@@ -47,7 +47,7 @@ class imageTools(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
 
-        await ctx.send("Send the url to your modifier image (either from sprockettools.github.io or Imgur), or reply with one of the following: `default preset`, `decal preset`, `vertical preset`, `seam preset`.")
+        await ctx.send("Send the url to your modifier image (either from sprockettools.github.io or Imgur), or reply with one of the following: `default preset`, `decal preset`, `dirt preset`, `vertical preset`, `seam preset`.")
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
 
@@ -60,6 +60,8 @@ class imageTools(commands.Cog):
                 imageLink = 'https://sprockettools.github.io/textures/Rusty_Metal.png'
             if imageInput == 'seam preset':
                 imageLink = 'https://sprockettools.github.io/textures/Rusty_Metal_2.png'
+            if imageInput == 'dirt preset':
+                imageLink = 'https://sprockettools.github.io/img/weathering_overlay_alternative.png'
             else:
                 if "https://i.imgur.com" in imageInput or "https://sprockettools.github.io/" in imageInput:
                     imageLink = imageInput
@@ -73,7 +75,7 @@ class imageTools(commands.Cog):
         for item in attachments:
             # Brave AI actually works fairly decent
             if int(item.size) > 25000000:
-                errorText = await textTools.retrieveError(ctx)
+                errorText = await errorFunctions.retrieveError(ctx)
                 await ctx.send(f"{errorText}\n\n{item.filename} is bigger than 25MB.  Please optimize this image a bit more to avoid issues when trying to use the decal.")
                 return
 

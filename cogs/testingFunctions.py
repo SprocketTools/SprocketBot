@@ -7,6 +7,46 @@ class testingFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+
+
+    @commands.command(name="contactlength", description="testing some stuff")
+    async def contactlength(self, ctx: commands.Context):
+        startingLength = int(await textTools.getResponse(ctx,f"User-specified wheel array length.  All values in mm."))
+        wheelDiameter = int(await textTools.getResponse(ctx, f"Wheel diameter"))
+        wheelSpacing = int(await textTools.getResponse(ctx, f"Wheel spacing"))
+        groupSize = int(await textTools.getResponse(ctx, f"Group size"))
+        groupOffset = int(await textTools.getResponse(ctx, f"Group offset"))
+        groupSpacing = int(await textTools.getResponse(ctx, f"Group spacing"))
+
+        # startingLength = 5289
+        # wheelDiameter = 700
+        # wheelSpacing = 30
+        # groupSize = 2
+        # groupOffset = 1
+        # groupSpacing = 500
+
+        wheelCount = 1
+        maxLength = startingLength + wheelSpacing + groupSpacing - wheelDiameter
+
+        # numbers that update as the loop runs
+        wheel = 1
+        currentLength = -1*wheelSpacing
+        wheelGroupPos = groupOffset
+        finalLength = 0
+
+        while currentLength <= maxLength:
+            print(f"Wheel {wheel}: {currentLength}mm")
+            finalLength = currentLength
+            currentLength += wheelDiameter + wheelSpacing
+            wheel += 1
+            wheelGroupPos += 1
+            if wheelGroupPos == groupSize:
+                currentLength += groupSpacing
+                wheelGroupPos -= groupSize
+
+        print(f"{currentLength}mm vs {maxLength}mm vs {finalLength}mm")
+        await ctx.send(f"Your distance is {finalLength +wheelSpacing} mm")
+
     @commands.command(name="testcommand3", description="testing some stuff")
     async def testcommand3(self, ctx: commands.Context):
         """Sends a message with our dropdown containing colours"""

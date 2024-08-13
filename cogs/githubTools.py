@@ -2,6 +2,7 @@ import shutil
 
 import discord, os, platform, time, asyncio, requests, io, datetime
 from pathlib import Path
+from cogs.errorFunctions import errorFunctions
 from discord.ext import commands
 from discord import app_commands
 from git import Repo
@@ -45,7 +46,7 @@ class githubTools(commands.Cog):
     @commands.command(name="pullRepository", description="Reload the repository onto the Pi")
     async def pullRepository(self, ctx: commands.Context):
         if ctx.author.id != 712509599135301673:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         operatingRepo = Repo(GithubDirectory)
         origin = operatingRepo.remote('origin')
@@ -56,7 +57,7 @@ class githubTools(commands.Cog):
     @commands.command(name="resetImageCatalog", description="Reset the image catalog")
     async def resetImageCatalog(self, ctx: commands.Context):
         if ctx.author.id != 712509599135301673:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         prompt = "DROP TABLE IF EXISTS imagecatalog"
         await SQLfunctions.databaseExecute(prompt)
@@ -108,7 +109,7 @@ class githubTools(commands.Cog):
                 strippedname = strippedname.lower()
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{strippedname}"
                 if os.path.isfile(imageCatalogFilepath):
-                    response = await textTools.retrieveError(ctx)
+                    response = await errorFunctions.retrieveError(ctx)
                     await ctx.send(f"{response}\n\n{strippedname} already exists!  Submit this again, but with a different name.")
                 else:
                     print(imageCatalogFilepath)
@@ -149,11 +150,13 @@ class githubTools(commands.Cog):
                     values = [name, tags, strippedname, 'Pending', str(self.bot.get_user(ctx.author.id)), ctx.author.id, category]
                     await SQLfunctions.databaseExecuteDynamic(f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''', values)
                     await ctx.send(f"### The image {strippedname} has been sent off for approval!")
+                    channel = self.bot.get_channel(1152377925916688484)
+                    await channel.send(f"**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
 
     @commands.command(name="removeDecal", description="Remove a decal from the SprocketTools website")
     async def removeDecal(self, ctx):
         if ctx.author.id != 712509599135301673:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         await ctx.send(f"Reply with the stripped name of the decal you wish to remove.  Ex: `6_side_circle.png`")
         def check(m: discord.Message):
@@ -180,7 +183,7 @@ class githubTools(commands.Cog):
     @commands.command(name="processDecals", description="Submit a decal to the SprocketTools website")
     async def processDecals(self, ctx):
         if ctx.author.id != 712509599135301673:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         try:
             while True:
@@ -384,7 +387,7 @@ class githubTools(commands.Cog):
     @commands.command(name="changeDecalCategory", description="change a decal category from the SprocketTools website")
     async def changeDecalCategory(self, ctx):
         if ctx.author.id != 712509599135301673:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         await ctx.send(f"Reply with the stripped name of the decal you wish to change.  Ex: `6_side_circle.png`")
         def check(m: discord.Message):
@@ -405,7 +408,7 @@ class githubTools(commands.Cog):
     @commands.command(name="changeDecalName", description="change a decal name from the SprocketTools website")
     async def changeDecalName(self, ctx):
         if ctx.author.id != 712509599135301673:
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         await ctx.send(f"Reply with the stripped name of the decal you wish to change.  Ex: `6_side_circle.png`")
         def check(m: discord.Message):

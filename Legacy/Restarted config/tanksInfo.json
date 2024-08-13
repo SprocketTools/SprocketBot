@@ -1,0 +1,14 @@
+{
+    "TK-18": {
+        "origin": "nunatuniq",
+        "originType": "country",
+        "status": "undetermined",
+        "weight": 7.818,
+        "width": 2.25,
+        "cost": 19160,
+        "buildTimeScalar": 1.3,
+        "licenseFee": 0,
+        "importFee": 0,
+        "buyoutFee": 0
+    }
+}

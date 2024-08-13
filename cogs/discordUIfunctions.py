@@ -3,13 +3,7 @@ from discord.ext import commands
 # promptResponses = {}
 import os, platform, discord, configparser, ast, json
 from discord.ext import commands
-from discord import app_commands
-import json, asyncio
-from pathlib import Path
-from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
-from discord import app_commands
-from cogs.textTools import textTools
+
 class discordUIfunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot

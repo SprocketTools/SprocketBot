@@ -5,8 +5,39 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9cea07c4-e001-4428-85f9-05c2e9eccbc5" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/cogs/campaignRegisterFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cogs/errorFunctions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cogs/serverFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/Contest Config 2.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/Contest Config 3.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/Contest Config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/contestCategoryConfigExampleV2.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/Stock Config/companyOperators.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/Stock Config/companyOperators.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/Stock Config/countries.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/Stock Config/countries.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/Stock Config/productionPaths.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/Stock Config/productionPaths.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/Stock Config/tanksInventory.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/Stock Config/tanksInventory.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/contestInfo.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/everything.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/fun-facts.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/oldContestCategoryExample.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/tanksAssembly.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Legacy/tanktest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/tanktest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/SQLfunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/SQLfunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/SprocketOfficialFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/SprocketOfficialFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/adminFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/adminFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/autoResponderFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/autoResponderFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cogs/blueprintFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/blueprintFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/campaignFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/campaignFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/contestFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/contestFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/discordUIfunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/discordUIfunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/githubTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/githubTools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/imageFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/imageFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/testingFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/testingFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cogs/textTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/textTools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oldmain.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,11 +74,14 @@
     &quot;Python.Python 3.11.executor&quot;: &quot;Run&quot;,
     &quot;Python.SQLtest.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.oldmain (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.oldmain (2).executor&quot;: &quot;Run&quot;,
+    &quot;Python.oldmain (3).executor&quot;: &quot;Run&quot;,
     &quot;Python.oldmain.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.tabs&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.fonts.default&quot;
   }
 }</component>
   <component name="RunManager" selected="Python.main">
@@ -118,7 +152,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="oldmain" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="oldmain (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="SprocketBot" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -127,11 +161,55 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Legacy" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/oldmain.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Legacy/oldmain.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="oldmain (2)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="SprocketBot" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Legacy/Stock Config" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Legacy/Stock Config/oldmain.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="oldmain (3)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="SprocketBot" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Legacy/Restarted config" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Legacy/Restarted config/oldmain.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -143,8 +221,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.oldmain (3)" />
+        <item itemvalue="Python.oldmain (1)" />
+        <item itemvalue="Python.oldmain (2)" />
         <item itemvalue="Python.SQLtest" />
-        <item itemvalue="Python.oldmain" />
       </list>
     </recent_temporary>
   </component>
@@ -170,10 +250,6 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/cogs/SQLfunctions.py</url>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/cogs/adminFunctions.py</url>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
@@ -183,6 +259,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/cogs/blueprintFunctions.py</url>
+          <line>1800</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>

@@ -5,6 +5,7 @@ import json, asyncio
 from pathlib import Path
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
+from cogs.errorFunctions import errorFunctions
 from cogs.blueprintFunctions import blueprintFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 # from cogs.githubTools import githubTools
@@ -162,7 +163,7 @@ class contestFunctions(commands.Cog):
         print(contestList["contestmanagerroleid"])
         print(ctx.author.roles)
         if str(contestList["contestmanagerroleid"]) not in str(ctx.author.roles):
-            await ctx.send(await textTools.retrieveError(ctx))
+            await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         await ctx.send("Beginning processing now.")
         contestHostID = ctx.author.id
