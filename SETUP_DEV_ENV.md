@@ -4,7 +4,7 @@ Sprocket Bot is a complex project, involving many Python libraries, custom funct
 
 Currently the "official" Sprocket Bot is hosted on a Raspberry Pi 4B with 8GB of RAM - albeit it seems to only use less than 1GB of that.  Any PC that is viewing this webpage should have the specs needed to run the bot.
 
-Note: this guide is not 100% complete.
+Note: this guide is not 100% complete.  Experience with Python is recommended.
 
 ## Necessary software
 - Python 3.11
