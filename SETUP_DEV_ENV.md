@@ -35,6 +35,10 @@ Once you have the bot invited to a Discord server, copy its user ID.  You will n
 
 Next, use the Github CMD or Github Desktop app to clone the SprocketBot repository to your PC.  This is the folder you will open with your IDE later.
 
+## Clone the SprocketTools repository
+
+Sprocket Bot pushes updates to the SprocketTools.github.io website.  In order to relicate this, you will need to make a copy of the repository and obtain an SSH access key.  If you wish to not use or modify the website features, set the `updateGithub` variable in your config file to "N", as it will allow the bot to run without a Github access key.
+
 ## Create the configuration.ini file
 
 In the `C:\SprocketBot` folder, create a file named `configuration.ini`.  Copy the code chunk below and replace the missing data bits with your information. 
@@ -59,6 +63,7 @@ database = sprocketbot
 
 [settings]
 ownerID = place your Discord user ID here
+updateGithub = Y
 githubPAT = if you have a clone of the SprocketTools repository, place your SSH access token here
 ```
 
