@@ -5,39 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9cea07c4-e001-4428-85f9-05c2e9eccbc5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/cogs/campaignRegisterFunctions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cogs/errorFunctions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cogs/serverFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/Contest Config 2.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/Contest Config 3.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/Contest Config.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Contest Configuration Examples/contestCategoryConfigExampleV2.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/Stock Config/companyOperators.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/Stock Config/companyOperators.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/Stock Config/countries.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/Stock Config/countries.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/Stock Config/productionPaths.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/Stock Config/productionPaths.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/Stock Config/tanksInventory.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/Stock Config/tanksInventory.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/config.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/contestInfo.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/everything.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/fun-facts.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/oldContestCategoryExample.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/tanksAssembly.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Legacy/tanktest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Legacy/tanktest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/SQLfunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/SQLfunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/SprocketOfficialFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/SprocketOfficialFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cogs/adminFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/adminFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/autoResponderFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/autoResponderFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/blueprintFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/blueprintFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/campaignFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/campaignFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/contestFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/contestFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cogs/discordUIfunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/discordUIfunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/githubTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/githubTools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/imageFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/imageFunctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cogs/testingFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/testingFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/textTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/textTools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oldmain.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -245,7 +245,7 @@ class adminFunctions(commands.Cog):
     @commands.command(name="sendGlobalUpdate", description="Send a global update to all servers.")
     async def sendGlobalUpdate(self, ctx: commands.Context):
         view = globalSendDropdownView()
-        await ctx.send(content="Where are you sending today's update to?", view=view)
+        await ctx.send(content="Where are you sending today's update to?", view=view, ephemeral=True)
         await view.wait()
         result = view.result
         await ctx.send("Type your message here!")

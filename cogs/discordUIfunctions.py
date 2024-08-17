@@ -49,7 +49,7 @@ class discordUIfunctions(commands.Cog):
             categoryListSlice = categoryList[int:int+20]
             int = int + 20
             view = listChoiceDropdownView(categoryListSlice)
-            await ctx.send(content=userPrompt, view=view)
+            await ctx.send(content=userPrompt, view=view, ephemeral=True)
             await view.wait()
             result = view.result
             if result != "Next page":

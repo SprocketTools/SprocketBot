@@ -1,5 +1,8 @@
 import discord
 from discord.ext import commands
+
+from cogs.discordUIfunctions import discordUIfunctions
+
 promptResponses = {}
 from discord import app_commands
 from cogs.textTools import textTools
@@ -47,6 +50,12 @@ class testingFunctions(commands.Cog):
         print(f"{currentLength}mm vs {maxLength}mm vs {finalLength}mm")
         await ctx.send(f"Your distance is {finalLength +wheelSpacing} mm")
 
+    @commands.command(name="testcommand6", description="testing some stuff")
+    async def testcommand6(self, ctx: commands.Context):
+        list = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+        prompt = 'choose'
+        answer = await discordUIfunctions.getChoiceFromList(ctx, list, prompt)
+        await ctx.send(f"You picked {answer}!")
     @commands.command(name="testcommand3", description="testing some stuff")
     async def testcommand3(self, ctx: commands.Context):
         """Sends a message with our dropdown containing colours"""
