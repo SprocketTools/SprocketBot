@@ -37,7 +37,8 @@ SQLsettings = config["SECURITY"]
 SQLsettings["database"] = config[f"settings.{botMode}"]["database"]
 ownerID = int(config["settings"]["ownerID"])
 githubPAT = str(config["settings"]["githubPAT"])
-cogsList = ["cogs.SQLfunctions", "cogs.textTools", "cogs.registerFunctions", "cogs.errorFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.githubTools",  "cogs.SprocketOfficialFunctions", "cogs.contestFunctions", "cogs.testingFunctions"]
+updateGithub = str(config["settings"]["updateGithub"])
+cogsList = ["cogs.SQLfunctions", "cogs.textTools", "cogs.registerFunctions", "cogs.errorFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.SprocketOfficialFunctions", "cogs.contestFunctions", "cogs.testingFunctions"]
 class Bot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all()) #
@@ -46,6 +47,8 @@ class Bot(commands.Bot):
     async def setup_hook(self):
         for ext in self.cogslist:
             await self.load_extension(ext)
+        if updateGithub == "Y":
+            await self.load_extension("cogs.githubTools")
 
     async def on_ready(self):
         channel = bot.get_channel(1152377925916688484)
