@@ -22,8 +22,9 @@ Open pgAdmin 4 and click "new server."  In the popup window, add the following i
 - Connection - Password: the password you defined when installing PostgreSQL
 - Connection - Save password?: enable
 Click "save" and you should then be connected to the PostgreSQL server.
-Now, you will need to create a database for the bot.  Under the "Servers" menu, right click on your SQL server and `create --> Database`.  Set the name to `sprocketbotdevelopment` and click "Save".
-The PostgreSQL server will launch automatically when starting the computer.  
+Now, you will need to create a database for the bot.  Under the "Servers" menu, right click on your SQL server and click `create --> Database`.  In the popup window, set the database name to `sprocketbotdevelopment` and click "Save".  Your SQL server should be all ready to go!
+
+Note: the PostgreSQL server will launch automatically when starting the computer.  You won't have to worry about having to launch it in the future.  
 
 ## Establish a Discord bot profile
 
