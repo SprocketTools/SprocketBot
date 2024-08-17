@@ -21,6 +21,7 @@ Open pgAdmin 4 and click "new server."  In the popup window, add the following i
 - Connection - Port: the port you defined when installing PostgreSQL (default was 2022)
 - Connection - Password: the password you defined when installing PostgreSQL
 - Connection - Save password?: enable
+
 Click "save" and you should then be connected to the PostgreSQL server.
 Now, you will need to create a database for the bot.  Under the "Servers" menu, right click on your SQL server and click `create --> Database`.  In the popup window, set the database name to `sprocketbotdevelopment` and click "Save".  Your SQL server should be all ready to go!
 
