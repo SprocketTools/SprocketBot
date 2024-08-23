@@ -4,7 +4,7 @@ Sprocket Bot is a complex project, involving many Python libraries, custom funct
 
 Currently the "official" Sprocket Bot is hosted on a Raspberry Pi 4B with 8GB of RAM - albeit it seems to only use less than 1GB of that.  Any PC that is viewing this webpage should have the specs needed to run the bot.
 
-Note: this guide is not 100% complete.
+Note: this guide is not 100% complete.  Experience with Python is recommended.
 
 ## Necessary software
 - Python 3.11
@@ -21,6 +21,7 @@ Open pgAdmin 4 and click "new server."  In the popup window, add the following i
 - Connection - Port: the port you defined when installing PostgreSQL (default was 2022)
 - Connection - Password: the password you defined when installing PostgreSQL
 - Connection - Save password?: enable
+
 Click "save" and you should then be connected to the PostgreSQL server.
 Now, you will need to create a database for the bot.  Under the "Servers" menu, right click on your SQL server and click `create --> Database`.  In the popup window, set the database name to `sprocketbotdevelopment` and click "Save".  Your SQL server should be all ready to go!
 
