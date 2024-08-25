@@ -52,6 +52,7 @@ class campaignFinanceFunctions(commands.Cog):
         await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]])
         await ctx.send(f"## Done!\n{factionChoiceName} now has {campaignData['currencysymbol']}{moneyAdd} more {campaignData['currencyname']}!")
         channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
+        ## test
         await channel.send(f"### Transaction log\nPurchaser: {factionData['factionname']}\nSeller: {factionChoiceName}\nCost: {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}\nDetails: {logDetails}")
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignFinanceFunctions(bot))
