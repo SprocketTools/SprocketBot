@@ -11,7 +11,8 @@ class textTools(commands.Cog):
         sanitizeKeywords = ["@", "/", ";", "invalid_tank"]
         outputPhrase = inputPhrase
         for phrase in sanitizeKeywords:
-          outputPhrase = outputPhrase.replace(phrase, "")
+            outputPhrase = outputPhrase.replace(phrase, "")
+        outputPhrase.strip()
         return outputPhrase
 
     async def mild_sanitize(inputPhrase: str):

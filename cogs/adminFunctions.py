@@ -199,6 +199,7 @@ class adminFunctions(commands.Cog):
         embed.add_field(name="tunePowertrain", value="Calibrate your tank's powertrain", inline=False)
         embed.add_field(name="submitTank", value="Submit a tank to an ongoing contest", inline=False)
         embed.add_field(name="submitDecal", value="Submit decals to the SprocketTools decal repository", inline=False)
+        embed.add_field(name="addError", value="Add a funny response to Sprocket Bot's error catalog", inline=False)
         embed.add_field(name="weather", value="Apply wear and tear effects to attached photos", inline=False)
         embed.add_field(name="help", value="Shows this message", inline=False)
         await ctx.send(embed=embed)
@@ -299,8 +300,8 @@ class adminFunctions(commands.Cog):
             return
         tablename = await errorFunctions.getResponse(ctx,"Whatis the table name?")
         columnname = await errorFunctions.getResponse(ctx, "What will the column be named?  Use all lowercase letters with no spaces.")
-        options = ["VARCHAR", "BIGINT", "REAL"]
-        prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, while REALs are for floats."
+        options = ["VARCHAR", "BIGINT", "REAL", "BOOLEAN"]
+        prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, REALs are for floats, and BOOLEANs are true/false."
         varType = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
 
         defaultVal = await errorFunctions.getResponse(ctx,"What will the default value be?")

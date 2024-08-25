@@ -1,6 +1,7 @@
 import discord, time
 from discord.ext import commands
 from cogs.SQLfunctions import SQLfunctions
+from cogs.discordUIfunctions import discordUIfunctions
 from cogs.textTools import textTools
 campaignSettings = {}
 campaignServers = {}
@@ -20,6 +21,26 @@ class campaignFunctions(commands.Cog):
         factionKey = factionData["factionkey"]
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionKey])
 
+    async def getFactionData(factionkey: int):
+        return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionkey])
+
+    async def pickCampaignFaction(ctx: commands.Context, prompt: str):
+        campaignKey = await campaignFunctions.getCampaignKey(ctx)
+        availableFactionsList = await SQLfunctions.databaseFetchdictDynamic(
+            '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey])
+        factionList = []
+        factionData = {}
+        print(availableFactionsList)
+        for faction in availableFactionsList:
+            name = faction["factionname"]
+            factionList.append(name)
+            subFactionData = {}
+            subFactionData["factionkey"] = faction["factionkey"]
+            subFactionData["money"] = faction["money"]
+            factionData[name] = subFactionData
+        factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
+        return factionChoiceName, factionData[factionChoiceName]["factionkey"]
+
     async def getUserCampaignData(ctx: commands.Context):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE hostserverid = $1;''', [ctx.guild.id])
 
@@ -28,6 +49,11 @@ class campaignFunctions(commands.Cog):
         if len(data) == 0:
             return
         return data["campaignname"]
+
+    async def getCampaignKey(ctx: commands.Context):
+        campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
+        return int(campaignData['campaignkey'])
+
     async def isCampaignManager(ctx: commands.Context):
         data = await SQLfunctions.databaseFetchrowDynamic(f'SELECT * FROM serverconfig WHERE serverid = $1', [ctx.guild.id])
         roleid = data["campaignmanagerroleid"]
