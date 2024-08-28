@@ -81,16 +81,20 @@ class SprocketOfficialFunctions(commands.Cog):
 
             avatarURL = ctx.author.display_avatar.url
             userName = ctx.author.name
-            if random.random() < 0.033:
-                if random.random() < 0.65:
+            if random.random() < 0.9033:
+                choiceV = random.random()
+                if choiceV < 0.65:
                     userName = "Sprocket Chan"
-                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/88cf620c9198031b13bc9851ee7f4e74c22cfbf3/images/Sprocket_chan_Aprilful.jpg"
+                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/Sprocket_chan_Aprilful.jpg"
                     messageOut = messageOut + "\nAlso please help me, Afghanistan sucks"
+                elif choiceV < 0.95:
+                    userName = "Jacob"
+                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/Jacob.png"
+                    messageOut = messageOut + "\nUnrelated: why have you forsaken me to this perpetual hell?  Driving all these tanks is a fate worse than death!"
                 else:
                     userName = "Jacob"
-                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/88cf620c9198031b13bc9851ee7f4e74c22cfbf3/images/Sprocket_chan_Aprilful.jpg"
-                    messageOut = messageOut + "\nAlso please help me, Afghanistan sucks"
-
+                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/Jacob.png"
+                    messageOut = messageOut + ""
             embed = discord.Embed(color=discord.Color.random(), description=messageOut)
             embed.set_footer(text=f"Question by {userName}", icon_url=avatarURL)
             sent_message = await channel.send(embed=embed, content=messageOut)
