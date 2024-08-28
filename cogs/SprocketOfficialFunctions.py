@@ -69,7 +69,7 @@ class SprocketOfficialFunctions(commands.Cog):
             msg = await ctx.bot.wait_for('message', check=check, timeout=1800.0)
             if msg.content.lower() != "yes":
                 return
-            if random.random() < 0.1:
+            if random.random() < 0.033:
                 if random.random() < 0.3:
                     messageOut = "Dearest Hamish Dunn, I come bearing a humble question to offer to thus.  " + messageOut
                 elif random.random() < 0.6:
@@ -81,22 +81,20 @@ class SprocketOfficialFunctions(commands.Cog):
 
             avatarURL = ctx.author.display_avatar.url
             userName = ctx.author.name
-            if random.random() < 0.1:
-                if random.random() < 0.3:
+            if random.random() < 0.033:
+                if random.random() < 0.65:
                     userName = "Sprocket Chan"
-                    avatarURL =
-                elif random.random() < 0.6:
-                    messageOut = "Daddy Hamish, " + messageOut
-                elif random.random() < 0.8:
-                    messageOut = "Testing testing 1-2-3\n" + messageOut
+                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/88cf620c9198031b13bc9851ee7f4e74c22cfbf3/images/Sprocket_chan_Aprilful.jpg"
+                    messageOut = messageOut + "\nAlso please help me, Afghanistan sucks"
                 else:
-                    message = messageOut + "\nBTW, Dario has an assignment for you."
-
+                    userName = "Jacob"
+                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/88cf620c9198031b13bc9851ee7f4e74c22cfbf3/images/Sprocket_chan_Aprilful.jpg"
+                    messageOut = messageOut + "\nAlso please help me, Afghanistan sucks"
 
             embed = discord.Embed(color=discord.Color.random(), description=messageOut)
-            embed.set_footer(text=f"Question by {ctx.author.name}", icon_url=avatarURL)
+            embed.set_footer(text=f"Question by {userName}", icon_url=avatarURL)
             sent_message = await channel.send(embed=embed, content=messageOut)
-            await sent_message.create_thread(name=f"Question by {}", auto_archive_duration=10080, reason=f"{ctx.author.name} asked for it.")
+            await sent_message.create_thread(name=f"Question by {userName}", auto_archive_duration=10080, reason=f"{ctx.author.name} asked for it.")
             if main.botMode != "development":
                 await sent_message.add_reaction(":plus1:881246627510239323")
                 await sent_message.add_reaction(":minus1:881246627770282015")
