@@ -3,6 +3,8 @@ import random
 
 import discord
 from discord.ext import commands
+
+import main
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 class SprocketOfficialFunctions(commands.Cog):
@@ -37,9 +39,16 @@ class SprocketOfficialFunctions(commands.Cog):
     @commands.command(name="askHamish", description="Ask Hamish a question.")
     async def askHamish(self, ctx: commands.Context):
         role = ctx.author.roles
-        if str(879050882107473990) not in str(role):
-            await ctx.send(f'{await errorFunctions.retrieveError(ctx)}\n\nYou need the FAQ enjoyer role to use this command.  Look in <#882618434834284594> for more info.')
-            return
+
+
+        if main.botMode == "development":
+            channel = self.bot.get_channel(1142053423370481747)
+        else:
+            channel = self.bot.get_channel(788410377268363264)
+            if str(879050882107473990) not in str(role):
+                await ctx.send(f'{await errorFunctions.retrieveError(ctx)}\n\nYou need the FAQ enjoyer role to use this command.  Look in <#882618434834284594> for more info.')
+                return
+
         await ctx.send(f"## Process started. \n\nSend a message containing your question.\n- Make sure that you have searched for previous replies on similar questions\n- Do not use this to post game suggestions, use the [Github tracker](https://github.com/Muushy/Sprocket-Feedback/issues) for this.")
         messageOut = "This is a default response"
         def check(m: discord.Message):
@@ -60,7 +69,7 @@ class SprocketOfficialFunctions(commands.Cog):
             msg = await ctx.bot.wait_for('message', check=check, timeout=1800.0)
             if msg.content.lower() != "yes":
                 return
-            if random.random() < 0.01:
+            if random.random() < 0.1:
                 if random.random() < 0.3:
                     messageOut = "Dearest Hamish Dunn, I come bearing a humble question to offer to thus.  " + messageOut
                 elif random.random() < 0.6:
@@ -69,17 +78,28 @@ class SprocketOfficialFunctions(commands.Cog):
                     messageOut = "Testing testing 1-2-3\n" + messageOut
                 else:
                     message = messageOut + "\nBTW, Dario has an assignment for you."
-            print(messageOut)
 
             avatarURL = ctx.author.display_avatar.url
+            userName = ctx.author.name
+            if random.random() < 0.1:
+                if random.random() < 0.3:
+                    userName = "Sprocket Chan"
+                    avatarURL =
+                elif random.random() < 0.6:
+                    messageOut = "Daddy Hamish, " + messageOut
+                elif random.random() < 0.8:
+                    messageOut = "Testing testing 1-2-3\n" + messageOut
+                else:
+                    message = messageOut + "\nBTW, Dario has an assignment for you."
+
+
             embed = discord.Embed(color=discord.Color.random(), description=messageOut)
             embed.set_footer(text=f"Question by {ctx.author.name}", icon_url=avatarURL)
-            channel = self.bot.get_channel(788410377268363264)
-            # channel = self.bot.get_channel(1142053423370481747)
             sent_message = await channel.send(embed=embed, content=messageOut)
-            await sent_message.create_thread(name=f"Question by {ctx.author.name}", auto_archive_duration=10080, reason=f"{ctx.author.name} asked for it.")
-            await sent_message.add_reaction(":plus1:881246627510239323")
-            await sent_message.add_reaction(":minus1:881246627770282015")
+            await sent_message.create_thread(name=f"Question by {}", auto_archive_duration=10080, reason=f"{ctx.author.name} asked for it.")
+            if main.botMode != "development":
+                await sent_message.add_reaction(":plus1:881246627510239323")
+                await sent_message.add_reaction(":minus1:881246627770282015")
             for attachment in msg.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content=" ")

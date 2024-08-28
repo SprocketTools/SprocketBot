@@ -1,4 +1,4 @@
-import discord, configparser, random, platform, asyncio
+import discord, configparser, random, platform, asyncio, re
 from discord.ext import commands
 from cogs.errorFunctions import errorFunctions
 from discord import app_commands
@@ -12,8 +12,15 @@ class textTools(commands.Cog):
         outputPhrase = inputPhrase
         for phrase in sanitizeKeywords:
             outputPhrase = outputPhrase.replace(phrase, "")
-        outputPhrase.strip()
+        pattern = r'[^a-zA-Z0-9\s\!\#\$\%\^\:\&\*\(\)\+\=\-_\|\<\>\?,\.;:\']'
+        outputPhrase = re.sub(pattern, '', outputPhrase)
+        outputPhrase = outputPhrase.strip()
+        # ^\x00-\x7f
         return outputPhrase
+
+    @commands.command(name="sanitizeTest", description="Ask Hamish a question.")
+    async def sanitizeTest(self, ctx: commands.Context, *, testString):
+        await ctx.send(await textTools.sanitize(testString))
 
     async def mild_sanitize(inputPhrase: str):
         sanitizeKeywords = ["@", "invalid_tank"]

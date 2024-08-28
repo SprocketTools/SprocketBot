@@ -11,7 +11,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 utc = datetime.timezone.utc
-
+botMode = "development"
 # Determines whether this is the live version of the bot or the testing version.
 # development settings (running on Windows/PyCharm)
 if platform.system() == "Windows":
