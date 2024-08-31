@@ -1,3 +1,5 @@
+import math
+
 import discord, time
 from discord.ext import commands
 from cogs.SQLfunctions import SQLfunctions
@@ -43,6 +45,51 @@ class campaignFunctions(commands.Cog):
 
     async def getUserCampaignData(ctx: commands.Context):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE hostserverid = $1;''', [ctx.guild.id])
+
+    async def getGovernmentType(ctx: commands.Context):
+        options = ["Republic", "Democracy", "Statist", "Monarchy", "Socialism"]
+        prompt = "Pick a type of government."
+        answer = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
+        if answer == "Republic":
+            return 0.8
+        if answer == "Democracy":
+            return 0.9
+        if answer == "Statist":
+            return 1.0
+        if answer == "Monarchy":
+            return 1.1
+        if answer == "Socialism":
+            return 1.2
+
+    async def getGovernmentName(answerIn: float):
+        answer = round(answerIn, 3)
+        if answer == 0.8:
+            return "Republic"
+        if answer == 0.9:
+            return "Democracy"
+        if answer == 1.0:
+            return "Statist"
+        if answer == 1.1:
+            return "Monarchy"
+        if answer == 1.2:
+            return "Socialism"
+        else:
+            return "Error"
+
+    async def getFarmingLatitudeScalar(latitudeI: float):
+        latitude = abs(latitudeI)
+        if latitude <= 30:
+            return 1
+        elif latitude <= 66:
+            k = 1/26
+            init = 30
+            return round(1/(math.exp(k*(latitude - init))), 3)
+        else:
+            return 0.25
+
+    @commands.command(name="farmingTest", description="Ask Hamish a question.")
+    async def farmingTest(self, ctx: commands.Context, latitude: float):
+        await ctx.send(str(await campaignFunctions.getFarmingLatitudeScalar(latitude)))
 
     async def getCampaignName(campaignKey: int):
         data = await SQLfunctions.databaseFetchrowDynamic(f'SELECT * FROM campaigns WHERE campaignkey = $1',[campaignKey])

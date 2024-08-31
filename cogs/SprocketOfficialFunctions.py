@@ -56,7 +56,7 @@ class SprocketOfficialFunctions(commands.Cog):
         msg = ""
         try:
             msg = await ctx.bot.wait_for('message', check=check, timeout=1800.0)
-            messageOut = await textTools.sanitize(msg.content)
+            messageOut = await textTools.mild_sanitize(msg.content)
         except Exception:
             await ctx.reply(await errorFunctions.retrieveError(ctx))
             return
@@ -81,20 +81,31 @@ class SprocketOfficialFunctions(commands.Cog):
 
             avatarURL = ctx.author.display_avatar.url
             userName = ctx.author.name
-            if random.random() < 0.9033:
-                choiceV = random.random()
-                if choiceV < 0.65:
-                    userName = "Sprocket Chan"
+            choiceV = random.random()
+
+            if ctx.author.id == 220134579736936448:
+                if choiceV < 0.25: userName = "dario xn"
+            if ctx.author.id == 712509599135301673:
+                if choiceV < 0.25: userName = "thewonderpancake"
+            if ctx.author.id == 834279720279474176:
+                if choiceV < 0.25: userName = "theflyingtexan"
+            if ctx.author.id == 658461485055606795:
+                if choiceV < 0.25: userName = "busy_german"
+
+            if random.random() < 0.033:
+
+                if choiceV < 0.6:
+                    userName = "sprocket chan"
                     avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/Sprocket_chan_Aprilful.jpg"
-                    messageOut = messageOut + "\nAlso please help me, Afghanistan sucks"
-                elif choiceV < 0.95:
+                    messageOut = messageOut + "\nAlso please help me, Romania sucks.  They keep stealing my tail!"
+                elif choiceV < 0.9:
                     userName = "Jacob"
                     avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/Jacob.png"
                     messageOut = messageOut + "\nUnrelated: why have you forsaken me to this perpetual hell?  Driving all these tanks is a fate worse than death!"
                 else:
-                    userName = "Jacob"
-                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/Jacob.png"
-                    messageOut = messageOut + ""
+                    userName = "muuushy"
+                    avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/hamish.png"
+
             embed = discord.Embed(color=discord.Color.random(), description=messageOut)
             embed.set_footer(text=f"Question by {userName}", icon_url=avatarURL)
             sent_message = await channel.send(embed=embed, content=messageOut)
