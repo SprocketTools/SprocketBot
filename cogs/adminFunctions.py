@@ -220,6 +220,7 @@ class adminFunctions(commands.Cog):
                 Contest managers role: {ctx.guild.get_role(int(serverData['contestmanagerroleid']))}
                 Bot manager role:      {ctx.guild.get_role(int(serverData['botmanagerroleid']))}
                 Campaign manager role: {ctx.guild.get_role(int(serverData['campaignmanagerroleid']))}
+                Music player role: {ctx.guild.get_role(int(serverData['musicroleid']))}
                 
                 Allow the bot to try and be funny: {serverData['allowfunny']}
                 '''
@@ -328,6 +329,13 @@ class adminFunctions(commands.Cog):
             return
         await self.bot.change_presence(activity=discord.Game(name=nameIn))
 
+    @commands.command(name="setMusicRole", description="setup the server")
+    async def setMusicRole(self, ctx: commands.Context):
+        intO = await textTools.getRoleResponse(ctx, "What role do you want to allow to play music?  Reply to this message with a ping of that role.")
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE serverconfig SET musicroleid = $1 WHERE serverid = $2;''', [intO, ctx.guild.id])
+        await adminFunctions.updateServerConfig(self)
+        await ctx.send("## Done! \nYour server is now configured.")
+
     @commands.command(name="setup", description="setup the server")
     async def setup(self, ctx: commands.Context):
         if ctx.author.guild_permissions.administrator == True:
@@ -417,6 +425,16 @@ class adminFunctions(commands.Cog):
         try:
             msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
             responses["campaignmanagerroleID"] = msg.role_mentions[0].id
+        except asyncio.TimeoutError:
+            await ctx.send("Operation cancelled.")
+            return
+
+        await ctx.send("What role do you want to allow to play music?  Reply to this message with a ping of that role.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
+            responses["musicroleid"] = msg.role_mentions[0].id
         except asyncio.TimeoutError:
             await ctx.send("Operation cancelled.")
             return
@@ -519,6 +537,9 @@ class adminFunctions(commands.Cog):
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")
+
+    async def getServerConfig(ctx: commands.Context):
+        return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
 
     @commands.command(name="DM", description="send a message to anyone's DM")
     async def DM(self, ctx: commands.Context, userID: str, *, message):

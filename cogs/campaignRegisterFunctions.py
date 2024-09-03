@@ -1,4 +1,6 @@
 import json, locale
+import math
+
 locale.setlocale(locale.LC_ALL, '')
 import random
 
@@ -45,7 +47,7 @@ class campaignRegisterFunctions(commands.Cog):
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignservers''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignfactions''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, approved BOOLEAN, factionname VARCHAR, description VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, taxestoplayerpercent REAL, population BIGINT, landsize BIGINT, farmsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL);''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, approved BOOLEAN, factionname VARCHAR, description VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, taxestoplayerpercent REAL, population BIGINT, landsize BIGINT, farmsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, incomeindex REAL, lifeexpectancy REAL, educationindex REAL);''')
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignusers''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         await ctx.send("## Done!")
@@ -169,6 +171,7 @@ class campaignRegisterFunctions(commands.Cog):
             return
         # campaignkey BIGINT, factionkey BIGINT, approved BOOLEAN, factionname VARCHAR, description VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, money BIGINT, population BIGINT
         governanceScale = await campaignFunctions.getGovernmentType(ctx)
+        #
         datalist = [campaignKey,
                     int(random.random()*50000000),
                     status,
@@ -189,11 +192,14 @@ class campaignRegisterFunctions(commands.Cog):
                     round((0.15*governanceScale), 3),
                     round((0.10*governanceScale), 3),
                     campaignData["GDP"],
-                    round(defaultGDP/governanceScale, 3)
+                    round(defaultGDP/governanceScale, 3),
+                    math.log((int(campaignData["GDP"])/int(campaignData["Population"]))/91.25)/math.log(839/91.25),
+                    round(70/governanceScale, 3),
+                    0.25
                     ]
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, campaignData["Faction name"]])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)''', datalist)
         if status == True:
             await ctx.send(f"## Done!\n{campaignData['Faction name']} is now registered as a faction!")
         else:

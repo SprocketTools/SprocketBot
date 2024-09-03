@@ -42,8 +42,10 @@ class campaignInfoFunctions(commands.Cog):
         embed.add_field(name="Poor tax rate", value=f"{round(float(variablesList['taxpoor'])*100, 3)} %", inline=False)
         embed.add_field(name="Rich tax rate", value=f"{round(float(variablesList['taxrich']) * 100, 3)} %", inline=False)
         embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 3)) + "%", inline=False)
-        embed.add_field(name="Economic stability", value=str(round(float(variablesList["financestability"]) * 100, 4)) + "%",inline=False)
         embed.add_field(name="Cultural stability", value=str(round(float(variablesList["culturestability"]) * 100, 4)) + "%",inline=False)
+        embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
+        embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 4)) + "%", inline=False)
+        embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 4)) + "%", inline=False)
         estimatedIncome = int(variablesList["gdp"])*variablesList["taxestoplayerpercent"]*(variablesList["taxpoor"] + variablesList["taxrich"])/2
         embed.add_field(name="Estimated yearly budget",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(estimatedIncome))), inline=False)
         # embed.add_field(name="Railway Gauge", value=railwayGauges[variablesList[country][0]["railwayTech"]],inline=False)

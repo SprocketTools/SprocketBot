@@ -63,6 +63,16 @@ class textTools(commands.Cog):
         except Exception:
             await ctx.send(await errorFunctions.retrieveError(ctx))
 
+    async def getRoleResponse(ctx: commands.Context, prompt):
+        await ctx.send(prompt)
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await ctx.bot.wait_for('message', check=check)
+            return int(msg.role_mentions[0].id)
+        except Exception:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
+
     async def getFileResponse(ctx: commands.Context, prompt):
         await ctx.send(prompt)
         def check(m: discord.Message):

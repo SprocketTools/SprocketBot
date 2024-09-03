@@ -10,6 +10,7 @@ nest_asyncio.apply()
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+intents.voice_states = True
 utc = datetime.timezone.utc
 botMode = "development"
 # Determines whether this is the live version of the bot or the testing version.
@@ -38,7 +39,7 @@ SQLsettings["database"] = config[f"settings.{botMode}"]["database"]
 ownerID = int(config["settings"]["ownerID"])
 githubPAT = str(config["settings"]["githubPAT"])
 updateGithub = str(config["settings"]["updateGithub"])
-cogsList = ["cogs.SQLfunctions", "cogs.textTools", "cogs.registerFunctions", "cogs.errorFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions"]
+cogsList = ["cogs.SQLfunctions", "cogs.textTools", "cogs.registerFunctions", "cogs.VCfunctions", "cogs.errorFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions"]
 class Bot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all()) #

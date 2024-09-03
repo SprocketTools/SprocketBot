@@ -827,8 +827,7 @@ class blueprintFunctions(commands.Cog):
                 stringOut = json.dumps(blueprintData, indent=4)
                 data = io.BytesIO(stringOut.encode())
                 await ctx.send(file=discord.File(data, f'{tankName}-transplanted.blueprint'))
-                await ctx.send(
-                    "Place this model into `C:\Program Files (x86)\Steam\steamapps\common\Sprocket\Sprocket_Data\StreamingAssets\Parts` and reload the game for it to appear.")
+                await ctx.send("Place this model into `%userprofile%\Documents\My Games\Sprocket\Factions\Default\Blueprints\Vehicles` and load the new tank.")
             i += 1
 
 

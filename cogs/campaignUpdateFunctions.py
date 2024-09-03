@@ -11,7 +11,9 @@ from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
-
+updateFrequency = 20 # time in seconds
+secondsInYear = 31536000 + 21600
+## secondsInYear = 20
 class campaignUpdateFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -22,16 +24,45 @@ class campaignUpdateFunctions(commands.Cog):
         current_minute = now.minute
         current_second = now.second
         seconds_count = int(3600 - (current_minute*60 + current_second))
-        if seconds_count > 1810:
-            seconds_count = seconds_count - 1800
+        seconds_count = seconds_count % updateFrequency
         status_log_channel = self.bot.get_channel(1152377925916688484)
         await status_log_channel.send(f"First campaign update is scheduled for: **{int(seconds_count/60)} minutes,** **{int(seconds_count % 60)} seconds** from now.")
         await asyncio.sleep(seconds_count)
         await self.loopUpdate.start()
-    @tasks.loop(seconds=1800)
+    @tasks.loop(seconds=updateFrequency)
     async def loopUpdate(self):
         status_log_channel = self.bot.get_channel(1152377925916688484)
+        await status_log_channel.send("Update is starting!")
+        await self.updatePopulation()
+        await self.collectTaxes()
+        await self.updateGDP()
+        await self.updateHappiness()
         await status_log_channel.send("Update is complete!")
+
+    async def updatePopulation(self):
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET population = population + 1000;''')
+
+    async def collectTaxes(self):
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET money = money + (gdp * $1 / $2 * subquery.timescale) FROM (SELECT timescale FROM campaigns WHERE campaignkey = campaignkey) AS subquery;''', [updateFrequency, secondsInYear])
+
+    async def updateGDP(self):
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET gdp = gdp * 1.00001 * happiness * $1 / $2;''', [updateFrequency, secondsInYear])
+
+    async def updateHappiness(self):
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = CASE WHEN @gdp/population > 91.25 THEN LN((gdp/population)/91.25)/LN(839/91.25) ELSE 0 END;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET lifeexpectancy = 70/governance;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET educationindex = 18/(1 + EXP((LN(17)/100) * (1000 - 100)));''')
+
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = POWER((incomeindex * (lifeexpectancy-20)/(85-20) * educationindex), 1/3);''')
+
+        # cleanup for extreme cases, such as falling below zero
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE gdp/population < 91.25;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = 0 WHERE gdp/population < 91.25;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE happiness < 0;''')
+
+    @commands.command(name="updateHappy", description="test")
+    async def updateHappy(self, ctx: commands.Context):
+        await self.updateHappiness()
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignUpdateFunctions(bot))
