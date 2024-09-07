@@ -90,15 +90,15 @@ class SprocketOfficialFunctions(commands.Cog):
             if ctx.author.id == 834279720279474176:
                 if choiceV < 0.25: userName = "theflyingtexan"
             if ctx.author.id == 658461485055606795:
-                if choiceV < 0.25: userName = "busy_german"
+                if choiceV < 0.25: userName = "bored_frenchman"
 
-            if random.random() < 0.033:
+            if random.random() < 0.02:
 
-                if choiceV < 0.6:
+                if choiceV < 0.333:
                     userName = "sprocket chan"
                     avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/Sprocket_chan_Aprilful.jpg"
-                    messageOut = messageOut + "\nAlso please help me, Romania sucks.  They keep stealing my tail!"
-                elif choiceV < 0.9:
+                    messageOut = messageOut + "\nAlso, got any tips on trying to escape Bulgaria?"
+                elif choiceV < 0.6667:
                     userName = "Jacob"
                     avatarURL = "https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/images/Jacob.png"
                     messageOut = messageOut + "\nUnrelated: why have you forsaken me to this perpetual hell?  Driving all these tanks is a fate worse than death!"

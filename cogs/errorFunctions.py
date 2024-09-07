@@ -27,7 +27,7 @@ class errorFunctions(commands.Cog):
 
     @commands.command(name="getError", description="higdffffffffffff")
     async def getError(self, ctx: commands.Context):
-        if ctx.author.id == main.ownerID:
+        if ctx.author.id == main.ownerID or ctx.author.guild_permissions.administrator == True:
             await ctx.message.delete()
         else:
             serverID = (ctx.guild.id)
@@ -70,6 +70,9 @@ class errorFunctions(commands.Cog):
         except asyncio.TimeoutError:
             await ctx.send("Operation cancelled.")
             return
+        if len(responseMessage) > 1024:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send("This error message is too big.  Please trim the length down and try again.")
         values = [responseMessage, status, ctx.author.id]
         await SQLfunctions.databaseExecuteDynamic(f'INSERT INTO errorlist VALUES ($1, $2, $3);', values)
         errorDict = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT error FROM errorlist WHERE status = true;')]
@@ -80,6 +83,15 @@ class errorFunctions(commands.Cog):
         if status == False:
             await ctx.send("This error message has been sent off for approval.")
 
+    @commands.command(name="errorLeaderboard", description="higdffffffffffff")
+    async def errorLeaderboard(self, ctx: commands.Context):
+        totalErrors = len(await SQLfunctions.databaseFetchdict(f'SELECT error FROM errorlist;'))
+        embed = discord.Embed(title="Error Stats", description=f'''There are {totalErrors} error messages in the bot's collection!''',color=discord.Color.random())
+        userSetList = await SQLfunctions.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM errorlist GROUP BY userid ORDER BY value_occurrence DESC LIMIT 5;''')
+        for user in userSetList:
+            embed.add_field(name=self.bot.get_user(user['userid']), value=user['value_occurrence'], inline=False)
+        embed.set_footer(text=await errorFunctions.retrieveError(ctx))
+        await ctx.send(embed=embed)
 
     @commands.command(name="countErrors", description="higdffffffffffff")
     async def countErrors(self, ctx: commands.Context):
@@ -101,7 +113,7 @@ class errorFunctions(commands.Cog):
         print(errorDict)
         for error in errorDict:
             view = YesNoMaybeButtons()
-            await ctx.send(content=f"Submitter: <@{error['userid']}>\nError message: {error['error']}", view=view)
+            await ctx.send(content=f"Submitter: <@{error['userid']}>\nError message: {error['error'][:1000]}", view=view)
             await view.wait()
             if view.value == 1:
                 await SQLfunctions.databaseExecuteDynamic('''UPDATE errorlist SET status = true WHERE error = $1;''', [error["error"]])

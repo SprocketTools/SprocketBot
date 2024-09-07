@@ -19,7 +19,8 @@ class campaignFunctions(commands.Cog):
     async def getUserFactionData(ctx: commands.Context):
         campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignData['campaignkey']
-        factionData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignusers WHERE userid = $1 AND campaignkey = $2 AND status = true;''', [ctx.author.id, campaignKey])
+        factionData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignusers WHERE status = true AND userid = $1 AND campaignkey = $2;''', [ctx.author.id, campaignKey])
+        print(factionData)
         factionKey = factionData["factionkey"]
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionKey])
 
@@ -32,7 +33,7 @@ class campaignFunctions(commands.Cog):
             '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey])
         factionList = []
         factionData = {}
-        print(availableFactionsList)
+        #print(availableFactionsList)
         for faction in availableFactionsList:
             name = faction["factionname"]
             factionList.append(name)
@@ -47,32 +48,32 @@ class campaignFunctions(commands.Cog):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE hostserverid = $1;''', [ctx.guild.id])
 
     async def getGovernmentType(ctx: commands.Context):
-        options = ["Republic", "Democracy", "Statist", "Monarchy", "Socialism"]
+        options = ["Direct Democracy", "Multi Party System", "Two Party System", "Single Party System", "Appointed Successor"]
         prompt = "Pick a type of government."
         answer = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
-        if answer == "Republic":
+        if answer == "Direct Democracy":
             return 0.8
-        if answer == "Democracy":
+        if answer == "Multi Party System":
             return 0.9
-        if answer == "Statist":
+        if answer == "Two Party System":
             return 1.0
-        if answer == "Monarchy":
+        if answer == "Single Party System":
             return 1.1
-        if answer == "Socialism":
+        if answer == "Appointed Successor":
             return 1.2
 
     async def getGovernmentName(answerIn: float):
         answer = round(answerIn, 3)
         if answer == 0.8:
-            return "Republic"
+            return "Direct Democracy"
         if answer == 0.9:
-            return "Democracy"
+            return "Multi Party System"
         if answer == 1.0:
-            return "Statist"
+            return "Two Party System"
         if answer == 1.1:
-            return "Monarchy"
+            return "Single Party System"
         if answer == 1.2:
-            return "Socialism"
+            return "Appointed Successor"
         else:
             return "Error"
 
