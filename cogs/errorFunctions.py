@@ -167,6 +167,14 @@ class errorFunctions(commands.Cog):
                 errorFunctions.errorList.append(error["error"])
         return random.choice(errorFunctions.errorList)
 
+    async def sendError(ctx: commands.Context):
+        if len(errorFunctions.errorList) == 0:
+            errorDict = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT error FROM errorlist WHERE status = true;')]
+            for error in errorDict:
+                errorFunctions.errorList.append(error["error"])
+        await ctx.send(random.choice(errorFunctions.errorList))
+        return
+
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(errorFunctions(bot))
 

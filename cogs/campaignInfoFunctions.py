@@ -1,3 +1,5 @@
+import datetime
+from datetime import datetime
 import json
 import random
 
@@ -24,6 +26,7 @@ class campaignInfoFunctions(commands.Cog):
         embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
         embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
         embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
+
         await ctx.send(embed=embed)
 
     @commands.command(name="viewStats", description="View the statistics of your faction")
@@ -31,25 +34,28 @@ class campaignInfoFunctions(commands.Cog):
         variablesList = await campaignFunctions.getUserFactionData(ctx)
         campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
         print(campaignInfoList)
+        date_string = str(campaignInfoList['timedate'])
+        format_string = "%Y-%m-%d %H:%M:%S"
+        dt = datetime.strptime(date_string, format_string)
+        print(dt.year)
+        hour = dt.strftime("%I")
+        min = dt.strftime("%M %p")
+        day = dt.strftime("%A %B %d")
         embed = discord.Embed(title=variablesList["factionname"],description=variablesList["description"], color=discord.Color.random())
-        # embed.add_field(name="Land size", value="{:,}".format(int(variablesList["land"])) + "mi",inline=False)
-        embed.add_field(name="Money in storage", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
-        embed.add_field(name="Population size", value=("{:,}".format(int(variablesList["population"]))),inline=False)
-        embed.add_field(name="Government type", value=await campaignFunctions.getGovernmentName(variablesList["governance"]), inline=False)
-        embed.add_field(name="money", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))), inline=False)
-        embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
-        embed.add_field(name="GDP growth", value=str(round(float(variablesList["gdpgrowth"]) * 100, 3)) + "%", inline=False)
-        embed.add_field(name="Poor tax rate", value=f"{round(float(variablesList['taxpoor'])*100, 3)} %", inline=False)
-        embed.add_field(name="Rich tax rate", value=f"{round(float(variablesList['taxrich']) * 100, 3)} %", inline=False)
-        embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 3)) + "%", inline=False)
-        embed.add_field(name="Cultural stability", value=str(round(float(variablesList["culturestability"]) * 100, 4)) + "%",inline=False)
-        embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
-        embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 4)) + "%", inline=False)
-        embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 4)) + "%", inline=False)
-        # estimatedIncome = int(variablesList["gdp"])*variablesList["taxestoplayerpercent"]*(variablesList["taxpoor"] + variablesList["taxrich"])/2
-        # embed.add_field(name="Estimated yearly budget",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(estimatedIncome))), inline=False)
-        # embed.add_field(name="Railway Gauge", value=railwayGauges[variablesList[country][0]["railwayTech"]],inline=False)
+        embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
+        if variablesList["iscountry"] == True:
+            embed.add_field(name="Land", value="{:,}".format(int(variablesList["landsize"])) + " km²",inline=False)
+            embed.add_field(name="Population size", value=("{:,}".format(int(variablesList["population"]))),inline=False)
+            embed.add_field(name="Government type", value=await campaignFunctions.getGovernmentName(variablesList["governance"]), inline=False)
+            embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
+            embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 1)) + "%", inline=False)
+            embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
+            embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
+            embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 1)) + "%", inline=False)
+        embed.set_footer(text=f"\nIt is {hour}:{min} on {day}, {dt.year}")
+        embed.set_thumbnail(url=variablesList["flagurl"])
         await ctx.send(embed=embed)
+
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignInfoFunctions(bot))

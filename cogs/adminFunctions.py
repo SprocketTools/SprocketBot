@@ -514,7 +514,7 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="troll", description="send a message wherever you want")
     async def troll(self, ctx: commands.Context, channelin: str, *, message):
-        if ctx.author.id == 712509599135301673 or ctx.author.id == 682990777814876312:
+        if ctx.author.id == 712509599135301673:
             import re
             channelin = int(re.sub(r'[^0-9]', '', channelin))
             print(channelin)
@@ -525,9 +525,24 @@ class adminFunctions(commands.Cog):
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")
 
+    @commands.command(name="edit", description="send a message wherever you want")
+    async def edit(self, ctx: commands.Context, msglink: str):
+        if ctx.author.id == 712509599135301673:
+            print(msglink.split("/"))
+            srvrid = int(msglink.split("/")[-3])
+            chnlid = int(msglink.split("/")[-2])
+            msgid = int(msglink.split("/")[-1])
+            serverIn = await self.bot.fetch_guild(srvrid)
+            channelIn = await self.bot.fetch_channel(chnlid)
+            messageIn = await channelIn.fetch_message(msgid)
+            await ctx.send(messageIn.content)
+            newText = await textTools.getResponse(ctx, "What do you want the result to be?")
+            await messageIn.edit(content=newText)
+            await ctx.send("## Done!")
+
     @commands.command(name="sendError", description="send a message wherever you want")
     async def sendError(self, ctx: commands.Context, channelin: str):
-        if ctx.author.id == 712509599135301673 or ctx.author.id == 682990777814876312:
+        if ctx.author.id == 712509599135301673:
             import re
             channelin = int(re.sub(r'[^0-9]', '', channelin))
             print(channelin)
@@ -543,7 +558,7 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="DM", description="send a message to anyone's DM")
     async def DM(self, ctx: commands.Context, userID: str, *, message):
-        if ctx.author.id == 712509599135301673 or ctx.author.id == 682990777814876312:
+        if ctx.author.id == 712509599135301673:
             import re
             await ctx.send("Message is en route.")
             recipient = self.bot.get_user(int(userID))

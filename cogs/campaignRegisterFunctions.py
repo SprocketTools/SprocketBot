@@ -48,7 +48,7 @@ class campaignRegisterFunctions(commands.Cog):
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignservers''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignfactions''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, approved BOOLEAN, factionname VARCHAR, description VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, farmsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, incomeindex REAL, lifeexpectancy REAL, educationindex REAL, farmefficiency REAL);''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, approved BOOLEAN, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, farmsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, incomeindex REAL, lifeexpectancy REAL, educationindex REAL, farmefficiency REAL, agriculturespend REAL, educationspend REAL, socialspend REAL, infrastructurespend REAL);''')
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignusers''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         await ctx.send("## Done!")
@@ -149,8 +149,10 @@ class campaignRegisterFunctions(commands.Cog):
             campaignData = json.loads(await jsonFile.read())
             campaignData["Faction name"] = await textTools.sanitize(campaignData["Faction name"])
             campaignData["Faction name"] = campaignData["Faction name"][:64]
-            campaignData["Short description"] = await textTools.sanitize(campaignData["Short description"])
+            campaignData["Short description"] = await textTools.mild_sanitize(campaignData["Short description"])
             campaignData["Short description"] = campaignData["Short description"][:1024]
+            campaignData["Flag image URL"] = await textTools.mild_sanitize(campaignData["Flag image URL"])
+            campaignData["Flag image URL"] = campaignData["Flag image URL"][:1024]
         except Exception:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             await ctx.send("This file failed to parse.  Fix the errors in your JSON file and resubmit.")
@@ -162,9 +164,19 @@ class campaignRegisterFunctions(commands.Cog):
             return
         except Exception:
             pass
+        if campaignData["Is a country"] == False:
+            campaignData["Population"] = 50000
+            campaignData["Land size"] = 5000
+            campaignData["Farmland size"] = 500
+        governanceScale = 0.8
+
         if len(campaignData["Faction name"]) == 0 or len(campaignData["Short description"]) == 0:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             await ctx.send("Your creativity in breaking the bot is appreciated.  Make sure your name and description are valid and rerun the command.")
+            return
+        if campaignData["Military funds"] <= 0 or campaignData["Population"] <= 0 or campaignData["Land size"] <= 0 or campaignData["Farmland size"] <= 0:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send("Your creativity in breaking the bot is appreciated.  Make sure your numbers are valid and rerun the command.")
             return
         serverChannelData = str(ctx.guild.channels)
         if str(campaignData["Logging channel ID"]) not in serverChannelData:
@@ -172,13 +184,15 @@ class campaignRegisterFunctions(commands.Cog):
             await ctx.send("Your creativity in breaking the bot is appreciated.  Make sure your logging channel is in the same server you're submitting from, then try again.")
             return
         # campaignkey BIGINT, factionkey BIGINT, approved BOOLEAN, factionname VARCHAR, description VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, money BIGINT, population BIGINT
-        governanceScale = await campaignFunctions.getGovernmentType(ctx)
-        #
+        if campaignData["Is a country"] == True:
+            governanceScale = await campaignFunctions.getGovernmentType(ctx)
+
         datalist = [campaignKey,
                     int(random.random()*50000000),
                     status,
                     campaignData["Faction name"],
                     campaignData["Short description"],
+                    campaignData["Flag image URL"],
                     campaignData["Faction role ID"],
                     campaignData["Logging channel ID"],
                     campaignData["Is a country"],
@@ -192,16 +206,20 @@ class campaignRegisterFunctions(commands.Cog):
                     round(0.72/governanceScale, 3),
                     round((0.15*governanceScale), 3),
                     round((0.10*governanceScale), 3),
-                    round(campaignData["Population"]/defaultPWR * (700) / governanceScale, 3),
+                    int(campaignData["Population"]/defaultPWR * (700) / governanceScale),
                     orgCampaignData["defaultgdpgrowth"],
                     math.log((campaignData["Population"]/defaultPWR * (700) / governanceScale)/int(campaignData["Population"])/91.25)/math.log(839/91.25),
                     round(70/governanceScale, 3),
                     0.9,
-                    round(1 / governanceScale, 3)
+                    round(1 / governanceScale, 3),
+                    0.05,
+                    0.05,
+                    0.05,
+                    0.05
                     ]
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, campaignData["Faction name"]])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)''', datalist)
         if status == True:
             await ctx.send(f"## Done!\n{campaignData['Faction name']} is now registered as a faction!")
         else:
@@ -271,7 +289,7 @@ class campaignRegisterFunctions(commands.Cog):
         factionData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [campaignKey, answerName])
 
         factionkey = factionData["factionkey"]
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignusers SET status = False WHERE userid = $1 AND campaignkey = $2 AND factionkey = $3''',[ctx.author.id, campaignKey, factionkey])
+        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignusers SET status = False WHERE userid = $1 AND campaignkey = $2''',[ctx.author.id, campaignKey])
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignusers VALUES ($1, $2, $3, true)''',[ctx.author.id, campaignKey, factionkey])
         await ctx.send(f"## Done!\nYou are now a part of {answerName}!")
 
