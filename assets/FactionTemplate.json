@@ -1,0 +1,12 @@
+{
+    "Faction name": "Example Corporation 2", 
+	"Short description": "A description for the example country.",
+	"Faction role ID": 1277389451370303529,
+	"Logging channel ID": 1277382152215986186,
+	"Flag image URL": "https://sprockettools.github.io/img/splandanavia.png",
+	"Is a country": true,
+	"Military funds": 2345678,
+	"Population": 1234567,
+	"Land size": 360000,
+	"Farmland size": 35000
+}

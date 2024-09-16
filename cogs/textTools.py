@@ -23,7 +23,7 @@ class textTools(commands.Cog):
         await ctx.send(await textTools.sanitize(testString))
 
     async def mild_sanitize(inputPhrase: str):
-        sanitizeKeywords = ["@", "invalid_tank"]
+        sanitizeKeywords = ["@", ";"]
         outputPhrase = inputPhrase
         for phrase in sanitizeKeywords:
             outputPhrase = outputPhrase.replace(phrase, "")

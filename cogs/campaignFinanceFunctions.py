@@ -95,16 +95,44 @@ class campaignFinanceFunctions(commands.Cog):
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         factionChoiceName, factionChoiceKey = await campaignFunctions.pickCampaignFaction(ctx, "Who are you purchasing equipment from?")
         factionChoiceData = await campaignFunctions.getFactionData(factionChoiceKey)
+        taxTransfer = 0
+        taxTransferChannel = 0
+        taxTransferName = ""
         moneyAdd = await textTools.getIntResponse(ctx, "How much is the purchase going to be?")
-        logDetails = await textTools.getResponse(ctx, "Describe the transaction and what it entails.  This will be logged for the campaign managers to view.")
+        if moneyAdd > factionData["money"]:
+            await errorFunctions.sendError(ctx)
+            await ctx.send("You don't have enough money to finance this transaction!")
+            return
+        if moneyAdd < 1:
+            await errorFunctions.sendError(ctx)
+            await ctx.send("A bit crafty, but unfortunately not legal here.")
+            return
+        if factionChoiceData["iscountry"] == False:
+            moneyProfit = await textTools.getIntResponse(ctx, f"How much {factionChoiceName} profit from this transaction?\nNote: subtract all expenses from {campaignData['currencysymbol']}{moneyAdd} to get this value.")
+            factionTaxerData = await campaignFunctions.getFactionData(factionChoiceData["landlordfactionkey"])
+            taxTransfer = int(factionTaxerData["taxrich"]*moneyProfit)
+            taxTransferChannel = factionTaxerData["logchannel"]
+            taxTransferName = factionTaxerData["factionname"]
+
+        shipDate = await textTools.getResponse(ctx, "When do you anticipate the order being completed?  Specify the month and year.")
+        logDetails = await textTools.getResponse(ctx, "Describe anything else about the transaction, such as what equipment is being transferred.  This will be logged for the campaign managers to view.")
         logDetails = await textTools.mild_sanitize(logDetails)
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''', [moneyAdd, factionChoiceKey])
+        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 - $3 WHERE factionkey = $2;''', [moneyAdd, factionChoiceKey, taxTransfer]) # the faction being purchased from
         await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]])
+        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',[taxTransfer, factionChoiceData["landlordfactionkey"]])
         await ctx.send(f"## Done!\n{factionChoiceName} now has {campaignData['currencysymbol']}{moneyAdd} more {campaignData['currencyname']}!")
         channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
-        await channel.send(f"### Transaction log\nPurchaser: {factionData['factionname']}\nSeller: {factionChoiceName}\nCost: {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}\nDetails: {logDetails}")
-        channel = self.bot.get_channel(int(factionChoiceData["logchannel"]))
-        await channel.send(f"### Transaction log\nPurchaser: {factionData['factionname']}\nSeller: you ({factionChoiceName})\nCost: {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}\nDetails: {logDetails}")
+        await channel.send(f"### Transaction log\nPurchaser: {factionData['factionname']}\nSeller: {factionChoiceName}\nCost: {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}\nDetails: {logDetails}\nCompletion date: {shipDate}")
+        channel2 = self.bot.get_channel(int(factionChoiceData["logchannel"]))
+        await channel2.send(f"### Transaction log\nPurchaser: {factionData['factionname']}\nSeller: you ({factionChoiceName})\nCost: {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}\nDetails: {logDetails}\nCompletion date: {shipDate}")
+        if factionChoiceData["iscountry"] == False:
+            await channel.send(f"Taxes paid to {taxTransferName}: {campaignData['currencysymbol']}{taxTransfer} {campaignData['currencyname']}")
+            await channel2.send(f"Taxes paid to {taxTransferName}: {campaignData['currencysymbol']}{taxTransfer} {campaignData['currencyname']}")
+            channel3 = self.bot.get_channel(taxTransferChannel)
+            await channel3.send(f"You have received income taxes from {factionChoiceName}!\nAmount: {campaignData['currencysymbol']}{taxTransfer} {campaignData['currencyname']}")
+
+
+
 
     @commands.command(name="setTaxes", description="Log a purchase made between players")
     async def setTaxes(self, ctx: commands.Context):

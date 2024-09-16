@@ -1066,6 +1066,9 @@ class blueprintFunctions(commands.Cog):
 
 
     async def tunePowertrain200(ctx: commands.Context, attachment):
+        if 1 > 0:
+            await ctx.send("## This command has been retired for 0.2 tanks\nIt is recommended to use the [SprocketTools gear calculator](https://sprockettools.github.io/TopGearCalculator.html) instead.")
+            return
         blueprintData = json.loads(await attachment.read())
         name = blueprintData["header"]["name"]
         tankName = blueprintData["header"]["name"]

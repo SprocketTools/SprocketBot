@@ -1,0 +1,16 @@
+{
+    "Name of your campaign": "Zheifu", 
+	"Link to your campaign rules": "https://docs.google.com/document/d/1OAph5GI-C6bPLZ_ihlqou_RarE25CxvtjwFdiMi4ZeQ/edit?usp=sharing",
+	"Speed of your campaign world clock compared to IRL": 30,
+	"Currency name": "Dollars",
+	"Currency symbol": "฿",
+	"Public announcement channel id": 1142053482371756062,
+	"Manager logging channel id": 1156854471767367680,
+	"Default GDP growth": 0.05,
+	"Default population growth": 1.07,
+	"Population fed per farmland square km": 2000,
+	"Default ratio of taxes available to play": 0.25,
+	"Population to worker ratio": 6,
+	"Starting year": 1417
+}
+

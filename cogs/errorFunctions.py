@@ -44,11 +44,12 @@ class errorFunctions(commands.Cog):
 
     @commands.command(name="removeError", description="higdffffffffffff")
     async def removeError(self, ctx: commands.Context):
-        if ctx.author.id != 712509599135301673:
-            return
         errorMessage = await errorFunctions.getTextResponse(ctx, "What error message do you want to remove?")
-        await SQLfunctions.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [errorMessage])
-        await ctx.send("Deleted!  Reload the cogs.")
+        if ctx.author.id == 712509599135301673:
+            await SQLfunctions.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [errorMessage])
+        else:
+            await SQLfunctions.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1 AND userid = $2;''', [errorMessage, ctx.author.id])
+        await ctx.send("Deleted any that match.  Reload the cogs.")
 
     @commands.command(name="addError", description="higdffffffffffff")
     async def addError(self, ctx: commands.Context):
@@ -121,7 +122,7 @@ class errorFunctions(commands.Cog):
                 recipient = self.bot.get_user(int(error["userid"]))
                 await recipient.send(f"Your error message:\n{error['error']}\nHas been added to the catalog!  Thanks for the submission!")
 
-            if view.value == 2:
+            elif view.value == 2:
                 newMessage = await errorFunctions.getTextResponse(ctx, "What do you want the modified error message to be?")
                 await SQLfunctions.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [error["error"]])
                 await SQLfunctions.databaseExecuteDynamic('''INSERT INTO errorlist VALUES ($1, $2, $3);''',[newMessage, True, error["userid"]])
@@ -129,11 +130,18 @@ class errorFunctions(commands.Cog):
                 recipient = self.bot.get_user(int(error["userid"]))
                 await recipient.send(f"Your error message:\n{error['error']}\nwas modified to:\n{newMessage}\nIt has now entered the catalog.  Thanks for submitting it!")
 
-            if view.value == 3:
+            elif view.value == 3:
                 await SQLfunctions.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [error["error"]])
                 await ctx.send("Deleted!")
                 recipient = self.bot.get_user(int(error["userid"]))
                 await recipient.send(f"Your error message:\n{error['error']}\nwas not accepted.")
+
+            elif view.value == 4:
+                await ctx.send("### Lame... \nEnjoy your break I guess.")
+                return
+
+            else:
+                return
         await ctx.send("All good here!")
 
     async def getTextResponse(ctx: commands.Context, prompt):
@@ -181,7 +189,7 @@ async def setup(bot:commands.Bot) -> None:
 class YesNoMaybeButtons(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=180)
-        self.value = None
+        self.value = 0
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
     async def callbackYes(self, a, b):
         self.value = 1
@@ -197,5 +205,11 @@ class YesNoMaybeButtons(discord.ui.View):
     @discord.ui.button(label="No", style=discord.ButtonStyle.red)
     async def callbackNo(self, a, b):
         self.value = 3
+        await a.response.defer()
+        self.stop()
+
+    @discord.ui.button(label="Stop processing errors", style=discord.ButtonStyle.blurple)
+    async def callbackStop(self, a, b):
+        self.value = 4
         await a.response.defer()
         self.stop()

@@ -26,7 +26,12 @@ class campaignInfoFunctions(commands.Cog):
         embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
         embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
         embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
-
+        embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
+        if data['active'] == True:
+            embed.add_field(name="Current status", value=f"**Campaign is running**", inline=False)
+        if data['active'] == False:
+            embed.add_field(name="Current status", value=f"**Campaign is NOT running**", inline=False)
+        embed.set_footer(text="To start and pause a campaign, use `-toggelCampaignProgress`")
         await ctx.send(embed=embed)
 
     @commands.command(name="viewStats", description="View the statistics of your faction")
@@ -52,6 +57,8 @@ class campaignInfoFunctions(commands.Cog):
             embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
             embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
             embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 1)) + "%", inline=False)
+        else:
+            embed.add_field(name="Country of origin",value=await campaignFunctions.getFactionName(variablesList["landlordfactionkey"]), inline=False)
         embed.set_footer(text=f"\nIt is {hour}:{min} on {day}, {dt.year}")
         embed.set_thumbnail(url=variablesList["flagurl"])
         await ctx.send(embed=embed)

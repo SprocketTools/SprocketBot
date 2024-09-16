@@ -19,18 +19,53 @@ class campaignFunctions(commands.Cog):
     async def getUserFactionData(ctx: commands.Context):
         campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignData['campaignkey']
-        factionData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignusers WHERE status = true AND userid = $1 AND campaignkey = $2;''', [ctx.author.id, campaignKey])
+        factionUserData = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionkey FROM campaignusers WHERE status = true AND userid = $1 AND campaignkey = $2;''', [ctx.author.id, campaignKey])
+        campaignNameList = []
+        campaignDataList = {}
+        for faction in factionUserData:
+            name = await campaignFunctions.getFactionName(faction["factionkey"])
+            campaignNameList.append(name)
+            campaignDataList[str(name)] = faction["factionkey"]
+        if len(campaignDataList) == 1:
+            factionKey = campaignDataList[campaignNameList[0]]
+        else:
+            factionName = await discordUIfunctions.getChoiceFromList(ctx, campaignNameList, "Pick your faction below:")
+            factionKey = campaignDataList[factionName]
+
+        factionData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionKey])
         print(factionData)
-        factionKey = factionData["factionkey"]
-        return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionKey])
+
+        return factionData
+
 
     async def getFactionData(factionkey: int):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionkey])
 
+    async def getFactionName(factionkey: int):
+        result = await SQLfunctions.databaseFetchrowDynamic('''SELECT factionname FROM campaignfactions WHERE factionkey = $1;''', [factionkey])
+        return result["factionname"]
+
     async def pickCampaignFaction(ctx: commands.Context, prompt: str):
         campaignKey = await campaignFunctions.getCampaignKey(ctx)
         availableFactionsList = await SQLfunctions.databaseFetchdictDynamic(
-            '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey])
+            '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1 ORDER BY factionname;''', [campaignKey])
+        factionList = []
+        factionData = {}
+        #print(availableFactionsList)
+        for faction in availableFactionsList:
+            name = faction["factionname"]
+            factionList.append(name)
+            subFactionData = {}
+            subFactionData["factionkey"] = faction["factionkey"]
+            subFactionData["money"] = faction["money"]
+            factionData[name] = subFactionData
+        factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
+        return factionChoiceName, factionData[factionChoiceName]["factionkey"]
+
+    async def pickCampaignCountry(ctx: commands.Context, prompt: str):
+        campaignKey = await campaignFunctions.getCampaignKey(ctx)
+        availableFactionsList = await SQLfunctions.databaseFetchdictDynamic(
+            '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1 AND iscountry = true ORDER BY factionname;''', [campaignKey])
         factionList = []
         factionData = {}
         #print(availableFactionsList)
