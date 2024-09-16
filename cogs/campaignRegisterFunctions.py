@@ -240,7 +240,7 @@ class campaignRegisterFunctions(commands.Cog):
             return
         factionDict = await SQLfunctions.databaseFetchdict('''SELECT * FROM campaignfactions WHERE approved = false;''')
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
-        if campaignData["hostserverid"] == ctx.guild.id:
+        if campaignData["hostserverid"] != ctx.guild.id:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         for faction in factionDict:
@@ -267,7 +267,7 @@ class campaignRegisterFunctions(commands.Cog):
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
-        if campaignData["hostserverid"] == ctx.guild.id:
+        if campaignData["hostserverid"] != ctx.guild.id:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         await SQLfunctions.databaseExecuteDynamic('''UPDATE campaigns SET active = NOT active WHERE hostserverid = $1;''',[ctx.guild.id])
@@ -292,7 +292,7 @@ class campaignRegisterFunctions(commands.Cog):
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignservers VALUES ($1, $2)''',[ctx.guild.id, str(userKey)])
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignservers VALUES ($1, $2)''',[ctx.guild.id, userKey])
         await ctx.send(f"## Done!\nYour server is now participating in {await campaignFunctions.getCampaignName(userKey)}")
 
     @commands.command(name="joinFaction", description="Add a server to an ongoing campaign")

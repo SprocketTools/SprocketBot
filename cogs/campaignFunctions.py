@@ -80,7 +80,7 @@ class campaignFunctions(commands.Cog):
         return factionChoiceName, factionData[factionChoiceName]["factionkey"]
 
     async def getUserCampaignData(ctx: commands.Context):
-        return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE hostserverid = $1;''', [ctx.guild.id])
+        return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = (SELECT campaignkey FROM campaignservers WHERE serverid = $1);''', [ctx.guild.id])
 
     async def getGovernmentType(ctx: commands.Context):
         options = ["Direct Democracy", "Multi Party System", "Two Party System", "Single Party System", "Appointed Successor"]
