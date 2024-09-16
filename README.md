@@ -17,6 +17,9 @@ For documentation on Sprocket Bot's tools, check the [contest documentation](htt
 Sprocket bot is an **in-development** utility bot.  Its capabilities are changing quite rapidly, and is nowhere near the end result I want it to be in.  As a result, 100% reliability in its services is not guaranteed.  
 - I cannot keep the bot's entire source code public once administrative utilities and/or vehicle rating formulas are added.
 
+## [Privacy Policy](https://github.com/SprocketTools/SprocketBot/blob/main/Bot%20Policies/PrivacyPolicy.md)
+## [Terms of Service](https://github.com/SprocketTools/SprocketBot/blob/main/Bot%20Policies/TOS.md)
+
 ## Requirements
 My responsibility for how contest hosts run their contests is extremely limited.  
 Contest hosts may run whatever contests they'd like to with Sprocket Bot, except in the following circumstances:  
