@@ -143,8 +143,7 @@ class campaignRegisterFunctions(commands.Cog):
         defaultPWR = float(orgCampaignData["poptoworkerratio"])
         landlordid = 0
         status = await campaignFunctions.isCampaignManager(ctx)
-        campaignKeyList = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaigns WHERE hostserverid = $1;''', [ctx.guild.id])
-        print(campaignKeyList)
+        campaignKeyList = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignKeyList['campaignkey']
         jsonFile = await textTools.getFileResponse(ctx, "Upload your faction JSON file to add the faction.")
         try:
