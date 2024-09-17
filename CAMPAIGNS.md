@@ -26,7 +26,7 @@ Additionally, you will need to acquire a campaign key.  This key is an anti-spam
 ## Campaign configuration
 Start by preparing your [Campaign Setup](assets/CampaignSetupTemplate.json) json file.  In this file are several settings covering your overall campaign.  
 
-- `Public announcement channel id`: This needs to be the channel ID of where you want the bot to send.  
+- `Public announcement channel id`: This needs to be the channel ID of where you want the bot to send public announcements.  
     - To get a channel ID, right click on it and select "copy channel ID."  This will past a string of numbers into your clipboard similar to the example.
 
 - `Manager logging channel id`: This needs to be the channel ID of where you want transaction logs to be sent.  Preferrably a channel only visible to campaign managers.
