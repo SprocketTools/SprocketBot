@@ -42,7 +42,7 @@ updateGithub = str(config["settings"]["updateGithub"])
 cogsList = ["cogs.SQLfunctions", "cogs.textTools", "cogs.registerFunctions", "cogs.VCfunctions", "cogs.errorFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions"]
 class Bot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all()) #
+        super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents().all(), case_insensitive=True) #
         self.cogslist = cogsList
 
     async def setup_hook(self):
