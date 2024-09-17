@@ -20,12 +20,12 @@ Campaigns are by far the most complex feature of the bot, and as a result are li
 Ensure that a server administrator has ran the `-setup` command, so that a campaign manager role has been assigned.  You can check this with the `-viewServerConfig` command.
 
 Make sure that Developer Mode is enabled in your Discord's user settings.  You will need this to copy channel IDs and role IDs.
-![alt text](2024-09-16_17-41-09.png)
+![alt text](assets/developermode.png)
 
-Additionally, you will need to acquire a campaign key.  This key is an anti-spam measure to prevent people from making campaigns en masse.  Join the [bot's development server](https://discord.gg/697ufH4hDa) and request a campaign key there.  Make sure to keep it logged somewhere.
+Additionally, if you intend to start a campaign, you will need to acquire a campaign key.  This key is an anti-spam measure to prevent people from making campaigns en masse.  Join the [bot's development server](https://discord.gg/697ufH4hDa) and request a campaign key there.  Make sure to keep it logged somewhere.
 ## Campaign configuration
 Start by preparing your [Campaign Setup](assets/CampaignSetupTemplate.json) json file.  In this file are several settings covering your overall campaign.  
-
+#### Warning: do not delete any lines from the json file.  Only replace the example values with your own.
 - `Public announcement channel id`: This needs to be the channel ID of where you want the bot to send public announcements.  
     - To get a channel ID, right click on it and select "copy channel ID."  This will past a string of numbers into your clipboard similar to the example.
 
@@ -46,6 +46,7 @@ Once this is complete, save the file, run the `-startCampaign` command, and foll
 ## Adding a faction
 
 In order to add a faction to the campaign, download the [faction configuration template](assets/FactionTemplate.json) json file. In this file are several settings pertaining to your specific faction.
+#### Warning: do not delete any lines from the json file.  Only replace the example values with your own.
 
 - `Faction role ID`: This needs to define the role ID you intend to require before players can join the faction.
 
@@ -60,6 +61,8 @@ In order to add a faction to the campaign, download the [faction configuration t
 - `Is a country`: Set to `true` to make the faction a country, otherwise set it to `false` to make it a company.
 
 - `Military funds`: Set this to the player's starting discretionary funds.
+
+Note: for companies, you don't need to set the population or land size values.  Still, these settings need to be in the json file.
 
 From here, save the file and run the `-addCampaignFaction` command.  Follow the instructions to add your faction to the campaign. Note that campaign managers from the host server will need to approve any factions that they don't upload themselves.
 
