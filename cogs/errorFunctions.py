@@ -24,7 +24,6 @@ class errorFunctions(commands.Cog):
         await SQLfunctions.databaseExecute(prompt)
         await ctx.send("Done!  Now go add some errors in.")
 
-
     @commands.command(name="getError", description="higdffffffffffff")
     async def getError(self, ctx: commands.Context):
         if ctx.author.id == main.ownerID or ctx.author.guild_permissions.administrator == True:

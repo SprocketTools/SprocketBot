@@ -22,6 +22,12 @@ class discordUIfunctions(commands.Cog):
         await view.wait()
         return view.value
 
+    async def getYesNoModifyStopChoice(ctx: commands.Context):
+        view = YesNoModifyStopButtons()
+        await ctx.send(view=view)
+        await view.wait()
+        return view.value
+
     async def getCategoryChoice(ctx: commands.Context, categoryList: list, userPrompt: str):
         chosen = False
         int = 0
@@ -51,6 +57,7 @@ class discordUIfunctions(commands.Cog):
     async def getChoiceFromList(ctx: commands.Context, categoryList: list, userPrompt: str):
         chosen = False
         int = 0
+        categoryList.sort()
         while chosen == False:
             categoryListSlice = categoryList[int:int+20]
             int = int + 20
@@ -172,5 +179,33 @@ class YesNoButtons(discord.ui.View):
     @discord.ui.button(label="No", style=discord.ButtonStyle.red)
     async def callbackNo(self, a, b):
         self.value = False
+        await a.response.defer()
+        self.stop()
+
+class YesNoModifyStopButtons(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=360)
+        self.value = None
+    @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
+    async def callbackYes(self, a, b):
+        self.value = "yes"
+        await a.response.defer()
+        self.stop()
+
+    @discord.ui.button(label="No", style=discord.ButtonStyle.red)
+    async def callbackNo(self, a, b):
+        self.value = "no"
+        await a.response.defer()
+        self.stop()
+
+    @discord.ui.button(label="Modify", style=discord.ButtonStyle.grey)
+    async def callbackModify(self, a, b):
+        self.value = "modify"
+        await a.response.defer()
+        self.stop()
+
+    @discord.ui.button(label="Stop", style=discord.ButtonStyle.blurple)
+    async def callbackStop(self, a, b):
+        self.value = "stop"
         await a.response.defer()
         self.stop()

@@ -37,6 +37,8 @@ class campaignInfoFunctions(commands.Cog):
     @commands.command(name="viewStats", description="View the statistics of your faction")
     async def viewStats(self, ctx: commands.Context):
         variablesList = await campaignFunctions.getUserFactionData(ctx)
+        await campaignFunctions.showStats(ctx, variablesList)
+    async def showStats(ctx: commands.Context, variablesList):
         campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
         print(campaignInfoList)
         date_string = str(campaignInfoList['timedate'])

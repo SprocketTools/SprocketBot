@@ -1,9 +1,11 @@
 import math
-
+import datetime
+from datetime import datetime
 import discord, time
 from discord.ext import commands
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
+from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 campaignSettings = {}
 campaignServers = {}
@@ -28,6 +30,9 @@ class campaignFunctions(commands.Cog):
             campaignDataList[str(name)] = faction["factionkey"]
         if len(campaignDataList) == 1:
             factionKey = campaignDataList[campaignNameList[0]]
+        if len(campaignNameList) == 0:
+            await errorFunctions.sendError(ctx)
+            await ctx.send("You aren't a part of any factions within this campaign!  Join one using `-joinFaction` and then try again.")
         else:
             factionName = await discordUIfunctions.getChoiceFromList(ctx, campaignNameList, "Pick your faction below:")
             factionKey = campaignDataList[factionName]
@@ -46,21 +51,25 @@ class campaignFunctions(commands.Cog):
         return result["factionname"]
 
     async def pickCampaignFaction(ctx: commands.Context, prompt: str):
-        campaignKey = await campaignFunctions.getCampaignKey(ctx)
-        availableFactionsList = await SQLfunctions.databaseFetchdictDynamic(
-            '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1 ORDER BY factionname;''', [campaignKey])
-        factionList = []
-        factionData = {}
-        #print(availableFactionsList)
-        for faction in availableFactionsList:
-            name = faction["factionname"]
-            factionList.append(name)
-            subFactionData = {}
-            subFactionData["factionkey"] = faction["factionkey"]
-            subFactionData["money"] = faction["money"]
-            factionData[name] = subFactionData
-        factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
-        return factionChoiceName, factionData[factionChoiceName]["factionkey"]
+        try:
+            campaignKey = await campaignFunctions.getCampaignKey(ctx)
+            availableFactionsList = await SQLfunctions.databaseFetchdictDynamic(
+                '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1 ORDER BY factionname;''', [campaignKey])
+            factionList = []
+            factionData = {}
+            #print(availableFactionsList)
+            for faction in availableFactionsList:
+                name = faction["factionname"]
+                factionList.append(name)
+                subFactionData = {}
+                subFactionData["factionkey"] = faction["factionkey"]
+                subFactionData["money"] = faction["money"]
+                factionData[name] = subFactionData
+            factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
+            return factionChoiceName, factionData[factionChoiceName]["factionkey"]
+        except Exception:
+            await errorFunctions.sendError(ctx)
+            await ctx.send("This server does not have any campaign factions.")
 
     async def pickCampaignCountry(ctx: commands.Context, prompt: str):
         campaignKey = await campaignFunctions.getCampaignKey(ctx)
@@ -83,7 +92,7 @@ class campaignFunctions(commands.Cog):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = (SELECT campaignkey FROM campaignservers WHERE serverid = $1);''', [ctx.guild.id])
 
     async def getGovernmentType(ctx: commands.Context):
-        options = ["Direct Democracy", "Multi Party System", "Two Party System", "Single Party System", "Appointed Successor"]
+        options = ["Direct Democracy", "Multi Party System", "Two Party System", "Constitutional Monarchy", "Single Party System", "Appointed Successor"]
         prompt = "Pick a type of government."
         answer = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
         if answer == "Direct Democracy":
@@ -91,6 +100,8 @@ class campaignFunctions(commands.Cog):
         if answer == "Multi Party System":
             return 0.9
         if answer == "Two Party System":
+            return 1.0
+        if answer == "Constitutional Monarchy":
             return 1.0
         if answer == "Single Party System":
             return 1.1
@@ -105,6 +116,8 @@ class campaignFunctions(commands.Cog):
             return "Multi Party System"
         if answer == 1.0:
             return "Two Party System"
+        if answer == 1.05:
+            return "Constitutional Monarchy"
         if answer == 1.1:
             return "Single Party System"
         if answer == 1.2:
@@ -126,6 +139,62 @@ class campaignFunctions(commands.Cog):
     @commands.command(name="farmingTest", description="Ask Hamish a question.")
     async def farmingTest(self, ctx: commands.Context, latitude: float):
         await ctx.send(str(await campaignFunctions.getFarmingLatitudeScalar(latitude)))
+    async def showStats(ctx: commands.Context, variablesList):
+        campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
+        print(campaignInfoList)
+        date_string = str(campaignInfoList['timedate'])
+        format_string = "%Y-%m-%d %H:%M:%S"
+        dt = datetime.strptime(date_string, format_string)
+        print(dt.year)
+        hour = dt.strftime("%I")
+        min = dt.strftime("%M %p")
+        day = dt.strftime("%A %B %d")
+        embed = discord.Embed(title=variablesList["factionname"],description=variablesList["description"], color=discord.Color.random())
+        embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
+        if variablesList["iscountry"] == True:
+            embed.add_field(name="Land", value="{:,}".format(int(variablesList["landsize"])) + " km²",inline=False)
+            embed.add_field(name="Population size", value=("{:,}".format(int(variablesList["population"]))),inline=False)
+            embed.add_field(name="Government type", value=await campaignFunctions.getGovernmentName(variablesList["governance"]), inline=False)
+            embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
+            embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 1)) + "%", inline=False)
+            embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
+            embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
+            embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 1)) + "%", inline=False)
+        else:
+            embed.add_field(name="Country of origin",value=await campaignFunctions.getFactionName(variablesList["landlordfactionkey"]), inline=False)
+        embed.set_footer(text=f"\nIt is {hour}:{min} on {day}, {dt.year}")
+        embed.set_thumbnail(url=variablesList["flagurl"])
+        await ctx.send(embed=embed)
+
+    async def showFinances(ctx: commands.Context, variablesList):
+        campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
+        if variablesList["iscountry"] == False:
+            await errorFunctions.sendError(ctx)
+            await ctx.send("You're a company!  This command isn't relevant to your faction - try `-viewStats` instead.")
+            return
+        print(campaignInfoList)
+        date_string = str(campaignInfoList['timedate'])
+        format_string = "%Y-%m-%d %H:%M:%S"
+        dt = datetime.strptime(date_string, format_string)
+        print(dt.year)
+        hour = dt.strftime("%I")
+        min = dt.strftime("%M %p")
+        day = dt.strftime("%A %B %d")
+        embed = discord.Embed(title=f'''{variablesList["factionname"]}'s finances''',description=f"These are your finances as of \n{day}, {dt.year}", color=discord.Color.random())
+        embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
+        embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
+        embed.add_field(name="GDP growth", value=str(round(float(variablesList["gdpgrowth"]) * 100, 1)) + "%", inline=False)
+        embed.add_field(name="Poor tax rate", value=f"{round(float(variablesList['taxpoor'])*100, 3)} %", inline=False) #test
+        embed.add_field(name="Rich tax rate", value=f"{round(float(variablesList['taxrich']) * 100, 3)} %", inline=False)
+        embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
+        embed.add_field(name="Average salary", value=campaignInfoList["currencysymbol"] + str(round(float(variablesList["averagesalary"]), 1)) + " " + campaignInfoList["currencyname"],inline=False)
+        embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
+        embed.add_field(name="Agricultural funding", value=str(round(float(variablesList["agriculturespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
+        embed.add_field(name="Educational funding boost", value=str(round(float(variablesList["educationspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
+        embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
+        embed.add_field(name="Infrastructure investments", value=str(round(float(variablesList["infrastructurespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
+        embed.set_thumbnail(url=variablesList["flagurl"])
+        await ctx.send(embed=embed)
 
     async def getCampaignName(campaignKey: int):
         data = await SQLfunctions.databaseFetchrowDynamic(f'SELECT * FROM campaigns WHERE campaignkey = $1',[campaignKey])
@@ -138,12 +207,32 @@ class campaignFunctions(commands.Cog):
         return int(campaignData['campaignkey'])
 
     async def isCampaignManager(ctx: commands.Context):
+        try:
+            data = await SQLfunctions.databaseFetchrowDynamic(f'SELECT * FROM serverconfig WHERE serverid = $1', [ctx.guild.id])
+            roleid = data["campaignmanagerroleid"]
+            role = discord.utils.get(ctx.guild.roles, id=roleid)
+            if role in ctx.author.roles:
+                return True
+            return False
+        except Exception:
+            await errorFunctions.sendError(ctx)
+            await ctx.send("It appears your server has not set up its roles correctly.  Ask an administrator to use the `-setup` command and give you the campaign manager role.")
+            return False
+    async def isCampaignHost(ctx: commands.Context):
+        # try:
         data = await SQLfunctions.databaseFetchrowDynamic(f'SELECT * FROM serverconfig WHERE serverid = $1', [ctx.guild.id])
         roleid = data["campaignmanagerroleid"]
         role = discord.utils.get(ctx.guild.roles, id=roleid)
-        if role in ctx.author.roles:
+        campaignServData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
+        campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT hostserverid FROM campaigns WHERE campaignkey = $1;''', [campaignServData["campaignkey"]])
+        print(campaignData)
+        if role in ctx.author.roles and campaignData["hostserverid"] == ctx.guild.id:
             return True
         return False
+        # except Exception:
+        #     await errorFunctions.sendError(ctx)
+        #     await ctx.send("It appears your server has not set up its roles correctly.  Ask an administrator to use the `-setup` command and give you the campaign manager role.  Note: you must also run this command in the server that the campaign is being hosted from.")
+        #     return False
 
 
 

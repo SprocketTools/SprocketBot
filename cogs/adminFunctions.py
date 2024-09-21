@@ -27,6 +27,9 @@ class adminFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    def __before_invoke(self, ctx):
+        print("hi")
+
     async def updateServerConfig(self):
         for guild in self.bot.guilds:
             try:
@@ -79,6 +82,11 @@ class adminFunctions(commands.Cog):
         for cog in main.cogsList:
             await self.bot.reload_extension(cog)
         await ctx.send("Reloaded!")
+
+
+    def authorize(ctx: commands.Context, bot):
+        print("Hi")
+        return False
 
     @commands.Cog.listener()
     async def on_message(self, message):

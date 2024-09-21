@@ -82,11 +82,23 @@ class githubTools(commands.Cog):
         operatingRepo.index.add(f'{GithubDirectory}{OSslashLine}{"img"}')
         await ctx.send("Done!")
 
+    @commands.command(name="changeDecalAuthor", description="Submit a decal to the SprocketTools website")
+    async def changeDecalAuthor(self, ctx):
+        name = await textTools.getResponse(ctx, f"What is the title of the decal?")
+        newAuthorID = await textTools.getIntResponse(ctx, f"What is the new author's ID?")
+        author = self.bot.get_user(newAuthorID)
+        authorName = await textTools.mild_sanitize(author.name)
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownerid = $1 WHERE name = $2''', [newAuthorID, name])
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownername = $1 WHERE name = $2''',[authorName, name])
+        await ctx.send(f"### The image has been updated.")
+
     @commands.command(name="submitDecal", description="Submit a decal to the SprocketTools website")
     async def submitDecal(self, ctx):
         imageCategoryListTemp = imageCategoryList.copy()
         if ctx.author.id != 712509599135301673:
             imageCategoryListTemp.remove("Featured")
+        allAttachments = await textTools.getManyFilesResponse(ctx, "Upload up to 10 images.  ")
+        tags = await textTools.getCappedResponse(ctx, "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`", 32)
         userPrompt = "What category should the image(s) go into?"
         category = await discordUIfunctions.getChoiceFromList(ctx, imageCategoryList, userPrompt)
         await ctx.send(f"Alright, let's get the names down for your images.")
@@ -94,16 +106,7 @@ class githubTools(commands.Cog):
         for attachment in ctx.message.attachments:
             if "image" in attachment.content_type:
                 type = ".png"
-                await ctx.send(f"What is the title of {attachment.filename}?  Limit the name to no more than 32 characters.")
-                def check(m: discord.Message):
-                    return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-                try:
-                    msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
-                    name = await textTools.sanitize(msg.content.lower())
-                except asyncio.TimeoutError:
-                    await ctx.send("Operation cancelled.")
-                    return
-                name = ('%.32s' % name)
+                name = await textTools.getCappedResponse(ctx, f"What is the title of {attachment.filename}?  Limit the name to no more than 32 characters.", 32)
                 strippedname = name.replace(" ", "_")
                 strippedname = f"{strippedname}{type}"
                 strippedname = strippedname.lower()
@@ -112,20 +115,6 @@ class githubTools(commands.Cog):
                     response = await errorFunctions.retrieveError(ctx)
                     await ctx.send(f"{response}\n\n{strippedname} already exists!  Submit this again, but with a different name.")
                 else:
-                    print(imageCatalogFilepath)
-                    print(name)
-                    print(strippedname)
-
-                    await ctx.send(f"Reply with a list of comma-separated tags to help with searching for the image.  Ex: `british, tonnage, tons`")
-                    def check(m: discord.Message):
-                        return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-                    try:
-                        msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
-                        tags = await textTools.sanitize(msg.content.lower())
-                    except asyncio.TimeoutError:
-                        await ctx.send("Operation cancelled.")
-                        return
-
                     # Optimized image https://www.askpython.com/python-modules/compress-png-image-using-pillow
                     maxwidth = 400
                     response = requests.get(attachment.url)

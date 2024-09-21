@@ -1,16 +1,19 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 
+import main
 from cogs.discordUIfunctions import discordUIfunctions
-
+import discord
+from discord.ext import commands
+from discord.ui import Modal, TextInput
 promptResponses = {}
 from discord import app_commands
 from cogs.textTools import textTools
+
 class testingFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-
 
     @commands.command(name="contactlength", description="testing some stuff")
     async def contactlength(self, ctx: commands.Context):

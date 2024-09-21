@@ -45,42 +45,13 @@ class campaignFinanceFunctions(commands.Cog):
     @commands.command(name="viewFinances", description="View the statistics of your faction")
     async def viewFinances(self, ctx: commands.Context):
         variablesList = await campaignFunctions.getUserFactionData(ctx)
-        campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
-        if variablesList["iscountry"] == False:
-            await errorFunctions.sendError(ctx)
-            await ctx.send("You're a company!  This command isn't relevant to your faction - try `-viewStats` instead.")
-            return
-        print(campaignInfoList)
-        date_string = str(campaignInfoList['timedate'])
-        format_string = "%Y-%m-%d %H:%M:%S"
-        dt = datetime.strptime(date_string, format_string)
-        print(dt.year)
-        hour = dt.strftime("%I")
-        min = dt.strftime("%M %p")
-        day = dt.strftime("%A %B %d")
-        embed = discord.Embed(title=f'''{variablesList["factionname"]}'s finances''',description=f"These are your finances as of \n{day}, {dt.year}", color=discord.Color.random())
-        embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
-        embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
-        embed.add_field(name="GDP growth", value=str(round(float(variablesList["gdpgrowth"]) * 100, 1)) + "%", inline=False)
-        embed.add_field(name="Poor tax rate", value=f"{round(float(variablesList['taxpoor'])*100, 3)} %", inline=False)
-        embed.add_field(name="Rich tax rate", value=f"{round(float(variablesList['taxrich']) * 100, 3)} %", inline=False)
-        embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
-        embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
-        embed.add_field(name="Agricultural funding", value=str(round(float(variablesList["agriculturespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
-        embed.add_field(name="Educational funding boost", value=str(round(float(variablesList["educationspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
-        embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
-        embed.add_field(name="Infrastructure investments", value=str(round(float(variablesList["infrastructurespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
-        embed.set_thumbnail(url=variablesList["flagurl"])
-        await ctx.send(embed=embed)
+        await campaignFunctions.showFinances(ctx, variablesList)
 
     @commands.command(name="logMaintenance", description="Log maintenance costs for a country")
     async def logMaintenance(self, ctx: commands.Context):
         factionData = await campaignFunctions.getUserFactionData(ctx)
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
-        moneyAdd = await textTools.getIntResponse(ctx, "How much is the maintenance going to be?  Reply with a number.")
-        if moneyAdd < 1:
-            await ctx.reply(await errorFunctions.retrieveError(ctx))
-            return
+        moneyAdd = await textTools.getFlooredIntResponse(ctx, "How much is the maintenance going to be?  Reply with a number.", 1)
         logDetails = await textTools.getResponse(ctx, "Reply with a short description for the maintenance and what it entails.  This will be logged for the campaign managers to view.")
         logDetails = await textTools.mild_sanitize(logDetails)
         await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]])
@@ -88,8 +59,8 @@ class campaignFinanceFunctions(commands.Cog):
         channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
         await channel.send(f"### Maintenance costs log\nPurchaser: {factionData['factionname']}\nCost: {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}\nDetails: {logDetails}")
 
-    @commands.command(name="logCivilSale", description="Log a sale into your country")
-    async def logCivilSale(self, ctx: commands.Context):
+    @commands.command(name="logcivilsale", description="Log a sale into your country")
+    async def logcivilsale(self, ctx: commands.Context):
         factionData = await campaignFunctions.getUserFactionData(ctx)
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         moneyAdd = await textTools.getIntResponse(ctx, "How much will the sale be for?  Reply with a number.\nNote: this command is only for sales to civilians.  Don't use this to log sales to other factions.")

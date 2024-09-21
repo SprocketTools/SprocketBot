@@ -11,6 +11,8 @@ Notable features:
 ## Warnings
 Campaigns are by far the most complex feature of the bot, and as a result are likely to be buggy.  Features are likely to be added and experimented with throughout the campaign's development.
 
+# ${\color{red}Read}$ ${\color{red}through}$ ${\color{red}the}$ ${\color{red}documentation}$ ${\color{orange}prior}$ ${\color{red}to}$ ${\color{red}starting}$ ${\color{red}a}$ ${\color{red}campaign!}$
+
 ## Definitions
 - **IGY**: In Game Year
 - **Discretionary funds**: the money that the player can use to buy and sell equipment, boost other parts of the faction, invest in research, etc.
@@ -24,47 +26,15 @@ Make sure that Developer Mode is enabled in your Discord's user settings.  You w
 
 Additionally, if you intend to start a campaign, you will need to acquire a campaign key.  This key is an anti-spam measure to prevent people from making campaigns en masse.  Join the [bot's development server](https://discord.gg/697ufH4hDa) and request a campaign key there.  Make sure to keep it logged somewhere.
 ## Campaign configuration
-Start by preparing your [Campaign Setup](assets/CampaignSetupTemplate.json) json file.  In this file are several settings covering your overall campaign.  
-#### Warning: do not delete any lines from the json file.  Only replace the example values with your own.
-- `Public announcement channel id`: This needs to be the channel ID of where you want the bot to send public announcements.  
-    - To get a channel ID, right click on it and select "copy channel ID."  This will past a string of numbers into your clipboard similar to the example.
 
-- `Manager logging channel id`: This needs to be the channel ID of where you want transaction logs to be sent.  Preferrably a channel only visible to campaign managers.
+To set up a campaign, run the `-startCampaign` command and follow the instructions.  You'll be asked a various set of questions about the campaign.
+- Campaigns are intended to have starting annual salaries for populations between 100 (approximately the poverty line) and 1000.  
+- The amount of people that can live off a square kilometer of farmland will be affected by the campaign-set ratio, and the average latitude of the faction.
 
-- `Default GDP growth`: This should indicate the default GDP growth per IGY.  A value of 0.01 indicates 1% growth.
-
-- `Default population growth`: This should indicate the default population growth per IGY.  A value of 0.01 indicates 1% growth.
-
-- `Population fed per farmland square km`: This indicates how many people can live off a square kilometer of farmland.  Real-world values average around 1000 to 2000.
-
-- `Default ratio of taxes available to play`: When a country collect taxes, this ratio determines how much of those taxes become "discretionary funds" available to the player.
-
-- `Population to worker ratio`: This ratio determines the average "family size," assuming only 1 family member is a worker.  This globally adjusts GDP for all countries, with bigger values lowering GDP.
-
-Once this is complete, save the file, run the `-startCampaign` command, and follow the instructions.
 
 ## Adding a faction
 
-In order to add a faction to the campaign, download the [faction configuration template](assets/FactionTemplate.json) json file. In this file are several settings pertaining to your specific faction.
-#### Warning: do not delete any lines from the json file.  Only replace the example values with your own.
-
-- `Faction role ID`: This needs to define the role ID you intend to require before players can join the faction.
-
-    - To get a role ID, open up your server profile and right-click on the role you intend to use.  Then select "copy role ID."  This will past a string of numbers into your clipboard similar to the given example.
-
-- `Logging channel ID`: This needs to be a channel id of where you want faction updates to be sent to.
-
-    - To get a channel ID, right click on it and select "copy channel ID."  This will past a string of numbers into your clipboard similar to the given example.
-
-- `Flag image URL`: This needs to be a valid embeddable image.
-
-- `Is a country`: Set to `true` to make the faction a country, otherwise set it to `false` to make it a company.
-
-- `Military funds`: Set this to the player's starting discretionary funds.
-
-Note: for companies, you don't need to set the population or land size values.  Still, these settings need to be in the json file.
-
-From here, save the file and run the `-addCampaignFaction` command.  Follow the instructions to add your faction to the campaign. Note that campaign managers from the host server will need to approve any factions that they don't upload themselves.
+From here, run the `-addCampaignFaction` command.  Follow the instructions to add your faction to the campaign. Note that campaign managers from the host server will need to approve any factions that they don't upload themselves.
 
 ## Join another server's ongoing campaign
 First, acquire the campaign key from the host.  Then, use the `-addServerToCampaign` bot command to join the campaign.
@@ -88,5 +58,76 @@ First, acquire the campaign key from the host.  Then, use the `-addServerToCampa
 - `-logPurchase`: Placeholder command.  Allows players to make a "purchase" from another faction.
 - `-logMaintenance`: Placeholder command.  Allows players to pay for maintenance costs.
 
+## Technical details: variables and constants for factions
 
+Note: variables that have obvious details (such as the faction name) are ommitted here.
+
+money
+- The amount of discretionary funds available to the player.
+- This value decreases as the player spends money, and increases automatically as taxes are collected.
+
+population
+- The amount of people spread out over the whole country
+
+landsize
+- The amount of land that a country controls
+- This is a cosmetic value right now; it affects nothing.
+
+farmsize
+- The amount of farmland that exists inside the country
+- If a country has too little farmland, this will have negative effects on the country as a whole
+
+governance
+- This value is set when the player chooses their type of government, and can range between 0.8 and 1.2.  
+- This value affects multiple other stats
+
+happiness
+- The cumulative "index" that amalyzes other statistics to show the integrity of the country's society
+- Low values will have negative downsides in the future
+
+taxpoor
+- The tax rate set for the lower class.  This makes up the bulk of a faction's income, but has more drastic side effects if set too high.
+
+taxrich
+- The tax rate set for the upper class and corporations.  This affects the income tax levied on companies that reside within the faction.
+
+gdp
+- The gross domestic product of a country over 1 IGY.  
+- This value is meant to fluctuate in real time in response to other variables.
+
+averagesalary
+- The median salary of the population within a faction
+- This value plays into GDP, and is expected to change in ways somewhat like the economic index.
+
+incomeindex
+- The financial stability "index" of the country
+- This value is currently affected by just the tax rate, but in the future will be affected by other variables
+- It is intended that this value can be adjusted to trigger random events in the future
+
+lifeexpectancy
+- The average life expectency within a country
+- This value is meant to fluctuate over time as a result of medical spending, agriculture, and other factors.
+
+educationindex
+- How efficient the education is within a country
+- This value is meant to change over time as a result of educational spending per pupil.
+
+farmefficiency
+- An efficiency scalar for farming that affects how many people a population can support
+
+agriculturespend
+- A user-set value that determines how many discretionary funds are redirected to improving agriculture
+- Spending money in this category helps to increase the efficiency scalar
+
+educationspend
+- A user-set value that determines how much discretionary funding is redirected to education
+- Spending money in this category helps to increase new technology researched
+
+socialspend
+- A user-set value that determines how much discretionary funding is redirected to healthcare, social programs, etc.
+- Spending money in this category provides an all-around improvement to various categories
+
+infrastructurespend
+- A user-set value that determines how much discretionary funding is redirected to improving transportation
+- Increases in this value improve the efficiency of the army and overall GDP
 
