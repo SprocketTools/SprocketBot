@@ -113,7 +113,9 @@ class errorFunctions(commands.Cog):
         print(errorDict)
         for error in errorDict:
             view = YesNoMaybeButtons()
-            await ctx.send(content=f"Submitter: <@{error['userid']}>\nError message: {error['error'][:1000]}", view=view)
+            await ctx.send(content=f"Submitter: <@{error['userid']}>\nError message:")
+            await ctx.send(error['error'][:1000])
+            await ctx.send(view=view)
             await view.wait()
             if view.value == 1:
                 await SQLfunctions.databaseExecuteDynamic('''UPDATE errorlist SET status = true WHERE error = $1;''', [error["error"]])

@@ -97,16 +97,22 @@ class githubTools(commands.Cog):
         imageCategoryListTemp = imageCategoryList.copy()
         if ctx.author.id != 712509599135301673:
             imageCategoryListTemp.remove("Featured")
-        allAttachments = await textTools.getManyFilesResponse(ctx, "Upload up to 10 images.  ")
-        tags = await textTools.getCappedResponse(ctx, "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`", 32)
+        if len(ctx.message.attachments) != 0:
+            await ctx.send("Note: this command no longer looks for images attached to the command initiation itself.  You will need to upload the images again.")
+        allAttachments = await textTools.getManyFilesResponse(ctx, "Process started.\nUpload up to 10 images that you wish to add to the SprocketTools decal catalog.")
+        if len(allAttachments) == 0:
+            await errorFunctions.sendError(ctx)
+            return
         userPrompt = "What category should the image(s) go into?"
         category = await discordUIfunctions.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+        tags = await textTools.getCappedResponse(ctx, "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`", 32)
         await ctx.send(f"Alright, let's get the names down for your images.")
         print(category)
-        for attachment in ctx.message.attachments:
+        for attachment in allAttachments:
             if "image" in attachment.content_type:
                 type = ".png"
                 name = await textTools.getCappedResponse(ctx, f"What is the title of {attachment.filename}?  Limit the name to no more than 32 characters.", 32)
+                name = name.lower()
                 strippedname = name.replace(" ", "_")
                 strippedname = f"{strippedname}{type}"
                 strippedname = strippedname.lower()

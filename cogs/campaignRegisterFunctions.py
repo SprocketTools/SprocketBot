@@ -187,6 +187,13 @@ class campaignRegisterFunctions(commands.Cog):
         await ctx.send("## Welcome!\nYou will now be asked between 7 and 15 questions about your country (dependent on its type)\nLet's begin: is your faction a country?")
         isCountry = await discordUIfunctions.getYesNoChoice(ctx)
         factionName = await textTools.getResponse(ctx, "What is the name of your faction?")
+        nameStatus = False
+        while nameStatus == False:
+            nameTest = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
+            if len(nameTest) > 0:
+                await ctx.send("A faction already exists with this name!")
+                return
+            nameStatus = True
         factionDescription = await textTools.getResponse(ctx, "What is your faction's description?")
         factionRoleID = await textTools.getRoleResponse(ctx, "What role do you require for players to be able to join your faction?\n-# Reply with a ping of that role.")
         logChannelID = await textTools.getChannelResponse(ctx, "What channel do you want updates about your faction to be sent to?\n-# Reply with a mention of that channel.")
@@ -195,6 +202,7 @@ class campaignRegisterFunctions(commands.Cog):
         flagURL = await textTools.getResponse(ctx,"What is your country's flag?\n-# Reply with a direct URL to your flag's picture.")
         site = urlopen(flagURL)
         meta = site.info()  # get header of the http request
+        factionkey = time.time() + round(random.random()*10000)
         if meta["content-type"] not in image_formats:  # check if the content-type is a image
             await errorFunctions.sendError(ctx)
             while meta["content-type"] not in image_formats:
@@ -229,7 +237,7 @@ class campaignRegisterFunctions(commands.Cog):
 
 
         datalist = [campaignKey,
-                    time.time() + round(random.random()*10000),
+                    factionkey,
                     landlordid,
                     approvalStatus,
                     campaignData["active"],
@@ -264,6 +272,11 @@ class campaignRegisterFunctions(commands.Cog):
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, factionName])
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)''', datalist)
+        nameTest = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
+        if len(nameTest) > 1:
+            await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2 AND factionkey = $3;''',[ctx.guild.id, factionName, factionkey])
+            await ctx.send("Somehow... there are now multiple factions with names matching this one.  As this is theoretically impossible without running bot exploits, I have cancelled the registration of this faction.")
+            return
         if approvalStatus == True:
             await ctx.send(f"## Done!\n{factionName} is now registered as a faction!")
         else:
