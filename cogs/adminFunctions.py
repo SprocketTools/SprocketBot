@@ -245,6 +245,12 @@ class adminFunctions(commands.Cog):
                 await ctx.send(await errorFunctions.retrieveError(ctx))
                 await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
 
+    @commands.command(name="setSlowmode", description="Set a slowmode.")
+    async def setSlowmode(self, ctx: commands.Context, duration: int):
+        if ctx.author.guild_permissions.administrator == False:
+            return
+        await ctx.channel.edit(slowmode_delay = duration)
+        await ctx.send(f"Slowmode is now set to a {duration} second delay!\n\n{await errorFunctions.retrieveError(ctx)}")
 
     @commands.command(name="listMyServers", description="List all my servers.")
     async def listMyServers(self, ctx: commands.Context):

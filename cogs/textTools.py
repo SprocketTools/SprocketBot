@@ -49,7 +49,7 @@ class textTools(commands.Cog):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
@@ -60,7 +60,7 @@ class textTools(commands.Cog):
             await ctx.send(prompt)
             def check(m: discord.Message):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-            msg = await ctx.bot.wait_for('message', check=check)
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
                 await errorFunctions.sendError(ctx)
                 raise ValueError("User termination")
@@ -73,7 +73,7 @@ class textTools(commands.Cog):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
@@ -88,7 +88,7 @@ class textTools(commands.Cog):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
@@ -105,7 +105,7 @@ class textTools(commands.Cog):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
@@ -120,7 +120,7 @@ class textTools(commands.Cog):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
@@ -130,7 +130,7 @@ class textTools(commands.Cog):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         response = msg.content.replace("%", "")
         value = float(response)/100
         if msg.content.lower() == "cancel":
@@ -142,17 +142,23 @@ class textTools(commands.Cog):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
+        if str(msg.channel_mentions) == '[]':
+            if "https://discord.com/channels/" in msg.content:
+                return int(msg.content.split("/")[-2])
+            else:
+                raise ValueError("User termination")
         return int(msg.channel_mentions[0].id)
+
 
     async def getRoleResponse(ctx: commands.Context, prompt):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
@@ -162,16 +168,25 @@ class textTools(commands.Cog):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
         return msg.attachments[0]
+
+    async def getFileURLResponse(ctx: commands.Context, prompt):
+        await ctx.send(prompt)
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+        if msg.content.lower() == "cancel":
+            await errorFunctions.sendError(ctx)
+        return msg.attachments[0].url
 
     async def getManyFilesResponse(ctx: commands.Context, prompt):
         await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
         return msg.attachments
@@ -180,7 +195,7 @@ class textTools(commands.Cog):
         messageOut = await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check)
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
@@ -194,7 +209,7 @@ class textTools(commands.Cog):
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         try:
-            msg = await ctx.bot.wait_for('message', check=check)
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             return msg.content
         except Exception:
             await ctx.send(await errorFunctions.retrieveError(ctx))

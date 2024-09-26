@@ -1,3 +1,18 @@
+## Error Functions
+```-addError```
+This command will submit a "joke" - also known as an error message - for approval.  
+The following markdown-esque tags are supported:
+
+```{user}``` - replaces this text with the user's name
+
+```{server}``` - replaces this text with the server's name
+
+`{second}`, `{minute}`, `{hour}`, `{day}`, `{month}`, and `{year}` are replaced with the bot's equivalent times. 
+
+`{meridian}` returns the bot's AM or PM time.
+
+
+
 ## Compartment Merging
 
 ```-bakeGeometry```

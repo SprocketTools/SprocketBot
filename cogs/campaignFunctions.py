@@ -34,7 +34,7 @@ class campaignFunctions(commands.Cog):
             await errorFunctions.sendError(ctx)
             await ctx.send("You aren't a part of any factions within this campaign!  Join one using `-joinFaction` and then try again.")
         else:
-            factionName = await discordUIfunctions.getChoiceFromList(ctx, campaignNameList, "Pick your faction below:")
+            factionName = await discordUIfunctions.getChoiceFromList(ctx, campaignNameList, "Choose your faction below:")
             factionKey = campaignDataList[factionName]
 
         factionData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionKey])

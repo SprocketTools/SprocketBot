@@ -15,6 +15,9 @@ class testingFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @commands.command(name="channeltest", description="testing some stuff")
+    async def channeltest(self, ctx: commands.Context):
+        await textTools.getChannelResponse(ctx, "test")
     @commands.command(name="contactlength", description="testing some stuff")
     async def contactlength(self, ctx: commands.Context):
         startingLength = int(await textTools.getResponse(ctx,f"User-specified wheel array length.  All values in mm."))

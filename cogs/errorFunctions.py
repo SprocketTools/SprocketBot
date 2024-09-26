@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import discord, configparser, random, platform, asyncio
 from discord.ext import commands
 from discord import app_commands
@@ -19,8 +21,7 @@ class errorFunctions(commands.Cog):
             return
         prompt = "DROP TABLE IF EXISTS errorlist"
         await SQLfunctions.databaseExecute(prompt)
-        prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (
-                              error TEXT, status BOOLEAN);''')
+        prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (error TEXT, status BOOLEAN, userid BIGINT);''')
         await SQLfunctions.databaseExecute(prompt)
         await ctx.send("Done!  Now go add some errors in.")
 
@@ -58,7 +59,7 @@ class errorFunctions(commands.Cog):
         else:
             status = False
         responseMessage = "This is not supposed to happen!"
-        await ctx.send("Type out your error message and send it.")
+        await ctx.send("Type out your error message and send it.\n-# New! You can now add tags that automatically get replaced with text")
 
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -90,7 +91,9 @@ class errorFunctions(commands.Cog):
         userSetList = await SQLfunctions.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM errorlist GROUP BY userid ORDER BY value_occurrence DESC LIMIT 5;''')
         for user in userSetList:
             embed.add_field(name=self.bot.get_user(user['userid']), value=user['value_occurrence'], inline=False)
-        embed.set_footer(text=await errorFunctions.retrieveError(ctx))
+        currentUser = (await SQLfunctions.databaseFetchdictDynamic(f'''SELECT userid, COUNT(userid) AS value_occ FROM errorlist WHERE userid = $1 GROUP BY userid;''', [ctx.author.id]))[0]['value_occ']
+        print(currentUser)
+        embed.set_footer(text=f"You have {currentUser} errors registered with the bot!")
         await ctx.send(embed=embed)
 
     @commands.command(name="countErrors", description="higdffffffffffff")
@@ -170,11 +173,24 @@ class errorFunctions(commands.Cog):
             await ctx.send(await errorFunctions.retrieveError(ctx))
 
     async def retrieveError(ctx: commands.Context):
-        if len(errorFunctions.errorList) == 0:
-            errorDict = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT error FROM errorlist WHERE status = true;')]
-            for error in errorDict:
-                errorFunctions.errorList.append(error["error"])
-        return random.choice(errorFunctions.errorList)
+        # if len(errorFunctions.errorList) == 0:
+        #     errorDict = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT error FROM errorlist WHERE status = true;')]
+        #     for error in errorDict:
+        #         errorFunctions.errorList.append(error["error"])
+
+        error = (await SQLfunctions.databaseFetchrow(f'SELECT error from errorlist WHERE status = true ORDER BY RANDOM() LIMIT 1;'))["error"]
+        error = error.replace('{user}', ctx.author.display_name)
+        error = error.replace('{server}', ctx.guild.name)
+        error = error.replace('{second}', str(datetime.now().strftime('%S')))
+        error = error.replace('{minute}', str(datetime.now().strftime('%M')))
+        error = error.replace('{hour}', str(datetime.now().strftime('%I')))
+        error = error.replace('{meridian}', datetime.now().strftime('%p'))
+        error = error.replace('{day}', datetime.now().strftime('%A'))
+        error = error.replace('{month}', datetime.now().strftime('%B'))
+        error = error.replace('{year}', datetime.now().strftime('%Y'))
+
+
+        return error
 
     async def sendError(ctx: commands.Context):
         if len(errorFunctions.errorList) == 0:

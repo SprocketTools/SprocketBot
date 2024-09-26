@@ -20,7 +20,7 @@ from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 class campaignRegisterFunctions(commands.Cog):
-    activeRegistKey = 569802354
+    activeRegistKey = 569801354
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -199,19 +199,19 @@ class campaignRegisterFunctions(commands.Cog):
         logChannelID = await textTools.getChannelResponse(ctx, "What channel do you want updates about your faction to be sent to?\n-# Reply with a mention of that channel.")
         # https://stackoverflow.com/questions/10543940/check-if-a-url-to-an-image-is-up-and-exists-in-python
         image_formats = ("image/png", "image/jpeg", "image/gif")
-        flagURL = await textTools.getResponse(ctx,"What is your country's flag?\n-# Reply with a direct URL to your flag's picture.")
-        site = urlopen(flagURL)
-        meta = site.info()  # get header of the http request
+        # site = urlopen(flagURL)
+        # meta = site.info()  # get header of the http request
         factionkey = time.time() + round(random.random()*10000)
-        if meta["content-type"] not in image_formats:  # check if the content-type is a image
-            await errorFunctions.sendError(ctx)
-            while meta["content-type"] not in image_formats:
-                flagURL = await textTools.getResponse(ctx, "Try again: what is your country's flag?\nReply with a direct URL to your flag's picture.")
-                site = urlopen(flagURL)
-                meta = site.info()  # get header of the http request
-                if meta["content-type"] not in image_formats:  # check if the content-type is a image
-                    await errorFunctions.sendError(ctx)
+        # if meta["content-type"] not in image_formats:  # check if the content-type is a image
+        #     await errorFunctions.sendError(ctx)
+        #     while meta["content-type"] not in image_formats:
+        #         flagURL = await textTools.getResponse(ctx, "Try again: what is your country's flag?\nReply with a direct URL to your flag's picture.")
+        #         site = urlopen(flagURL)
+        #         meta = site.info()  # get header of the http request
+        #         if meta["content-type"] not in image_formats:  # check if the content-type is a image
+        #             await errorFunctions.sendError(ctx)
         if isCountry == True: # country
+            flagURL = await textTools.getFileURLResponse(ctx,"What is your country's flag?\n-# Upload a picture of your flag.")
             discretionaryFunds = await textTools.getFlooredIntResponse(ctx, "How much money does your country's military have in the bank?", 10000)
             population = await textTools.getFlooredIntResponse(ctx,"What is the population of your country?\n-# For numerical replies like this one, do not include any commas.", 1000)
             salary = await textTools.getFlooredIntResponse(ctx, "What is the median annual salary of a worker in your population?\n-# Don't factor in anyone who is not employed.  You will do this in the next question.", 1)
@@ -223,6 +223,7 @@ class campaignRegisterFunctions(commands.Cog):
             landlordid = 0
         else: #company
             discretionaryFunds = await textTools.getFlooredIntResponse(ctx,"How much money does your company have in the bank?",10000)
+            flagURL = await textTools.getFileURLResponse(ctx,"What is your company's logo?\n-# Upload a picture of your flag.")
             population = 1000
             salary = 1000
             popworkerratio = 1

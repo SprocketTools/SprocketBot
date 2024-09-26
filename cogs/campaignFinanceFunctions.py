@@ -18,7 +18,7 @@ class campaignFinanceFunctions(commands.Cog):
 
     @commands.command(name="addMoney", description="Add money to a faction")
     async def addMoney(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignManager(ctx) == False:
+        if await campaignFunctions.isCampaignHost(ctx) == False:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         campaignKey = await campaignFunctions.getCampaignKey(ctx)
