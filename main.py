@@ -21,6 +21,7 @@ if platform.system() == "Windows":
     configurationFilepath = "C:\\SprocketBot\\configuration.ini"
     OSslashLine = "\\"
     prefix = "?"
+    defaultURL = "https://cdn.discordapp.com/avatars/1139195875994910740/a_f4486b85c46d15f43b258066841ce067.gif?size=1024"
 
 else:
     # default settings (running on Rasbian)
@@ -28,6 +29,8 @@ else:
     configurationFilepath = "/home/mumblepi/configuration.ini"
     OSslashLine = "/"
     prefix = "-"
+    defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
+
 # general settings
 config = configparser.ConfigParser()
 config.read(configurationFilepath)

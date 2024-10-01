@@ -1,5 +1,7 @@
-import discord, datetime, time
+import discord, datetime, time, io
 from datetime import timedelta
+from PIL import Image, ImageChops
+import requests
 from discord.ext import commands
 import os, platform, discord, configparser, ast, json
 from discord.ext import commands
@@ -346,6 +348,24 @@ class adminFunctions(commands.Cog):
         else:
             return
         await self.bot.change_presence(activity=discord.Game(name=nameIn))
+
+    @commands.command(name="setBotAvatar", description="setup the server")
+    async def setBotAvatar(self, ctx: commands.Context):
+        defaultURL = main.defaultURL
+        if ctx.author.id != 712509599135301673:
+            return
+        url = await textTools.getResponse(ctx, "Reply with the image link")
+        waitTime = await textTools.getIntResponse(ctx, "How many seconds should it last?")
+        response = requests.get(url).content
+        await self.bot.user.edit(avatar=response)
+        await ctx.send("Hi there!")
+        await asyncio.sleep(waitTime)
+        response = requests.get(defaultURL).content
+        await self.bot.user.edit(avatar=response)
+        await ctx.send("Restored logo to default.")
+
+
+
 
     @commands.command(name="setMusicRole", description="setup the server")
     async def setMusicRole(self, ctx: commands.Context):
