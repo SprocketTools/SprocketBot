@@ -212,7 +212,7 @@ class campaignRegisterFunctions(commands.Cog):
         #             await errorFunctions.sendError(ctx)
         if isCountry == True: # country
             flagURL = await textTools.getFileURLResponse(ctx,"What is your country's flag?\n-# Upload a picture of your flag.")
-            discretionaryFunds = await textTools.getFlooredIntResponse(ctx, "How much money does your country's military have in the bank?", 10000)
+            discretionaryFunds = await textTools.getFlooredIntResponse(ctx, "How much money does your country's military have in the bank?  Consider this your starting discretionary funds.", 10000)
             population = await textTools.getFlooredIntResponse(ctx,"What is the population of your country?\n-# For numerical replies like this one, do not include any commas.", 1000)
             salary = await textTools.getFlooredIntResponse(ctx, "What is the median annual salary of a worker in your population?\n-# Don't factor in anyone who is not employed.  You will do this in the next question.", 1)
             popworkerratio = await textTools.getFlooredFloatResponse(ctx,f"What is the ratio between population size and worker count?\n As an example in the United States, this ratio was 3.5 in 1925, and 2.0 in 2019\nYour campaign's default value is set to {campaignData['poptoworkerratio']}", 1)
@@ -222,7 +222,7 @@ class campaignRegisterFunctions(commands.Cog):
             governanceScale = await campaignFunctions.getGovernmentType(ctx)
             landlordid = 0
         else: #company
-            discretionaryFunds = await textTools.getFlooredIntResponse(ctx,"How much money does your company have in the bank?",10000)
+            discretionaryFunds = await textTools.getFlooredIntResponse(ctx,"How much money does your company currently have in the bank?",10000)
             flagURL = await textTools.getFileURLResponse(ctx,"What is your company's logo?\n-# Upload a picture of your flag.")
             population = 1000
             salary = 1000
@@ -282,6 +282,8 @@ class campaignRegisterFunctions(commands.Cog):
             await ctx.send(f"## Done!\n{factionName} is now registered as a faction!")
         else:
             await ctx.send(f"## Done!\n{factionName} now awaits moderator approval.")
+            log_channel = self.bot.get_channel(campaignData['privatemoneychannelid'])
+            await log_channel.send(f'### {ctx.author.mention} has submitted the faction "{factionName}" to {campaignData["campaignname"]} and now awaits approval!\n\n-# Use `-approveCampaignFactions` to approve queued faction submissions.')
 
         #except Exception:
             #await ctx.send(await errorFunctions.retrieveError(ctx))

@@ -9,24 +9,26 @@ import main
 from cogs.SQLfunctions import SQLfunctions
 
 
+
 class errorFunctions(commands.Cog):
     errorList = []
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-    @commands.command(name="resetErrorConfig", description="Reset everyone's server configurations")
-    async def resetErrorConfig(self, ctx: commands.Context):
-        if ctx.author.id == 712509599135301673:
-            pass
-        else:
-            return
-        prompt = "DROP TABLE IF EXISTS errorlist"
-        await SQLfunctions.databaseExecute(prompt)
-        prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (error TEXT, status BOOLEAN, userid BIGINT);''')
-        await SQLfunctions.databaseExecute(prompt)
-        await ctx.send("Done!  Now go add some errors in.")
+    # @commands.command(name="resetErrorConfig", description="Reset everyone's server configurations")
+    # async def resetErrorConfig(self, ctx: commands.Context):
+    #     if ctx.author.id == 712509599135301673:
+    #         pass
+    #     else:
+    #         return
+    #     prompt = "DROP TABLE IF EXISTS errorlist"
+    #     await SQLfunctions.databaseExecute(prompt)
+    #     prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (error TEXT, status BOOLEAN, userid BIGINT);''')
+    #     await SQLfunctions.databaseExecute(prompt)
+    #     await ctx.send("Done!  Now go add some errors in.")
 
     @commands.command(name="getError", description="higdffffffffffff")
     async def getError(self, ctx: commands.Context):
+        ttsp = False
         if ctx.author.id == main.ownerID or ctx.author.guild_permissions.administrator == True:
             await ctx.message.delete()
         else:
@@ -40,7 +42,9 @@ class errorFunctions(commands.Cog):
                     error = await errorFunctions.retrieveError(ctx)
                     await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                     return
-        await ctx.send(await errorFunctions.retrieveError(ctx))
+        if random.random() < 0.001:
+            ttsp = True
+        await ctx.send(await errorFunctions.retrieveError(ctx), tts=ttsp)
 
     @commands.command(name="removeError", description="higdffffffffffff")
     async def removeError(self, ctx: commands.Context):
@@ -59,7 +63,7 @@ class errorFunctions(commands.Cog):
         else:
             status = False
         responseMessage = "This is not supposed to happen!"
-        await ctx.send("Type out your error message and send it.\n-# New! You can now add tags that automatically get replaced with text")
+        await ctx.send("Type out your error message and send it.\n-# To learn more about this command, click [here](<https://github.com/SprocketTools/SprocketBot/blob/main/TOOLS.md>)")
 
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -188,7 +192,7 @@ class errorFunctions(commands.Cog):
         error = error.replace('{day}', datetime.now().strftime('%A'))
         error = error.replace('{month}', datetime.now().strftime('%B'))
         error = error.replace('{year}', datetime.now().strftime('%Y'))
-
+        error = error.replace('@', '')
 
         return error
 

@@ -2,6 +2,7 @@ import datetime
 from datetime import datetime
 import json
 import random
+from io import StringIO
 
 import discord
 from discord.ext import commands
@@ -21,18 +22,47 @@ class campaignInfoFunctions(commands.Cog):
 
     @commands.command(name="campaignSettings", description="generate a key that can be used to initiate a campaign")
     async def campaignSettings(self, ctx: commands.Context):
-        data = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE hostserverid = $1;''', [ctx.guild.id])
-        embed = discord.Embed(title=f"{data['campaignname']} settings", description="These are the settings encompassing your entire campaign!", color=discord.Color.random())
-        embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
-        embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
-        embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
-        embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
-        if data['active'] == True:
-            embed.add_field(name="Current status", value=f"**Campaign is running**", inline=False)
-        if data['active'] == False:
-            embed.add_field(name="Current status", value=f"**Campaign is NOT running**", inline=False)
-        embed.set_footer(text="To start and pause a campaign, use `-toggelCampaignProgress`")
-        await ctx.send(embed=embed)
+        try:
+            campaignKey = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
+            data = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
+            embed = discord.Embed(title=f"{data['campaignname']} settings", description="These are the settings encompassing your entire campaign!", color=discord.Color.random())
+            embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
+            embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
+            embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
+            embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
+            if data['active'] == True:
+                embed.add_field(name="Current status", value=f"**Campaign is running**", inline=False)
+            if data['active'] == False:
+                embed.add_field(name="Current status", value=f"**Campaign is NOT running**", inline=False)
+            embed.set_footer(text="To start and pause a campaign, use `-toggleCampaignProgress`")
+            await ctx.send(embed=embed)
+        except Exception as e:
+            await ctx.send(f"Error:\n-# {e}\n\nMake sure that you have set up your server and joined, or started, a campaign.")
+
+
+
+
+    @commands.command(name="viewFactions", description="Get a list of all the factions in your campaign")
+    async def viewFactions(self, ctx: commands.Context):
+        campaignKey = await campaignFunctions.getUserCampaignData(ctx)
+        print(campaignKey)
+        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionname FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
+        if len(str(data)) > 2000:
+            text = ""
+            print(data)
+            for i in data:
+                text = f"{i['factionname']}\n{text}"
+            # Create a File object from the StringIO object
+            fileOut = StringIO(text)
+            file = discord.File(fileOut, "data.txt")
+            await ctx.send(content="Since your info was too big, here's a file instead.", file=file)
+        else:
+            embed = discord.Embed(title=f"Faction list", description="This is a list of all the factions in your campaign!", color=discord.Color.random())
+            for i in data:
+                embed.add_field(name=i['factionname'], value = " ", inline=False)
+            await ctx.send(embed=embed)
+
+
 
     @commands.command(name="viewStats", description="View the statistics of your faction")
     async def viewStats(self, ctx: commands.Context):
