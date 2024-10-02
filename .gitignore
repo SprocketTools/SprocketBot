@@ -12,3 +12,5 @@ postgresql-16-main.log
 cogs/__pycache__/textTools.cpython-311.pyc
 cogs/__pycache__/campaignRegisterFunctions.cpython-311.pyc
 cogs/__pycache__/errorFunctions.cpython-311.pyc
+.idea/misc.xml
+/.idea

@@ -59,7 +59,7 @@ class campaignRegisterFunctions(commands.Cog):
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignservers''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignfactions''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, farmsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, incomeindex REAL, lifeexpectancy REAL, educationindex REAL, farmefficiency REAL, agriculturespend REAL, educationspend REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL);''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, incomeindex REAL, lifeexpectancy REAL, educationindex REAL, educationspend REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL);''')
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaignusers''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         await ctx.send("## Done!")
@@ -214,10 +214,16 @@ class campaignRegisterFunctions(commands.Cog):
             flagURL = await textTools.getFileURLResponse(ctx,"What is your country's flag?\n-# Upload a picture of your flag.")
             discretionaryFunds = await textTools.getFlooredIntResponse(ctx, "How much money does your country's military have in the bank?  Consider this your starting discretionary funds.", 10000)
             population = await textTools.getFlooredIntResponse(ctx,"What is the population of your country?\n-# For numerical replies like this one, do not include any commas.", 1000)
-            salary = await textTools.getFlooredIntResponse(ctx, "What is the median annual salary of a worker in your population?\n-# Don't factor in anyone who is not employed.  You will do this in the next question.", 1)
-            popworkerratio = await textTools.getFlooredFloatResponse(ctx,f"What is the ratio between population size and worker count?\n As an example in the United States, this ratio was 3.5 in 1925, and 2.0 in 2019\nYour campaign's default value is set to {campaignData['poptoworkerratio']}", 1)
+            popworkerratio = campaignData['poptoworkerratio']
+            await ctx.send("This next question will set your country's GDP and median salary.  You can plug in either value, and the other one will be auto-calculated from it.")
+            EEE = await textTools.getFlooredIntResponse(ctx, "Reply with any number below 5,000 to set your country's median salary.\nReply with any number greater than 10,000 to set your country's GDP.", 1)
+            if EEE < 5000:
+                salary = EEE
+                gdp = round(salary*population/popworkerratio)
+            else:
+                gdp = EEE
+                salary = round((gdp/population)*popworkerratio, 3)
             latitude = await textTools.getFloatResponse(ctx,"What is the average latitude of your country on the globe?  Reply with a number in degrees.")
-            farmland = await textTools.getFlooredFloatResponse(ctx, "How many square kilometers of farmland does your country have?", 1)
             land = await textTools.getFlooredFloatResponse(ctx, "How many square kilometers of land does your country control?", 1)
             governanceScale = await campaignFunctions.getGovernmentType(ctx)
             landlordid = 0
@@ -228,7 +234,6 @@ class campaignRegisterFunctions(commands.Cog):
             salary = 1000
             popworkerratio = 1
             latitude = 0
-            farmland = 1000
             land = 2000
             governanceScale = 1.0
             landlordname, landlordid = await campaignFunctions.pickCampaignCountry(ctx, prompt="What country is your faction operating from?\n-# Note: this will affect your income taxes, so choose wisely.")
@@ -251,7 +256,6 @@ class campaignRegisterFunctions(commands.Cog):
                     discretionaryFunds, #money
                     population, #population
                     land, #landsize
-                    farmland, #farmsize
                     governanceScale, #governance
                     round(0.70/governanceScale, 3), #happiness
                     round(0.75/governanceScale, 3), #financestability
@@ -263,8 +267,6 @@ class campaignRegisterFunctions(commands.Cog):
                     math.log((population/popworkerratio * (salary) / governanceScale)/int(population)/91.25)/math.log(839/91.25), #incomeindex
                     round(70/governanceScale, 3), #lifeexpectency
                     0.9, #educationindex
-                    round((0.8 / governanceScale) * await campaignFunctions.getFarmingLatitudeScalar(50), 3), #farmefficiency
-                    0.05, #agriculturespend
                     0.05, #educationspend
                     0.05, #socialspend
                     0.05, #infastructurespend
@@ -272,7 +274,7 @@ class campaignRegisterFunctions(commands.Cog):
                     ]
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, factionName])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)''', datalist)
         nameTest = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
         if len(nameTest) > 1:
             await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2 AND factionkey = $3;''',[ctx.guild.id, factionName, factionkey])
@@ -355,7 +357,6 @@ class campaignRegisterFunctions(commands.Cog):
                     campaignData["Military funds"],
                     campaignData["Population"],
                     campaignData["Land size"],
-                    campaignData["Farmland size"],
                     governanceScale,
                     round(0.70/governanceScale, 3),
                     round(0.75/governanceScale, 3),
@@ -375,7 +376,7 @@ class campaignRegisterFunctions(commands.Cog):
                     ]
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, campaignData["Faction name"]])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)''', datalist)
         if status == True:
             await ctx.send(f"## Done!\n{campaignData['Faction name']} is now registered as a faction!")
         else:
