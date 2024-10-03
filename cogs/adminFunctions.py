@@ -364,7 +364,18 @@ class adminFunctions(commands.Cog):
         await self.bot.user.edit(avatar=response)
         await ctx.send("Restored logo to default.")
 
+    @commands.command(name="setBotName", description="setup the server")
+    async def setBotName(self, ctx: commands.Context):
+        defaultName = main.defaultName
+        if ctx.author.guild_permissions.administrator == False:
+            return
+        url = await textTools.getResponse(ctx, "Reply with my new name!")
+        waitTime = await textTools.getIntResponse(ctx, "How many seconds should it last?")
 
+        await ctx.send("Hi there!")
+        await asyncio.sleep(waitTime)
+        await self.bot.user.edit(username=defaultName)
+        await ctx.send("Restored name to default.")
 
 
     @commands.command(name="setMusicRole", description="setup the server")

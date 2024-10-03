@@ -47,7 +47,7 @@ class campaignInfoFunctions(commands.Cog):
         campaignKey = await campaignFunctions.getUserCampaignData(ctx)
         print(campaignKey)
         data = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionname FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
-        if len(str(data)) > 2000:
+        if len(str(data)) > 200:
             text = ""
             print(data)
             for i in data:

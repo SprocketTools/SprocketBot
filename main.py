@@ -13,23 +13,30 @@ intents.members = True
 intents.message_content = True
 intents.voice_states = True
 utc = datetime.timezone.utc
-botMode = "development"
+# botMode = "official"
 # Determines whether this is the live version of the bot or the testing version.
 # development settings (running on Windows/PyCharm)
 if platform.system() == "Windows":
     botMode = "development"
     configurationFilepath = "C:\\SprocketBot\\configuration.ini"
     OSslashLine = "\\"
-    prefix = "?"
-    defaultURL = "https://cdn.discordapp.com/avatars/1139195875994910740/a_f4486b85c46d15f43b258066841ce067.gif?size=1024"
 
 else:
     # default settings (running on Rasbian)
     botMode = "official"
     configurationFilepath = "/home/mumblepi/configuration.ini"
     OSslashLine = "/"
+
+
+if botMode != "official":
+    prefix = "?"
+    defaultURL = "https://github.com/SprocketTools/SprocketBot/blob/main/assets/SprocketBotDevLogo.gif?raw=true"
+    defaultName = "Testing Bot"
+
+else:
     prefix = "-"
     defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
+    defaultName = "Sprocket Bot"
 
 # general settings
 config = configparser.ConfigParser()
@@ -54,7 +61,7 @@ class Bot(commands.Bot):
     async def setup_hook(self):
         for ext in self.cogslist:
             await self.load_extension(ext)
-        if updateGithub != "Y":
+        if updateGithub == "Y":
             await self.load_extension("cogs.githubTools")
 
     async def on_ready(self):

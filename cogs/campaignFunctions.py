@@ -169,8 +169,6 @@ class campaignFunctions(commands.Cog):
     async def showFinances(ctx: commands.Context, variablesList):
         campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
         if variablesList["iscountry"] == False:
-            await errorFunctions.sendError(ctx)
-            await ctx.send("You're a company!  This command isn't relevant to your faction - try `-viewStats` instead.")
             return
         print(campaignInfoList)
         date_string = str(campaignInfoList['timedate'])

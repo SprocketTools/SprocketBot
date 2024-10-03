@@ -131,7 +131,16 @@ class campaignFinanceFunctions(commands.Cog):
             channel3 = self.bot.get_channel(taxTransferChannel)
             await channel3.send(f"You have received income taxes from {factionChoiceName}!\nAmount: {campaignData['currencysymbol']}{taxTransfer} {campaignData['currencyname']}")
 
-
+    @commands.command(name="editFaction", description="Log a purchase made between players")
+    async def editFaction(self, ctx: commands.Context):
+        factionData = await campaignFunctions.getUserFactionData(ctx)
+        if factionData['iscountry'] == True:
+            await campaignFunctions.showStats(ctx, factionData)
+            salary = await textTools.getFlooredIntResponse(ctx, "What will your new median salary be?  Reply with a whole number.  \nTake note that this will directly affect your GDP.  The equation is:\n\n `GDP` = `population` * `average salary` / `population per worker ratio`", 1)
+            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''', [salary, factionData["factionkey"]])
+        bankbal = await textTools.getFlooredIntResponse(ctx,"How much money does your faction have in storage now?  Reply with a whole number.", 1)
+        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [bankbal, factionData["factionkey"]])
+        await ctx.send(f"## Done!\nYour new stats have been set!")
 
 
     @commands.command(name="setTaxes", description="Log a purchase made between players")
