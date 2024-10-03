@@ -154,32 +154,30 @@ class adminFunctions(commands.Cog):
                 else:
                     await channel.send(f"@{serverConfig[message.guild.id]['flagping']}")
 
-    # @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
-    # async def resetServerConfig(self, ctx: commands.Context):
-    #     if ctx.author.id == 712509599135301673:
-    #         pass
-    #     else:
-    #         return
-    #     prompt = "DROP TABLE IF EXISTS serverconfig"
-    #     await SQLfunctions.databaseExecute(prompt)
-    #     prompt = ('''CREATE TABLE IF NOT EXISTS serverconfig (
-    #                           serverid BIGINT,
-    #                           ownerID BIGINT,
-    #                           generalchannelID BIGINT,
-    #                           allowfunny BOOL,
-    #                           updateschannelID BIGINT,
-    #                           commandschannelID BIGINT,
-    #                           managerchannelID BIGINT,
-    #                           serverboosterroleID BIGINT,
-    #                           contestmanagerroleID BIGINT,
-    #                           botmanagerroleID BIGINT,
-    #                           campaignmanagerroleID BIGINT,
-    #                           flagthreshold INT,
-    #                           flagaction VARCHAR,
-    #                           flagping VARCHAR,
-    #                           flagpingid BIGINT);''')
-    #     await SQLfunctions.databaseExecute(prompt)
-    #     await ctx.send("Done!  Now go DM everyone that their config was reset.")
+    @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
+    async def resetServerConfig(self, ctx: commands.Context):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        prompt = ('''CREATE TABLE IF NOT EXISTS serverconfig (
+                              serverid BIGINT,
+                              ownerID BIGINT,
+                              generalchannelID BIGINT,
+                              allowfunny BOOL,
+                              updateschannelID BIGINT,
+                              commandschannelID BIGINT,
+                              managerchannelID BIGINT,
+                              serverboosterroleID BIGINT,
+                              contestmanagerroleID BIGINT,
+                              botmanagerroleID BIGINT,
+                              campaignmanagerroleID BIGINT,
+                              flagthreshold INT,
+                              flagaction VARCHAR,
+                              flagping VARCHAR,
+                              flagpingid BIGINT);''')
+        await SQLfunctions.databaseExecute(prompt)
+        await ctx.send("Done!  Now go DM everyone that their config was reset.")
 
     @commands.command(name="addScamConfig", description="Reset everyone's server configurations")
     async def resetScamConfig(self, ctx: commands.Context):

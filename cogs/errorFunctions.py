@@ -14,17 +14,15 @@ class errorFunctions(commands.Cog):
     errorList = []
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-    # @commands.command(name="resetErrorConfig", description="Reset everyone's server configurations")
-    # async def resetErrorConfig(self, ctx: commands.Context):
-    #     if ctx.author.id == 712509599135301673:
-    #         pass
-    #     else:
-    #         return
-    #     prompt = "DROP TABLE IF EXISTS errorlist"
-    #     await SQLfunctions.databaseExecute(prompt)
-    #     prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (error TEXT, status BOOLEAN, userid BIGINT);''')
-    #     await SQLfunctions.databaseExecute(prompt)
-    #     await ctx.send("Done!  Now go add some errors in.")
+    @commands.command(name="resetErrorConfig", description="Reset everyone's server configurations")
+    async def resetErrorConfig(self, ctx: commands.Context):
+        if ctx.author.id != main.ownerID:
+            return
+        prompt = "DROP TABLE IF EXISTS errorlist"
+        await SQLfunctions.databaseExecute(prompt)
+        prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (error TEXT, status BOOLEAN, userid BIGINT);''')
+        await SQLfunctions.databaseExecute(prompt)
+        await ctx.send("Done!  Now go add some errors in.")
 
     @commands.command(name="getError", description="higdffffffffffff")
     async def getError(self, ctx: commands.Context):
