@@ -132,10 +132,10 @@ class textTools(commands.Cog):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         response = msg.content.replace("%", "")
-        value = float(response)/100
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
+        value = float(response)/100
         return round(value, 6)
 
     async def getChannelResponse(ctx: commands.Context, prompt):
