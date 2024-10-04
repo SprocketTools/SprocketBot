@@ -10,6 +10,15 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
     - This function asks the user for an input, using the prompt as the question, and returns a sanitized string value with no limit on its length.
         - `prompt`: string
     - All of the response functions will use this similar format, with different behaviors to suit different tasks.
+    ```python
+        @commands.command(name="adminGetTable", description="add a column to a SQL table")
+        async def adminGetTable(self, ctx: commands.Context):
+            if ctx.author.id == main.ownerID:
+                await errorFunctions.sendError(ctx)
+                return
+            tablename = await errorFunctions.getResponse(ctx, "What is the table name?")
+            await ctx.send(await SQLfunctions.databaseFetchdict(f"SELECT * FROM {tablename};"))
+    ```
 - `textTools.getCappedResponse(ctx, prompt, length)`
     - This function asks the user for an input, and returns a sanitized string value.  If the length of the user input exceeds the defined length, the command will try again.  This is recommended for most use cases, as string inputs shouldn't be so long that the bot cannot resend it.
         - `length`: integer
@@ -49,6 +58,18 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
 - `SQLfunctions.databaseExecuteDynamic(prompt, values)`
     - This function performs a prepared SQL operation, where values are substituted into the SQL function to avoid SQL attacks.
         - `values`: list - the values need to align with the function
+    ```python
+        @commands.command(name="clearCampaignFactions", description="Remove all factions from a campaign")
+        async def clearCampaignFactions(self, ctx: commands.Context):
+            if campaignFunctions.isCampaignHost(ctx) == False:
+                await ctx.send(await errorFunctions.retrieveError(ctx))
+                return
+            campaignData = await campaignFunctions.getUserCampaignData(ctx)
+            campaignKey = campaignData["campaignkey"]
+            await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey])
+            await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignusers WHERE campaignkey = $1;''', [campaignKey])
+            await ctx.send("## Done!\nYour campaign has been cleared of all factions.")
+    ```
 - `SQLfunctions.databaseFetch(prompt)`
     - This function lets you retrieve SQL data from the database.
 - `SQLfunctions.databaseFetchDynamic(prompt, values)`
@@ -61,11 +82,23 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
     - This function lets you use a SQL operation to retrieve data.  The first row of data is formatted and returned as a list.
 - `SQLfunctions.databaseFetchdictDynamic(prompt, values)`
     - This function lets you use a prepared SQL operation to retrieve data.  Data is formatted and returned as a dict.
+    ```python
+        @commands.command(name="errorLeaderboard", description="Leaderboard of errors!")
+        async def errorLeaderboard(self, ctx: commands.Context):
+            totalErrors = len(await SQLfunctions.databaseFetchdict(f'SELECT error FROM errorlist;'))
+            embed = discord.Embed(title="Error Stats", description=f'''There are {totalErrors} error messages in the bot's collection!''',color=discord.Color.random())
+            userSetList = await SQLfunctions.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM errorlist GROUP BY userid ORDER BY value_occurrence DESC LIMIT 5;''')
+            for user in userSetList:
+                embed.add_field(name=self.bot.get_user(user['userid']), value=user['value_occurrence'], inline=False)
+            currentUser = (await SQLfunctions.databaseFetchdictDynamic(f'''SELECT userid, COUNT(userid) AS value_occ FROM errorlist WHERE userid = $1 GROUP BY userid;''', [ctx.author.id]))[0]['value_occ']
+            print(currentUser)
+            embed.set_footer(text=f"You have {currentUser} errors registered with the bot!")
+            await ctx.send(embed=embed)
+        ```
 - `SQLfunctions.databaseFetchrowDynamic(prompt, values)`
     - This function lets you use a prepared SQL operation to retrieve data.  The first row of data is formatted and returned as a dict.
 - `SQLfunctions.databaseFetchlistDynamic(prompt, values)`
     - This function lets you use a prepared SQL operation to retrieve data.  The first row of data is formatted and returned as a list.
-
 - `discordUIfunctions.getYesNoChoice(ctx)`
     - Returns a true or false boolean depending on user input.
 - `discordUIfunctions.getYesNoModifyStopChoice(ctx)`

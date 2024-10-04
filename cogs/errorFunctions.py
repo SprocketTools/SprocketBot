@@ -86,7 +86,7 @@ class errorFunctions(commands.Cog):
         if status == False:
             await ctx.send("This error message has been sent off for approval.")
 
-    @commands.command(name="errorLeaderboard", description="higdffffffffffff")
+    @commands.command(name="errorLeaderboard", description="Leaderboard of errors!")
     async def errorLeaderboard(self, ctx: commands.Context):
         totalErrors = len(await SQLfunctions.databaseFetchdict(f'SELECT error FROM errorlist;'))
         embed = discord.Embed(title="Error Stats", description=f'''There are {totalErrors} error messages in the bot's collection!''',color=discord.Color.random())

@@ -83,6 +83,8 @@ class adminFunctions(commands.Cog):
             return
         for cog in main.cogsList:
             await self.bot.reload_extension(cog)
+        if main.updateGithub == "Y":
+            await self.bot.reload_extension("cogs.githubTools")
         await ctx.send("Reloaded!")
 
 
@@ -332,11 +334,10 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="adminGetTable", description="add a column to a SQL table")
     async def adminGetTable(self, ctx: commands.Context):
-        if ctx.author.id == 712509599135301673:
-            pass
-        else:
+        if ctx.author.id == main.ownerID:
+            await errorFunctions.sendError(ctx)
             return
-        tablename = await errorFunctions.getResponse(ctx, "Whatis the table name?")
+        tablename = await errorFunctions.getResponse(ctx, "What is the table name?")
         await ctx.send(await SQLfunctions.databaseFetchdict(f"SELECT * FROM {tablename};"))
 
     @commands.command(name="setBotStatus", description="setup the server")

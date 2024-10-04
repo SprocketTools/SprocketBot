@@ -1,9 +1,9 @@
 # Getting Started
 So you've completed the setup guide and are ready to begin coding?  Great job!  Now the fun part begins.
 Most discord bots coded in Python will look quite different from your usual Python project, for a few big reasons:
-- main.py doesn't actually contain much.  All it really does is launch the bot.  All your actual commands are stored in "cogs"
-- All commands, and functions, depend on `async` to run "asyncronously"
-- The variable `ctx` is more common than `print()`
+- main.py doesn't actually contain much - all it really does is launch the bot.  Your actual commands are stored in "cogs".
+- All commands, and functions, depend on `async` to run "asyncronously".
+- The variable `ctx` is more common than `print()`.
 
 Let's break these down in more detail before providing some examples.
 ## cogs
