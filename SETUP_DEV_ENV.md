@@ -97,3 +97,7 @@ After setting these up, make sure to run `-addError` a couple times to ensure yo
 ## Hosting the bot
 
 Your general procedure for self-hosting Sprocket Bot is similar to what's covered in this guide, you'll just need to ensure that additional procedures are made for autostarting the bot, and update the configuration file to point to the correct values.  Also ensure that the database setup is correct, as you'll likely need a separate database for the bot.
+
+## Coding the bot
+
+Refer to [here](https://github.com/SprocketTools/SprocketBot/blob/main/CODING_INTRO.md) to get started.
