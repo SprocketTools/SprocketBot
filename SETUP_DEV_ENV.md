@@ -42,7 +42,7 @@ Sprocket Bot pushes updates to the SprocketTools.github.io website.  In order to
 ## Create the configuration.ini file
 
 In the `C:\SprocketBot` folder, create a file named `configuration.ini`.  Copy the code chunk below and replace the missing data bits with your information. 
-```
+```ini
 [SECURITY]
 user = postgres
 password = ~~ password to your PostgreSQL server ~~
