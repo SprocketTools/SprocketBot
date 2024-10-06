@@ -43,7 +43,7 @@ class campaignRegisterFunctions(commands.Cog):
             return
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaigns (campaignname VARCHAR, campaignrules VARCHAR(50000), hostserverid BIGINT, campaignkey BIGINT, timescale BIGINT, currencyname VARCHAR, currencysymbol VARCHAR, publiclogchannelid BIGINT, privatemoneychannelid BIGINT, defaultgdpgrowth REAL, defaultpopgrowth REAL, populationperkm INT, taxestoplayer REAL, poptoworkerratio REAL, active BOOLEAN, timedate TIMESTAMP);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, incomeindex REAL, lifeexpectancy REAL, educationindex REAL, educationspend REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL);''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, incomeindex REAL, lifeexpectancy REAL, educationindex REAL, educationspend REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         await ctx.send("## Done!")
 
@@ -253,11 +253,12 @@ class campaignRegisterFunctions(commands.Cog):
                     0.05, #educationspend
                     0.05, #socialspend
                     0.05, #infastructurespend
-                    salary #averagesalary
+                    salary, #averagesalary
+                    popworkerratio
                     ]
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, factionName])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)''', datalist)
         nameTest = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
         if len(nameTest) > 1:
             await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2 AND factionkey = $3;''',[ctx.guild.id, factionName, factionkey])
@@ -267,103 +268,9 @@ class campaignRegisterFunctions(commands.Cog):
             await ctx.send(f"## Done!\n{factionName} is now registered as a faction!")
         else:
             await ctx.send(f"## Done!\n{factionName} now awaits moderator approval.")
+            await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignusers VALUES ($1, $2, $3, true)''',[ctx.author.id, campaignKey, factionkey])
             log_channel = self.bot.get_channel(campaignData['privatemoneychannelid'])
             await log_channel.send(f'### {ctx.author.mention} has submitted the faction "{factionName}" to {campaignData["campaignname"]} and now awaits approval!\n\n-# Use `-approveCampaignFactions` to approve queued faction submissions.')
-
-        #except Exception:
-            #await ctx.send(await errorFunctions.retrieveError(ctx))
-
-
-    @commands.command(name="addCampaignFactionLegacy", description="Add a faction to a campaign")
-    async def addCampaignFactionLegacy(self, ctx: commands.Context):
-        orgCampaignData = await campaignFunctions.getUserCampaignData(ctx)
-        defaultPWR = float(orgCampaignData["poptoworkerratio"])
-        landlordid = 0
-        status = await campaignFunctions.isCampaignHost(ctx)
-        campaignKeyList = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
-        campaignKey = campaignKeyList['campaignkey']
-        jsonFile = await textTools.getFileResponse(ctx, "Upload your faction JSON file to add the faction.")
-        try:
-            campaignData = json.loads(await jsonFile.read())
-            campaignData["Faction name"] = await textTools.sanitize(campaignData["Faction name"])
-            campaignData["Faction name"] = campaignData["Faction name"][:64]
-            campaignData["Short description"] = await textTools.mild_sanitize(campaignData["Short description"])
-            campaignData["Short description"] = campaignData["Short description"][:1024]
-            campaignData["Flag image URL"] = await textTools.mild_sanitize(campaignData["Flag image URL"])
-            campaignData["Flag image URL"] = campaignData["Flag image URL"][:1024]
-        except Exception:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-            await ctx.send("This file failed to parse.  Fix the errors in your JSON file and resubmit.")
-            return
-        try:
-            print(await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''',[campaignKey, campaignData["Faction name"]]))
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-            await ctx.send('You already have a faction with this name!')
-            return
-        except Exception:
-            pass
-        if campaignData["Is a country"] == False:
-            campaignData["Population"] = 50000
-            campaignData["Land size"] = 5000
-            campaignData["Farmland size"] = 500
-        governanceScale = 0.8
-
-        if len(campaignData["Faction name"]) == 0 or len(campaignData["Short description"]) == 0:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-            await ctx.send("Your creativity in breaking the bot is appreciated.  Make sure your name and description are valid and rerun the command.")
-            return
-        if campaignData["Military funds"] <= 0 or campaignData["Population"] <= 0 or campaignData["Land size"] <= 0 or campaignData["Farmland size"] <= 0:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-            await ctx.send("Your creativity in breaking the bot is appreciated.  Make sure your numbers are valid and rerun the command.")
-            return
-        serverChannelData = str(ctx.guild.channels)
-        if str(campaignData["Logging channel ID"]) not in serverChannelData:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-            await ctx.send("Your creativity in breaking the bot is appreciated.  Make sure your logging channel is in the same server you're submitting from, then try again.")
-            return
-        # campaignkey BIGINT, factionkey BIGINT, approved BOOLEAN, factionname VARCHAR, description VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, money BIGINT, population BIGINT
-        if campaignData["Is a country"] == True:
-            governanceScale = await campaignFunctions.getGovernmentType(ctx)
-        else:
-            landlordname, landlordid = await campaignFunctions.pickCampaignCountry(ctx, "What country is your company stationed in?")
-        datalist = [campaignKey,
-                    time.time() + round(random.random()*10000),
-                    landlordid,
-                    status,
-                    orgCampaignData["active"],
-                    campaignData["Faction name"],
-                    campaignData["Short description"],
-                    campaignData["Flag image URL"],
-                    campaignData["Faction role ID"],
-                    campaignData["Logging channel ID"],
-                    campaignData["Is a country"],
-                    campaignData["Military funds"],
-                    campaignData["Population"],
-                    campaignData["Land size"],
-                    governanceScale,
-                    round(0.70/governanceScale, 3),
-                    round(0.75/governanceScale, 3),
-                    round(0.72/governanceScale, 3),
-                    round((0.15*governanceScale), 3),
-                    round((0.10*governanceScale), 3),
-                    int(campaignData["Population"]/defaultPWR * (700) / governanceScale),
-                    orgCampaignData["defaultgdpgrowth"],
-                    math.log((campaignData["Population"]/defaultPWR * (700) / governanceScale)/int(campaignData["Population"])/91.25)/math.log(839/91.25),
-                    round(70/governanceScale, 3),
-                    0.9,
-                    round(1 / governanceScale, 3),
-                    0.05,
-                    0.05,
-                    0.05,
-                    0.05
-                    ]
-
-        await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, campaignData["Faction name"]])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)''', datalist)
-        if status == True:
-            await ctx.send(f"## Done!\n{campaignData['Faction name']} is now registered as a faction!")
-        else:
-            await ctx.send(f"## Done!\n{campaignData['Faction name']} now awaits moderator approval.")
 
         #except Exception:
             #await ctx.send(await errorFunctions.retrieveError(ctx))
@@ -395,6 +302,7 @@ class campaignRegisterFunctions(commands.Cog):
                 await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE factionkey = $1;''', [faction['factionkey']])
                 await ctx.send("Deleted!")
                 await recipient.send(f"{faction['factionname']} was not accepted into {campaignData['campaignname']}.")
+                await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignusers SET status = False WHERE factionkey = $1 AND campaignkey = $2;''',[faction['factionkey'], campaignData['campaignkey']])
             elif answer == "modify":
                 scalar = await textTools.getFlooredFloatResponse(ctx, "Enter a ratio value for how much you want to multiply the faction's average salary.\n-# As an example, 0.5 will halve the salary.\nNote that changes to this value will directly affect the GDP, along with other stats, as a result.", 0)
                 await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET averagesalary = averagesalary * $2 WHERE factionkey = $1;''',[faction['factionkey'], scalar])
@@ -405,27 +313,6 @@ class campaignRegisterFunctions(commands.Cog):
                 await ctx.send("Alright, stopping here.")
                 return
         await ctx.send("All good here!")
-
-    @commands.command(name="toggleCampaignProgress", description="higdffffffffffff")
-    async def toggleCampaignProgress(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignHost(ctx) == False:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-            serverConfig = await adminFunctions.getServerConfig(ctx)
-            await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
-            return
-        campaignData = await campaignFunctions.getUserCampaignData(ctx)
-        if campaignData["hostserverid"] != ctx.guild.id:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-            return
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaigns SET active = NOT active WHERE hostserverid = $1;''',[ctx.guild.id])
-
-        await ctx.send("## Done!")
-        result = await SQLfunctions.databaseFetchlistDynamic('''SELECT campaignname, active, campaignkey FROM campaigns WHERE hostserverid = $1;''',[ctx.guild.id])
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET hostactive = $1 WHERE campaignkey = $2;''', [result[1], result[2]])
-        if result[1] == True:
-            await ctx.send(f'''{str(result[0])} will now initiate real-time updates.''')
-        else:
-            await ctx.send(f'''{str(result[0])} will stop real-time updates.''')
 
     @commands.command(name="addServerToCampaign", description="Add a server to an ongoing campaign")
     async def addServerToCampaign(self, ctx: commands.Context):

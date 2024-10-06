@@ -12,7 +12,6 @@ from discord import app_commands
 
 import main
 from cogs.SQLfunctions import SQLfunctions
-from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools

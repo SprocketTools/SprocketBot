@@ -22,25 +22,7 @@ class campaignInfoFunctions(commands.Cog):
 
     @commands.command(name="campaignSettings", description="generate a key that can be used to initiate a campaign")
     async def campaignSettings(self, ctx: commands.Context):
-        try:
-            campaignKey = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
-            data = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
-            embed = discord.Embed(title=f"{data['campaignname']} settings", description="These are the settings encompassing your entire campaign!", color=discord.Color.random())
-            embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
-            embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
-            embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
-            embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
-            if data['active'] == True:
-                embed.add_field(name="Current status", value=f"**Campaign is running**", inline=False)
-            if data['active'] == False:
-                embed.add_field(name="Current status", value=f"**Campaign is NOT running**", inline=False)
-            embed.set_footer(text="To start and pause a campaign, use `-toggleCampaignProgress`")
-            await ctx.send(embed=embed)
-        except Exception as e:
-            await ctx.send(f"Error:\n-# {e}\n\nMake sure that you have set up your server and joined, or started, a campaign.")
-
-
-
+        await campaignFunctions.showSettings(ctx)
 
     @commands.command(name="viewFactions", description="Get a list of all the factions in your campaign")
     async def viewFactions(self, ctx: commands.Context):

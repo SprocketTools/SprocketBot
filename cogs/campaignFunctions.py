@@ -18,6 +18,32 @@ class campaignFunctions(commands.Cog):
     async def updateCampaignServerSettings(ctx: commands.Context):
         campaignFunctions.campaignSettings = await SQLfunctions.databaseFetchdict(f'''SELECT * FROM campaignservers''')
 
+    async def showSettings(ctx: commands.Context):
+        try:
+            campaignKey = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
+            data = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
+            date_string = str(data['timedate'])
+            format_string = "%Y-%m-%d %H:%M:%S"
+            dt = datetime.strptime(date_string, format_string)
+            print(dt.year)
+            hour = dt.strftime("%I")
+            min = dt.strftime("%M %p")
+            day = dt.strftime("%A %B %d")
+            embed = discord.Embed(title=f"{data['campaignname']} settings", description="These are the settings encompassing your entire campaign!", color=discord.Color.random())
+            embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
+            embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
+            embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
+            embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
+            embed.add_field(name="Starting pop/worker ratio", value=f"{data['poptoworkerratio']}", inline=False)
+            if data['active'] == True:
+                embed.add_field(name="Current status", value=f"**Campaign is running**", inline=False)
+            if data['active'] == False:
+                embed.add_field(name="Current status", value=f"**Campaign is NOT running**", inline=False)
+            embed.set_footer(text=f"It is {hour}:{min} on {day}, {dt.year}")
+            await ctx.send(embed=embed)
+        except Exception as e:
+            await ctx.send(f"Error:\n-# {e}\n\nMake sure that you have set up your server and joined, or started, a campaign.")
+
     async def getUserFactionData(ctx: commands.Context):
         campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignData['campaignkey']
@@ -51,25 +77,26 @@ class campaignFunctions(commands.Cog):
         return result["factionname"]
 
     async def pickCampaignFaction(ctx: commands.Context, prompt: str):
-        try:
-            campaignKey = await campaignFunctions.getCampaignKey(ctx)
-            availableFactionsList = await SQLfunctions.databaseFetchdictDynamic(
-                '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1 ORDER BY factionname;''', [campaignKey])
-            factionList = []
-            factionData = {}
-            #print(availableFactionsList)
-            for faction in availableFactionsList:
-                name = faction["factionname"]
+        # try:
+        campaignKey = await campaignFunctions.getCampaignKey(ctx)
+        availableFactionsList = await SQLfunctions.databaseFetchdictDynamic(
+            '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1 ORDER BY factionname;''', [campaignKey])
+        factionList = []
+        factionData = {}
+        #print(availableFactionsList)
+        for faction in availableFactionsList:
+            name = faction["factionname"]
+            if name not in factionList:
                 factionList.append(name)
                 subFactionData = {}
                 subFactionData["factionkey"] = faction["factionkey"]
                 subFactionData["money"] = faction["money"]
                 factionData[name] = subFactionData
-            factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
-            return factionChoiceName, factionData[factionChoiceName]["factionkey"]
-        except Exception:
-            await errorFunctions.sendError(ctx)
-            await ctx.send("This server does not have any campaign factions.")
+        factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
+        return factionChoiceName, factionData[factionChoiceName]["factionkey"]
+        # except Exception:
+        #     await errorFunctions.sendError(ctx)
+        #     await ctx.send("This server does not have any campaign factions.")
 
     async def pickCampaignCountry(ctx: commands.Context, prompt: str):
         campaignKey = await campaignFunctions.getCampaignKey(ctx)
@@ -155,6 +182,7 @@ class campaignFunctions(commands.Cog):
             embed.add_field(name="Land", value="{:,}".format(int(variablesList["landsize"])) + " km²",inline=False)
             embed.add_field(name="Population size", value=("{:,}".format(int(variablesList["population"]))),inline=False)
             embed.add_field(name="Government type", value=await campaignFunctions.getGovernmentName(variablesList["governance"]), inline=False)
+            embed.add_field(name="Median salary", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["averagesalary"]))), inline=False)
             embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
             embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 1)) + "%", inline=False)
             embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)

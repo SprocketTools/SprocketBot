@@ -49,13 +49,14 @@ class campaignUpdateFunctions(commands.Cog):
         await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET timedate = timedate + make_interval(secs => timescale * $1) WHERE active = true AND active = true;''', [updateFrequency])
 
     async def updatePopulation(self):
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET population = population + population * POWER((farmefficiency*farmsize*subquery.populationperkm/population), 0.1) * incomeindex * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale FROM (SELECT timescale, populationperkm FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET population = population + population * 0.1 * POWER((subquery.populationperkm/population), 0.1) * incomeindex * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale FROM (SELECT timescale, populationperkm FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
 
     async def collectTaxes(self):
         await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET money = money + (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)) * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale * subquery.taxestoplayer) FROM (SELECT timescale, taxestoplayer FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
 
     async def updateGDP(self):
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET gdp = gdp + gdp * defaultgdpgrowth * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale  FROM (SELECT timescale, defaultgdpgrowth FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = averagesalary + averagesalary * defaultgdpgrowth * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale  FROM (SELECT timescale, defaultgdpgrowth FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET gdp = population * averagesalary / popworkerratio WHERE iscountry = true AND hostactive = true;''')
 
     async def updateIncome(self):
         # await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = CASE WHEN @gdp/population > 20 THEN (1 - (3*(LN((gdp/population) + 182.5)/((gdp/population) + 2)))) ELSE 0 END;''')

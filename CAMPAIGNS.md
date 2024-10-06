@@ -58,9 +58,71 @@ First, acquire the campaign key from the host.  Then, use the `-addServerToCampa
 - `-logPurchase`: Placeholder command.  Allows players to make a "purchase" from another faction.
 - `-logMaintenance`: Placeholder command.  Allows players to pay for maintenance costs.
 
-## Technical details: variables and constants for factions
+# Technical details 
+
+## variables and constants for campaigns overall
+timescale
+- This variable determines how quickly the campaign's time moves compared to IRL time.  Ex: a timescale of 30 means that for every real-world day, 30 days will pass in the campaign.
+
+currencyname
+- The name of your currency.  This shows up in alot of financial commands.
+
+currencysymbol
+- The symbol for your currency.  This can be anything, but should be a unique symbol like $, %, &, etc.
+
+defaultgdpgrowth
+- The expected growth rate of a country's overall revenue.  Ex: a value of 0.06 will denote a 6% growth.
+
+defaultpopgrowth
+- The expected growth rate of a country's population every year.  
+
+populationperkm
+- THe expected value for how many people can live off an acre of farmland.  WIll be depreciated if no use can be found for this value.
+
+taxestoplayer
+- When a country collects taxes, not all of it can be spent by the player.  This ratio determines how much of those collected taxes go to the player.
+
+poptoworkerratio
+- The starting ratio of how many people to employed people are in a country.  AKA the average family size.  Bigger values should denote a happier populace, while smaller values should denote a more productive populace.
+
+timedate
+- the timestamp of the campaign, used to tell the time.
+
+## Variables and constants for factions
 
 Note: variables that have obvious details (such as the faction name) are ommitted here.
+
+### Constants
+(These are set by the user)
+
+landsize
+- The amount of land that a country controls
+- This is a cosmetic value right now; it affects nothing.
+
+governance
+- This value is set when the player chooses their type of government, and can range between 0.8 and 1.2.  
+- This value affects multiple other stats
+
+taxpoor
+- The tax rate set for the lower class.  This makes up the bulk of a faction's income, but has more drastic side effects if set too high.
+
+taxrich
+- The tax rate set for the upper class and corporations.  This affects the income tax levied on companies that reside within the faction.
+
+educationspend
+- A user-set value that determines how much discretionary funding is redirected to education
+- Spending money in this category helps to increase new technology researched
+
+socialspend
+- A user-set value that determines how much discretionary funding is redirected to healthcare, social programs, etc.
+- Spending money in this category provides an all-around improvement to various categories
+
+infrastructurespend
+- A user-set value that determines how much discretionary funding is redirected to improving transportation
+- Increases in this value improve the efficiency of the army and overall GDP
+
+### Variables
+(Equations are used to keep these updated)
 
 money
 - The amount of discretionary funds available to the player.
@@ -69,27 +131,9 @@ money
 population
 - The amount of people spread out over the whole country
 
-landsize
-- The amount of land that a country controls
-- This is a cosmetic value right now; it affects nothing.
-
-farmsize
-- The amount of farmland that exists inside the country
-- If a country has too little farmland, this will have negative effects on the country as a whole
-
-governance
-- This value is set when the player chooses their type of government, and can range between 0.8 and 1.2.  
-- This value affects multiple other stats
-
 happiness
 - The cumulative "index" that amalyzes other statistics to show the integrity of the country's society
 - Low values will have negative downsides in the future
-
-taxpoor
-- The tax rate set for the lower class.  This makes up the bulk of a faction's income, but has more drastic side effects if set too high.
-
-taxrich
-- The tax rate set for the upper class and corporations.  This affects the income tax levied on companies that reside within the faction.
 
 gdp
 - The gross domestic product of a country over 1 IGY.  
@@ -112,22 +156,7 @@ educationindex
 - How efficient the education is within a country
 - This value is meant to change over time as a result of educational spending per pupil.
 
-farmefficiency
-- An efficiency scalar for farming that affects how many people a population can support
-
-agriculturespend
-- A user-set value that determines how many discretionary funds are redirected to improving agriculture
-- Spending money in this category helps to increase the efficiency scalar
-
-educationspend
-- A user-set value that determines how much discretionary funding is redirected to education
-- Spending money in this category helps to increase new technology researched
-
-socialspend
-- A user-set value that determines how much discretionary funding is redirected to healthcare, social programs, etc.
-- Spending money in this category provides an all-around improvement to various categories
-
-infrastructurespend
-- A user-set value that determines how much discretionary funding is redirected to improving transportation
-- Increases in this value improve the efficiency of the army and overall GDP
+popworkerratio
+- The country's population to worker ratio
+- Used to help determine its tax revenue
 

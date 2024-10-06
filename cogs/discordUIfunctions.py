@@ -16,6 +16,12 @@ class discordUIfunctions(commands.Cog):
         # promptResponses.__delitem__(contestHostID)
         return result
 
+    async def getButtonChoice(ctx: commands.Context, inList: list):
+        view = getButtonChoice(inList)
+        await ctx.send(view=view)
+        await view.wait()
+        return view.value
+
     async def getYesNoChoice(ctx: commands.Context):
         view = YesNoButtons()
         await ctx.send(view=view)
@@ -182,6 +188,9 @@ class YesNoButtons(discord.ui.View):
         await a.response.defer()
         self.stop()
 
+
+
+
 class YesNoModifyStopButtons(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=360)
@@ -209,3 +218,36 @@ class YesNoModifyStopButtons(discord.ui.View):
         self.value = "stop"
         await a.response.defer()
         self.stop()
+
+
+
+
+
+
+
+
+
+
+class buttonList(discord.ui.Button['getButtonChoice']):
+    # https://github.com/Rapptz/discord.py/blob/master/examples/views/tic_tac_toe.py
+    def __init__(self, value: str, row: int):
+        super().__init__(style=discord.ButtonStyle.secondary, label=value, row=row)
+        self.value = value
+        self.row = row
+
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        view: getButtonChoice = self.view
+        view.value = self.value
+        await interaction.response.defer()
+        view.stop()
+
+class getButtonChoice(discord.ui.View):
+    value = ""
+    def __init__(self, listIn: list):
+        super().__init__()
+        self.list = listIn
+        i = 0
+        for str in self.list:
+            self.add_item(buttonList(str, int(i/5)))
+            i += 1

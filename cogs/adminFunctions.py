@@ -6,7 +6,7 @@ from discord.ext import commands
 import os, platform, discord, configparser, ast, json
 from discord.ext import commands
 from discord import app_commands
-import json, asyncio
+import json, asyncio, requests
 from pathlib import Path
 from cogs.errorFunctions import errorFunctions
 
@@ -24,6 +24,7 @@ nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plu
 scamFlags = ["$", "steam", "asdfghjkl"]
 linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "https://temu.com/s/", "discord.gg", "discord.com/invite"]
 strikethreshold = 3
+piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c"]
 
 class adminFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -42,6 +43,8 @@ class adminFunctions(commands.Cog):
         await adminFunctions.printServerConfig(self)
     async def printServerConfig(self):
         print(serverConfig)
+
+
 
     @commands.command(name="testLatency", description="test the bot's latency")
     async def testLatency(self, ctx: commands.Context):
@@ -92,8 +95,19 @@ class adminFunctions(commands.Cog):
         print("Hi")
         return False
 
+    # detect the latest piratable version of Sprocket on websites like steamunlocked.  This will get plugged into the piracy scanner.
+
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.attachments:
+            print(message.attachments)
+            for attachment in message.attachments:
+                if ".blueprint" in attachment.filename:
+                    blueprintData = json.loads(await attachment.read())
+                    print()
+                    if blueprintData["header"]["gameVersion"] in piratedVersions:
+                        channel = self.bot.get_channel(1142053423370481747)
+                        await channel.send(f"Out-of-date blueprint was sent by <@{message.author.id}> (id: {message.author.id})\nVersion: {blueprintData['header']['gameVersion']}\nMessage: {message.jump_url}")
         if message.author.bot:
             return
         if serverConfig == {}:
