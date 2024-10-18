@@ -17,10 +17,16 @@ class discordUIfunctions(commands.Cog):
         return result
 
     async def getButtonChoice(ctx: commands.Context, inList: list):
-        view = getButtonChoice(inList)
+        view = getButtonChoice(ctx, inList)
         await ctx.send(view=view)
         await view.wait()
         return view.value
+
+    async def getButtonChoiceReturnID(ctx: commands.Context, inList: list):
+        view = getButtonChoiceReturnID(ctx, inList)
+        await ctx.send(view=view)
+        await view.wait()
+        return view.id
 
     async def getYesNoChoice(ctx: commands.Context):
         view = YesNoButtons()
@@ -63,11 +69,16 @@ class discordUIfunctions(commands.Cog):
     async def getChoiceFromList(ctx: commands.Context, categoryList: list, userPrompt: str):
         chosen = False
         int = 0
+        categoryList = list(set(categoryList))
         categoryList.sort()
         while chosen == False:
             categoryListSlice = categoryList[int:int+20]
             int = int + 20
-            view = listChoiceDropdownView(categoryListSlice)
+            if len(categoryList) == 1:
+                return categoryList[0]
+            if len(categoryList) == 0:
+                return
+            view = listChoiceDropdownView(ctx, categoryListSlice)
             await ctx.send(content=userPrompt, view=view, ephemeral=True)
             await view.wait()
             result = view.result
@@ -136,10 +147,13 @@ class categoryDropdown(discord.ui.Select):
                          options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        # promptResponses[self.authorID] = self.values[0]
-        self.view.result = self.values[0]
-        await interaction.response.defer()
-        self.view.stop()
+        if interaction.user == interaction.message.author:
+            # promptResponses[self.authorID] = self.values[0]
+            self.view.result = self.values[0]
+            await interaction.response.defer()
+            self.view.stop()
+
+
 
 class categoryDropdownView(discord.ui.View):
     def __init__(self, categoryList):
@@ -148,8 +162,9 @@ class categoryDropdownView(discord.ui.View):
         self.add_item(categoryDropdown(categoryList))
 
 class listChoiceDropdown(discord.ui.Select):
-    def __init__(self, itemList):
+    def __init__(self, ctx: commands.Context, itemList):
         self.categoryList = itemList
+        self.ctx = ctx
         i = 0
         options = []
         for item in itemList:
@@ -161,16 +176,19 @@ class listChoiceDropdown(discord.ui.Select):
                          options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        # promptResponses[self.authorID] = self.values[0]
-        self.view.result = self.values[0]
-        await interaction.response.defer()
-        self.view.stop()
+        if interaction.user == self.ctx.author:
+            # promptResponses[self.authorID] = self.values[0]
+            self.view.result = self.values[0]
+            await interaction.response.defer()
+            self.view.stop()
+        else:
+            await interaction.response.send_message(content="Love the ambition, but this isn't your menu.", ephemeral=True)
 
 class listChoiceDropdownView(discord.ui.View):
-    def __init__(self, categoryList):
+    def __init__(self, ctx: commands.Context, categoryList):
         super().__init__()
         self.contestList = categoryList
-        self.add_item(listChoiceDropdown(categoryList))
+        self.add_item(listChoiceDropdown(ctx, categoryList))
 
 class YesNoButtons(discord.ui.View):
     def __init__(self):
@@ -230,24 +248,63 @@ class YesNoModifyStopButtons(discord.ui.View):
 
 class buttonList(discord.ui.Button['getButtonChoice']):
     # https://github.com/Rapptz/discord.py/blob/master/examples/views/tic_tac_toe.py
-    def __init__(self, value: str, row: int):
+    def __init__(self, ctx: commands.Context, value: str, row: int):
         super().__init__(style=discord.ButtonStyle.secondary, label=value, row=row)
         self.value = value
         self.row = row
+        self.ctx = ctx
 
     async def callback(self, interaction: discord.Interaction):
-        assert self.view is not None
-        view: getButtonChoice = self.view
-        view.value = self.value
-        await interaction.response.defer()
-        view.stop()
+        if interaction.user == self.ctx.author:
+            assert self.view is not None
+            view: getButtonChoice = self.view
+            view.value = self.value
+            await interaction.response.defer()
+            view.stop()
+        else:
+            await interaction.response.send_message(content="### Ouchie!  \n[Don't touch my buttons, they aren't yours!](<https://www.youtube.com/watch?v=a6pbjksYUHY>)\n", ephemeral=True)
 
 class getButtonChoice(discord.ui.View):
     value = ""
-    def __init__(self, listIn: list):
+    def __init__(self, ctx: commands.Context, listIn: list):
+        super().__init__()
+        self.list = listIn
+        self.ctx = ctx
+        i = 0
+        for str in self.list:
+            self.add_item(buttonList(ctx, str, int(i/5)))
+            i += 1
+
+
+
+
+
+class buttonListReturnID(discord.ui.Button['getButtonChoiceReturnID']):
+    # https://github.com/Rapptz/discord.py/blob/master/examples/views/tic_tac_toe.py
+    def __init__(self, ctx: commands.Context, value: str, id: str, row: int):
+        super().__init__(style=discord.ButtonStyle.secondary, label=value, row=row)
+        self.id = id
+        self.row = row
+        self.ctx = ctx
+
+    async def callback(self, interaction: discord.Interaction):
+        print(interaction.user)
+        print(interaction.message.author)
+        if interaction.user == self.ctx.author:
+            assert self.view is not None
+            view: getButtonChoiceReturnID = self.view
+            view.id = self.id
+            await interaction.response.defer()
+            view.stop()
+        else:
+            await interaction.response.send_message(content="### Ouchie!  \n[Don't touch my buttons, they aren't yours!](<https://www.youtube.com/watch?v=a6pbjksYUHY>)\n", ephemeral=True)
+
+class getButtonChoiceReturnID(discord.ui.View):
+    value = ""
+    def __init__(self, ctx: commands.Context, listIn: list):
         super().__init__()
         self.list = listIn
         i = 0
         for str in self.list:
-            self.add_item(buttonList(str, int(i/5)))
+            self.add_item(buttonListReturnID(ctx, str[0], str[1], int(i/5)))
             i += 1

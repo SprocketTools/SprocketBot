@@ -46,6 +46,10 @@ First, acquire the campaign key from the host.  Then, use the `-addServerToCampa
 - `-leaveCampaign`: Allows the player to leave all factions of a campaign.
 - `-approveCampaignFactions`: Allows the campaign manager to approve factions into the campaign.  Any factions not submitted by a campaign manager must go through this process.
 - `-overwriteCampaignSettings`: Allows campaign managers to change the settings of their campaign
+- `-manageCampaign`: Allows managers to make edits to the campaign
+- `-manageFaction`: Allows players and campaign managers to make edits to their factions, or all factions for campaign managers.
+- `-manageFactionBulk`: Allows managers to mass-edit factions using a json file.
+
 ### Information
 - `-campaignSettings`: Allows players to see the settings for a campaign
 - `-viewStats`: Allows players to view information about their faction

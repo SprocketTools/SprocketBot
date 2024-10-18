@@ -114,6 +114,34 @@ class campaignFinanceFunctions(commands.Cog):
             taxTransferChannel = factionTaxerData["logchannel"]
             taxTransferName = factionTaxerData["factionname"]
 
+        @commands.command(name="addAutoPurchase", description="Log a purchase made between players")
+        async def addAutoPurchase(self, ctx: commands.Context):
+            factionData = await campaignFunctions.getUserFactionData(ctx)
+            if not factionData['factionname']:
+                return
+            campaignData = await campaignFunctions.getUserCampaignData(ctx)
+            factionChoiceName, factionChoiceKey = await campaignFunctions.pickCampaignFaction(ctx,"Who are you purchasing equipment from?")
+            factionChoiceData = await campaignFunctions.getFactionData(factionChoiceKey)
+            taxTransfer = 0
+            taxTransferChannel = 0
+            taxTransferName = ""
+            moneyAdd = await textTools.getIntResponse(ctx, "How much is the purchase going to be?")
+            if moneyAdd > factionData["money"]:
+                await errorFunctions.sendError(ctx)
+                await ctx.send("You don't have enough money to finance this transaction!")
+                return
+            if moneyAdd < 1:
+                await errorFunctions.sendError(ctx)
+                await ctx.send("A bit crafty, but unfortunately not legal here.")
+                return
+            if factionChoiceData["iscountry"] == False:
+                moneyProfit = await textTools.getIntResponse(ctx,
+                                                             f"How much {factionChoiceName} profit from this transaction?\nNote: subtract all expenses from {campaignData['currencysymbol']}{moneyAdd} to get this value.")
+                factionTaxerData = await campaignFunctions.getFactionData(factionChoiceData["landlordfactionkey"])
+                taxTransfer = int(factionTaxerData["taxrich"] * moneyProfit)
+                taxTransferChannel = factionTaxerData["logchannel"]
+                taxTransferName = factionTaxerData["factionname"]
+
         shipDate = await textTools.getResponse(ctx, "When do you anticipate the order being completed?  Specify the month and year.")
         logDetails = await textTools.getResponse(ctx, "Describe anything else about the transaction, such as what equipment is being transferred.  This will be logged for the campaign managers to view.")
         logDetails = await textTools.mild_sanitize(logDetails)

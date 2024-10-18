@@ -607,7 +607,7 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-                error = await errorFunctions.retrieveError(ctx)
+                error = await errorFunctions.retrieveCategorizedError(ctx, "blueprint")
                 await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
         for attachment in ctx.message.attachments:
@@ -649,7 +649,7 @@ class blueprintFunctions(commands.Cog):
                 for meshBase in blueprintData["meshes"]:
                     if compartmentNameData[meshBase["vuid"]] != "Unnamed Structure":
                         if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                            await ctx.send(await errorFunctions.retrieveError(ctx))
+                            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send(
                                 "Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                             return
@@ -673,7 +673,7 @@ class blueprintFunctions(commands.Cog):
                             await ctx.send(file=discord.File(data, f'{compartmentNameData[meshBase["vuid"]]}.json'))
 
                         else:
-                            await ctx.send(await errorFunctions.retrieveError(ctx))
+                            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send(
                                 "I was unable to download the base .json file needed to create the compartment.  Maybe the GitHub servers are down or something.")
                         i += 1
@@ -685,7 +685,7 @@ class blueprintFunctions(commands.Cog):
                 for meshBase in blueprintData["meshes"]:
                     if meshBase["vuid"] == Vuid:
                         if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                            await ctx.send(await errorFunctions.retrieveError(ctx))
+                            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send("Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                             return
                         compartmentData = blueprintData["meshes"][i]["meshData"]
@@ -710,7 +710,7 @@ class blueprintFunctions(commands.Cog):
                             await ctx.send(file=discord.File(data, f'{answer}.json'))
                             await ctx.send("Place this model into `C:\Program Files (x86)\Steam\steamapps\common\Sprocket\Sprocket_Data\StreamingAssets\Parts` and reload the game for it to appear.")
                         else:
-                            await ctx.send(await errorFunctions.retrieveError(ctx))
+                            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send("I was unable to download the base .json file needed to create the compartment.  Maybe the GitHub servers are down or something.")
 
                     i += 1
@@ -725,9 +725,9 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-            error = await errorFunctions.retrieveError(ctx)
+            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
             await ctx.send(
-                f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+                f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
             return
         sourceFile = await textTools.getFileResponse(ctx, "Upload the first .blueprint that contains your compartment.  Note: unnamed structures will not be listed, so make sure your source compartment has a unique name.")
         targetFile = await textTools.getFileResponse(ctx,"Upload the second .blueprint that you wish to modify.  Note: your target structure will not be listed if it does not have a unique name.")

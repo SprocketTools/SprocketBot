@@ -93,5 +93,9 @@ class campaignUpdateFunctions(commands.Cog):
         await status_log_channel.send("Update is complete!")
         await ctx.send("## Done!")
 
+    async def softUpdate(self):
+        await self.updateGDP()
+        await self.updateHappiness()
+
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignUpdateFunctions(bot))

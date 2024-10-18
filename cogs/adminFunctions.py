@@ -1,4 +1,6 @@
-import discord, datetime, time, io
+import random
+
+import discord, datetime, time, io, random
 from datetime import timedelta
 from PIL import Image, ImageChops
 import requests
@@ -99,19 +101,24 @@ class adminFunctions(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+
+        if message.author.bot:
+            return
+        # blueprint scanner
         if message.attachments:
             print(message.attachments)
             for attachment in message.attachments:
                 if ".blueprint" in attachment.filename:
                     blueprintData = json.loads(await attachment.read())
-                    print()
                     if blueprintData["header"]["gameVersion"] in piratedVersions:
                         channel = self.bot.get_channel(1142053423370481747)
                         await channel.send(f"Out-of-date blueprint was sent by <@{message.author.id}> (id: {message.author.id})\nVersion: {blueprintData['header']['gameVersion']}\nMessage: {message.jump_url}")
-        if message.author.bot:
-            return
+
         if serverConfig == {}:
             await adminFunctions.updateServerConfig(self)
+            return
+
+        #scam scanner
         messageParse = message.content.lower()
         nudeTrigger = 0
         scamTrigger = 0
@@ -169,6 +176,42 @@ class adminFunctions(commands.Cog):
                     await channel.send(f"<@&{serverConfig[message.guild.id]['flagpingid']}>")
                 else:
                     await channel.send(f"@{serverConfig[message.guild.id]['flagping']}")
+
+
+        if serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"]:
+            i = int(random.random()*5000)
+            if i == 1:
+                serverConfig[message.guild.id]["funnycounter"] = 10
+                category = random.choice(["compliment", "insult", "sprocket", "flyout", "video", "gif", "joke", "campaign", "blueprint"])
+                await message.reply(await errorFunctions.retrieveCategorizedError(message, category))
+            try:
+                if serverConfig[message.guild.id]["funnycounter"] > 0 and i < 700:
+                    serverConfig[message.guild.id]["funnycounter"] = serverConfig[message.guild.id]["funnycounter"] - 1
+                    category = random.choice(["compliment", "insult", "sprocket", "flyout", "video", "gif", "joke", "campaign", "blueprint"])
+                    await message.reply(await errorFunctions.retrieveCategorizedError(message, category))
+            except Exception:
+                serverConfig[message.guild.id]["funnycounter"] = 0
+
+    @commands.command(name="setTrollCount", description="reload all extensions")
+    async def setTrollCount(self, ctx: commands.Context):
+        try:
+            if ctx.author.id != 712509599135301673:
+                return
+            serverID = await textTools.getIntResponse(ctx, "What is the server ID?")
+            if serverConfig[serverID]["allowfunny"] != True:
+                await ctx.send("WARNING: This server has the fun module disabled; the command will NOT work!")
+                return
+            count = await textTools.getIntResponse(ctx, "What do you want to set the troll count to?")
+            serverConfig[serverID]["funnycounter"] = count
+            await ctx.send("## Done!")
+        except Exception as e:
+            await ctx.send(str(e))
+
+
+
+
+
+
 
     @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
     async def resetServerConfig(self, ctx: commands.Context):
@@ -271,12 +314,56 @@ class adminFunctions(commands.Cog):
     @commands.command(name="listMyServers", description="List all my servers.")
     async def listMyServers(self, ctx: commands.Context):
         i = 0
+        c = 0
         serverList = "Your server list:"
         for server in self.bot.guilds:
-            serverList = serverList + f"\n{server.name}"
+            serverList = serverList + f"\n{server.name} ({server.member_count} members)"
             i+= 1
+            c += server.member_count
+            if i % 20 == 0:
+                await ctx.send(serverList)
+                serverList = ""
         await ctx.send(serverList)
         await ctx.send(f"count: {i} servers!")
+        await ctx.send(f"serving: {c} members!")
+
+    @commands.command(name="listVulnerableServers", description="List all my servers.")
+    async def listVulnerableServers(self, ctx: commands.Context, count: int):
+        i = 0
+        c = 0
+        serverList = "Your server list:"
+        for server in self.bot.guilds:
+            if server.member_count < count:
+                serverList = serverList + f"\n{server.name} ({server.member_count} members)"
+                i+= 1
+                c += server.member_count
+                if i % 20 == 0:
+                    await ctx.send(serverList)
+                    serverList = ""
+        await ctx.send(serverList)
+
+    @commands.command(name="pruneServers", description="List all my servers.")
+    async def pruneServers(self, ctx: commands.Context, count: int):
+        i = 0
+        protectedServers = ["The Oteran Republic", "SkyFall Aerospace"]
+        serverList = "Your server list:"
+        for server in self.bot.guilds:
+            serverList = serverList + f"\n{server.name} ({server.member_count} members)"
+            if server.member_count < count and server.name not in protectedServers:
+                try:
+                    await server.owner.send(f"Note: As a result of my current 100-server limitation, I have left **{server.name}** due to insufficient member count.  ")
+                except Exception:
+                    serverList = serverList + f".  <@{server.owner_id}> apparently had me blocked"
+                await server.leave()
+                serverList = serverList + " - I have now left this server."
+            i+= 1
+        await ctx.send(serverList)
+        await ctx.send(f"original count: {i} servers.")
+        e = 0
+        for server in self.bot.guilds:
+            e+= 1
+        await ctx.send(f"servers left: {i - e} servers.")
+        await ctx.send(f"remaining servers: {e} servers.")
 
     @commands.command(name="sendGlobalUpdate", description="Send a global update to all servers.")
     async def sendGlobalUpdate(self, ctx: commands.Context):
@@ -338,13 +425,22 @@ class adminFunctions(commands.Cog):
         options = ["VARCHAR", "BIGINT", "REAL", "BOOLEAN"]
         prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, REALs are for floats, and BOOLEANs are true/false."
         varType = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
-
-        defaultVal = await errorFunctions.getResponse(ctx,"What will the default value be?")
         try:
-            await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType} DEFAULT {defaultVal};''')
+            if varType == "VARCHAR":
+                await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType};''')
+            else:
+                defaultVal = await errorFunctions.getResponse(ctx,"What will the default value be?")
+                await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType} DEFAULT {defaultVal};''')
             await ctx.send("Operation successful!")
         except Exception:
             await ctx.send("Something was incorrect.")
+
+    @commands.command(name="adminDownloadErrors", description="add a column to a SQL table")
+    async def adminDownloadErrors(self, ctx: commands.Context):
+        data = await SQLfunctions.databaseFetchdict('''SELECT * FROM errorlist''')
+        stringOut = json.dumps(data, indent=4)
+        data = io.BytesIO(stringOut.encode())
+        await ctx.send(file=discord.File(data, f'errors.json'))
 
     @commands.command(name="adminGetTable", description="add a column to a SQL table")
     async def adminGetTable(self, ctx: commands.Context):

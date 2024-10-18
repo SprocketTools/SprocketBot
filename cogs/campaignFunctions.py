@@ -54,9 +54,9 @@ class campaignFunctions(commands.Cog):
             name = await campaignFunctions.getFactionName(faction["factionkey"])
             campaignNameList.append(name)
             campaignDataList[str(name)] = faction["factionkey"]
-        if len(campaignDataList) == 1:
+        if len(campaignNameList) == 1:
             factionKey = campaignDataList[campaignNameList[0]]
-        if len(campaignNameList) == 0:
+        elif len(campaignNameList) == 0:
             await errorFunctions.sendError(ctx)
             await ctx.send("You aren't a part of any factions within this campaign!  Join one using `-joinFaction` and then try again.")
         else:
