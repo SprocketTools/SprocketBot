@@ -72,6 +72,8 @@ class Bot(commands.Bot):
         print(f'Logged in as {bot.user} (ID: {bot.user.id})')
         print('------')
 
+
+
 class Management:
     def __init__(self, bot):
         self.bot = bot
@@ -101,3 +103,4 @@ bot = Bot()
 bot.run(discordToken)
 
 blacklist_ids = ['712509599135301673']
+

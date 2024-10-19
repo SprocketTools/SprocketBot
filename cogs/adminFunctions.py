@@ -46,7 +46,10 @@ class adminFunctions(commands.Cog):
     async def printServerConfig(self):
         print(serverConfig)
 
-
+    @commands.check
+    def blacklist_test(ctx):
+        print("denied")
+        return False
 
     @commands.command(name="testLatency", description="test the bot's latency")
     async def testLatency(self, ctx: commands.Context):
@@ -177,13 +180,24 @@ class adminFunctions(commands.Cog):
                 else:
                     await channel.send(f"@{serverConfig[message.guild.id]['flagping']}")
 
-
-        if serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"]:
-            i = int(random.random()*5000)
+        # fun module
+        special_list = {
+            "amogus": "compliment",
+            "skibidi": "insult",
+            "colon": "insult"
+            }
+        if serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"] or message.author.id == main.ownerID:
+            prob = 1000
+            i = int(random.random()*prob)
+            print(i)
             if i == 1:
-                serverConfig[message.guild.id]["funnycounter"] = 10
+                serverConfig[message.guild.id]["funnycounter"] = 5
                 category = random.choice(["compliment", "insult", "sprocket", "flyout", "video", "gif", "joke", "campaign", "blueprint"])
                 await message.reply(await errorFunctions.retrieveCategorizedError(message, category))
+            if i <= prob/2:
+                for x in special_list:
+                    if x in message.content.lower:
+                        await message.reply(await errorFunctions.retrieveCategorizedError(message, special_list[x]))
             try:
                 if serverConfig[message.guild.id]["funnycounter"] > 0 and i < 700:
                     serverConfig[message.guild.id]["funnycounter"] = serverConfig[message.guild.id]["funnycounter"] - 1

@@ -27,7 +27,7 @@ class campaignRegisterFunctions(commands.Cog):
     @commands.command(name="generateCampaignKey", description="generate a key that can be used to initiate a campaign")
     async def generateCampaignKey(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you are the bot owner and try again.")
             return
@@ -39,7 +39,7 @@ class campaignRegisterFunctions(commands.Cog):
     @commands.command(name="setupCampaignDatabase", description="generate a key that can be used to initiate a campaign")
     async def setupCampaignDatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaigns (campaignname VARCHAR, campaignrules VARCHAR(50000), hostserverid BIGINT, campaignkey BIGINT, timescale BIGINT, currencyname VARCHAR, currencysymbol VARCHAR, publiclogchannelid BIGINT, privatemoneychannelid BIGINT, defaultgdpgrowth REAL, defaultpopgrowth REAL, populationperkm INT, taxestoplayer REAL, poptoworkerratio REAL, active BOOLEAN, timedate TIMESTAMP);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
@@ -51,7 +51,7 @@ class campaignRegisterFunctions(commands.Cog):
     @commands.command(name="clearCampaignFactions", description="generate a key that can be used to initiate a campaign")
     async def clearCampaignFactions(self, ctx: commands.Context):
         if campaignFunctions.isCampaignHost(ctx) == False:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         campaignKey = campaignData["campaignkey"]
@@ -62,7 +62,7 @@ class campaignRegisterFunctions(commands.Cog):
     @commands.command(name="startCampaign", description="Start a campaign")
     async def startCampaign(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignManager(ctx) == False:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
             return
@@ -74,7 +74,7 @@ class campaignRegisterFunctions(commands.Cog):
             if userKey != self.activeRegistKey:
                 print(userKey)
                 print(self.activeRegistKey)
-                await ctx.send(await errorFunctions.retrieveError(ctx))
+                await errorFunctions.sendCategorizedError(ctx, "campaign")
                 return
 
         campaignName = await textTools.getCappedResponse(ctx, "What is the name of your campaign?", 128)
@@ -122,13 +122,13 @@ class campaignRegisterFunctions(commands.Cog):
     @commands.command(name="overwriteCampaignSettings", description="generate a key that can be used to initiate a campaign")
     async def overwriteCampaignSettings(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
-            await ctx.send(await errorFunctions.getError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         oldCampaignData = await campaignFunctions.getUserCampaignData(ctx)
         userKey = oldCampaignData["campaignkey"]
 
         if ctx.guild.id == oldCampaignData["hostserverid"]:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             await ctx.send("This isn't your campaign!  You would need to make your own campaign in order to modify its settings.")
             return
         print(oldCampaignData)
@@ -156,7 +156,7 @@ class campaignRegisterFunctions(commands.Cog):
             await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignservers VALUES ($1, $2)''', [ctx.guild.id, userKey])
             await ctx.send("## Done!")
         except Exception:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
 
     @commands.command(name="addCampaignFaction", description="Add a faction to a campaign")
     async def addCampaignFaction(self, ctx: commands.Context):
@@ -279,7 +279,7 @@ class campaignRegisterFunctions(commands.Cog):
     @commands.command(name="approveCampaignFactions", description="higdffffffffffff")
     async def approveCampaignFactions(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
             return
@@ -287,7 +287,7 @@ class campaignRegisterFunctions(commands.Cog):
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         factionDict = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM campaignfactions WHERE approved = false AND campaignkey = $1;''', [campaignData["campaignkey"]])
         if campaignData["hostserverid"] != ctx.guild.id:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         for faction in factionDict:
             await campaignFunctions.showStats(ctx, faction)
@@ -318,7 +318,7 @@ class campaignRegisterFunctions(commands.Cog):
     @commands.command(name="addServerToCampaign", description="Add a server to an ongoing campaign")
     async def addServerToCampaign(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignManager(ctx) == False:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
             return
@@ -326,7 +326,7 @@ class campaignRegisterFunctions(commands.Cog):
         resultKeyData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = $1;''',[userKey])
         resultKey = resultKeyData["campaignkey"]
         if userKey != resultKey:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignservers VALUES ($1, $2)''',[ctx.guild.id, userKey])
@@ -346,7 +346,7 @@ class campaignRegisterFunctions(commands.Cog):
                     factionNameList.append(serverData['factionname'])
                     factionNameDict[serverData['factionname']] = serverData['factionkey']
         if len(factionNameList) == 0:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             await ctx.send("No factions are available for you to join!  Ensure that you have the correct role.")
             return
         promptText = "Pick the faction you would like to join."

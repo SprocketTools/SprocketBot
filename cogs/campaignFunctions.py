@@ -57,7 +57,7 @@ class campaignFunctions(commands.Cog):
         if len(campaignNameList) == 1:
             factionKey = campaignDataList[campaignNameList[0]]
         elif len(campaignNameList) == 0:
-            await errorFunctions.sendError(ctx)
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             await ctx.send("You aren't a part of any factions within this campaign!  Join one using `-joinFaction` and then try again.")
         else:
             factionName = await discordUIfunctions.getChoiceFromList(ctx, campaignNameList, "Choose your faction below:")
@@ -240,7 +240,7 @@ class campaignFunctions(commands.Cog):
                 return True
             return False
         except Exception:
-            await errorFunctions.sendError(ctx)
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             await ctx.send("It appears your server has not set up its roles correctly.  Ask an administrator to use the `-setup` command and give you the campaign manager role.")
             return False
     async def isCampaignHost(ctx: commands.Context):

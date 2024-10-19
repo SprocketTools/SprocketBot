@@ -288,6 +288,12 @@ class errorFunctions(commands.Cog):
         error = await errorFunctions.errorfyText(ctx, error)
         return error
 
+    async def sendCategorizedError(ctx: commands.Context, category: str):
+        error = (await SQLfunctions.databaseFetchrowDynamic(f'SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;', [category]))["error"]
+        error = await errorFunctions.errorfyText(ctx, error)
+        await ctx.send(error)
+        return
+
     async def sendError(ctx: commands.Context):
         error = (await SQLfunctions.databaseFetchrow(f'SELECT error from errorlist WHERE status = true ORDER BY RANDOM() LIMIT 1;'))["error"]
         error = await errorFunctions.errorfyText(ctx, error)

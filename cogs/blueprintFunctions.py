@@ -26,8 +26,9 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-                await ctx.send(f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
-                return
+            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
+            await ctx.send(f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+            return
         # received if else statement from stackoverflow: https://stackoverflow.com/questions/65169339/download-csv-file-sent-by-user-discord-py
         for attachment in ctx.message.attachments:
 
@@ -465,6 +466,7 @@ class blueprintFunctions(commands.Cog):
         version = blueprintData["header"]["gameVersion"]
         if "0.12" not in version:
             errorText = await errorFunctions.retrieveError(ctx)
+            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
             await ctx.reply(f"{errorText}\n\nThis command does not support the Geometric Internals build yet.")
 
         x = 0

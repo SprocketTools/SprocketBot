@@ -147,13 +147,13 @@ class campaignManageFunctions(commands.Cog):
 
     async def toggleCampaignProgress(ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
             return
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         if campaignData["hostserverid"] != ctx.guild.id:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecuteDynamic('''UPDATE campaigns SET active = NOT active WHERE hostserverid = $1;''',[ctx.guild.id])
 
