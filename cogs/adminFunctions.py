@@ -196,8 +196,8 @@ class adminFunctions(commands.Cog):
                 await message.reply(await errorFunctions.retrieveCategorizedError(message, category))
             if i <= prob/2:
                 for x in special_list:
-                    if x in message.content.lower:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(message, special_list[x]))
+                    if x in message.content.lower():
+                        await textTools.sendThenDelete(message, await errorFunctions.retrieveCategorizedError(message, special_list[x]))
             try:
                 if serverConfig[message.guild.id]["funnycounter"] > 0 and i < 700:
                     serverConfig[message.guild.id]["funnycounter"] = serverConfig[message.guild.id]["funnycounter"] - 1

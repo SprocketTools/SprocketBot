@@ -55,6 +55,11 @@ class textTools(commands.Cog):
             raise ValueError("User termination")
         return await textTools.mild_sanitize(msg.content)
 
+    async def sendThenDelete(ctx: commands.Context, prompt):
+        message = await ctx.reply(prompt)
+        await asyncio.sleep(15)
+        await message.delete()
+
     async def getCappedResponse(ctx: commands.Context, prompt, leng):
         while True:
             await ctx.send(prompt)
