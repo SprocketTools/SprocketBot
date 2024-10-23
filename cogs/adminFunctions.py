@@ -11,6 +11,8 @@ from discord import app_commands
 import json, asyncio, requests
 from pathlib import Path
 from cogs.errorFunctions import errorFunctions
+import random, asyncio, datetime
+from discord.ext import tasks
 
 import main
 from cogs.textTools import textTools
@@ -27,13 +29,15 @@ scamFlags = ["$", "steam", "asdfghjkl"]
 linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "https://temu.com/s/", "discord.gg", "discord.com/invite"]
 strikethreshold = 3
 piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c"]
-
+colorint = -1
 class adminFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.printOut.start()
+        self.colorint = colorint
+        self.color1 = (250, 250, 120)
+        self.color2 = (119, 86, 35)
 
-    def __before_invoke(self, ctx):
-        print("hi")
 
     async def updateServerConfig(self):
         for guild in self.bot.guilds:
@@ -94,6 +98,31 @@ class adminFunctions(commands.Cog):
         if main.updateGithub == "Y":
             await self.bot.reload_extension("cogs.githubTools")
         await ctx.send("Reloaded!")
+
+    @tasks.loop(seconds=12)
+    async def printOut(self):
+        if self.colorint == -1:
+            await asyncio.sleep(10)
+            self.colorint = 0
+        else:
+            server = self.bot.get_guild(int('1137849402891960340'))
+            #print(self.colorint)
+            role = discord.utils.get(server.roles, name="Bot Developer")
+            color2 = discord.Color.from_hsv((self.colorint)/100, 1, 1)
+            self.colorint = self.colorint + 5
+            if self.colorint > 99:
+                self.colorint = 100
+            #color2 = discord.Color.from_rgb(int(random.random()*255), int(random.random()*255), int(random.random()*255))
+            #
+            percent = self.colorint/100
+            color3_r = self.color1[0] - (self.color1[0] - self.color2[0]) * percent
+            color3_g = self.color1[1] - (self.color1[1] - self.color2[1]) * percent
+            color3_b = self.color1[2] - (self.color1[2] - self.color2[2]) * percent
+            color3 = (int(color3_r), int(color3_g), int(color3_b))
+            print(color3)
+            color3out = discord.Color.from_rgb(int(color3_r), int(color3_g), int(color3_b))
+            await role.edit(color=color3out)
+
 
 
     def authorize(ctx: commands.Context, bot):
