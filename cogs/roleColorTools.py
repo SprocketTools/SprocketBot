@@ -64,7 +64,13 @@ class roleColorTools(commands.Cog):
 
     @commands.command(name="addColorChanger", description="generate a key that can be used to initiate a campaign")
     async def addColorChanger(self, ctx: commands.Context):
-        serverid = ctx.guild.id
+
+        await ctx.send("Do you want to use this server?")
+        isThisServer = await discordUIfunctions.getYesNoChoice(ctx)
+        if isThisServer == True:
+            serverid = ctx.guild.id
+        else:
+            serverid = await textTools.getIntResponse(ctx, "What is the server ID you wish to use?")
         roleid = await textTools.getIntResponse(ctx, "What role do you want to update?  Reply with that role's ID.")
         minutes = await textTools.getIntResponse(ctx, "How many minutes do you want the update to take?  Reply with an integer.")
         await ctx.send("Do you want to make it a rainbow color?")
@@ -92,11 +98,6 @@ class roleColorTools(commands.Cog):
         role = discord.utils.get(server.roles, id=roleid)
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM colorchangers WHERE roleid = $1''', [roleid])
         await ctx.send("## Done!")
-
-
-
-
-
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(roleColorTools(bot))
