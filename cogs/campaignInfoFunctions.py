@@ -50,6 +50,23 @@ class campaignInfoFunctions(commands.Cog):
     async def viewStats(self, ctx: commands.Context):
         variablesList = await campaignFunctions.getUserFactionData(ctx)
         await campaignFunctions.showStats(ctx, variablesList)
+
+    @commands.command(name="viewTime", description="View the statistics of your faction")
+    async def viewTime(self, ctx: commands.Context):
+        campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
+        print(campaignInfoList)
+        date_string = str(campaignInfoList['timedate'])
+        format_string = "%Y-%m-%d %H:%M:%S"
+        dt = datetime.strptime(date_string, format_string)
+        print(dt.year)
+        hour = dt.strftime("%I")
+        min = dt.strftime("%M %p")
+        day = dt.strftime("%A %B %d")
+        embed = discord.Embed(title=f"\nIt is {hour}:{min} on {day}, {dt.year} in {campaignInfoList['campaignname']}", color=discord.Color.random())
+        embed.add_field(name="Time scale", value=f"{campaignInfoList['timescale']}x", inline=True)
+        embed.set_footer(text=(await errorFunctions.retrieveCategorizedError(ctx, "campaign")))
+        await ctx.send(embed=embed)
+
     async def showStats(ctx: commands.Context, variablesList):
         campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
         print(campaignInfoList)
