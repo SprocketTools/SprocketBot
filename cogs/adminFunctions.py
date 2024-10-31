@@ -439,11 +439,11 @@ class adminFunctions(commands.Cog):
             return
         tablename = await errorFunctions.getResponse(ctx,"Whatis the table name?")
         columnname = await errorFunctions.getResponse(ctx, "What will the column be named?  Use all lowercase letters with no spaces.")
-        options = ["VARCHAR", "BIGINT", "REAL", "BOOLEAN"]
-        prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, REALs are for floats, and BOOLEANs are true/false."
+        options = ["VARCHAR", "BIGINT", "REAL", "BOOLEAN", "TIMESTAMP"]
+        prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, REALs are for floats, BOOLEANs are true/false, and TIMESTAMPs are for timestamps."
         varType = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
         try:
-            if varType == "VARCHAR":
+            if varType == "VARCHAR" or varType == "TIMESTAMP":
                 await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType};''')
             else:
                 defaultVal = await errorFunctions.getResponse(ctx,"What will the default value be?")

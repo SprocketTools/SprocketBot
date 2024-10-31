@@ -267,7 +267,7 @@ class buttonList(discord.ui.Button['getButtonChoice']):
 class getButtonChoice(discord.ui.View):
     value = ""
     def __init__(self, ctx: commands.Context, listIn: list):
-        super().__init__()
+        super().__init__(timeout=600)
         self.list = listIn
         self.ctx = ctx
         i = 0
@@ -302,7 +302,7 @@ class buttonListReturnID(discord.ui.Button['getButtonChoiceReturnID']):
 class getButtonChoiceReturnID(discord.ui.View):
     value = ""
     def __init__(self, ctx: commands.Context, listIn: list):
-        super().__init__()
+        super().__init__(timeout=600)
         self.list = listIn
         i = 0
         for str in self.list:

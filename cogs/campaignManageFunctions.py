@@ -27,7 +27,7 @@ class campaignManageFunctions(commands.Cog):
             await ctx.send("What statistic do you wish to modify?")
             answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Pop to worker ratio", "Start/stop campaign", "Exit"]))
             print(answer)
-            if answer == "exit" or i > 3:
+            if answer == "exit" or i > 1:
                 await ctx.send("Alright, have fun.")
                 return
             elif answer == "adjust time":

@@ -17,13 +17,28 @@ class roleColorTools(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.startup = True
-        self.updateFrequency = 60
+        self.updateFrequency = 300
+        self.startupdelay = 10800
         self.updateRoles.start()
 
-    @tasks.loop(seconds=60)
+    @tasks.loop(seconds=300)
     async def updateRoles(self):
+        await roleColorTools.roleUpdater(self)
+
+    @commands.command(name="updateColorChangers",description="Update the color changers by force")
+    async def updateColorChangers(self, ctx: commands.Context):
+        try:
+            self.startup = False
+            await roleColorTools.roleUpdater(self)
+            self.startup = True
+            print("test")
+            await ctx.send("## Done!")
+        except Exception as e:
+            await ctx.send(f"{e}")
+
+    async def roleUpdater(self):
         if self.startup == True:
-            await asyncio.sleep(10)
+            await asyncio.sleep(self.startupdelay)
             self.startup = False
         else:
             colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE rainbow = true;''')
@@ -98,6 +113,25 @@ class roleColorTools(commands.Cog):
         role = discord.utils.get(server.roles, id=roleid)
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM colorchangers WHERE roleid = $1''', [roleid])
         await ctx.send("## Done!")
+
+    @commands.command(name="listColorChangers", description="generate a key that can be used to initiate a campaign")
+    async def listColorChangers(self, ctx: commands.Context):
+        colorList = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers''')
+        print(colorList)
+        for colori in colorList:
+            print(colori)
+            guildIn = self.bot.get_guild(colori['serverid'])
+            embed = discord.Embed(title=f"{guildIn.name} (ID: {colori['serverid']})",
+                                  description=f"Role: **{discord.utils.get(guildIn.roles, id=colori['roleid']).name}** (ID: {colori['roleid']})",
+                                  color=discord.Color.random())
+            embed.add_field(name="Minutes to complete cycle", value=colori['duration'])
+            if colori['rainbow'] == True:
+                embed.add_field(name="Rainbow percent", value=f"{round(colori['percent']*100, 3)}%")
+            else:
+                embed.add_field(name="Starting color", value=f"RGB ({colori['r_i']}, {colori['g_i']}, {colori['b_i']})")
+                embed.add_field(name="Ending color", value=f"RGB ({colori['r_f']}, {colori['g_f']}, {colori['b_f']})")
+                embed.add_field(name="Progress", value=f"{round(colori['percent'] * 100, 3)}%")
+            await ctx.send(embed=embed)
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(roleColorTools(bot))

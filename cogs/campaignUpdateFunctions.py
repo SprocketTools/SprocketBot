@@ -1,5 +1,6 @@
 import json
 import random, asyncio, datetime
+from datetime import datetime
 from discord.ext import tasks
 import discord
 from discord.ext import commands
@@ -20,7 +21,7 @@ class campaignUpdateFunctions(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        now = datetime.datetime.now()
+        now = datetime.now()
         current_minute = now.minute
         current_second = now.second
         seconds_count = int(3600 - (current_minute*60 + current_second))
@@ -73,6 +74,22 @@ class campaignUpdateFunctions(commands.Cog):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE gdp/population < 0 AND iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE happiness < 0 AND iscountry = true AND hostactive = true;''')
 
+    async def sendTimeUpdates(self):
+        data = await SQLfunctions.databaseFetchdict('''SELECT * FROM campaigns where EXTRACT(YEAR FROM timedate) != EXTRACT(YEAR FROM lastupdated);''')
+        for campaignData in data:
+            channel = self.bot.get_channel(campaignData['publiclogchannelid'])
+            date_string = str(campaignData['timedate'])
+            format_string = "%Y-%m-%d %H:%M:%S"
+            dt = datetime.strptime(date_string, format_string)
+            print(dt.year)
+            hour = dt.strftime("%I")
+            min = dt.strftime("%M %p")
+            day = dt.strftime("%A %B %d")
+            await channel.send(f"## Happy new year! :tada:\nThe year is now **{dt.year}** in **{campaignData['campaignname']}**")
+
+    async def updateLastUpdated(self):
+        await SQLfunctions.databaseExecute(f'''UPDATE campaigns SET lastupdated = timedate;''')
+
     @commands.command(name="forceUpdate", description="test")
     async def forceUpdate(self, ctx: commands.Context):
         status_log_channel = self.bot.get_channel(1152377925916688484)
@@ -90,6 +107,8 @@ class campaignUpdateFunctions(commands.Cog):
         await self.updateEducation()
         print("Education is complete!")
         await self.updateHappiness()
+        await self.sendTimeUpdates()
+        await self.updateLastUpdated()
         await status_log_channel.send("Update is complete!")
         await ctx.send("## Done!")
 

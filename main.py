@@ -11,7 +11,7 @@ nest_asyncio.apply()
 intents = discord.Intents.all()
 intents.message_content = True
 utc = datetime.timezone.utc
-# botMode = "official"
+
 # Determines whether this is the live version of the bot or the testing version.
 # development settings (running on Windows/PyCharm)
 if platform.system() == "Windows":
@@ -25,6 +25,7 @@ else:
     configurationFilepath = "/home/mumblepi/configuration.ini"
     OSslashLine = "/"
 
+# botMode = "official" # dev on live flag
 
 if botMode != "official":
     prefix = "?"
@@ -35,6 +36,8 @@ else:
     prefix = "-"
     defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
     defaultName = "Sprocket Bot"
+
+# prefix = "?" # dev on live variable
 
 # general settings
 config = configparser.ConfigParser()
@@ -48,7 +51,7 @@ SQLsettings["database"] = config[f"settings.{botMode}"]["database"]
 ownerID = int(config["settings"]["ownerID"])
 githubPAT = str(config["settings"]["githubPAT"])
 updateGithub = str(config["settings"]["updateGithub"])
-cogsList = ["cogs.SQLfunctions", "cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",   "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.roleColorTools"]
+cogsList = ["cogs.SQLfunctions", "cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",   "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.serverFunctions", "cogs.roleColorTools"]
 
 class Bot(commands.Bot):
     def __init__(self):
@@ -64,6 +67,7 @@ class Bot(commands.Bot):
 
     async def on_ready(self):
         await self.wait_until_ready()
+        await bot.tree.sync()
         # if not self.synced:
         #     await tree.sync(guild=discord.Object(id=1137849402891960340))
         #     self.synced = True
