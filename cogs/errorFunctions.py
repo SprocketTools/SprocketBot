@@ -25,13 +25,8 @@ class errorFunctions(commands.Cog):
         await ctx.send("Done!  Now go add some errors in.")
 
     @app_commands.command(name="error", description="Get an error message")
-    async def errorSlash(self, interaction):
-        await interaction.send("What would you categorize this error under?")
-        categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"],
-                      ["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"],
-                      ["Campaign", "campaign"], ["Blueprint", "blueprint"],
-                      ["Only a catgirl would say that", "catgirl"]]
-        category = await discordUIfunctions.getButtonChoiceReturnID(interaction, categories)
+    async def errorSlash(self, interaction, error_type: str):
+        await interaction.response.send_message("What would you categorize this error under?")
         ttsp = False
         if interaction.author.id == main.ownerID or interaction.author.guild_permissions.administrator == True:
             await interaction.message.delete()
@@ -40,15 +35,15 @@ class errorFunctions(commands.Cog):
             try:
                 channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
                 if interaction.channel.id != channel:
-                    await interaction.send(f"This command is restricted to <#{channel}>")
+                    await interaction.response.send(f"This command is restricted to <#{channel}>")
                     return
             except Exception:
                     error = await errorFunctions.retrieveError(interaction)
-                    await interaction.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+                    await interaction.response.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                     return
         if random.random() < 0.005:
             ttsp = True
-        await interaction.send(await errorFunctions.retrieveCategorizedError(interaction, category), tts=ttsp)
+        await interaction.send(await errorFunctions.retrieveCategorizedError(interaction, error_type), tts=ttsp)
     @commands.command(name="getError", description="higdffffffffffff")
     async def getError(self, ctx: commands.Context):
         ttsp = False

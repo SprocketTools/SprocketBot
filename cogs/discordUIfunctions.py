@@ -248,11 +248,19 @@ class YesNoModifyStopButtons(discord.ui.View):
 
 class buttonList(discord.ui.Button['getButtonChoice']):
     # https://github.com/Rapptz/discord.py/blob/master/examples/views/tic_tac_toe.py
-    def __init__(self, ctx: commands.Context, value: str, row: int):
-        super().__init__(style=discord.ButtonStyle.secondary, label=value, row=row)
+    def __init__(self, ctx: commands.Context, value: str, pos: int):
         self.value = value
-        self.row = row
+        self.row = int(pos/5)
         self.ctx = ctx
+        if value.lower() == "exit":
+            super().__init__(style=discord.ButtonStyle.red, label=value, row=self.row)
+        elif pos % 3 == 0:
+            super().__init__(style=discord.ButtonStyle.blurple, label=value, row=self.row)
+        elif pos % 3 == 1:
+            super().__init__(style=discord.ButtonStyle.green, label=value, row=self.row)
+        else:
+            super().__init__(style=discord.ButtonStyle.secondary, label=value, row=self.row)
+
 
     async def callback(self, interaction: discord.Interaction):
         if interaction.user == self.ctx.author:
@@ -272,7 +280,7 @@ class getButtonChoice(discord.ui.View):
         self.ctx = ctx
         i = 0
         for str in self.list:
-            self.add_item(buttonList(ctx, str, int(i/5)))
+            self.add_item(buttonList(ctx, str, i))
             i += 1
 
 
@@ -281,11 +289,19 @@ class getButtonChoice(discord.ui.View):
 
 class buttonListReturnID(discord.ui.Button['getButtonChoiceReturnID']):
     # https://github.com/Rapptz/discord.py/blob/master/examples/views/tic_tac_toe.py
-    def __init__(self, ctx: commands.Context, value: str, id: str, row: int):
-        super().__init__(style=discord.ButtonStyle.secondary, label=value, row=row)
+    def __init__(self, ctx: commands.Context, value: str, id: str, pos: int):
         self.id = id
-        self.row = row
+        self.value = value
+        self.row = int(pos/5)
         self.ctx = ctx
+        if value.lower() == "exit":
+            super().__init__(style=discord.ButtonStyle.red, label=value, row=self.row)
+        elif pos % 3 == 0:
+            super().__init__(style=discord.ButtonStyle.blurple, label=value, row=self.row)
+        elif pos % 3 == 1:
+            super().__init__(style=discord.ButtonStyle.green, label=value, row=self.row)
+        else:
+            super().__init__(style=discord.ButtonStyle.secondary, label=value, row=self.row)
 
     async def callback(self, interaction: discord.Interaction):
         print(interaction.user)
@@ -306,5 +322,5 @@ class getButtonChoiceReturnID(discord.ui.View):
         self.list = listIn
         i = 0
         for str in self.list:
-            self.add_item(buttonListReturnID(ctx, str[0], str[1], int(i/5)))
+            self.add_item(buttonListReturnID(ctx, str[0], str[1], i))
             i += 1

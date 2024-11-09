@@ -53,6 +53,8 @@ githubPAT = str(config["settings"]["githubPAT"])
 updateGithub = str(config["settings"]["updateGithub"])
 cogsList = ["cogs.SQLfunctions", "cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",   "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.serverFunctions", "cogs.roleColorTools"]
 
+
+
 class Bot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True) #
@@ -67,7 +69,7 @@ class Bot(commands.Bot):
 
     async def on_ready(self):
         await self.wait_until_ready()
-        await bot.tree.sync()
+        # await bot.tree.sync()
         # if not self.synced:
         #     await tree.sync(guild=discord.Object(id=1137849402891960340))
         #     self.synced = True
@@ -75,8 +77,6 @@ class Bot(commands.Bot):
         await channel.send("I am now online!")
         print(f'Logged in as {bot.user} (ID: {bot.user.id})')
         print('------')
-
-
 
 class Management:
     def __init__(self, bot):

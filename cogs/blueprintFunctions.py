@@ -45,6 +45,11 @@ class blueprintFunctions(commands.Cog):
             data = io.BytesIO(stringOut.encode())
             await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
 
+            stringOut = json.dumps(blueprintDataSave, indent=4)
+            data = io.BytesIO(stringOut.encode())
+            fileOut = discord.File(data, f'{name}.json')
+            await ctx.author.send(content=f"Baked geometry of {name}", file=fileOut)
+
 
     async def bakeGeometry200old(ctx: commands.Context, attachment):
         blueprintData = json.loads(await attachment.read())
@@ -612,7 +617,11 @@ class blueprintFunctions(commands.Cog):
                 error = await errorFunctions.retrieveCategorizedError(ctx, "blueprint")
                 await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
-        for attachment in ctx.message.attachments:
+        if len(ctx.message.attachments) == 0:
+            attachments = await textTools.getManyFilesResponse(ctx, "Upload the file(s) you wish to create addon structures out of.")
+        else:
+            attachments = ctx.message.attachments
+        for attachment in attachments:
             blueprintData = json.loads(await attachment.read())
             structureList = ["All of them"]
             structureVuidList = {}
@@ -673,7 +682,6 @@ class blueprintFunctions(commands.Cog):
                             stringOut = json.dumps(addonStructureData, indent=4)
                             data = io.BytesIO(stringOut.encode())
                             await ctx.send(file=discord.File(data, f'{compartmentNameData[meshBase["vuid"]]}.json'))
-
                         else:
                             await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send(
@@ -707,9 +715,16 @@ class blueprintFunctions(commands.Cog):
                                 gridSnap = 1
                             addonStructureData['components'][0]['info']['mesh']['gridSize'] = gridSnap
                             await ctx.send("## Done!")
+                            #message-bound copy
                             stringOut = json.dumps(addonStructureData, indent=4)
                             data = io.BytesIO(stringOut.encode())
-                            await ctx.send(file=discord.File(data, f'{answer}.json'))
+                            fileOut = discord.File(data, f'{answer}.json')
+                            await ctx.send(file=fileOut)
+                            # DM-bound copy
+                            stringOut = json.dumps(addonStructureData, indent=4)
+                            data = io.BytesIO(stringOut.encode())
+                            fileOut = discord.File(data, f'{answer}.json')
+                            await ctx.author.send(content=f"addon structure {answer}", file=fileOut)
                             await ctx.send("Place this model into `C:\Program Files (x86)\Steam\steamapps\common\Sprocket\Sprocket_Data\StreamingAssets\Parts` and reload the game for it to appear.")
                         else:
                             await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))

@@ -37,6 +37,9 @@ class adminFunctions(commands.Cog):
         self.colorint = colorint
         self.color1 = (250, 250, 120)
         self.color2 = (119, 86, 35)
+        self.operational = True
+        #self.bot.add_check(adminFunctions.blacklist_test)
+        print("Hi")
 
 
     async def updateServerConfig(self):
@@ -50,12 +53,43 @@ class adminFunctions(commands.Cog):
     async def printServerConfig(self):
         print(serverConfig)
 
-    @commands.check
-    def blacklist_test(ctx):
-        print("denied")
-        return False
+    async def bot_check(self, ctx):
+        try:
+            await ctx.author.send(content="")
+        except discord.Forbidden:
+            await errorFunctions.sendCategorizedError(ctx, "compliment")
+            await ctx.send("Sprocket Bot has noticed that you have blocked him.  Unblock the bot and run the command again.")
+            return False
+        except Exception:
+            pass
+        if ctx.author.id in [439836738064613378]: # blacklist
+            await errorFunctions.sendCategorizedError(ctx, "insult")
+            return False
+        if ctx.author.id == main.ownerID:
+            return True
+        if self.operational == True:
+            return True
+        else:
+            await errorFunctions.sendCategorizedError(ctx, "catgirl")
+            await ctx.send("Sprocket Bot is a bit too sleepy right now.  Come back when I've finished my catnap, please?")
+
+
+
+    @commands.command(name="toggleOperation", description="Toggle operation of the bot")
+    async def toggleOperation(self, ctx: commands.Context):
+        if ctx.author.id != main.ownerID:
+            return
+        self.operational = not self.operational
+        await ctx.send(f'## Operational status is {self.operational}')
+
+    @commands.command(name="killswitch", description="Toggle operation of the bot")
+    async def killswitch(self, ctx: commands.Context):
+        if ctx.author.id != main.ownerID:
+            return
+        exit()
 
     @commands.command(name="testLatency", description="test the bot's latency")
+    #@commands.check(adminFunctions.commands_check)
     async def testLatency(self, ctx: commands.Context):
         start_time = time.time()
         await SQLfunctions.databaseExecute("SELECT * FROM serverconfig")
@@ -98,6 +132,15 @@ class adminFunctions(commands.Cog):
         if main.updateGithub == "Y":
             await self.bot.reload_extension("cogs.githubTools")
         await ctx.send("Reloaded!")
+        await asyncio.sleep(10)
+        await ctx.send("Update slash command tree?")
+        if await discordUIfunctions.getYesNoChoice(ctx) == True:
+            for guild in self.bot.guilds:
+                self.bot.tree.clear_commands(guild=guild)
+                await self.bot.tree.sync(guild=guild)
+                await ctx.send(f"Commands synced in {guild.name}!")
+                await asyncio.sleep(2)
+
 
     def authorize(ctx: commands.Context, bot):
         print("Hi")
@@ -190,14 +233,13 @@ class adminFunctions(commands.Cog):
             "colon": "insult"
             }
         if serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"] or message.author.id == main.ownerID:
-            prob = 1000
+            guild = self.bot.get_guild(message.guild.id)
+            prob = 1500 + len(guild.members)/6
             i = int(random.random()*prob)
             print(i)
             if i == 1:
-                serverConfig[message.guild.id]["funnycounter"] = 5
-                category = random.choice(["compliment", "insult", "sprocket", "flyout", "video", "gif", "joke", "campaign", "blueprint"])
-                await message.reply(await errorFunctions.retrieveCategorizedError(message, category))
-            if i <= prob/2:
+                serverConfig[message.guild.id]["funnycounter"] = int((random.random()**2)*2+1)
+            if i <= prob/4:
                 for x in special_list:
                     if x in message.content.lower():
                         await textTools.sendThenDelete(message, await errorFunctions.retrieveCategorizedError(message, special_list[x]))
@@ -323,6 +365,7 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="setSlowmode", description="Set a slowmode.")
     async def setSlowmode(self, ctx: commands.Context, duration: int):
+        serverConfig = await adminFunctions.getServerConfig(ctx)
         if ctx.author.guild_permissions.administrator == False:
             return
         await ctx.channel.edit(slowmode_delay = duration)
@@ -690,15 +733,34 @@ class adminFunctions(commands.Cog):
     @commands.command(name="troll", description="send a message wherever you want")
     async def troll(self, ctx: commands.Context, channelin: str, *, message):
         if ctx.author.id == 712509599135301673:
+            tts = False
             import re
             channelin = int(re.sub(r'[^0-9]', '', channelin))
             print(channelin)
             channel = self.bot.get_channel(channelin)
-            await ctx.send("Message is en route.")
-            await channel.send(message)
+            await ctx.send("Message is en route.  \nReminder that adding `-tts-` anywhere will enable TTS readout.")
+            if "-tts-" in message:
+                tts = True
+            await channel.send(message.strip("-tts-"), tts=tts)
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")
+
+    @commands.command(name="trollReply", description="send a message wherever you want")
+    async def trollReply(self, ctx: commands.Context, msglink: str, *, message):
+        if ctx.author.id == 712509599135301673:
+            import re
+            srvrid = int(msglink.split("/")[-3])
+            chnlid = int(msglink.split("/")[-2])
+            msgid = int(msglink.split("/")[-1])
+            serverIn = await self.bot.fetch_guild(srvrid)
+            channelIn = await self.bot.fetch_channel(chnlid)
+            messageIn = await channelIn.fetch_message(msgid)
+            await ctx.send("Message is en route.")
+            await messageIn.reply(message)
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await channelIn.send(file=file, content="")
 
     @commands.command(name="edit", description="send a message wherever you want")
     async def edit(self, ctx: commands.Context, msglink: str):

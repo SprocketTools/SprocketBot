@@ -1,8 +1,11 @@
 import math
 import datetime
+import random
 from datetime import datetime
 import discord, time
 from discord.ext import commands
+
+import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
@@ -32,6 +35,8 @@ class campaignFunctions(commands.Cog):
             embed = discord.Embed(title=f"{data['campaignname']} settings", description="These are the settings encompassing your entire campaign!", color=discord.Color.random())
             embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
             embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
+            embed.add_field(name="Announcements channel", value=f"<#{data['publiclogchannelid']}>", inline=False)
+            embed.add_field(name="Transaction logger", value=f"<#{data['privatemoneychannelid']}>", inline=False)
             embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
             embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
             embed.add_field(name="Starting pop/worker ratio", value=f"{data['poptoworkerratio']}", inline=False)
@@ -68,6 +73,39 @@ class campaignFunctions(commands.Cog):
 
         return factionData
 
+    @commands.command(name="sendMessage", description="Send a message to a campaign")
+    async def sendMessage(self, ctx: commands.Context):
+        factionData = await campaignFunctions.getUserFactionData(ctx)
+        targetData = await campaignFunctions.pickCampaignFaction(ctx, "Choose who you're sending your message to.")
+        originName = factionData["factionname"]
+        isVulnerable = False
+        isIntercepted = False
+        if factionData["espionagestaff"] > 10 or ctx.author.id == main.ownerID:
+            messagetype = await discordUIfunctions.getButtonChoice(ctx, ["Send a diplomatic message", "Try to impersonate another country"])
+            if messagetype == "Try to impersonate another country":
+                espionageStaff = factionData['espionagestaff']
+                vulnerableThreshold = espionageStaff/(1000+espionageStaff)
+                originData = await campaignFunctions.pickCampaignFaction(ctx,"Choose who you're trying to impersonate.")
+                originName = originData["factionname"]
+                opponentStaff = targetData['espionagestaff']
+                interceptThreshold = opponentStaff / (50 + opponentStaff)
+                # determine if the message is vulnerable to interception
+                isVulnerable = random.random() > vulnerableThreshold
+                isIntercepted = random.random() < interceptThreshold
+
+        message = await textTools.getCappedResponse(ctx, "Type out your message here!", 1700)
+        messageDescriptor = f"## Message from {originName}:"
+        if isVulnerable and isIntercepted:
+            messageDescriptor = f"**{factionData['factionname']}** tried to impersonate **{originName}** and sent you this message under their name:"
+        await campaignFunctions.sendMessageToFaction(self, targetData['factionkey'], messageDescriptor)
+        await campaignFunctions.sendMessageToFaction(self, targetData['factionkey'], message)
+        await ctx.send(f"## Message delivered to {targetData['factionname']}!")
+
+    async def sendMessageToFaction(self, factionkey: int, message: str):
+        data = await SQLfunctions.databaseFetchrowDynamic('''SELECT logchannel FROM campaignfactions WHERE factionkey = $1;''', [factionkey])
+        channel = self.bot.get_channel(data['logchannel'])
+        await channel.send(message)
+
 
     async def getFactionData(factionkey: int):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionkey])
@@ -93,7 +131,10 @@ class campaignFunctions(commands.Cog):
                 subFactionData["money"] = faction["money"]
                 factionData[name] = subFactionData
         factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
-        return factionChoiceName, factionData[factionChoiceName]["factionkey"]
+        dataout = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionname = $1;''', [factionChoiceName])
+        print("aaa")
+        print(dataout)
+        return dataout
         # except Exception:
         #     await errorFunctions.sendError(ctx)
         #     await ctx.send("This server does not have any campaign factions.")
@@ -113,7 +154,7 @@ class campaignFunctions(commands.Cog):
             subFactionData["money"] = faction["money"]
             factionData[name] = subFactionData
         factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
-        return factionChoiceName, factionData[factionChoiceName]["factionkey"]
+        return factionData
 
     async def getUserCampaignData(ctx: commands.Context):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = (SELECT campaignkey FROM campaignservers WHERE serverid = $1);''', [ctx.guild.id])
@@ -177,6 +218,8 @@ class campaignFunctions(commands.Cog):
         min = dt.strftime("%M %p")
         day = dt.strftime("%A %B %d")
         embed = discord.Embed(title=variablesList["factionname"],description=variablesList["description"], color=discord.Color.random())
+        embed.add_field(name="Operational", value=str(variablesList["hostactive"]), inline=False)
+        embed.add_field(name="Updates channel", value=f'<#{variablesList["logchannel"]}>', inline=False)
         embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
         if variablesList["iscountry"] == True:
             embed.add_field(name="Land", value="{:,}".format(int(variablesList["landsize"])) + " km²",inline=False)
@@ -207,6 +250,7 @@ class campaignFunctions(commands.Cog):
         min = dt.strftime("%M %p")
         day = dt.strftime("%A %B %d")
         embed = discord.Embed(title=f'''{variablesList["factionname"]}'s finances''',description=f"These are your finances as of \n{day}, {dt.year}", color=discord.Color.random())
+
         embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
         embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
         embed.add_field(name="GDP growth", value=str(round(float(variablesList["gdpgrowth"]) * 100, 1)) + "%", inline=False)
@@ -218,6 +262,8 @@ class campaignFunctions(commands.Cog):
         embed.add_field(name="Educational funding boost", value=str(round(float(variablesList["educationspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Infrastructure investments", value=str(round(float(variablesList["infrastructurespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
+        embed.add_field(name="Espionage funding",value=str(round(float(variablesList["espionagespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
+        embed.add_field(name="Spy agency staff", value=str(variablesList["espionagestaff"]) + " employees", inline=False)
         embed.set_thumbnail(url=variablesList["flagurl"])
         await ctx.send(embed=embed)
 

@@ -52,6 +52,8 @@ class serverFunctions(commands.Cog):
         points = data['points']
         await ctx.send(f'This is worth {points} points.')
 
+        await SQLfunctions.databaseExecute('''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, 7);''')
+
     @app_commands.command(name="roll", description="🎲 roll a dice")
     async def roll(self, interaction):
         result = random.randint(1, 6)

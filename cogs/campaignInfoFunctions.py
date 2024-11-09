@@ -88,6 +88,8 @@ class campaignInfoFunctions(commands.Cog):
             embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
             embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
             embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 1)) + "%", inline=False)
+            embed.add_field(name="Espionage funding", value=str(round(float(variablesList["espionagespend"]) * 100, 1)) + "% of GDP", inline=False)
+            embed.add_field(name="Spy agency staff", value=str(variablesList["espionagestaff"]) + " employees", inline=False)
         else:
             embed.add_field(name="Country of origin",value=await campaignFunctions.getFactionName(variablesList["landlordfactionkey"]), inline=False)
         embed.set_footer(text=f"\nIt is {hour}:{min} on {day}, {dt.year}")

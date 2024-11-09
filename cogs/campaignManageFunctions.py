@@ -25,7 +25,7 @@ class campaignManageFunctions(commands.Cog):
             key = await campaignFunctions.getCampaignKey(ctx)
             await campaignFunctions.showSettings(ctx)
             await ctx.send("What statistic do you wish to modify?")
-            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Pop to worker ratio", "Start/stop campaign", "Exit"]))
+            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit"]))
             print(answer)
             if answer == "exit" or i > 1:
                 await ctx.send("Alright, have fun.")
@@ -53,6 +53,12 @@ class campaignManageFunctions(commands.Cog):
             elif answer == "currency symbol":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new currency symbol of the campaign?", 2)
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET currencysymbol = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "transaction logs channel":
+                name_adj = await textTools.getChannelResponse(ctx, "What is your new transaction logging channel?")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET privatemoneychannelid = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "announcement channel":
+                name_adj = await textTools.getChannelResponse(ctx, "What is your new channel for automated campaign update announcements?")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET publiclogchannelid = $1 WHERE campaignkey = $2;''',[name_adj, key])
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
                 i += 1
@@ -63,8 +69,9 @@ class campaignManageFunctions(commands.Cog):
     @commands.command(name="manageFaction", description="Add money to a faction")
     async def manageFaction(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx):
-            factionName, key = await campaignFunctions.pickCampaignFaction(ctx, "Pick the faction you would like to manage.")
-            data = await campaignFunctions.getFactionData(key)
+            data = await campaignFunctions.pickCampaignFaction(ctx, "Pick the faction you would like to manage.")
+            factionName = data['factionname']
+            key = data['factionkey']
         else:
             data = await campaignFunctions.getUserFactionData(ctx)
             key = data["factionkey"]
@@ -74,7 +81,11 @@ class campaignManageFunctions(commands.Cog):
             data = await campaignFunctions.getFactionData(key)
             await campaignFunctions.showStats(ctx, data)
             await ctx.send("What statistic do you wish to modify?")
-            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Description", "Discretionary funds", "Median salary", "Population", "GDP", "Move your company to a new country", "Exit"]))
+            if data['iscountry'] == False:
+                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Move your company to a new country", "Exit"]
+            else:
+                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Median salary", "Population", "GDP", "Espionage funding", "Exit"]
+            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, inList))
             print(answer)
             if answer == "exit":
                 await ctx.send("Alright, have fun.")
@@ -112,12 +123,15 @@ class campaignManageFunctions(commands.Cog):
                     await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landlordfactionkey = $1 WHERE factionkey = $2;''',[landlordkey, key])
                 else:
                     await ctx.send("Yeah, unfortunately surrendering to another country is not a part of the game here.")
-            elif answer == "currency name":
-                name_adj = await textTools.getCappedResponse(ctx, "What is the new currency name of the campaign?", 32)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET currencyname = $1 WHERE campaignkey = $2;''',[name_adj, key])
-            elif answer == "currency symbol":
-                name_adj = await textTools.getCappedResponse(ctx, "What is the new currency symbol of the campaign?", 2)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET currencysymbol = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "flag":
+                name_adj = await textTools.getFileURLResponse(ctx, "What is the new flag?  Upload an image.")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET flagurl = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "updates channel":
+                name_adj = await textTools.getChannelResponse(ctx, "What is the new channel you want updates sent to?")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET logchannel = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "espionage funding":
+                name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards espionage funding?")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET espionagespend = $1 WHERE campaignkey = $2;''',[name_adj, key])
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
             await ctx.send("## Done!")
