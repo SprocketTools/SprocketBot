@@ -11,9 +11,11 @@ nest_asyncio.apply()
 intents = discord.Intents.all()
 intents.message_content = True
 utc = datetime.timezone.utc
-
+import sys
+#sys.setrecursionlimit(100)
 # Determines whether this is the live version of the bot or the testing version.
 # development settings (running on Windows/PyCharm)
+
 if platform.system() == "Windows":
     botMode = "development"
     configurationFilepath = "C:\\SprocketBot\\configuration.ini"
@@ -51,7 +53,7 @@ SQLsettings["database"] = config[f"settings.{botMode}"]["database"]
 ownerID = int(config["settings"]["ownerID"])
 githubPAT = str(config["settings"]["githubPAT"])
 updateGithub = str(config["settings"]["updateGithub"])
-cogsList = ["cogs.SQLfunctions", "cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",   "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.serverFunctions", "cogs.roleColorTools"]
+cogsList = ["cogs.SQLfunctions", "cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",   "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions",  "cogs.serverFunctions", "cogs.flyoutTools", "cogs.roleColorTools"]
 
 
 
@@ -62,10 +64,12 @@ class Bot(commands.Bot):
         self.synced = False
 
     async def setup_hook(self):
+        if updateGithub == "Y":
+            cogsList.append("cogs.githubTools")
+            #await self.load_extension("cogs.githubTools")
         for ext in self.cogslist:
             await self.load_extension(ext)
-        if updateGithub == "Y":
-            await self.load_extension("cogs.githubTools")
+
 
     async def on_ready(self):
         await self.wait_until_ready()

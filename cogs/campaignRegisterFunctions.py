@@ -261,7 +261,7 @@ class campaignRegisterFunctions(commands.Cog):
                     ]
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, factionName])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)''', datalist)
         nameTest = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
         if len(nameTest) > 1:
             await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2 AND factionkey = $3;''',[ctx.guild.id, factionName, factionkey])

@@ -55,13 +55,27 @@ class adminFunctions(commands.Cog):
 
     async def bot_check(self, ctx):
         try:
-            await ctx.author.send(content="")
+            await ctx.message.add_reaction('310177266011340803')
         except discord.Forbidden:
             await errorFunctions.sendCategorizedError(ctx, "compliment")
             await ctx.send("Sprocket Bot has noticed that you have blocked him.  Unblock the bot and run the command again.")
             return False
-        except Exception:
+        except Exception as e:
+            # if "Forbidden" in str(e):
+            #     await errorFunctions.sendCategorizedError(ctx, "compliment")
+            #     await ctx.send("Sprocket Bot has noticed that you have blocked him.  Unblock the bot and run the command again.")
+            #     return False
             pass
+
+        # try:
+        #     print("hi")
+        # except discord.Forbidden:
+        #     await errorFunctions.sendCategorizedError(ctx, "compliment")
+        #     await ctx.send("Sprocket Bot has noticed that you have blocked him.  Unblock the bot and run the command again.")
+        #     return False
+        # except Exception:
+        #     pass
+
         if ctx.author.id in [439836738064613378]: # blacklist
             await errorFunctions.sendCategorizedError(ctx, "insult")
             return False
@@ -150,7 +164,7 @@ class adminFunctions(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-
+        #await message.add_reaction('310177266011340803')
         if message.author.bot:
             return
         # blueprint scanner

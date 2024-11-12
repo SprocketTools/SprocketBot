@@ -262,7 +262,7 @@ class campaignFunctions(commands.Cog):
         embed.add_field(name="Educational funding boost", value=str(round(float(variablesList["educationspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Infrastructure investments", value=str(round(float(variablesList["infrastructurespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
-        embed.add_field(name="Espionage funding",value=str(round(float(variablesList["espionagespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
+        embed.add_field(name="Espionage funding",value=str(round(float(variablesList["espionagespend"]) * 100, 2)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Spy agency staff", value=str(variablesList["espionagestaff"]) + " employees", inline=False)
         embed.set_thumbnail(url=variablesList["flagurl"])
         await ctx.send(embed=embed)

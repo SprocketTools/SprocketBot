@@ -37,22 +37,22 @@ class serverFunctions(commands.Cog):
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO modrules VALUES ($1, $2, $3, $4);''', [serverid, ruleName, ruleDesc, pointCount])
         await ctx.send("## Done!")
 
-    @commands.command(name="warn", description="Add a moderation rule or subrule")
-    async def warn(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
-            await errorFunctions.sendCategorizedError(ctx, "insult")
+    @app_commands.command(name="warn", description="Add a moderation rule or subrule")
+    async def warn(self, interaction, user: discord.Member, reason: str):
+        if interaction.author.id != main.ownerID:
+            await errorFunctions.sendCategorizedError(interaction, "insult")
             return
         data = await SQLfunctions.databaseFetchdictDynamic('''SELECT name, points FROM modrules WHERE serverid = $1;''', [ctx.guild.id])
         dataOut = []
         for rule in data:
             dataOut.append(rule["name"])
-        await ctx.send("Select the applicable rule violation")
-        ruleName = await discordUIfunctions.getButtonChoice(ctx, dataOut)
+        await interaction.response.send("Select the applicable rule violation")
+
         data = (await SQLfunctions.databaseFetchrowDynamic('''SELECT points FROM modrules WHERE serverid = $1 AND name = $2;''',[ctx.guild.id, ruleName]))
         points = data['points']
-        await ctx.send(f'This is worth {points} points.')
+        await interaction.send(f'This is worth {points} points.')
 
-        await SQLfunctions.databaseExecute('''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, 7);''')
+        await SQLfunctions.databaseExecuteDynamic('''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, 7);''', )
 
     @app_commands.command(name="roll", description="🎲 roll a dice")
     async def roll(self, interaction):
