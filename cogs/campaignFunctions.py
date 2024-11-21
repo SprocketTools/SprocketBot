@@ -142,19 +142,16 @@ class campaignFunctions(commands.Cog):
     async def pickCampaignCountry(ctx: commands.Context, prompt: str):
         campaignKey = await campaignFunctions.getCampaignKey(ctx)
         availableFactionsList = await SQLfunctions.databaseFetchdictDynamic(
-            '''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1 AND iscountry = true ORDER BY factionname;''', [campaignKey])
+            '''SELECT * FROM campaignfactions WHERE campaignkey = $1 AND iscountry = true ORDER BY factionname;''', [campaignKey])
         factionList = []
         factionData = {}
         #print(availableFactionsList)
         for faction in availableFactionsList:
             name = faction["factionname"]
             factionList.append(name)
-            subFactionData = {}
-            subFactionData["factionkey"] = faction["factionkey"]
-            subFactionData["money"] = faction["money"]
-            factionData[name] = subFactionData
+            factionData[name] = faction
         factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
-        return factionData
+        return factionData[factionChoiceName]
 
     async def getUserCampaignData(ctx: commands.Context):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = (SELECT campaignkey FROM campaignservers WHERE serverid = $1);''', [ctx.guild.id])
@@ -175,6 +172,15 @@ class campaignFunctions(commands.Cog):
             return 1.1
         if answer == "Appointed Successor":
             return 1.2
+
+    async def getTime(date_string: str):
+        format_string = "%Y-%m-%d %H:%M:%S"
+        dt = datetime.strptime(str(date_string), format_string)
+        print(dt.year)
+        hour = dt.strftime("%I")
+        min = dt.strftime("%M %p")
+        day = dt.strftime("%A %B %d")
+        return f"{hour}:{min} on {day}, {dt.year}"
 
     async def getGovernmentName(answerIn: float):
         answer = round(answerIn, 3)

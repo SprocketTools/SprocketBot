@@ -27,7 +27,7 @@ else:
     configurationFilepath = "/home/mumblepi/configuration.ini"
     OSslashLine = "/"
 
-# botMode = "official" # dev on live flag
+#botMode = "official" # dev on live flag
 
 if botMode != "official":
     prefix = "?"
@@ -39,7 +39,7 @@ else:
     defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
     defaultName = "Sprocket Bot"
 
-# prefix = "?" # dev on live variable
+#prefix = "?" # dev on live variable
 
 # general settings
 config = configparser.ConfigParser()

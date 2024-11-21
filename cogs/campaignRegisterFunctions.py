@@ -160,7 +160,6 @@ class campaignRegisterFunctions(commands.Cog):
 
     @commands.command(name="addCampaignFaction", description="Add a faction to a campaign")
     async def addCampaignFaction(self, ctx: commands.Context):
-        print("hi")
         # try:
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         defaultPWR = float(campaignData["poptoworkerratio"])
@@ -220,7 +219,8 @@ class campaignRegisterFunctions(commands.Cog):
             latitude = 0
             land = 2000
             governanceScale = 1.0
-            landlordname, landlordid = await campaignFunctions.pickCampaignCountry(ctx, prompt="What country is your faction operating from?\n-# Note: this will affect your income taxes, so choose wisely.")
+            landlorddata = await campaignFunctions.pickCampaignCountry(ctx, prompt="What country is your faction operating from?\n-# Note: this will affect your income taxes, so choose wisely.")
+            landlordid = landlorddata['factionkey']
         # except ValueError as e:
             # await ctx.send(f"Command has stopped:\n\n{e}")
 

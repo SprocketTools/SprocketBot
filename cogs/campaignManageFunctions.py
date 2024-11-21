@@ -114,24 +114,22 @@ class campaignManageFunctions(commands.Cog):
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET population = $1 WHERE factionkey = $2;''',[pop_adj, key])
             elif answer == "pop to worker ratio":
                 ratio_adj = await textTools.getFlooredFloatResponse(ctx, "What is the new default pop/worker ratio you wish to use?", 1)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET poptoworkerratio = $1 WHERE campaignkey = $2;''',[ratio_adj, key])
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET poptoworkerratio = $1 WHERE factionkey = $2;''',[ratio_adj, key])
             elif answer == "move your company to a new country":
                 if data['iscountry'] == False:
-                    landlorddata, landlordkey = await campaignFunctions.pickCampaignCountry(ctx, "Where are you relocating your company to?")
-                    print(landlordkey)
-                    print(landlorddata)
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landlordfactionkey = $1 WHERE factionkey = $2;''',[landlordkey, key])
+                    landlorddata = await campaignFunctions.pickCampaignCountry(ctx, "Where are you relocating your company to?")
+                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landlordfactionkey = $1 WHERE factionkey = $2;''',[landlorddata['factionkey'], key])
                 else:
                     await ctx.send("Yeah, unfortunately surrendering to another country is not a part of the game here.")
             elif answer == "flag":
                 name_adj = await textTools.getFileURLResponse(ctx, "What is the new flag?  Upload an image.")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET flagurl = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET flagurl = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "updates channel":
                 name_adj = await textTools.getChannelResponse(ctx, "What is the new channel you want updates sent to?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET logchannel = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET logchannel = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "espionage funding":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards espionage funding?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET espionagespend = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET espionagespend = $1 WHERE factionkey = $2;''',[name_adj, key])
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
             await ctx.send("## Done!")

@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 
 import main
+from datetime import datetime, timedelta
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 
@@ -79,7 +80,8 @@ class roleColorTools(commands.Cog):
 
     @commands.command(name="addColorChanger", description="generate a key that can be used to initiate a campaign")
     async def addColorChanger(self, ctx: commands.Context):
-
+        if ctx.author.id != main.ownerID:
+            return
         await ctx.send("Do you want to use this server?")
         isThisServer = await discordUIfunctions.getYesNoChoice(ctx)
         if isThisServer == True:
@@ -108,29 +110,43 @@ class roleColorTools(commands.Cog):
 
     @commands.command(name="clearColorChangers", description="generate a key that can be used to initiate a campaign")
     async def clearColorChangers(self, ctx: commands.Context):
+        if ctx.author.id != main.ownerID:
+            return
         roleid = await textTools.getIntResponse(ctx, "What role do you want to stop updating?  Reply with that role's ID.")
         server = self.bot.get_guild(ctx.guild.id)
         role = discord.utils.get(server.roles, id=roleid)
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM colorchangers WHERE roleid = $1''', [roleid])
         await ctx.send("## Done!")
 
-    @commands.command(name="listColorChangers", description="generate a key that can be used to initiate a campaign")
+    @commands.command(name="viewColorChangers", description="generate a key that can be used to initiate a campaign")
     async def listColorChangers(self, ctx: commands.Context):
         colorList = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers''')
         print(colorList)
+
         for colori in colorList:
             print(colori)
+            end_time = datetime.now() + timedelta(minutes=int(colori['duration']*(1-colori['percent'])))
+            date_string = str(end_time.replace(microsecond=0, second=0))
+            format_string = "%Y-%m-%d %H:%M:%S"
+            dt = datetime.strptime(date_string, format_string)
+            print(dt.year)
+            hour = dt.strftime("%I")
+            min = dt.strftime("%M %p")
+            day = dt.strftime("%A %B %d")
             guildIn = self.bot.get_guild(colori['serverid'])
             embed = discord.Embed(title=f"{guildIn.name} (ID: {colori['serverid']})",
                                   description=f"Role: **{discord.utils.get(guildIn.roles, id=colori['roleid']).name}** (ID: {colori['roleid']})",
                                   color=discord.Color.random())
-            embed.add_field(name="Minutes to complete cycle", value=colori['duration'])
+
             if colori['rainbow'] == True:
+                embed.add_field(name="Cycle duration", value=colori['duration'])
                 embed.add_field(name="Rainbow percent", value=f"{round(colori['percent']*100, 3)}%")
+                embed.add_field(name="Resets at", value=discord.utils.format_dt(dt, style='f'), inline=False)
             else:
                 embed.add_field(name="Starting color", value=f"RGB ({colori['r_i']}, {colori['g_i']}, {colori['b_i']})")
                 embed.add_field(name="Ending color", value=f"RGB ({colori['r_f']}, {colori['g_f']}, {colori['b_f']})")
                 embed.add_field(name="Progress", value=f"{round(colori['percent'] * 100, 3)}%")
+                embed.add_field(name="End time", value=discord.utils.format_dt(dt, style='f'))
             await ctx.send(embed=embed)
 
 async def setup(bot:commands.Bot) -> None:

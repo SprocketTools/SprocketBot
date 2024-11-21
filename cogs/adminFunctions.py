@@ -169,7 +169,7 @@ class adminFunctions(commands.Cog):
             return
         # blueprint scanner
         if message.attachments:
-            print(message.attachments)
+            #print(message.attachments)
             for attachment in message.attachments:
                 if ".blueprint" in attachment.filename:
                     blueprintData = json.loads(await attachment.read())
@@ -250,7 +250,7 @@ class adminFunctions(commands.Cog):
             guild = self.bot.get_guild(message.guild.id)
             prob = 1500 + len(guild.members)/6
             i = int(random.random()*prob)
-            print(i)
+            #print(i)
             if i == 1:
                 serverConfig[message.guild.id]["funnycounter"] = int((random.random()**2)*2+1)
             if i <= prob/4:
@@ -380,7 +380,7 @@ class adminFunctions(commands.Cog):
     @commands.command(name="setSlowmode", description="Set a slowmode.")
     async def setSlowmode(self, ctx: commands.Context, duration: int):
         serverConfig = await adminFunctions.getServerConfig(ctx)
-        if ctx.author.guild_permissions.administrator == False:
+        if str(serverConfig['botmanagerroleid']) not in str(ctx.author.roles):
             return
         await ctx.channel.edit(slowmode_delay = duration)
         await ctx.send(f"Slowmode is now set to a {duration} second delay!\n\n{await errorFunctions.retrieveError(ctx)}")
@@ -419,6 +419,8 @@ class adminFunctions(commands.Cog):
     @commands.command(name="pruneServers", description="List all my servers.")
     async def pruneServers(self, ctx: commands.Context, count: int):
         i = 0
+        if ctx.author.id != main.ownerID:
+            return
         protectedServers = ["The Oteran Republic", "SkyFall Aerospace"]
         serverList = "Your server list:"
         for server in self.bot.guilds:
@@ -525,17 +527,30 @@ class adminFunctions(commands.Cog):
         await ctx.send(await SQLfunctions.databaseFetchdict(f"SELECT * FROM {tablename};"))
 
     @commands.command(name="setBotStatus", description="setup the server")
-    async def setBotStatus(self, ctx: commands.Context, *, nameIn: str):
+    async def setBotStatus(self, ctx: commands.Context):
         if ctx.author.id == 712509599135301673:
             pass
         else:
             return
-        await self.bot.change_presence(activity=discord.Game(name=nameIn))
+        activityType = await discordUIfunctions.getButtonChoice(ctx, ["Playing", "Watching", "Listening", "Streaming"])
+        if activityType == "Playing":
+            name = await textTools.getResponse(ctx, "What game are you playing?")
+            await self.bot.change_presence(activity=discord.Game(name=name))
+        if activityType == "Watching":
+            name = await textTools.getResponse(ctx, "What is your video name?")
+            await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=name))
+        if activityType == "Listening":
+            url = await textTools.getResponse(ctx, "What song name are you listening to?")
+            await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=url))
+        if activityType == "Streaming":
+            name = await textTools.getResponse(ctx, "What is your stream name?")
+            url = await textTools.getResponse(ctx, "What URL are you streaming?")
+            await self.bot.change_presence(activity=discord.Streaming(name=name, url=url))
 
     @commands.command(name="setBotAvatar", description="setup the server")
     async def setBotAvatar(self, ctx: commands.Context):
         defaultURL = main.defaultURL
-        if ctx.author.id != 712509599135301673:
+        if ctx.author.id != main.ownerID:
             return
         url = await textTools.getResponse(ctx, "Reply with the image link")
         waitTime = await textTools.getIntResponse(ctx, "How many seconds should it last?")

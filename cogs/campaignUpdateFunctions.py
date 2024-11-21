@@ -12,7 +12,7 @@ from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
-updateFrequency = 1800 # time in seconds
+updateFrequency = 900 # time in seconds
 secondsInYear = 31536000 + 21600
 ## secondsInYear = 20
 class campaignUpdateFunctions(commands.Cog):
@@ -32,15 +32,26 @@ class campaignUpdateFunctions(commands.Cog):
         await self.loopUpdate.start()
     @tasks.loop(seconds=updateFrequency)
     async def loopUpdate(self):
-        status_log_channel = self.bot.get_channel(1152377925916688484)
-        await status_log_channel.send("Update is starting!")
-        await self.errorPrevention()
-        await self.updateTime()
-        await self.updatePopulation()
-        await self.collectTaxes()
-        await self.updateGDP()
-        await self.updateHappiness()
-        await status_log_channel.send("Update is complete!")
+        current_time = int(datetime.now().timestamp())
+        last_time = int(main.config["settings"]['lastupdated'])
+        #print(f'{last_time} --> {current_time}')
+        while last_time + (updateFrequency/2) < current_time:
+            status_log_channel = self.bot.get_channel(1152377925916688484)
+            await status_log_channel.send("Update is starting!")
+            await self.errorPrevention()
+            await self.updateTime()
+            await self.updatePopulation()
+            await self.collectTaxes()
+            await self.updateGDP()
+            await self.updateHappiness()
+            await self.updateEspionage()
+            await self.updateLastUpdated()
+            main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
+            await status_log_channel.send(f"Campaigns have updated from <t:{last_time}:f> to <t:{last_time + updateFrequency}:f>")
+            last_time = last_time + updateFrequency
+        main.config["settings"]['lastupdated'] = str(current_time)
+        with open(main.configurationFilepath, "w") as configfile:
+            main.config.write(configfile)
 
     async def errorPrevention(self):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE gdp/population < 0 AND iscountry = true AND hostactive = true;''')
@@ -79,6 +90,8 @@ class campaignUpdateFunctions(commands.Cog):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE gdp/population < 0 AND iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE happiness < 0 AND iscountry = true AND hostactive = true;''')
 
+
+
     async def sendTimeUpdates(self):
         data = await SQLfunctions.databaseFetchdict('''SELECT * FROM campaigns where EXTRACT(YEAR FROM timedate) != EXTRACT(YEAR FROM lastupdated);''')
         for campaignData in data:
@@ -95,8 +108,12 @@ class campaignUpdateFunctions(commands.Cog):
     async def updateLastUpdated(self):
         await SQLfunctions.databaseExecute(f'''UPDATE campaigns SET lastupdated = timedate;''')
 
+
     @commands.command(name="forceUpdate", description="test")
     async def forceUpdate(self, ctx: commands.Context):
+        current_time = int(datetime.now().timestamp())
+        last_time = int(main.config["settings"]['lastupdated'])
+        print(f'{last_time} --> {current_time}')
         status_log_channel = self.bot.get_channel(1152377925916688484)
         await status_log_channel.send("Update is starting!")
         await self.updateTime()
@@ -115,7 +132,11 @@ class campaignUpdateFunctions(commands.Cog):
         await self.sendTimeUpdates()
         await self.updateEspionage()
         await self.updateLastUpdated()
+        main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
         await status_log_channel.send("Update is complete!")
+        main.config["settings"]['lastupdated'] = str(current_time)
+        with open(main.configurationFilepath, "w") as configfile:
+            main.config.write(configfile)
         await ctx.send("## Done!")
 
     async def softUpdate(self):
