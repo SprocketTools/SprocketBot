@@ -248,7 +248,7 @@ class adminFunctions(commands.Cog):
             }
         if serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"] or message.author.id == main.ownerID:
             guild = self.bot.get_guild(message.guild.id)
-            prob = 1500 + len(guild.members)/6
+            prob = 1500 + len(guild.members)
             i = int(random.random()*prob)
             #print(i)
             if i == 1:

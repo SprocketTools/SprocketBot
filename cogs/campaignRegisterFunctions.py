@@ -158,8 +158,8 @@ class campaignRegisterFunctions(commands.Cog):
         except Exception:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
 
-    @commands.command(name="addCampaignFaction", description="Add a faction to a campaign")
-    async def addCampaignFaction(self, ctx: commands.Context):
+    @commands.command(name="startFaction", description="Add a faction to a campaign")
+    async def startFaction(self, ctx: commands.Context):
         # try:
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         defaultPWR = float(campaignData["poptoworkerratio"])
@@ -317,8 +317,8 @@ class campaignRegisterFunctions(commands.Cog):
                 return
         await ctx.send("All good here!")
 
-    @commands.command(name="addServerToCampaign", description="Add a server to an ongoing campaign")
-    async def addServerToCampaign(self, ctx: commands.Context):
+    @commands.command(name="joinExternalCampaign", description="Add a server to an ongoing campaign")
+    async def joinExternalCampaign(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignManager(ctx) == False:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
@@ -359,8 +359,8 @@ class campaignRegisterFunctions(commands.Cog):
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignusers VALUES ($1, $2, $3, true)''',[ctx.author.id, campaignKey, factionkey])
         await ctx.send(f"## Done!\nYou are now a part of {answerName}!")
 
-    @commands.command(name="leaveCampaign", description="Add a server to an ongoing campaign")
-    async def leaveCampaign(self, ctx: commands.Context):
+    @commands.command(name="leaveFactions", description="Add a server to an ongoing campaign")
+    async def leaveFactions(self, ctx: commands.Context):
         campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignData['campaignkey']
         await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignusers SET status = False WHERE userid = $1 AND campaignkey = $2;''',[ctx.author.id, campaignKey])

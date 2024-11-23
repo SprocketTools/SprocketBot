@@ -1,4 +1,5 @@
 import discord, json, io
+import pandas as pd
 from discord.ext import commands
 from typing import List
 
@@ -76,15 +77,15 @@ class campaignManageFunctions(commands.Cog):
             data = await campaignFunctions.getUserFactionData(ctx)
             key = data["factionkey"]
         print(data)
-
-        while True:
+        continue_val = True
+        while continue_val:
             data = await campaignFunctions.getFactionData(key)
             await campaignFunctions.showStats(ctx, data)
             await ctx.send("What statistic do you wish to modify?")
             if data['iscountry'] == False:
-                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Move your company to a new country", "Exit"]
+                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Move your company to a new country", "Delete faction", "Exit"]
             else:
-                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Median salary", "Population", "GDP", "Espionage funding", "Exit"]
+                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Median salary", "Population", "GDP", "Espionage funding", "Delete faction", "Exit"]
             answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, inList))
             print(answer)
             if answer == "exit":
@@ -130,31 +131,58 @@ class campaignManageFunctions(commands.Cog):
             elif answer == "espionage funding":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards espionage funding?")
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET espionagespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+            elif answer == "delete faction":
+                if await campaignFunctions.isCampaignHost(ctx) == False:
+                    await errorFunctions.sendError(ctx)
+                    await ctx.send("You are not a campaign host; please contact a campaign host to delete your faction.")
+                    return
+                else:
+                    await ctx.send(f"Please confirm that you intend to delete {factionName} and wipe all records of it from the bot.")
+                    if await discordUIfunctions.getYesNoChoice(ctx) == False:
+                        return
+                    await ctx.send(f"Please confirm again that you intend to delete {factionName}.  There won't be another confirmation after this one.")
+                    if await discordUIfunctions.getYesNoChoice(ctx) == False:
+                        return
+                    await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM campaignfactions WHERE factionkey = $1;''',[key])
+                    await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM campaignusers WHERE factionkey = $1;''',[key])
+                    await ctx.send("## Done!")
+                    return
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
+                return
             await ctx.send("## Done!")
 
-    @commands.command(name="manageFactionBatch", description="Edit a faction un bulk")
-    async def manageFactionBatch(self, ctx: commands.Context):
+    @commands.command(name="manageAllFactions", description="Edit a faction un bulk")
+    async def manageAllFactions(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
             return
         key = await campaignFunctions.getCampaignKey(ctx)
         name = await campaignFunctions.getCampaignName(key)
-        await ctx.send("Do you have a data file ready yet?")
+        await ctx.send("Do you have a .csv data file ready yet?")
         isReady = await discordUIfunctions.getYesNoChoice(ctx)
         if isReady:
-            attachment = await textTools.getFileResponse(ctx, "Upload your edited json file containing all your faction's data.")
-            data = json.loads(await attachment.read())
+
+            attachment = await textTools.getFileResponse(ctx, "Upload your .csv file containing all your faction's data.")
+            df = pd.read_csv(io.StringIO((await attachment.read()).decode('utf-8')))
+            data = df.to_dict(orient='records')
             print(data)
             for faction in data:
-                await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET factionname = $1, money = $2, population = $3, landsize = $4, averagesalary = $5 WHERE factionkey = $6''', [faction["factionname"], faction["money"], faction["population"], faction["landsize"], faction["averagesalary"], faction["factionkey"]])
+                await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET factionname = $1, money = $2, population = $3, landsize = $4, averagesalary = $5, gdp = $7 WHERE factionkey = $6''', [faction["factionname"], faction["money"], faction["population"], faction["landsize"], faction["averagesalary"], faction["factionkey"], faction["gdp"]])
             await ctx.send(f"## Done!\n{len(data)} factions have been updated.")
         else:
-            data = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionkey, factionname, money, population, landsize, averagesalary FROM campaignfactions WHERE campaignkey = $1;''',[key])
-            stringOut = json.dumps(data, indent=4)
-            await ctx.send("Open up this .json file and make any changes to factions as desired.  Then, run the -manageFactionBatch command again and click **\"yes\"** when prompted.")
-            data = io.BytesIO(stringOut.encode())
-            await ctx.send(file=discord.File(data, f'{name}_data.json'))
+            if await campaignFunctions.isCampaignHost(ctx) == False:
+                return
+            await ctx.send("Download this file and edit it in a spreadsheet editor.  When you're done, save it as a .csv and run the command again.")
+            data = await SQLfunctions.databaseFetchdictDynamic(
+                '''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''',
+                [await campaignFunctions.getCampaignKey(ctx)])
+            # credits: brave AI
+            df = pd.DataFrame(data)
+            buffer = io.StringIO()
+            df.to_csv(buffer, index=False)
+            # Send CSV file
+            buffer.seek(0)
+            await ctx.channel.send(file=discord.File(buffer, "data.csv"))
             await ctx.send("## Warning\nDo not change the faction keys - these are basically their social security numbers.")
 
     async def toggleCampaignProgress(ctx: commands.Context):

@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 import random
 from io import StringIO
-
+import pandas as pd
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -44,7 +44,57 @@ class campaignInfoFunctions(commands.Cog):
                 embed.add_field(name=i['factionname'], value = " ", inline=False)
             await ctx.send(embed=embed)
 
+    @commands.command(name="campaignHelp", description="View all the bot commands")
+    async def campaignHelp(self, ctx: commands.Context):
+        embed = discord.Embed(title=f"**Campaign Commands**",
+                              description="*Sprocket Bot's prefix is* `-`\n",
+                              color=discord.Color.random())
+        embed.add_field(name="", value="", inline=False)
+        embed.add_field(name="startFaction", value="Start a brand new faction", inline=False)
+        embed.add_field(name="joinFaction", value="Join a faction", inline=False)
+        embed.add_field(name="leaveFactions", value="Leave all factions", inline=False)
+        embed.add_field(name="campaignSettings", value="View campaign settings", inline=False)
+        embed.add_field(name="viewStats", value="View your faction's stats", inline=False)
+        embed.add_field(name="viewFinances", value="View your faction's finances", inline=False)
+        embed.add_field(name="logPurchase", value="[Placeholder] Purchase an item", inline=False)
+        embed.add_field(name="logMaintenance", value="[Placeholder] Pay for something", inline=False)
+        embed.add_field(name="logCivilSale", value="[Placeholder] Log revenue from civilians", inline=False)
+        embed.add_field(name="sendMessage", value="Send a message in-character to another faction", inline=False)
+        embed.set_thumbnail(url='https://sprockettools.github.io/SprocketToolsLogo.png')
+        embed.set_footer(text="Campaign managers can view administrative commands with `-campaignManagerHelp`")
+        await ctx.send(embed=embed)
 
+    @commands.command(name="campaignManagerHelp", description="View all the bot commands")
+    async def campaignManagerHelp(self, ctx: commands.Context):
+        embed = discord.Embed(title=f"**Campaign Commands**",
+                              description="*Sprocket Bot's prefix is* `-`\n",
+                              color=discord.Color.random())
+        embed.add_field(name="", value="", inline=False)
+        embed.add_field(name="startCampaign", value="Start a brand new campaign", inline=False)
+        embed.add_field(name="startFaction", value="Start a brand new faction", inline=False)
+        embed.add_field(name="joinExternalCampaign", value="Join a campaign in another server", inline=False)
+        embed.add_field(name="approveCampaignFactions", value="Approve new factions", inline=False)
+        embed.add_field(name="campaignSettings", value="View campaign settings", inline=False)
+        embed.add_field(name="manageCampaign", value="Manage the campaign settings", inline=False)
+        embed.add_field(name="manageFaction", value="Manage a faction's settings", inline=False)
+        embed.add_field(name="manageAllFactions", value="Use a spreadsheet to update everything", inline=False)
+        embed.add_field(name="addMoney", value="Add money to a faction", inline=False)
+        embed.set_thumbnail(url='https://sprockettools.github.io/SprocketToolsLogo.png')
+        embed.set_footer(text="Campaign managers can view administrative commands with `-campaignManagerHelp`")
+        await ctx.send(embed=embed)
+
+    @commands.command(name="downloadStats", description="Download the campaign data")
+    async def downloadStats(self, ctx: commands.Context):
+        if await campaignFunctions.isCampaignHost(ctx) == False:
+            return
+        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''', [await campaignFunctions.getCampaignKey(ctx)])
+        # credits: brave AI
+        df = pd.DataFrame(data)
+        buffer = StringIO()
+        df.to_csv(buffer, index=False)
+        # Send CSV file
+        buffer.seek(0)
+        await ctx.channel.send(file=discord.File(buffer, "data.csv"))
 
     @commands.command(name="viewStats", description="View the statistics of your faction")
     async def viewStats(self, ctx: commands.Context):
