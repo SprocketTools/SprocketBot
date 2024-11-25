@@ -359,6 +359,20 @@ class campaignRegisterFunctions(commands.Cog):
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignusers VALUES ($1, $2, $3, true)''',[ctx.author.id, campaignKey, factionkey])
         await ctx.send(f"## Done!\nYou are now a part of {answerName}!")
 
+    @commands.command(name="recruitToFaction", description="Add a server to an ongoing campaign")
+    async def recruitToFaction(self, ctx: commands.Context):
+        if await campaignFunctions.isCampaignHost(ctx) == False:
+            return
+        campaignKey = await campaignFunctions.getCampaignKey(ctx)
+        factionData = await campaignFunctions.pickCampaignFaction(ctx, "What faction are you adding players to?")
+        rawtext = await textTools.getResponse(ctx, f"Reply with a list of the members you wish to add to {factionData['factionname']}.\n-# Separate entries by spaces.  Both pings and user IDs can be used.")
+        userids = rawtext.replace('<', '').replace('>', '').split(' ')
+        for user in userids:
+            if abs(len(user) - 18) < 2:
+                await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignusers VALUES ($1, $2, $3, true)''',[ctx.author.id, campaignKey, factionData['factionkey']])
+            print(user)
+        await ctx.send(f"## Done!")
+
     @commands.command(name="leaveFactions", description="Add a server to an ongoing campaign")
     async def leaveFactions(self, ctx: commands.Context):
         campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])

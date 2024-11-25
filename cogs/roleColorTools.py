@@ -1,4 +1,6 @@
 import asyncio
+import math
+
 from discord.ext import tasks
 
 import discord
@@ -19,7 +21,7 @@ class roleColorTools(commands.Cog):
         self.bot = bot
         self.startup = True
         self.updateFrequency = 300
-        self.startupdelay = 10800
+        self.startupdelay = 150
         self.updateRoles.start()
 
     @tasks.loop(seconds=300)
@@ -42,7 +44,7 @@ class roleColorTools(commands.Cog):
             await asyncio.sleep(self.startupdelay)
             self.startup = False
         else:
-            colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE rainbow = true;''')
+            colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE type = 'rainbow';''')
             for colorInstance in colorData:
                 server = self.bot.get_guild(colorInstance['serverid'])
                 role = discord.utils.get(server.roles, id=colorInstance['roleid'])
@@ -50,9 +52,9 @@ class roleColorTools(commands.Cog):
                 await role.edit(color=colorout)
                 percentInceease = self.updateFrequency/(60*colorInstance['duration'])
                 await SQLfunctions.databaseExecuteDynamic('''UPDATE colorchangers SET percent = percent + $1 WHERE roleid = $2;''', [percentInceease, colorInstance['roleid']])
-            await SQLfunctions.databaseExecute('''UPDATE colorchangers SET percent = 0 WHERE rainbow = true AND percent > 1;''')
+            await SQLfunctions.databaseExecute('''UPDATE colorchangers SET percent = 0 WHERE type = 'rainbow' AND percent > 1;''')
 
-            colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE rainbow = false;''')
+            colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE type = 'standard';''')
             for colorInstance in colorData:
                 server = self.bot.get_guild(colorInstance['serverid'])
                 role = discord.utils.get(server.roles, id=colorInstance['roleid'])
@@ -68,14 +70,36 @@ class roleColorTools(commands.Cog):
                 await role.edit(color=color3out)
                 percentInceease = self.updateFrequency / (60 * colorInstance['duration'])
                 await SQLfunctions.databaseExecuteDynamic('''UPDATE colorchangers SET percent = percent + $1 WHERE roleid = $2;''',[percentInceease, colorInstance['roleid']])
-            await SQLfunctions.databaseExecute('''DELETE FROM colorchangers WHERE rainbow = false AND percent > 1;''')
+            await SQLfunctions.databaseExecute('''DELETE FROM colorchangers WHERE type = 'standard' AND percent > 1;''')
 
-    @commands.command(name="setupRoleColorDatabase", description="generate a key that can be used to initiate a campaign")
+            colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE type = 'oscillate';''')
+            for colorInstance in colorData:
+                server = self.bot.get_guild(colorInstance['serverid'])
+                role = discord.utils.get(server.roles, id=colorInstance['roleid'])
+                color1 = discord.Color.from_hsv(colorInstance['percent'], 1, 1)
+
+                percent = 0.5 - math.sin(colorInstance['percent']*2*math.pi)*0.5
+                print(percent)
+                color3_r = colorInstance['r_i'] - (colorInstance['r_i'] - colorInstance['r_f']) * percent
+                color3_g = colorInstance['g_i'] - (colorInstance['g_i'] - colorInstance['g_f']) * percent
+                color3_b = colorInstance['b_i'] - (colorInstance['b_i'] - colorInstance['b_f']) * percent
+                # color3 = (int(color3_r), int(color3_g), int(color3_b))
+                # print(color3)
+                color3out = discord.Color.from_rgb(int(color3_r), int(color3_g), int(color3_b))
+                await role.edit(color=color3out)
+                percentInceease = self.updateFrequency / (60 * colorInstance['duration'])
+                await SQLfunctions.databaseExecuteDynamic(
+                    '''UPDATE colorchangers SET percent = percent + $1 WHERE roleid = $2;''',
+                    [percentInceease, colorInstance['roleid']])
+            await SQLfunctions.databaseExecute('''UPDATE colorchangers SET percent = 0 WHERE type = 'oscillate' AND percent > 1;''')
+
+    @commands.command(name="resetRoleColorDatabase", description="generate a key that can be used to initiate a campaign")
     async def setupRoleColorDatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS colorchangers (serverid BIGINT, roleid BIGINT, r_i INT, g_i INT, b_i INT, r_f INT, g_f INT, b_f INT, percent REAL, duration BIGINT, rainbow BOOLEAN);''')
+        await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS colorchangers;''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS colorchangers (serverid BIGINT, roleid BIGINT, r_i INT, g_i INT, b_i INT, r_f INT, g_f INT, b_f INT, percent REAL, duration BIGINT, type VARCHAR);''')
         await ctx.send("## Done!")
 
     @commands.command(name="addColorChanger", description="generate a key that can be used to initiate a campaign")
@@ -91,10 +115,10 @@ class roleColorTools(commands.Cog):
         roleid = await textTools.getIntResponse(ctx, "What role do you want to update?  Reply with that role's ID.")
         minutes = await textTools.getIntResponse(ctx, "How many minutes do you want the update to take?  Reply with an integer.")
         await ctx.send("Do you want to make it a rainbow color?")
-        isRainbow = await discordUIfunctions.getYesNoChoice(ctx)
+        type = await discordUIfunctions.getButtonChoice(ctx, ["transition", "rainbow", "oscillate"])
         server = self.bot.get_guild(serverid)
         role = discord.utils.get(server.roles, id=roleid)
-        if isRainbow == False:
+        if type != "rainbow":
             final_color_str = await textTools.getResponse(ctx, "What hex color do you want to conclude with?")
             current_color_str = role.color
             h = str(current_color_str).lstrip('#')
@@ -104,7 +128,12 @@ class roleColorTools(commands.Cog):
         else:
             current_color = (0, 0, 0)
             final_color = (0, 0, 0)
-        datalist = [serverid, roleid, current_color[0], current_color[1], current_color[2], final_color[0], final_color[1], final_color[2], 0, minutes, isRainbow]
+        percent = 0
+        if type == "oscillate":
+            now = datetime.now()
+            midnight = datetime(now.year, now.month, now.day)
+            percent = ((now - midnight).total_seconds() / 60)/1440
+        datalist = [serverid, roleid, current_color[0], current_color[1], current_color[2], final_color[0], final_color[1], final_color[2], percent, minutes, type]
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO colorchangers VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)''', datalist)
         await ctx.send("## Done!\nThis role will now be automatically be updated!")
 
@@ -138,7 +167,7 @@ class roleColorTools(commands.Cog):
                                   description=f"Role: **{discord.utils.get(guildIn.roles, id=colori['roleid']).name}** (ID: {colori['roleid']})",
                                   color=discord.Color.random())
 
-            if colori['rainbow'] == True:
+            if colori['type'] == "rainbow":
                 embed.add_field(name="Cycle duration", value=colori['duration'])
                 embed.add_field(name="Rainbow percent", value=f"{round(colori['percent']*100, 3)}%")
                 embed.add_field(name="Resets at", value=discord.utils.format_dt(dt, style='f'), inline=False)

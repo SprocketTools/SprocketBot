@@ -24,6 +24,27 @@ class campaignInfoFunctions(commands.Cog):
     async def campaignSettings(self, ctx: commands.Context):
         await campaignFunctions.showSettings(ctx)
 
+    @commands.command(name="viewFactionHistory", description="Get a list of all the factions in your campaign")
+    async def viewFactionHistory(self, ctx: commands.Context, *, userid: int=None):
+        if not userid:
+            userid = ctx.author.id
+        campaignKey = await campaignFunctions.getUserCampaignData(ctx)
+        print(campaignKey['campaignkey'])
+        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM campaignusers WHERE userid = $1 AND campaignkey = $2;''',[userid, campaignKey['campaignkey']])
+        if len(data) == 0:
+            await errorFunctions.sendError(ctx)
+        else:
+            embed = discord.Embed(title=f"{self.bot.get_user(userid).name}'s faction history", color=discord.Color.random())
+            for faction in data:
+                if faction['status'] == True:
+                    embed.add_field(name=await campaignFunctions.getFactionName(faction['factionkey']), value="Active member", inline=False)
+                if faction['status'] == False:
+                    embed.add_field(name=await campaignFunctions.getFactionName(faction['factionkey']), value="Former member", inline=False)
+            embed.set_thumbnail(url=self.bot.get_user(userid).avatar.url)
+            await ctx.send(embed=embed)
+
+
+
     @commands.command(name="viewFactions", description="Get a list of all the factions in your campaign")
     async def viewFactions(self, ctx: commands.Context):
         campaignKey = await campaignFunctions.getUserCampaignData(ctx)
@@ -74,9 +95,11 @@ class campaignInfoFunctions(commands.Cog):
         embed.add_field(name="startFaction", value="Start a brand new faction", inline=False)
         embed.add_field(name="joinExternalCampaign", value="Join a campaign in another server", inline=False)
         embed.add_field(name="approveCampaignFactions", value="Approve new factions", inline=False)
+        embed.add_field(name="recruitToCampaign", value="Add members to a faction", inline=False)
         embed.add_field(name="campaignSettings", value="View campaign settings", inline=False)
         embed.add_field(name="manageCampaign", value="Manage the campaign settings", inline=False)
         embed.add_field(name="manageFaction", value="Manage a faction's settings", inline=False)
+        embed.add_field(name="viewFactionHistory", value="View a player's affiliations", inline=False)
         embed.add_field(name="manageAllFactions", value="Use a spreadsheet to update everything", inline=False)
         embed.add_field(name="addMoney", value="Add money to a faction", inline=False)
         embed.set_thumbnail(url='https://sprockettools.github.io/SprocketToolsLogo.png')

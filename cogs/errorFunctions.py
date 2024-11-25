@@ -124,10 +124,16 @@ class errorFunctions(commands.Cog):
             await ctx.send("This error message is too big.  Please trim the length down and try again.")
         if "https://www.youtube.com/" in responseMessage or "https://youtu.be/" in responseMessage:
             category = "video"
+            await ctx.send("Filing as a video")
         elif ".gif" in responseMessage and "https://" in responseMessage:
             category = "gif"
+            await ctx.send("Filing as a GIF")
         elif "tenor.com" in responseMessage or "giphy" in responseMessage:
             category = "gif"
+            await ctx.send("Filing as a GIF")
+        elif ctx.channel.id == 1310539603144343603:
+            category = "mlp"
+            await ctx.send("Filing as a MLP error")
         else:
             await ctx.send("What would you categorize this error under?")
             categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"], ["Flyout", "flyout"], ["Joke/other", "joke"], ["Campaign", "campaign"], ["Blueprint", "blueprint"], ["Only a catgirl would say that", "catgirl"]]
@@ -299,7 +305,11 @@ class errorFunctions(commands.Cog):
             await ctx.send(await errorFunctions.retrieveError(ctx))
 
     async def retrieveError(ctx: commands.Context):
-        error = (await SQLfunctions.databaseFetchrow(f'SELECT error from errorlist WHERE status = true ORDER BY RANDOM() LIMIT 1;'))["error"]
+        if ctx.author.id == 299330776162631680:
+            category = "mlp"
+            error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
+        else:
+            error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
         error = await errorFunctions.errorfyText(ctx, error)
         return error
 
@@ -315,7 +325,7 @@ class errorFunctions(commands.Cog):
         return
 
     async def sendError(ctx: commands.Context):
-        error = (await SQLfunctions.databaseFetchrow(f'SELECT error from errorlist WHERE status = true ORDER BY RANDOM() LIMIT 1;'))["error"]
+        error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
         error = await errorFunctions.errorfyText(ctx, error)
         await ctx.send(error)
         return

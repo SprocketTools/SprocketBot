@@ -81,7 +81,7 @@ class campaignUpdateFunctions(commands.Cog):
 
     async def updateEspionage(self):
         # await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = CASE WHEN @gdp/population > 20 THEN (1 - (3*(LN((gdp/population) + 182.5)/((gdp/population) + 2)))) ELSE 0 END;''')
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET espionagestaff = ROUND(((money*espionagespend)/(averagesalary*10) - espionagestaff)*0.5 + espionagestaff) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET espionagestaff = ROUND(((money*espionagespend)/(averagesalary*10) - espionagestaff)*0.1 + espionagestaff) WHERE iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET espionagestaff = 0 WHERE espionagestaff < 0 AND iscountry = true AND hostactive = true;''')
 
     async def updateEducation(self):
