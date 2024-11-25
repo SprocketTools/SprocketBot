@@ -122,7 +122,10 @@ class errorFunctions(commands.Cog):
         if len(responseMessage) > 1024:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             await ctx.send("This error message is too big.  Please trim the length down and try again.")
-        if "https://www.youtube.com/" in responseMessage or "https://youtu.be/" in responseMessage:
+        if ctx.channel.id == 1310539603144343603:
+            category = "mlp"
+            await ctx.send("Filing as a MLP error: auto-approved")
+        elif "https://www.youtube.com/" in responseMessage or "https://youtu.be/" in responseMessage:
             category = "video"
             await ctx.send("Filing as a video")
         elif ".gif" in responseMessage and "https://" in responseMessage:
@@ -131,13 +134,12 @@ class errorFunctions(commands.Cog):
         elif "tenor.com" in responseMessage or "giphy" in responseMessage:
             category = "gif"
             await ctx.send("Filing as a GIF")
-        elif ctx.channel.id == 1310539603144343603:
-            category = "mlp"
-            await ctx.send("Filing as a MLP error")
         else:
             await ctx.send("What would you categorize this error under?")
             categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"], ["Flyout", "flyout"], ["Joke/other", "joke"], ["Campaign", "campaign"], ["Blueprint", "blueprint"], ["Only a catgirl would say that", "catgirl"]]
             category = await discordUIfunctions.getButtonChoiceReturnID(ctx, categories)
+            if category == "mlp":
+                status = True
         values = [responseMessage, status, ctx.author.id, category]
         await SQLfunctions.databaseExecuteDynamic(f'INSERT INTO errorlist VALUES ($1, $2, $3, $4);', values)
         errorDict = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT error FROM errorlist WHERE status = true;')]
@@ -247,7 +249,7 @@ class errorFunctions(commands.Cog):
 
                 elif value == "Modify category":
                     await ctx.send("What would you categorize this error under?")
-                    categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"],["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"],["Campaign", "campaign"], ["Blueprint", "blueprint"],["Only a catgirl would say that", "catgirl"]]
+                    categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"],["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"],["Campaign", "campaign"], ["Blueprint", "blueprint"],["Only a catgirl would say that", "catgirl"],["[Specialty]", "mlp"]]
                     category = await discordUIfunctions.getButtonChoiceReturnID(ctx, categories)
                     await SQLfunctions.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [error["error"]])
                     await SQLfunctions.databaseExecuteDynamic('''INSERT INTO errorlist VALUES ($1, $2, $3, $4);''',[error["error"], True, error["userid"], category])
@@ -258,7 +260,7 @@ class errorFunctions(commands.Cog):
                 elif value == "Modify both":
                     newMessage = await errorFunctions.getTextResponse(ctx, "What do you want the modified error message to be?")
                     await ctx.send("What would you categorize this error under?")
-                    categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"], ["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"], ["Campaign", "campaign"], ["Blueprint", "blueprint"], ["Only a catgirl would say that", "catgirl"]]
+                    categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"], ["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"], ["Campaign", "campaign"], ["Blueprint", "blueprint"], ["Only a catgirl would say that", "catgirl"],["[Specialty]", "mlp"]]
                     category = await discordUIfunctions.getButtonChoiceReturnID(ctx, categories)
                     await SQLfunctions.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [error["error"]])
                     await SQLfunctions.databaseExecuteDynamic('''INSERT INTO errorlist VALUES ($1, $2, $3, $4);''',[newMessage, True, error["userid"], category])
@@ -306,7 +308,6 @@ class errorFunctions(commands.Cog):
 
     async def retrieveError(ctx: commands.Context):
         if ctx.author.id == 299330776162631680:
-            category = "mlp"
             error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
         else:
             error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
@@ -314,19 +315,28 @@ class errorFunctions(commands.Cog):
         return error
 
     async def retrieveCategorizedError(ctx: commands.Context, category: str):
-        error = (await SQLfunctions.databaseFetchrowDynamic(f'SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;', [category]))["error"]
-        error = await errorFunctions.errorfyText(ctx, error)
+        if ctx.author.id == 299330776162631680:
+            error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
+        else:
+            error = (await SQLfunctions.databaseFetchrowDynamic(f'''SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;''', [category]))["error"]
+            error = await errorFunctions.errorfyText(ctx, error)
         return error
 
     async def sendCategorizedError(ctx: commands.Context, category: str):
-        error = (await SQLfunctions.databaseFetchrowDynamic(f'SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;', [category]))["error"]
-        error = await errorFunctions.errorfyText(ctx, error)
+        if ctx.author.id == 299330776162631680:
+            error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
+        else:
+            error = (await SQLfunctions.databaseFetchrowDynamic(f'''SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;''', [category]))["error"]
+            error = await errorFunctions.errorfyText(ctx, error)
         await ctx.send(error)
         return
 
     async def sendError(ctx: commands.Context):
-        error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
-        error = await errorFunctions.errorfyText(ctx, error)
+        if ctx.author.id == 299330776162631680:
+            error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
+        else:
+            error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
+            error = await errorFunctions.errorfyText(ctx, error)
         await ctx.send(error)
         return
 
