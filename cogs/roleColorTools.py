@@ -54,7 +54,7 @@ class roleColorTools(commands.Cog):
                 await SQLfunctions.databaseExecuteDynamic('''UPDATE colorchangers SET percent = percent + $1 WHERE roleid = $2;''', [percentInceease, colorInstance['roleid']])
             await SQLfunctions.databaseExecute('''UPDATE colorchangers SET percent = 0 WHERE type = 'rainbow' AND percent > 1;''')
 
-            colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE type = 'standard';''')
+            colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE type = 'transition';''')
             for colorInstance in colorData:
                 server = self.bot.get_guild(colorInstance['serverid'])
                 role = discord.utils.get(server.roles, id=colorInstance['roleid'])
@@ -70,7 +70,7 @@ class roleColorTools(commands.Cog):
                 await role.edit(color=color3out)
                 percentInceease = self.updateFrequency / (60 * colorInstance['duration'])
                 await SQLfunctions.databaseExecuteDynamic('''UPDATE colorchangers SET percent = percent + $1 WHERE roleid = $2;''',[percentInceease, colorInstance['roleid']])
-            await SQLfunctions.databaseExecute('''DELETE FROM colorchangers WHERE type = 'standard' AND percent > 1;''')
+            await SQLfunctions.databaseExecute('''DELETE FROM colorchangers WHERE type = 'transition' AND percent > 1;''')
 
             colorData = await SQLfunctions.databaseFetchdict('''SELECT * FROM colorchangers WHERE type = 'oscillate';''')
             for colorInstance in colorData:

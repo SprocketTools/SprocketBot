@@ -605,7 +605,7 @@ class blueprintFunctions(commands.Cog):
         # shared point lists (adjusted to not overlap with current faces)
         return sourcePartPoints
 
-    @commands.command(name="getAddon", description="merge compartment geometry into itself.")
+    @commands.hybrid_command(name="getaddon", description="merge compartment geometry into itself.")
     async def getAddon(self, ctx: commands.Context):
         serverID = (ctx.guild.id)
         try:
@@ -852,8 +852,7 @@ class blueprintFunctions(commands.Cog):
 
 
     @commands.command(name="drawFrame", description="merge compartment geometry into itself.")
-    async def drawFrame(self, ctx: commands.Context):
-        for attachment in ctx.message.attachments:
+    async def drawFrame(self, ctx: commands.Context, attachment: discord.File):
             blueprintData = json.loads(await attachment.read())
             name = blueprintData["header"]["name"]
             version = 0.127

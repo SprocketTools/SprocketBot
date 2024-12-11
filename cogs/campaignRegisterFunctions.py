@@ -178,7 +178,7 @@ class campaignRegisterFunctions(commands.Cog):
                 return
             nameStatus = True
         factionDescription = await textTools.getResponse(ctx, "What is your faction's description?")
-        factionRoleID = await textTools.getRoleResponse(ctx, "What role do you require for players to be able to join your faction?\n-# Reply with a ping of that role.")
+        factionRoleID = await textTools.getRoleResponse(ctx, "What role do you require for players to be able to join your faction?\n-# Reply with a ping of that role, or its role id.")
         logChannelID = await textTools.getChannelResponse(ctx, "What channel do you want updates about your faction to be sent to?\n-# Reply with a mention of that channel.")
         # https://stackoverflow.com/questions/10543940/check-if-a-url-to-an-image-is-up-and-exists-in-python
         image_formats = ("image/png", "image/jpeg", "image/gif")

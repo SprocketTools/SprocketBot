@@ -29,7 +29,7 @@ imgCandidateFolder = "imgbin"
 class imageTools(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-    @commands.command(name="weather", description="Weather a picture.  Must be a .png")
+    @commands.hybrid_command(name="weather", description="Weather a picture.  Must be a .png")
     async def weather(self, ctx: commands.Context):
         if random.random() < 0.001:
             imageLink = "https://sprockettools.github.io/inscriptions/SprocketBotLogoOutlineTransparent.png"

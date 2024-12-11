@@ -1,3 +1,4 @@
+import datetime
 import sys
 
 import discord, configparser, random, platform, asyncio, re
@@ -30,6 +31,11 @@ class textTools(commands.Cog):
         for phrase in sanitizeKeywords:
             outputPhrase = outputPhrase.replace(phrase, "")
         return outputPhrase
+
+    async def getUnixTimestamp(inStr: datetime.datetime):
+        date_string = str(inStr).split('.')[0]
+        format_string = "%Y-%m-%d %H:%M:%S"
+        return int(datetime.datetime.strptime(date_string, format_string).timestamp())
 
     async def getSQLprompt(inputList: list):
         names = list(inputList.keys())
@@ -161,13 +167,19 @@ class textTools(commands.Cog):
 
     async def getRoleResponse(ctx: commands.Context, prompt):
         await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
-        if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
-            raise ValueError("User termination")
-        return int(msg.role_mentions[0].id)
+        while True:
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+            if msg.content.lower() == "cancel":
+                await errorFunctions.sendError(ctx)
+                raise ValueError("User termination")
+            try:
+                return int(msg.content)
+            except Exception:
+                if len(msg.role_mentions) > 0:
+                    return int(msg.role_mentions[0].id)
+            await ctx.send("Try again.  Send either a ping of the role or its ID.")
 
     async def getFileResponse(ctx: commands.Context, prompt):
         await ctx.send(prompt)

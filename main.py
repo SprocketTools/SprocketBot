@@ -8,8 +8,10 @@ from discord.ui import View
 import configparser
 import nest_asyncio
 nest_asyncio.apply()
-intents = discord.Intents.all()
+intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
+intents.presences = False
 utc = datetime.timezone.utc
 import sys
 #sys.setrecursionlimit(100)
@@ -27,7 +29,7 @@ else:
     configurationFilepath = "/home/mumblepi/configuration.ini"
     OSslashLine = "/"
 
-botMode = "official" # dev on live flag
+#botMode = "official" # dev on live flag
 
 if botMode != "official":
     prefix = "?"
@@ -39,7 +41,7 @@ else:
     defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
     defaultName = "Sprocket Bot"
 
-prefix = "?" # dev on live variable
+#prefix = "?" # dev on live variable
 
 # general settings
 config = configparser.ConfigParser()

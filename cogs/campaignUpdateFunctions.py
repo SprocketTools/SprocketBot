@@ -49,7 +49,10 @@ class campaignUpdateFunctions(commands.Cog):
             await self.updateHappiness()
             await self.updateEspionage()
             await self.updateLastUpdated()
-            await self.sendBackup()
+            if datetime.now().minute < 2:
+                await self.sendBackup()
+            else:
+                print("HiHi")
             main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
             await status_log_channel.send(f"Campaigns have updated from <t:{last_time}:f> to <t:{last_time + updateFrequency}:f>")
             last_time = last_time + updateFrequency
@@ -95,14 +98,18 @@ class campaignUpdateFunctions(commands.Cog):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE happiness < 0 AND iscountry = true AND hostactive = true;''')
 
     async def sendBackup(self):
-        data = await SQLfunctions.databaseFetchdict('SELECT * FROM campaignfactions;')
-        df = pd.DataFrame(data)
-        buffer = io.StringIO()
-        df.to_csv(buffer, index=False)
-        # Send CSV file
-        buffer.seek(0)
-        channel = self.bot.get_channel(1156854471767367680)
-        await channel.send(file=discord.File(buffer, f'{datetime.now()}.json'))
+        tables = await SQLfunctions.databaseFetchdict('''SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema');''')
+        for table in tables:
+            tablename = table['table_name']
+            print(tablename)
+            data = await SQLfunctions.databaseFetchdict(f'SELECT * FROM {tablename};')
+            df = pd.DataFrame(data)
+            buffer = io.StringIO()
+            df.to_csv(buffer, index=False)
+            # Send CSV file
+            buffer.seek(0)
+            channel = self.bot.get_channel(1156854471767367680)
+            await channel.send(file=discord.File(buffer, f'{tablename}-{datetime.now()}.csv'))
 
     async def sendTimeUpdates(self):
         data = await SQLfunctions.databaseFetchdict('''SELECT * FROM campaigns where EXTRACT(YEAR FROM timedate) != EXTRACT(YEAR FROM lastupdated);''')
@@ -144,7 +151,10 @@ class campaignUpdateFunctions(commands.Cog):
         await self.sendTimeUpdates()
         await self.updateEspionage()
         await self.updateLastUpdated()
-        await self.sendBackup()
+        if datetime.now().minute < 2:
+            await self.sendBackup()
+        else:
+            await self.sendBackup()
         main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
         await status_log_channel.send("Update is complete!")
         main.config["settings"]['lastupdated'] = str(current_time)

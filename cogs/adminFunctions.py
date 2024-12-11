@@ -154,6 +154,7 @@ class adminFunctions(commands.Cog):
                 await self.bot.tree.sync(guild=guild)
                 await ctx.send(f"Commands synced in {guild.name}!")
                 await asyncio.sleep(2)
+            await self.bot.tree.sync()
 
 
     def authorize(ctx: commands.Context, bot):
@@ -446,7 +447,7 @@ class adminFunctions(commands.Cog):
         view = globalSendDropdownView()
         await ctx.send(content="Where are you sending today's update to?", view=view, ephemeral=True)
         await view.wait()
-        result = view.result
+        result = str(view.result).lower()
         await ctx.send("Type your message here!")
         # get the message that is to be sent
         def check(m: discord.Message):
@@ -464,20 +465,25 @@ class adminFunctions(commands.Cog):
                     serverOwner = self.bot.get_user(server.owner.id)
                     await serverOwner.send(message_out_text)
         else:
-            for server in self.bot.guilds:
+            channelList = await SQLfunctions.databaseFetchdict(f'SELECT * FROM serverconfig;')
+            for serverDat in channelList:
+                serverChn = serverDat[str(result)]
                 try:
-                    channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {server.id}')][0][result.lower()])
-                    serverChannel = self.bot.get_channel(channel)
+                    guildIn = self.bot.get_guild(serverDat['serverid'])
+                    serverChannel = guildIn.get_channel(serverChn)
                     await serverChannel.send(message_out_text)
                     for attachment in msg.attachments:
                         file = await attachment.to_file()
                         await serverChannel.send(file=file, content="")
                 except Exception:
-                    serverOwner = self.bot.get_user(server.owner.id)
-                    await serverOwner.send(message_out_text)
-                    for attachment in msg.attachments:
-                        file = await attachment.to_file()
-                        await serverOwner.send(file=file, content="")
+                    try:
+                        serverOwner = self.bot.get_user(self.bot.get_guild(serverDat['serverid']).owner.id)
+                        await serverOwner.send(message_out_text)
+                        for attachment in msg.attachments:
+                            file = await attachment.to_file()
+                            await serverOwner.send(file=file, content="")
+                    except Exception:
+                        print(f"Failed to update server of ID {serverDat['serverid']}.  Sprocket Bot is likely not in this server.")
 
 
         await ctx.send("## Delivered!")

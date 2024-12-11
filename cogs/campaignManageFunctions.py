@@ -174,7 +174,7 @@ class campaignManageFunctions(commands.Cog):
                 return
             await ctx.send("Download this file and edit it in a spreadsheet editor.  When you're done, save it as a .csv and run the command again.")
             data = await SQLfunctions.databaseFetchdictDynamic(
-                '''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''',
+                '''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio,  FROM campaignfactions where campaignkey = $1;''',
                 [await campaignFunctions.getCampaignKey(ctx)])
             # credits: brave AI
             df = pd.DataFrame(data)

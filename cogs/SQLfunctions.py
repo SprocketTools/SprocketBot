@@ -7,10 +7,6 @@ class SQLfunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="cog3", description="Sends hello!")
-    async def cog1(self, ctx):
-        await ctx.send(content="Hello!")
-
     async def databaseExecute(prompt: str):
         async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
             async with pool.acquire() as connection:
@@ -73,6 +69,11 @@ class SQLfunctions(commands.Cog):
             async with pool.acquire() as connection:
                 return list(await connection.fetchrow(prompt, *values))
 
+    async def databaseFetchlineDynamic(prompt: str, values: list):
+        async with asyncpg.create_pool(**SQLsettings,command_timeout=60) as pool:
+            async with pool.acquire() as connection:
+                return [dict(row) for row in await connection.fetch(prompt, *values)][0]
+
     @commands.command(name="adminExecute", description="register a contest")
     async def adminExecute(self, ctx: commands.Context, *, prompt):
         if ctx.author.id == 712509599135301673:
@@ -91,6 +92,12 @@ class SQLfunctions(commands.Cog):
         result = await SQLfunctions.databaseFetch(prompt)
         print(result)
         await ctx.send(result)
+
+    async def getServerConfig(ctx: commands.Context):
+        prompt = '''SELECT * FROM serverconfig WHERE serverid = $1;'''
+        async with asyncpg.create_pool(**SQLsettings, command_timeout=60) as pool:
+            async with pool.acquire() as connection:
+                return [dict(row) for row in await connection.fetch(prompt, ctx.guild.id)][0]
 
     @commands.command(name="databaseAlterTest", description="Sends hello!")
     async def databaseAlterTest(self, ctx):
