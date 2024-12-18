@@ -29,7 +29,7 @@ else:
     configurationFilepath = "/home/mumblepi/configuration.ini"
     OSslashLine = "/"
 
-#botMode = "official" # dev on live flag
+botMode = "official" # dev on live flag
 
 if botMode != "official":
     prefix = "?"
@@ -41,7 +41,7 @@ else:
     defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
     defaultName = "Sprocket Bot"
 
-#prefix = "?" # dev on live variable
+prefix = "?" # dev on live variable
 
 # general settings
 config = configparser.ConfigParser()
@@ -55,7 +55,7 @@ SQLsettings["database"] = config[f"settings.{botMode}"]["database"]
 ownerID = int(config["settings"]["ownerID"])
 githubPAT = str(config["settings"]["githubPAT"])
 updateGithub = str(config["settings"]["updateGithub"])
-cogsList = ["cogs.SQLfunctions", "cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",   "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions",  "cogs.serverFunctions", "cogs.flyoutTools", "cogs.roleColorTools"]
+cogsList = ["cogs.SQLfunctions", "cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",   "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.contestFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.roleColorTools"]
 
 
 

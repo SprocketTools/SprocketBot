@@ -77,7 +77,7 @@ class campaignInfoFunctions(commands.Cog):
         embed.add_field(name="campaignSettings", value="View campaign settings", inline=False)
         embed.add_field(name="viewStats", value="View your faction's stats", inline=False)
         embed.add_field(name="viewFinances", value="View your faction's finances", inline=False)
-        embed.add_field(name="logPurchase", value="[Placeholder] Purchase an item", inline=False)
+        embed.add_field(name="purchase", value="Purchase an item", inline=False)
         embed.add_field(name="logMaintenance", value="[Placeholder] Pay for something", inline=False)
         embed.add_field(name="logCivilSale", value="[Placeholder] Log revenue from civilians", inline=False)
         embed.add_field(name="sendMessage", value="Send a message in-character to another faction", inline=False)

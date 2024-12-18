@@ -78,8 +78,8 @@ class campaignFinanceFunctions(commands.Cog):
         time = await campaignFunctions.getTime(campaignData['timedate'])
         await channel.send(f"### Civilian sale log\nPurchaser: {factionData['factionname']}\nCost: {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}\nTime of purchase: {time}\nDetails: {logDetails}")
 
-    @commands.command(name="logPurchase", description="Log a purchase made between players")
-    async def logPurchase(self, ctx: commands.Context):
+    @commands.command(name="logPurchaseLegacy", description="Log a purchase made between players")
+    async def logPurchaseLegacy(self, ctx: commands.Context):
         factionData = await campaignFunctions.getUserFactionData(ctx)
         if not factionData['factionname']:
             return
