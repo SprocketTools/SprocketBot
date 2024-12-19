@@ -36,7 +36,7 @@ Reply to the user with a sanitized version of their message:
         await ctx.send(await textTools.sanitize(testString)) # sends the message
 ```
 
-Edit a campaign faction's stats (placeholder)
+Edit a campaign faction's stats
 ```python
     @commands.command(name="editFaction", description="Log a purchase made between players") # setup
     async def editFaction(self, ctx: commands.Context): # setup
@@ -51,7 +51,7 @@ Edit a campaign faction's stats (placeholder)
 ```
 
 ## Standards:
-- Avoid having commands use arguments while running the command, unless you are trying to replicate an existing command (ex: moderation tools).  It's typically better to ask for inputs after.
+- Avoid having commands use arguments while running the command, unless you are trying to replicate an existing command (ex: moderation tools) or implementing a slash command.  It's typically better to ask for inputs after.
 - Use `await errorFunctions.sendError(ctx)` followed by `return` whenever a command hits an "exit point", such that you want it to stop executing.
 
 ## More info
