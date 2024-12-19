@@ -5,7 +5,8 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
     - Takes a string and removes potentially invalid characters from it, returning that "sanitized" string
         - `str`: string
 - `textTools.mild_sanitize(str)`
-    - The same as `sanitize`, but it only strips the symbols `@` and `;`.  Both of these symbols have the potential to cause issues with the bot.  All user input processed through functions shown later apply this sanitation
+    - The same as `sanitize`, but it only strips the symbols `@` and `;`.  Both of these symbols have the potential to cause issues with the bot.
+    - All user input processed through the functions shown later will have this sanitation, so you won't have to worry about that.
 - `textTools.getResponse(ctx, prompt)`
     - This function asks the user for an input, using the prompt as the question, and returns a sanitized string value with no limit on its length.
         - `prompt`: string
