@@ -40,13 +40,13 @@ Edit a campaign faction's stats
 ```python
     @commands.command(name="editFaction", description="Log a purchase made between players") # setup
     async def editFaction(self, ctx: commands.Context): # setup
-        factionData = await campaignFunctions.getUserFactionData(ctx) # retrieve a dict that contains the player's faction's data
-        if factionData['iscountry'] == True: # checks to see if the player's faction is a country or not
-            await campaignFunctions.showStats(ctx, factionData) # send's the player's statistics into the channel
-            salary = await textTools.getFlooredIntResponse(ctx, "What will your new median salary be?  Reply with a whole number.  \nTake note that this will directly affect your GDP.  The equation is:\n\n `GDP` = `population` * `average salary` / `population per worker ratio`", 1) # Asks the player to send a numerical value of their desired new average salary
-            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''', [salary, factionData["factionkey"]]) # runs an SQL command to update the value accordingly
-        bankbal = await textTools.getFlooredIntResponse(ctx,"How much money does your faction have in storage now?  Reply with a whole number.", 1) # Asks the player to send a numerical value of their desired balance
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [bankbal, factionData["factionkey"]]) # runs a SQL command to update the value accordingly
+        factionData = await campaignFunctions.getUserFactionData(ctx)    # retrieve a dict that contains the player's faction's data
+        if factionData['iscountry'] == True:    # checks to see if the player's faction is a country or not
+            await campaignFunctions.showStats(ctx, factionData)    # send's the player's statistics into the channel
+            salary = await textTools.getFlooredIntResponse(ctx, "What will your new median salary be?  Reply with a whole number.", 1)    # Asks the player to send a numerical value of their desired new average salary
+            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''', [salary, factionData["factionkey"]])    # runs an SQL command to update the value accordingly
+        bankbal = await textTools.getFlooredIntResponse(ctx,"How much money does your faction have in storage now?  Reply with a whole number.", 1)    # Asks the player to send a numerical value of their desired balance
+        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [bankbal, factionData["factionkey"]])    # runs a SQL command to update the value accordingly
         await ctx.send(f"## Done!\nYour new stats have been set!") # sends a confirmation message
 ```
 
