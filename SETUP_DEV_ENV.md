@@ -83,15 +83,21 @@ You will need to install the following list of Python packages to operate the bo
 ## Run the bot
 
 Run the `main.py` file to launch the bot.  If everything was set up correctly, you should log into Discord after several seconds and be able to run commands!
-Note: several commands will need to be ran through Discord to fully set up the database:
+Note: several commands will need to be ran on the bot through Discord to fully set up the database:
+- 
+- `?resetCodeConfigs` - required for the April Fools module
 - `?setupCampaignDatabase` - this allows you to run most of the campaign functions
+- `?setupTransactionDatabase` - This is needed for campaign transactions
 - `?resetServerConfig` - allows for setting up your server's settings
 - `?resetHelpConfig` - This is used by the ?SprocketHelp command
+- `?setupRoleColorDatabase` - This allows for changing role colors gradually to make fancy roles
+- `?setupmoderationdatabase` - This allows for using the bot for moderation tools
 - `?resetContests` and `?resetContestCategories` are used for running Sprocket contests
 - `?resetErrorConfig` - used for setting up your list of errors.  Alot of the bot depends on this list not being empty.
 - `?resetImageCatalog` - used for establishing a Github catalog
+- `?pullRepository` - if you had set up a Github repo
 
-After setting these up, make sure to run `-addError` a couple times to ensure you get proper error responses.
+After setting these up, make sure to run `-addError` a couple times to ensure you get proper error responses later on.
 
 
 ## Hosting the bot
@@ -100,4 +106,4 @@ Your general procedure for self-hosting Sprocket Bot is similar to what's covere
 
 ## Coding the bot
 
-Refer to [here](https://github.com/SprocketTools/SprocketBot/blob/main/CODING_INTRO.md) to get started.
+To add your own code to Sprocket Bot, refer to [this documentation](https://github.com/SprocketTools/SprocketBot/blob/main/CODING_INTRO.md) to get started.
