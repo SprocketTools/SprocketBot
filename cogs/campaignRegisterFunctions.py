@@ -334,6 +334,21 @@ class campaignRegisterFunctions(commands.Cog):
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignservers VALUES ($1, $2)''',[ctx.guild.id, userKey])
         await ctx.send(f"## Done!\nYour server is now participating in {await campaignFunctions.getCampaignName(userKey)}")
 
+    @commands.command(name="leaveExternalCampaign", description="Add a server to an ongoing campaign")
+    async def leaveExternalCampaign(self, ctx: commands.Context):
+        if await campaignFunctions.isCampaignHost(ctx):
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
+            await ctx.send("\nYou cannot leave your own campaign!")
+            return
+        if await campaignFunctions.isCampaignManager(ctx) == False:
+            await errorFunctions.sendCategorizedError(ctx, "campaign")
+            serverConfig = await adminFunctions.getServerConfig(ctx)
+            await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
+            return
+
+        await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
+        await ctx.send(f"## Done!\nYour server is no longer a part of an external campaign.")
+
     @commands.command(name="joinFaction", description="Add a server to an ongoing campaign")
     async def joinFaction(self, ctx: commands.Context):
         # await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')

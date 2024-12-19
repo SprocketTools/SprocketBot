@@ -29,7 +29,7 @@ class campaignTransactionFunctions(commands.Cog):
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS transactions;''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS transactions (customerkey BIGINT, sellerkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT);''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS transactions (customerkey BIGINT, sellerkey BIGINT, campaignkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT);''')
         await ctx.send("## Done!")
 
     @commands.command(name="purchase", description="Log a purchase made between players")
@@ -80,7 +80,7 @@ class campaignTransactionFunctions(commands.Cog):
             sellerName = factionChoiceName
         await ctx.send(f"## Done!\n{factionChoiceName} now has {campaignData['currencysymbol']}{moneyAdd} more {campaignData['currencyname']}!")
         time = await campaignFunctions.getTime(campaignData['timedate'])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO transactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)''', [customerID, sellerID, logDetails, moneyAdd, campaignData['timedate'], campaignData['timedate'] + datetime.timedelta(days=(shipDate*30)), 0, transactionType, repeatFrequency])
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO transactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)''', [customerID, sellerID, campaignData['campaignkey'], logDetails, moneyAdd, campaignData['timedate'], campaignData['timedate'] + datetime.timedelta(days=(shipDate*30)), 0, transactionType, repeatFrequency])
         embed = discord.Embed(title=f"Transaction log", color=discord.Color.random())
         embed.add_field(name="Customer:", value=f"{customerName}", inline=False)
         embed.add_field(name="Seller", value=f"{sellerName}", inline=False)
@@ -104,6 +104,22 @@ class campaignTransactionFunctions(commands.Cog):
             channel2 = self.bot.get_channel(int(factionChoiceData["logchannel"]))
             await channel2.send(embed=embed)
 
+    @commands.command(name="cancelTransaction", description="Cancel an automatic purchase")
+    async def cancelTransaction(self, ctx: commands.Context):
+        campaignData = await campaignFunctions.getUserCampaignData(ctx)
+        factionData = await campaignFunctions.getUserFactionData(ctx)
+        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM transactions WHERE customerkey = $1 AND repeat > 0;''', [factionData['factionkey']])
+        nameList = []
+        for item in data:
+            nameList.append(f"{campaignData['currencysymbol']}{str(item['cost'])} - {item['description']}")
+        data = await SQLfunctions.databaseFetchdictDynamic(
+            '''SELECT * FROM transactions WHERE sellerkey = $1 AND customerkey = 0 AND repeat > 0;''', [factionData['factionkey']])
+        for item in data:
+            nameList.append(f"{campaignData['currencysymbol']}{str(item['cost'])} - {item['description']}")
+        nameChoice = await discordUIfunctions.getChoiceFromList(ctx, nameList, "Which automatic transaction do you want to cancel?")
+        dataOut = nameChoice.split(" - ")
+        await SQLfunctions.databaseExecuteDynamic('''DELETE FROM transactions WHERE cost = $1 AND description = $2 AND campaignkey = $3;''', [int(dataOut[0].strip(campaignData['currencysymbol'])), dataOut[1], campaignData['campaignkey']])
+        await ctx.send("Done!")
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignTransactionFunctions(bot))

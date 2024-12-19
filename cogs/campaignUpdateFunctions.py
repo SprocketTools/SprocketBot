@@ -2,7 +2,7 @@ import json
 import random, asyncio, datetime
 from datetime import datetime
 import io
-
+import datetime as dtime
 import pandas as pd
 from discord.ext import tasks
 import discord
@@ -15,7 +15,8 @@ from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
-updateFrequency = 900 # time in seconds
+updateFrequency = 60 # time in seconds
+
 secondsInYear = 31536000 + 21600
 ## secondsInYear = 20
 class campaignUpdateFunctions(commands.Cog):
@@ -49,10 +50,11 @@ class campaignUpdateFunctions(commands.Cog):
             await self.updateHappiness()
             await self.updateEspionage()
             await self.updateLastUpdated()
+            await self.runAutoTransactions()
             if datetime.now().minute < 2:
                 await self.sendBackup()
             else:
-                print("HiHi")
+                print("Campaign update triggered")
             main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
             await status_log_channel.send(f"Campaigns have updated from <t:{last_time}:f> to <t:{last_time + updateFrequency}:f>")
             last_time = last_time + updateFrequency
@@ -111,6 +113,95 @@ class campaignUpdateFunctions(commands.Cog):
             channel = self.bot.get_channel(1156854471767367680)
             await channel.send(file=discord.File(buffer, f'{tablename}-{datetime.now()}.csv'))
 
+    async def runAutoTransactions(self):
+        Wdata = await SQLfunctions.databaseFetchdict('''SELECT * FROM campaigns where EXTRACT(MONTH FROM timedate) != EXTRACT(MONTH FROM lastupdated);''')
+        for campaignData in Wdata:
+            channel = self.bot.get_channel(campaignData['privatemoneychannelid'])
+            subData = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM transactions WHERE repeat > 0 AND campaignkey = $1;''', [campaignData['campaignkey']])
+            print(f"There are {len(subData)} auto transactions queued")
+            for data in subData:
+
+                timeOut = datetime.strptime(str(campaignData['timedate']).split(" ")[0], "%Y-%m-%d")
+
+                if (timeOut.month - 1) % data['repeat'] == 0:
+                    print("Transaction is due to auto repeat")
+                    # customerkey BIGINT, sellerkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT
+                    transactionType = data['type']
+                    moneyAdd = data['cost']
+                    factionData = await campaignFunctions.getFactionData(data['customerkey'])
+                    factionChoiceData = await campaignFunctions.getFactionData(data['sellerkey'])
+                    factionChoiceKey = data['sellerkey']
+                    factionChoiceName = await campaignFunctions.getFactionName(data['sellerkey'])
+                    logDetails = data['description']
+                    shipDate = data['repeat']
+                    repeatFrequency = data['repeat']
+
+
+
+
+                    if transactionType == "sales of equipment to civilians":
+                        await SQLfunctions.databaseExecuteDynamic(
+                            '''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',
+                            [moneyAdd, factionData["factionkey"]])  # the faction being purchased from
+                        customerID = 0
+                        sellerID = factionData["factionkey"]
+                        customerName = f"Citizens of {factionData['factionname']}"
+                        sellerName = factionData['factionname']
+                    if transactionType == "maintenance payments":
+                        await SQLfunctions.databaseExecuteDynamic(
+                            '''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''',
+                            [moneyAdd, factionData["factionkey"]])  # the faction being purchased from
+                        customerID = 0
+                        sellerID = factionData["factionkey"]
+                        customerName = f"Citizens of {factionData['factionname']}"
+                        sellerName = factionData['factionname']
+                    else:
+                        await SQLfunctions.databaseExecuteDynamic(
+                            '''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',
+                            [moneyAdd, factionChoiceKey])  # the faction being purchased from
+                        await SQLfunctions.databaseExecuteDynamic(
+                            '''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''',
+                            [moneyAdd, factionData["factionkey"]])  # the user's faction
+                        customerID = factionData["factionkey"]
+                        sellerID = factionChoiceKey
+                        customerName = factionData['factionname']
+                        sellerName = factionChoiceName
+                    time = await campaignFunctions.getTime(campaignData['timedate'])
+                    embed = discord.Embed(title=f"Automatic transaction log", color=discord.Color.random())
+                    embed.add_field(name="Customer:", value=f"{customerName}")
+                    embed.add_field(name="Seller", value=f"{sellerName}")
+                    embed.add_field(name="Cost", value=f"{campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}")
+                    embed.add_field(name="Time of purchase", value=f"{time}", inline=False)
+                    embed.add_field(name="Details", value=f"{logDetails}", inline=False)
+                    embed.set_thumbnail(url=factionData['flagurl'])
+                    newTime = campaignData['timedate'] + dtime.timedelta(days=shipDate * 30)
+                    format_string = "%Y-%m-%d %H:%M:%S"
+                    dt = datetime.strptime(str(newTime), format_string)
+                    print(dt.year)
+                    hour = dt.strftime("%I")
+                    min = dt.strftime("%M %p")
+                    day = dt.strftime("%A %B %d")
+                    embed.add_field(name="Completion date:", value=f"{day}, {dt.year}", inline=False)
+                    if repeatFrequency > 0:
+                        embed.add_field(name="Repeat frequency:", value=f"{repeatFrequency} months", inline=False)
+                    channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
+                    await channel.send(embed=embed)
+                    if transactionType != "sales of equipment to civilians":
+                        channel2 = self.bot.get_channel(int(factionChoiceData["logchannel"]))
+                        await channel2.send(embed=embed)
+
+
+
+
+
+
+
+
+
+
+
+
+
     async def sendTimeUpdates(self):
         data = await SQLfunctions.databaseFetchdict('''SELECT * FROM campaigns where EXTRACT(YEAR FROM timedate) != EXTRACT(YEAR FROM lastupdated);''')
         for campaignData in data:
@@ -127,7 +218,10 @@ class campaignUpdateFunctions(commands.Cog):
     async def updateLastUpdated(self):
         await SQLfunctions.databaseExecute(f'''UPDATE campaigns SET lastupdated = timedate;''')
 
-
+    @commands.command(name="forceTransactions", description="test")
+    async def forceTransactions(self, ctx: commands.Context):
+        await self.runAutoTransactions()
+        await ctx.send("Done!")
     @commands.command(name="forceUpdate", description="test")
     async def forceUpdate(self, ctx: commands.Context):
         current_time = int(datetime.now().timestamp())
@@ -148,13 +242,14 @@ class campaignUpdateFunctions(commands.Cog):
         await self.updateEducation()
         print("Education is complete!")
         await self.updateHappiness()
+        await self.runAutoTransactions()
         await self.sendTimeUpdates()
         await self.updateEspionage()
         await self.updateLastUpdated()
-        if datetime.now().minute < 2:
-            await self.sendBackup()
-        else:
-            await self.sendBackup()
+        # if datetime.now().minute < 2:
+        #     await self.sendBackup()
+        # else:
+        #     await self.sendBackup()
         main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
         await status_log_channel.send("Update is complete!")
         main.config["settings"]['lastupdated'] = str(current_time)

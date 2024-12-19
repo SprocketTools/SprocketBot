@@ -45,7 +45,7 @@ class adminFunctions(commands.Cog):
     async def updateServerConfig(self):
         for guild in self.bot.guilds:
             try:
-                serverConfig[guild.id] = [dict(row) for row in await SQLfunctions.databaseFetch(
+                serverConfig[guild.id] = [dict(row) for row in await SQLfunctions.databaseFetchFast(
                 f'SELECT * FROM serverconfig WHERE serverid = {guild.id}')][0]
             except Exception:
                 pass

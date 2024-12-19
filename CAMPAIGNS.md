@@ -40,6 +40,10 @@ From here, run the `-addCampaignFaction` command.  Follow the instructions to ad
 First, acquire the campaign key from the host.  Then, use the `-addServerToCampaign` bot command to join the campaign.
 
 ## Command list
+`-campaignHelp` will outline the key commands (and will be most up to date)
+
+`-campaignManagerHelp` will outline the key management commands
+
 ### Management
 - `-addServerToCampaign`: Allows campaign managers to link their server to another server's campaign.  Requires the registration key provided to the original server.
 - `-joinFaction`: Allows the player to join a faction for a campaign.  The player must have the role that is specified in the faction's configuration.
