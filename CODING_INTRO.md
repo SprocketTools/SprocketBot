@@ -36,22 +36,22 @@ Reply to the user with a sanitized version of their message:
         await ctx.send(await textTools.sanitize(testString)) # sends the message
 ```
 
-Edit a campaign faction's stats (placeholder)
+Edit a campaign faction's stats
 ```python
     @commands.command(name="editFaction", description="Log a purchase made between players") # setup
     async def editFaction(self, ctx: commands.Context): # setup
-        factionData = await campaignFunctions.getUserFactionData(ctx) # retrieve a dict that contains the player's faction's data
-        if factionData['iscountry'] == True: # checks to see if the player's faction is a country or not
-            await campaignFunctions.showStats(ctx, factionData) # send's the player's statistics into the channel
-            salary = await textTools.getFlooredIntResponse(ctx, "What will your new median salary be?  Reply with a whole number.  \nTake note that this will directly affect your GDP.  The equation is:\n\n `GDP` = `population` * `average salary` / `population per worker ratio`", 1) # Asks the player to send a numerical value of their desired new average salary
-            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''', [salary, factionData["factionkey"]]) # runs an SQL command to update the value accordingly
-        bankbal = await textTools.getFlooredIntResponse(ctx,"How much money does your faction have in storage now?  Reply with a whole number.", 1) # Asks the player to send a numerical value of their desired balance
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [bankbal, factionData["factionkey"]]) # runs a SQL command to update the value accordingly
+        factionData = await campaignFunctions.getUserFactionData(ctx)    # retrieve a dict that contains the player's faction's data
+        if factionData['iscountry'] == True:    # checks to see if the player's faction is a country or not
+            await campaignFunctions.showStats(ctx, factionData)    # send's the player's statistics into the channel
+            salary = await textTools.getFlooredIntResponse(ctx, "What will your new median salary be?  Reply with a whole number.", 1)    # Asks the player to send a numerical value of their desired new average salary
+            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''', [salary, factionData["factionkey"]])    # runs an SQL command to update the value accordingly
+        bankbal = await textTools.getFlooredIntResponse(ctx,"How much money does your faction have in storage now?  Reply with a whole number.", 1)    # Asks the player to send a numerical value of their desired balance
+        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [bankbal, factionData["factionkey"]])    # runs a SQL command to update the value accordingly
         await ctx.send(f"## Done!\nYour new stats have been set!") # sends a confirmation message
 ```
 
 ## Standards:
-- Avoid having commands use arguments while running the command, unless you are trying to replicate an existing command (ex: moderation tools).  It's typically better to ask for inputs after.
+- Avoid having commands use arguments while running the command, unless you are trying to replicate an existing command (ex: moderation tools) or implementing a slash command.  It's typically better to ask for inputs after.
 - Use `await errorFunctions.sendError(ctx)` followed by `return` whenever a command hits an "exit point", such that you want it to stop executing.
 
 ## More info

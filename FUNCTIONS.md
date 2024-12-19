@@ -5,11 +5,13 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
     - Takes a string and removes potentially invalid characters from it, returning that "sanitized" string
         - `str`: string
 - `textTools.mild_sanitize(str)`
-    - The same as `sanitize`, but it only strips the symbols `@` and `;`.  Both of these symbols have the potential to cause issues with the bot.  All user input processed through functions shown later apply this sanitation
+    - The same as `sanitize`, but it only strips the symbols `@` and `;`.  Both of these symbols have the potential to cause issues with the bot.
+    - All user input processed through the functions shown later will have this sanitation, so you won't have to worry about that.
 - `textTools.getResponse(ctx, prompt)`
     - This function asks the user for an input, using the prompt as the question, and returns a sanitized string value with no limit on its length.
         - `prompt`: string
     - All of the response functions will use this similar format, with different behaviors to suit different tasks.
+    - Here's an example of it in use:
     ```python
         @commands.command(name="adminGetTable", description="add a column to a SQL table")
         async def adminGetTable(self, ctx: commands.Context):
@@ -19,6 +21,8 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
             tablename = await errorFunctions.getResponse(ctx, "What is the table name?")
             await ctx.send(await SQLfunctions.databaseFetchdict(f"SELECT * FROM {tablename};"))
     ```
+    - Note that this is a bad application of the SQL function; you never want to directly embed variables into the execution prompt.  You will want to use prepared SQL statements, as demonstrated later.
+      
 - `textTools.getCappedResponse(ctx, prompt, length)`
     - This function asks the user for an input, and returns a sanitized string value.  If the length of the user input exceeds the defined length, the command will try again.  This is recommended for most use cases, as string inputs shouldn't be so long that the bot cannot resend it.
         - `length`: integer
@@ -31,7 +35,7 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
 - `textTools.getFlooredFloatResponse(ctx, prompt, min)`
     - A prompt function that either returns the input float `min`, or the user's input if it's bigger.  Useful to avoid negative number inputs.
 - `textTools.getPercentResponse(ctx, prompt)`
-    - A prompt function that returns a ratio equivalent of a percentage input.  Note that the returned value will be divided by 100 compared to the user's input.
+    - A prompt function that returns a ratio equivalent of a percentage input.  Note that the returned value will be divided by 100 compared to the user's input.  Ex: the user's input of 79% will return as 0.79
 - `textTools.getChannelResponse(ctx, prompt)`
     - A prompt function that returns a channel ID.
 - `textTools.getRoleResponse(ctx, prompt)`
