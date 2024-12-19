@@ -7,7 +7,7 @@ Most discord bots coded in Python will look quite different from your usual Pyth
 
 Let's break these down in more detail before providing some examples.
 ## cogs
-Sprocket Bot uses a couple dozen or so "cogs", which are python files containing all the commands that users can execute.  Cogs can be named anything, but must be placed in the cogs folder relative to main.py.
+Sprocket Bot uses a couple dozen or so "cogs", which are python files in the cogs folder containing all the commands that users can execute.  Cogs can be named anything, but must be placed in the cogs folder relative to main.py.
 On startup, Sprocket Bot will load all the cogs defined in the main.py file, then launch the bot.  These can also be reloaded without restarting the bot using `-reloadCogs`.
 
 ## async
