@@ -35,7 +35,7 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
 - `textTools.getFlooredFloatResponse(ctx, prompt, min)`
     - A prompt function that either returns the input float `min`, or the user's input if it's bigger.  Useful to avoid negative number inputs.
 - `textTools.getPercentResponse(ctx, prompt)`
-    - A prompt function that returns a ratio equivalent of a percentage input.  Note that the returned value will be divided by 100 compared to the user's input.
+    - A prompt function that returns a ratio equivalent of a percentage input.  Note that the returned value will be divided by 100 compared to the user's input.  Ex: the user's input of 79% will return as 0.79
 - `textTools.getChannelResponse(ctx, prompt)`
     - A prompt function that returns a channel ID.
 - `textTools.getRoleResponse(ctx, prompt)`
