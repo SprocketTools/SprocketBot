@@ -11,6 +11,7 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
     - This function asks the user for an input, using the prompt as the question, and returns a sanitized string value with no limit on its length.
         - `prompt`: string
     - All of the response functions will use this similar format, with different behaviors to suit different tasks.
+    - Here's an example of it in use:
     ```python
         @commands.command(name="adminGetTable", description="add a column to a SQL table")
         async def adminGetTable(self, ctx: commands.Context):
@@ -20,6 +21,8 @@ Sprocket Bot uses a wide range of functions to help simplify its code, reducing 
             tablename = await errorFunctions.getResponse(ctx, "What is the table name?")
             await ctx.send(await SQLfunctions.databaseFetchdict(f"SELECT * FROM {tablename};"))
     ```
+    - Note that this is a bad application of the SQL function; you never want to directly embed variables into the execution prompt.  You will want to use prepared SQL statements, as demonstrated later.
+      
 - `textTools.getCappedResponse(ctx, prompt, length)`
     - This function asks the user for an input, and returns a sanitized string value.  If the length of the user input exceeds the defined length, the command will try again.  This is recommended for most use cases, as string inputs shouldn't be so long that the bot cannot resend it.
         - `length`: integer
