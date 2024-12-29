@@ -1,5 +1,6 @@
 import json
 import random, asyncio, datetime
+from calendar import calendar
 from datetime import datetime
 import io
 import datetime as dtime
@@ -15,7 +16,7 @@ from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
-updateFrequency = 60 # time in seconds
+updateFrequency = 900 # time in seconds
 
 secondsInYear = 31536000 + 21600
 ## secondsInYear = 20
@@ -44,13 +45,13 @@ class campaignUpdateFunctions(commands.Cog):
             await status_log_channel.send("Update is starting!")
             await self.errorPrevention()
             await self.updateTime()
+            resultStr = await self.runAutoTransactions()
             await self.updatePopulation()
             await self.collectTaxes()
             await self.updateGDP()
             await self.updateHappiness()
             await self.updateEspionage()
             await self.updateLastUpdated()
-            await self.runAutoTransactions()
             if datetime.now().minute < 2:
                 await self.sendBackup()
             else:
@@ -114,30 +115,37 @@ class campaignUpdateFunctions(commands.Cog):
             await channel.send(file=discord.File(buffer, f'{tablename}-{datetime.now()}.csv'))
 
     async def runAutoTransactions(self):
+        #print("executing auto transactions")
         Wdata = await SQLfunctions.databaseFetchdict('''SELECT * FROM campaigns where EXTRACT(MONTH FROM timedate) != EXTRACT(MONTH FROM lastupdated);''')
+        #print(len(Wdata))
         for campaignData in Wdata:
             channel = self.bot.get_channel(campaignData['privatemoneychannelid'])
+            await channel.send(f'''---Transactions for: {campaignData['timedate'].strftime("%B")} {campaignData['timedate'].strftime("%Y")}---''')
             subData = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM transactions WHERE repeat > 0 AND campaignkey = $1;''', [campaignData['campaignkey']])
             print(f"There are {len(subData)} auto transactions queued")
             for data in subData:
 
                 timeOut = datetime.strptime(str(campaignData['timedate']).split(" ")[0], "%Y-%m-%d")
-
+                print((timeOut.month - 1) % data['repeat'])
                 if (timeOut.month - 1) % data['repeat'] == 0:
-                    print("Transaction is due to auto repeat")
                     # customerkey BIGINT, sellerkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT
                     transactionType = data['type']
                     moneyAdd = data['cost']
-                    factionData = await campaignFunctions.getFactionData(data['customerkey'])
-                    factionChoiceData = await campaignFunctions.getFactionData(data['sellerkey'])
+                    try:
+                        factionData = await campaignFunctions.getFactionData(data['customerkey'])
+                    except Exception:
+                        factionData = await campaignFunctions.getFactionData(data['sellerkey'])
+                    try:
+                        factionChoiceData = await campaignFunctions.getFactionData(data['sellerkey'])
+                        factionChoiceName = await campaignFunctions.getFactionName(data['sellerkey'])
+                    except Exception:
+                        factionChoiceData = await campaignFunctions.getFactionData(data['customerkey'])
+                        factionChoiceName = "Citizens"
                     factionChoiceKey = data['sellerkey']
-                    factionChoiceName = await campaignFunctions.getFactionName(data['sellerkey'])
+
                     logDetails = data['description']
                     shipDate = data['repeat']
                     repeatFrequency = data['repeat']
-
-
-
 
                     if transactionType == "sales of equipment to civilians":
                         await SQLfunctions.databaseExecuteDynamic(
@@ -177,7 +185,6 @@ class campaignUpdateFunctions(commands.Cog):
                     newTime = campaignData['timedate'] + dtime.timedelta(days=shipDate * 30)
                     format_string = "%Y-%m-%d %H:%M:%S"
                     dt = datetime.strptime(str(newTime), format_string)
-                    print(dt.year)
                     hour = dt.strftime("%I")
                     min = dt.strftime("%M %p")
                     day = dt.strftime("%A %B %d")
@@ -189,6 +196,7 @@ class campaignUpdateFunctions(commands.Cog):
                     if transactionType != "sales of equipment to civilians":
                         channel2 = self.bot.get_channel(int(factionChoiceData["logchannel"]))
                         await channel2.send(embed=embed)
+        return "Complete!"
 
 
 
@@ -231,6 +239,7 @@ class campaignUpdateFunctions(commands.Cog):
         await status_log_channel.send("Update is starting!")
         await self.updateTime()
         print("Time is complete!")
+        resultStr = await self.runAutoTransactions()
         await self.updatePopulation()
         print("Population is complete!")
         await self.collectTaxes()
@@ -242,7 +251,6 @@ class campaignUpdateFunctions(commands.Cog):
         await self.updateEducation()
         print("Education is complete!")
         await self.updateHappiness()
-        await self.runAutoTransactions()
         await self.sendTimeUpdates()
         await self.updateEspionage()
         await self.updateLastUpdated()

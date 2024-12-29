@@ -67,6 +67,17 @@ class serverFunctions(commands.Cog):
         embed.set_footer(text=f"Total points: {points_total}")
         embed.set_thumbnail(url=user.avatar.url)
         await ctx.send(embed=embed)
+        delWarnTrigger = await discordUIfunctions.getButtonChoice(ctx, ["Delete warn"])
+        if delWarnTrigger == "Delete warn" and len(data) > 0:
+            warnList = []
+            warnData = {}
+            for rule in data:
+                warnList.append(rule['description'])
+                warnData[rule['description']] = rule['timestamp']
+            warnChoice = await discordUIfunctions.getChoiceFromList(ctx, warnList, "Which warn do you want to delete?")
+            await SQLfunctions.databaseExecuteDynamic('''DELETE FROM modlogs WHERE userid = $1 AND serverid = $2 AND description = $3 AND timestamp = $4;''', [user.id, ctx.guild.id, warnChoice, warnData[warnChoice]])
+            await ctx.send("Done!")
+
 
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="warn", description="Issue a warning")

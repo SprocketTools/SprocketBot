@@ -1,5 +1,6 @@
 from pathlib import Path
 import os, random, time, asyncio, asyncpg, datetime, json, copy
+from cogs.SQLfunctions import SQLfunctions
 import platform
 import discord
 from discord.ext import tasks, commands
@@ -29,7 +30,7 @@ else:
     configurationFilepath = "/home/mumblepi/configuration.ini"
     OSslashLine = "/"
 
-#botMode = "official" # dev on live flag
+botMode = "official" # dev on live flag
 
 if botMode != "official":
     prefix = "?"
@@ -41,7 +42,7 @@ else:
     defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
     defaultName = "Sprocket Bot"
 
-#prefix = "?" # dev on live variable
+prefix = "?" # dev on live variable
 
 # general settings
 config = configparser.ConfigParser()
@@ -55,7 +56,7 @@ SQLsettings["database"] = config[f"settings.{botMode}"]["database"]
 ownerID = int(config["settings"]["ownerID"])
 githubPAT = str(config["settings"]["githubPAT"])
 updateGithub = str(config["settings"]["updateGithub"])
-cogsList = ["cogs.SQLfunctions", "cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",  "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.roleColorTools"]
+cogsList = ["cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",  "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.roleColorTools"]
 
 
 
@@ -66,6 +67,7 @@ class Bot(commands.Bot):
         self.synced = False
 
     async def setup_hook(self):
+
         if updateGithub == "Y":
             cogsList.append("cogs.githubTools")
             #await self.load_extension("cogs.githubTools")
@@ -74,6 +76,7 @@ class Bot(commands.Bot):
 
 
     async def on_ready(self):
+        self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=60)
         await self.wait_until_ready()
         # await bot.tree.sync()
         # if not self.synced:
@@ -83,19 +86,6 @@ class Bot(commands.Bot):
         await channel.send("I am now online!")
         print(f'Logged in as {bot.user} (ID: {bot.user.id})')
         print('------')
-
-class Management:
-    def __init__(self, bot):
-        self.bot = bot
-    @commands.command(name="reloadCogs", description="reload all extensions")
-    async def reloadCogs(self, ctx: commands.Context):
-        if ctx.author.id == 712509599135301673:
-            pass
-        else:
-            return
-        for cog in self.bot.cogslist:
-            await bot.reload_extension(cog)
-        await ctx.send("Reloaded!")
 
 
 
