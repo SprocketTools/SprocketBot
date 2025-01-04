@@ -54,7 +54,7 @@ class campaignTransactionFunctions(commands.Cog):
             await ctx.send("You don't have enough money to finance this transaction!")
             return
 
-        await ctx.send("Specify the desired frequency of this transaction auto-recurring.  If you do not want this transaction to recur, select 0.")
+        await ctx.send("Specify the desired frequency of this transaction recurring, in months.\nEx: selecting '12' means the transaction will repeat every 12 months.\nIf you do not want this transaction to repeat, select 0.")
         repeatFrequency = int(await discordUIfunctions.getButtonChoice(ctx, ['0', '1', '2', '3', '4', '6', '12']))
         # the processor for these will need to use a 12 - current_month
         shipDate = await textTools.getFlooredIntResponse(ctx, "How many months will this order take to complete?", 0)
@@ -84,7 +84,7 @@ class campaignTransactionFunctions(commands.Cog):
         embed = discord.Embed(title=f"Transaction log", color=discord.Color.random())
         embed.add_field(name="Customer:", value=f"{customerName}", inline=False)
         embed.add_field(name="Seller", value=f"{sellerName}", inline=False)
-        embed.add_field(name="Cost", value=f"{campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}", inline=False)
+        embed.add_field(name="Cost", value=f"{campaignData['currencysymbol']}{'{:,}'.format(moneyAdd)} {campaignData['currencyname']}", inline=False)
         embed.add_field(name="Time of purchase", value=f"{time}", inline=False)
         embed.add_field(name="Details", value=f"{logDetails}", inline=False)
         embed.set_thumbnail(url=factionData['flagurl'])
@@ -118,7 +118,7 @@ class campaignTransactionFunctions(commands.Cog):
             nameList.append(f"{campaignData['currencysymbol']}{str(item['cost'])} - {item['description']}")
         nameChoice = await discordUIfunctions.getChoiceFromList(ctx, nameList, "Which automatic transaction do you want to cancel?")
         dataOut = nameChoice.split(" - ")
-        await SQLfunctions.databaseExecuteDynamic('''DELETE FROM transactions WHERE cost = $1 AND description = $2 AND campaignkey = $3;''', [int(dataOut[0].strip(campaignData['currencysymbol'])), dataOut[1], campaignData['campaignkey']])
+        await SQLfunctions.databaseExecuteDynamic('''DELETE FROM transactions WHERE cost = $1 AND description = $2 AND campaignkey = $3 AND factionkey = $4;''', [int(dataOut[0].strip(campaignData['currencysymbol'])), dataOut[1], campaignData['campaignkey'], factionData['factionkey']])
         await ctx.send("Done!")
 
 async def setup(bot:commands.Bot) -> None:

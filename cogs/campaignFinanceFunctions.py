@@ -47,8 +47,8 @@ class campaignFinanceFunctions(commands.Cog):
         variablesList = await campaignFunctions.getUserFactionData(ctx)
         await campaignFunctions.showFinances(ctx, variablesList)
 
-    @commands.command(name="logMaintenance", description="Log maintenance costs for a country")
-    async def logMaintenance(self, ctx: commands.Context):
+    @commands.command(name="logMaintenanceLegacy", description="Log maintenance costs for a country")
+    async def logMaintenanceLegacy(self, ctx: commands.Context):
         factionData = await campaignFunctions.getUserFactionData(ctx)
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         moneyAdd = await textTools.getFlooredIntResponse(ctx, "How much is the maintenance going to be?  Reply with a number.", 1)
@@ -60,8 +60,8 @@ class campaignFinanceFunctions(commands.Cog):
         channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
         await channel.send(f"### Maintenance costs log\nPurchaser: {factionData['factionname']}\nCost: {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}\nTime of purchase: {time}\nDetails: {logDetails}")
 
-    @commands.command(name="logcivilsale", description="Log a sale into your country")
-    async def logcivilsale(self, ctx: commands.Context):
+    @commands.command(name="logcivilsaleLegacy", description="Log a sale into your country")
+    async def logcivilsaleLegacy(self, ctx: commands.Context):
         factionData = await campaignFunctions.getUserFactionData(ctx)
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         moneyAdd = await textTools.getIntResponse(ctx, "How much will the sale be for?  Reply with a number.\nNote: this command is only for sales to civilians.  Don't use this to log sales to other factions.")

@@ -240,38 +240,42 @@ class githubTools(commands.Cog):
             await ctx.send("Looks like there are no more decals to approve!")
             result = await githubTools.updateHTML(self, ctx)
     async def updateHTML(self, ctx):
-        HTMLending = '''	</ul></center></body></html>'''
+        HTMLending = '''	</ul></center></body><script>
+		function copyText(inputText) {
+			// Copy the text inside the text field
+			navigator.clipboard.writeText(inputText);
+		}	
+        </script>
+        </html>'''
 
         # Update all the main pages first
         for category in imageCategoryList:
             inText = category
             if category == "Featured":
-                inText = "Decal Catalog"
+                inText = "SprocketTools Decal Catalog"
             HTMLdoc = f'''<html>
                 <head>
                     <title>{inText}</title>
                     <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
                     <link rel="icon" type="image/x-icon" href="SprocketToolsLogo.png">
-                    <link rel="stylesheet" href="styles_testing.css">
+                    <link rel="stylesheet" href="stylesV3.css">
                 </head>
             <body>
             <div class="navbar">
             	<img src="SprocketToolsLogo.png"/>
                 <a href="index.html">Home</a>
                 <a href="TopGearCalculator.html">Gear Calculator</a>
-                <a href="ContestsList.html">Contests</a>
-                <a href="VehicleGenerator.html">Random Tank Picker</a>
-                <a href="resources.html">Guides</a>
+                <a href="resources.html">Sprocket Guides</a>
                 <a href="credits.html">Credits</a>
                 <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
                 <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
                 <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
             </div>
             <div class="container">
-                    <h1 class="text-center">{inText}</h1>
-                </div>
+                <h1 class="text-center">{inText}</h1>
+            </div>
             <div>
-                <ul class="decal-menu">'''
+                <ul class="navbar">'''
             for subcategory in imageCategoryList:
                 if subcategory == category:
                     appendation = f'''<li class="active" onclick="document.location='Decals{subcategory}.html'">{subcategory}</li>'''
@@ -279,38 +283,39 @@ class githubTools(commands.Cog):
                     appendation = f'''<li onclick="document.location='Decals{subcategory}.html'">{subcategory}</li>'''
                 HTMLdoc = f'{HTMLdoc}{appendation}'
             if category == "Featured":
-                HTMLdocmid = f'''
-                            <li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
-                        </div>
+                HTMLdocmid = f'''<li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
                     </div>
                 </div>
-                <div class="container">
-                    <center>
-                        <h4>Welcome to the biggest community collection of URL-embeddable decals!</h4> 
-                        <h5>Copy the decal's URL, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h5>
-                        <h5>Your decals will now automatically download and apply wherever you share your tank!</h5>
+                <div class="wrap">
+                    <div class="box">
+                        <h2>Welcome to the biggest community collection of URL-embeddable decals!</h2> 
+                        <h4>Click on a picture to copy its embeddable URL.</h4>
+                        <h4>Then, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h4>
+                        <h4>Your decals will now automatically download and apply wherever you share your tank!</h4>
+                    </div>
                 </div>
-                <ul class="decals">'''
+                <ul class="catalog">'''
             else:
                 HTMLdocmid = f'''
                             <li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
                         </div>
                     </div>
                 </div>
-                <div class="container">
-                    <center>
-                        <h5>Copy the decal's URL, select a decal in Sprocket Tank Design, and paste the link into the URL field.</h5>   
+                <div class="wrap">
+                    <div class="box">
+                        <h4>Click on a picture to copy its embeddable URL.</h4>
+                        <h4>Then, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h4>
+                        <h4>Your decals will now automatically download and apply wherever you share your tank!</h4>
+                    </div>
                 </div>
-                <ul class="decals">'''
+                <ul class="catalog">'''
             HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
             decalList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' ORDER BY name;''')]
             for decalInfo in decalList:
                 print("Hi!")
-                decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" />
-                <h4>{decalInfo['name']}</h4>
-                <h5>https://sprockettools.github.io/img/{decalInfo['strippedname']}</h5>
-                <h6>Uploaded by: {decalInfo['ownername']}</h6>
-                <h6>Tags: {decalInfo['tags']}</h6></li>'''
+                decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
+                <h3>{decalInfo['name']}</h3>
+                <h5>Uploaded by: {decalInfo['ownername']}</h5>'''
                 HTMLdoc = f'{HTMLdoc}{decalLI}'
             HTMLdoc = HTMLdoc + HTMLending
             saveDirectory = f'{GithubDirectory}{OSslashLine}Decals{category}.html'
@@ -325,15 +330,13 @@ class githubTools(commands.Cog):
                             <title>Contribute Decals</title>
                             <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
                             <link rel="icon" type="image/x-icon" href="SprocketToolsLogo.png">
-                            <link rel="stylesheet" href="styles_testing.css">
+                            <link rel="stylesheet" href="stylesV3.css">
                         </head>
                     <body>
                     <div class="navbar">
                         <a href="index.html">Home</a>
                         <a href="TopGearCalculator.html">Gear Calculator</a>
-                        <a href="ContestsList.html">Contests</a>
-                        <a href="VehicleGenerator.html">Random Tank Picker</a>
-                        <a href="resources.html">Guides</a>
+                        <a href="resources.html">Sprocket Guides</a>
                         <a href="credits.html">Credits</a>
                         <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
                         <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
@@ -341,25 +344,24 @@ class githubTools(commands.Cog):
                     </div>
 
                     <div>
-                        <ul class="decal-menu">'''
+                        <ul class="navbar">'''
         for subcategory in imageCategoryList:
             appendation = f'''<li onclick="document.location='Decals{subcategory}.html'">{subcategory}</li>'''
             HTMLdoccontribute = f'{HTMLdoccontribute}{appendation}'
 
         HTMLdoccontributemid = '''<li class="active" onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
-                                </div>
                             </div>
                         </div>
-                        <div class="container">
+                        <div class="wrap">
                             <h1 class="text-center">Contributing Decals</h1>
-                            <center>
+                            <div class="box">
                                 <h4>To contribute your own decals to the catalog, use the -submitDecal command in any discord server with Sprocket Bot.</h4> 
                                 <h4>This includes the <a href="https://discord.gg/sprocket">Sprocket Official Discord</a>.</h4>
                                 <h3>Decals need to meet the following criteria:</h3>   
                                 <h5>- Files must be a .png</h5>
                                 <h5>- Files should not exceed 1MB in size</h5>
                                 <h5>- Decals need to be compliant with Discord TOS (no hateful symbols, NSFW, etc.)</h5>
-                                <br />
+                            </div>
                         </div>
                         </center></body></html>'''
         HTMLdoccontribute = f'{HTMLdoccontribute}{HTMLdoccontributemid}'

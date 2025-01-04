@@ -1,4 +1,5 @@
 import discord
+from unicodedata import lookup
 from discord.ext import commands
 # promptResponses = {}
 import os, platform, discord, configparser, ast, json
@@ -86,6 +87,9 @@ class discordUIfunctions(commands.Cog):
                 return result
 
 
+
+
+
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(discordUIfunctions(bot))
 
@@ -168,7 +172,10 @@ class listChoiceDropdown(discord.ui.Select):
         i = 0
         options = []
         for item in itemList:
-            options.append(discord.SelectOption(label=item, emoji='🟩', value=item))
+            if str.isalpha(item[0].lower()):
+                options.append(discord.SelectOption(label=item, emoji=chr(127365 + (ord(item[0].lower()))), value=item))
+            else:
+                options.append(discord.SelectOption(label=item, emoji='❔', value=item))
             i += 1
         if len(options) > 19:
             options.append(discord.SelectOption(label="Next page", emoji='➡️', value="Next page"))
@@ -252,7 +259,7 @@ class buttonList(discord.ui.Button['getButtonChoice']):
         self.value = value
         self.row = int(pos/5)
         self.ctx = ctx
-        if value.lower() == "exit":
+        if value.lower() == "exit" or value.lower() == "0" or value.lower() == "stop" or value.lower() == "cancel":
             super().__init__(style=discord.ButtonStyle.red, label=value, row=self.row)
         elif pos % 3 == 0:
             super().__init__(style=discord.ButtonStyle.blurple, label=value, row=self.row)
