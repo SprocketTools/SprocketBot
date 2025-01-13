@@ -345,6 +345,7 @@ class adminFunctions(commands.Cog):
         embed.add_field(name="play [search term]", value="Play YouTube music in your voice chat", inline=False)
         embed.add_field(name="skip", value="Skip the current music track", inline=False)
         embed.add_field(name="help", value="Shows this message", inline=False)
+        embed.add_field(name="settings", value="Adjust the server configuration", inline=False)
         embed.set_thumbnail(url='https://sprockettools.github.io/SprocketToolsLogo.png')
         embed.set_footer(text=await errorFunctions.retrieveError(ctx))
         await ctx.send(embed=embed)
@@ -382,7 +383,13 @@ class adminFunctions(commands.Cog):
     async def setSlowmode(self, ctx: commands.Context, duration: int):
         serverConfig = await adminFunctions.getServerConfig(ctx)
         if str(serverConfig['botmanagerroleid']) not in str(ctx.author.roles):
-            return
+            if ctx.author.id == main.ownerID:
+                await ctx.send("You do not have permission to perform this action.  Proceed forward and override this?")
+                answer = await discordUIfunctions.getYesNoChoice(ctx)
+                if not answer:
+                    return
+            else:
+                return
         await ctx.channel.edit(slowmode_delay = duration)
         await ctx.send(f"Slowmode is now set to a {duration} second delay!\n\n{await errorFunctions.retrieveError(ctx)}")
 

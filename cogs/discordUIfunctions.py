@@ -72,6 +72,21 @@ class discordUIfunctions(commands.Cog):
         int = 0
         categoryList = list(set(categoryList))
         categoryList.sort()
+        if len(categoryList) > 60:
+            filtered_options = []
+            while len(filtered_options) == 0:
+                options = ["ABC", "DEF", "GHI", "JKL", "MNOP", "QRS", "TUV", "WXYZ", "do not sort"]
+                await ctx.send(f"Yikes, there are {len(categoryList)} choices!  Pick the first letter of your desired option.")
+                sortChoice = await discordUIfunctions.getButtonChoice(ctx, options)
+                if sortChoice != "do not sort":
+                    filtered_options = [option for option in categoryList if option[0].lower() in sortChoice.lower()] #ai suggestion
+                    if len(filtered_options) == 0:
+                        await ctx.send("There are no valid options that start with these letters - try again.")
+                    else:
+                        categoryList = filtered_options
+
+
+        print(categoryList)
         while chosen == False:
             categoryListSlice = categoryList[int:int+20]
             int = int + 20

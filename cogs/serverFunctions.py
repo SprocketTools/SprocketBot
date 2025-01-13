@@ -104,7 +104,7 @@ class serverFunctions(commands.Cog):
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="ban", type="ban", description="Ban a user")
     async def ban(self, ctx: commands.Context, user: discord.Member, reason: str, days: int):
-        serverData = await SQLfunctions.getServerConfig(ctx)
+        serverData = await adminFunctions.getServerConfig(ctx)
         ruleName = "Ban"
         points = 0
         # serverid BIGINT, userid BIGINT, moderatorid BIGINT, name VARCHAR, description VARCHAR, points INT, timestamp TIMESTAMP, endtime TIMESTAMP, type VARCHAR
@@ -217,9 +217,16 @@ class serverFunctions(commands.Cog):
         #     await ctx.send(
         #         "It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
 
-    @commands.has_permissions(administrator=True)
-    @commands.command(name="settings", description="Add money to a faction")
+    @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
+        if not ctx.message.author.guild_permissions.administrator:
+            if ctx.author.id == main.ownerID:
+                await ctx.send("You are the bot owner.  Override the restriction against your server permissions?")
+                answer = await discordUIfunctions.getYesNoChoice(ctx)
+                if not answer:
+                    return
+            else:
+                return
         continue_val = True
         while continue_val:
             data = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1''', [ctx.guild.id])

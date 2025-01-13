@@ -3,6 +3,7 @@ import pandas as pd
 from discord.ext import commands
 from typing import List
 
+import main
 from cogs.campaignFunctions import campaignFunctions
 from cogs.campaignUpdateFunctions import campaignUpdateFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -20,7 +21,14 @@ class campaignManageFunctions(commands.Cog):
     @commands.command(name="manageCampaign", description="Add money to a faction")
     async def manageCampaign(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
-            return
+            if ctx.author.id == main.ownerID:
+                await ctx.send(
+                    "You do not have permission to perform this action.  Proceed forward and override this?")
+                answer = await discordUIfunctions.getYesNoChoice(ctx)
+                if not answer:
+                    return
+            else:
+                return
         i = 0
         while True:
             key = await campaignFunctions.getCampaignKey(ctx)

@@ -146,7 +146,7 @@ class githubTools(commands.Cog):
                     await SQLfunctions.databaseExecuteDynamic(f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''', values)
                     await ctx.send(f"### The image {strippedname} has been sent off for approval!")
                     channel = self.bot.get_channel(1152377925916688484)
-                    await channel.send(f"**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
+                    await channel.send(f"<@{main.ownerID}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
 
     @commands.command(name="removeDecal", description="Remove a decal from the SprocketTools website")
     async def removeDecal(self, ctx):

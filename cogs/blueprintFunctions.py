@@ -852,7 +852,8 @@ class blueprintFunctions(commands.Cog):
 
 
     @commands.command(name="drawFrame", description="merge compartment geometry into itself.")
-    async def drawFrame(self, ctx: commands.Context, attachment: discord.File):
+    async def drawFrame(self, ctx: commands.Context):
+        for attachment in ctx.message.attachments:
             blueprintData = json.loads(await attachment.read())
             name = blueprintData["header"]["name"]
             version = 0.127

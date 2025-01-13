@@ -160,6 +160,8 @@ class textTools(commands.Cog):
         if str(msg.channel_mentions) == '[]':
             if "https://discord.com/channels/" in msg.content:
                 return int(msg.content.split("/")[-2])
+            elif "<#" in msg.content:
+                return int(msg.content.strip("<").strip("#").strip(">"))
             else:
                 raise ValueError("User termination")
         return int(msg.channel_mentions[0].id)
