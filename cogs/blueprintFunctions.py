@@ -5,7 +5,7 @@ from discord.ext import commands
 import cv2 as cv
 from discord import app_commands
 from cogs.errorFunctions import errorFunctions
-import main
+
 from cogs.textTools import textTools
 from PIL import Image, ImageChops
 from cogs.SQLfunctions import SQLfunctions
@@ -22,7 +22,7 @@ class blueprintFunctions(commands.Cog):
         serverID = (ctx.guild.id)
         try:
             channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
-            if ctx.channel.id != channel and ctx.author.id != main.ownerID:
+            if ctx.channel.id != channel and ctx.author.id != self.bot.owner_id:
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:

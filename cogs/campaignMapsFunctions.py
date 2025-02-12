@@ -1,4 +1,4 @@
-import main, discord, datetime, json, pandas
+import discord, datetime, json, pandas
 from discord.ext import commands
 from discord import app_commands
 from cogs.SQLfunctions import SQLfunctions

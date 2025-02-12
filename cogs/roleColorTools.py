@@ -6,7 +6,6 @@ from discord.ext import tasks
 import discord
 from discord.ext import commands
 
-import main
 from datetime import datetime, timedelta
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
@@ -95,7 +94,7 @@ class roleColorTools(commands.Cog):
 
     @commands.command(name="resetRoleColorDatabase", description="generate a key that can be used to initiate a campaign")
     async def setupRoleColorDatabase(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.owner_id:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS colorchangers;''')
@@ -104,7 +103,7 @@ class roleColorTools(commands.Cog):
 
     @commands.command(name="addColorChanger", description="generate a key that can be used to initiate a campaign")
     async def addColorChanger(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.owner_id:
             return
         await ctx.send("Do you want to use this server?")
         isThisServer = await discordUIfunctions.getYesNoChoice(ctx)
@@ -139,7 +138,7 @@ class roleColorTools(commands.Cog):
 
     @commands.command(name="clearColorChangers", description="generate a key that can be used to initiate a campaign")
     async def clearColorChangers(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.owner_id:
             return
         roleid = await textTools.getIntResponse(ctx, "What role do you want to stop updating?  Reply with that role's ID.")
         server = self.bot.get_guild(ctx.guild.id)

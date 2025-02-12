@@ -4,7 +4,6 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -25,7 +24,7 @@ class campaignTransactionFunctions(commands.Cog):
     @commands.is_owner()
     @commands.command(name="setupTransactionDatabase", description="testing some stuff")
     async def setupTransactionDatabase(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.owner_id:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS transactions;''')
@@ -34,10 +33,14 @@ class campaignTransactionFunctions(commands.Cog):
 
     @commands.command(name="purchase", description="Log a purchase made between players")
     async def purchase(self, ctx: commands.Context):
+        campaignData = await campaignFunctions.getUserCampaignData(ctx)
+        if ctx.channel.id == campaignData['privatemoneychannelid'] or ctx.channel.id == campaignData['publiclogchannelid']:
+            await errorFunctions.sendCategorizedError(ctx, "insult")
+            await ctx.send("\nLast I checked, this was your server's logging channel.  Typically these are not for running bot commands in.")
+            return
         factionData = await campaignFunctions.getUserFactionData(ctx)
         if not factionData['factionname']:
             return
-        campaignData = await campaignFunctions.getUserCampaignData(ctx)
         await ctx.send("What type of transaction are you making?")
         transactionType = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["General purchase transaction", "Maintenance payments", "Sales of equipment to civilians"]))
         if transactionType == "sales of equipment to civilians" or transactionType == "maintenance payments":

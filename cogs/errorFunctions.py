@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord import app_commands
 from discord.ui import view
 
-import main
+
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 
@@ -16,7 +16,7 @@ class errorFunctions(commands.Cog):
         self.bot = bot
     @commands.command(name="resetErrorConfig", description="Reset everyone's server configurations")
     async def resetErrorConfig(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.owner_id:
             return
         prompt = "DROP TABLE IF EXISTS errorlist"
         await SQLfunctions.databaseExecute(prompt)
@@ -51,7 +51,7 @@ class errorFunctions(commands.Cog):
     @commands.command(name="getError", description="higdffffffffffff")
     async def getError(self, ctx: commands.Context):
         ttsp = False
-        if ctx.author.id == main.ownerID or ctx.author.guild_permissions.administrator == True:
+        if ctx.author.id == self.bot.ownerID or ctx.author.guild_permissions.administrator == True:
             await ctx.message.delete()
         else:
             serverID = (ctx.guild.id)
@@ -77,7 +77,7 @@ class errorFunctions(commands.Cog):
                       ["Only a catgirl would say that", "catgirl"]]
         category = await discordUIfunctions.getButtonChoiceReturnID(ctx, categories)
         ttsp = False
-        if ctx.author.id == main.ownerID or ctx.author.guild_permissions.administrator == True:
+        if ctx.author.id == self.bot.ownerID or ctx.author.guild_permissions.administrator == True:
             await ctx.message.delete()
         else:
             serverID = (ctx.guild.id)
@@ -106,7 +106,7 @@ class errorFunctions(commands.Cog):
     @commands.command(name="addError", description="higdffffffffffff")
     async def addError(self, ctx: commands.Context):
 
-        if ctx.author.id == main.ownerID and main.botMode == "official":
+        if ctx.author.id == self.bot.ownerID and self.bot.mode == "official":
             status = True
         else:
             status = False
@@ -210,7 +210,7 @@ class errorFunctions(commands.Cog):
     @commands.command(name="approveErrors", description="higdffffffffffff")
     async def approveErrors(self, ctx: commands.Context):
 
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.ownerID:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             await ctx.send("You aren't authorized to run this command!")
             return

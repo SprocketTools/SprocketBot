@@ -10,14 +10,13 @@ from git import Repo
 # Github config
 from PIL import Image, ImageChops
 
-import main
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 imageCategoryList = ["Featured", "Chalk", "Fictional Insignia", "Historical Insignia", "Inscriptions", "Labels", "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures", "Weathering", "Welding"]
 GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
 username = 'SprocketTools'
-password = main.githubPAT
+
 if platform.system() == "Windows":
 
     GithubDirectory = "C:\\Users\\colson\\Documents\\GitHub\\SprocketTools.github.io"
@@ -146,7 +145,7 @@ class githubTools(commands.Cog):
                     await SQLfunctions.databaseExecuteDynamic(f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''', values)
                     await ctx.send(f"### The image {strippedname} has been sent off for approval!")
                     channel = self.bot.get_channel(1152377925916688484)
-                    await channel.send(f"<@{main.ownerID}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
+                    await channel.send(f"<@{self.bot.owner_id}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
 
     @commands.command(name="removeDecal", description="Remove a decal from the SprocketTools website")
     async def removeDecal(self, ctx):

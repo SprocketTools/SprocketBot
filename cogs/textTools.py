@@ -51,14 +51,17 @@ class textTools(commands.Cog):
         #print(values_string)
         return names_string, values_string
 
-    async def getResponse(ctx: commands.Context, prompt):
-        await ctx.send(prompt)
+    async def getResponse(ctx: commands.Context, prompt, action=None):
+        promptMsg = await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
+            await errorFunctions.sendCategorizedError(ctx, "insult")
             raise ValueError("User termination")
+        if action == "delete":
+            await promptMsg.delete()
+            await msg.delete()
         return await textTools.mild_sanitize(msg.content)
 
     async def sendThenDelete(ctx: commands.Context, prompt):
@@ -66,7 +69,67 @@ class textTools(commands.Cog):
         await asyncio.sleep(15)
         await message.delete()
 
-    async def getCappedResponse(ctx: commands.Context, prompt, leng):
+    async def getCappedResponse(ctx: commands.Context, prompt, leng, action=None):
+        promptMsg = await ctx.send(prompt)
+        while True:
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+            if msg.content.lower() == "cancel":
+                await errorFunctions.sendError(ctx)
+                raise ValueError("User termination")
+            if action == "delete":
+                await promptMsg.delete()
+                await msg.delete()
+            if len(msg.content) <= leng:
+                return await textTools.mild_sanitize(msg.content)
+            await errorFunctions.sendError(ctx)
+            await ctx.send(f"Error: response should not exceed {leng} characters in length.")
+            await ctx.send(prompt)
+
+    async def getIntResponse(ctx: commands.Context, prompt):
+        while True:
+            messageSend = await ctx.send(prompt)
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+            if msg.content.lower() == "cancel":
+                await errorFunctions.sendError(ctx)
+                raise ValueError("User termination")
+            textOut = msg.content.replace(",", "")
+            textSplit = textOut.split(".")
+            if len(textSplit) > 1:
+                await ctx.send(f"Interpreting input as {textSplit[0]}")
+            try:
+                return int(textSplit[0])
+            except Exception:
+                await messageSend.delete()
+                await ctx.send("Invalid input.  Don't include commas, periods, and symbols with your message.")
+
+
+    async def getFlooredIntResponse(ctx: commands.Context, prompt: str, min: int):
+        while True:
+            messageSend = await ctx.send(prompt)
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+            if msg.content.lower() == "cancel":
+                await errorFunctions.sendError(ctx)
+                raise ValueError("User termination")
+            textOut = msg.content.replace(",", "")
+            textSplit = textOut.split(".")
+            try:
+                val = int(textSplit[0])
+                if len(textSplit) > 1:
+                    await ctx.send(f"Interpreting input as {textSplit[0]}")
+                if val < min:
+                    return min
+                return val
+            except Exception:
+                await messageSend.delete()
+                await ctx.send("Invalid input.  Try again, but exclude commas, periods, and symbols.")
+
+    async def getFlooredFloatResponse(ctx: commands.Context, prompt: str, min: int):
         while True:
             await ctx.send(prompt)
             def check(m: discord.Message):
@@ -75,70 +138,32 @@ class textTools(commands.Cog):
             if msg.content.lower() == "cancel":
                 await errorFunctions.sendError(ctx)
                 raise ValueError("User termination")
-            if len(msg.content) <= leng:
-                return await textTools.mild_sanitize(msg.content)
-            await errorFunctions.sendError(ctx)
-            await ctx.send(f"Error: response should not exceed {leng} characters in length.")
-
-    async def getIntResponse(ctx: commands.Context, prompt):
-        await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
-        if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
-            raise ValueError("User termination")
-        textOut = msg.content.replace(",", "")
-        textSplit = textOut.split(".")
-        if len(textSplit) > 1:
-            await ctx.send(f"Interpreting input as {textSplit[0]}")
-        return int(textSplit[0])
-
-
-    async def getFlooredIntResponse(ctx: commands.Context, prompt: str, min: int):
-        await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
-        if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
-            raise ValueError("User termination")
-        textOut = msg.content.replace(",", "")
-        textSplit = textOut.split(".")
-        val = int(textSplit[0])
-        if len(textSplit) > 1:
-            await ctx.send(f"Interpreting input as {textSplit[0]}")
-        if val < min:
-            return min
-        return val
-
-    async def getFlooredFloatResponse(ctx: commands.Context, prompt: str, min: int):
-        await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
-        if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
-            raise ValueError("User termination")
-        val = float(msg.content)
-        val = round(val, 7)
-        if val < min:
-            return min
-        return val
+            try:
+                val = float(msg.content)
+                val = round(val, 7)
+                if val < min:
+                    return min
+                return val
+            except Exception:
+                await ctx.send("Invalid input.  Try again.")
 
 
     async def getFloatResponse(ctx: commands.Context, prompt: str):
-        await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
-        if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
-            raise ValueError("User termination")
-        return round(float(msg.content), 7)
+        while True:
+            await ctx.send(prompt)
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+            if msg.content.lower() == "cancel":
+                await errorFunctions.sendError(ctx)
+                raise ValueError("User termination")
+            try:
+                return round(float(msg.content), 7)
+            except Exception:
+                await ctx.send("Invalid input.  Try again.")
 
     async def getPercentResponse(ctx: commands.Context, prompt: str):
-        await ctx.send(prompt)
+        messageSend = await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
@@ -146,25 +171,35 @@ class textTools(commands.Cog):
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
-        value = float(response)/100
-        return round(value, 6)
+        try:
+            value = float(response)/100
+            return round(value, 6)
+        except Exception:
+            await messageSend.delete()
+            await ctx.send("Invalid input.  Try again.")
 
     async def getChannelResponse(ctx: commands.Context, prompt):
-        await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
-        if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
-            raise ValueError("User termination")
-        if str(msg.channel_mentions) == '[]':
-            if "https://discord.com/channels/" in msg.content:
-                return int(msg.content.split("/")[-2])
-            elif "<#" in msg.content:
-                return int(msg.content.strip("<").strip("#").strip(">"))
-            else:
+        while True:
+            messageSend = await ctx.send(prompt)
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+            if msg.content.lower() == "cancel":
+                await errorFunctions.sendError(ctx)
                 raise ValueError("User termination")
-        return int(msg.channel_mentions[0].id)
+            try:
+                if str(msg.channel_mentions) == '[]':
+                    if "https://discord.com/channels/" in msg.content:
+                        return int(msg.content.split("/")[-2])
+                    elif "<#" in msg.content:
+                        return int(msg.content.strip("<").strip("#").strip(">"))
+                    else:
+                        raise ValueError("User termination")
+                return int(msg.channel_mentions[0].id)
+            except Exception:
+                await messageSend.delete()
+                await msg.delete()
+                await ctx.send("Invalid input.  Try again by mentioning the channel using `<#123456789>` syntax, or paste its link.")
 
 
     async def getRoleResponse(ctx: commands.Context, prompt):
@@ -184,13 +219,17 @@ class textTools(commands.Cog):
             await ctx.send("Try again.  Send either a ping of the role or its ID.")
 
     async def getFileResponse(ctx: commands.Context, prompt):
-        await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
-        if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
-        return msg.attachments[0]
+        while True:
+            await ctx.send(prompt)
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+            if msg.content.lower() == "cancel":
+                await errorFunctions.sendError(ctx)
+            try:
+                return msg.attachments[0]
+            except Exception:
+                await ctx.send("Invalid input.  Try again.")
 
     async def getFileURLResponse(ctx: commands.Context, prompt):
         await ctx.send(prompt)
@@ -199,7 +238,10 @@ class textTools(commands.Cog):
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
-        return msg.attachments[0].url
+        try:
+            return msg.attachments[0].url
+        except Exception:
+            await ctx.send("Invalid input.  Try again.")
 
     async def getManyFilesResponse(ctx: commands.Context, prompt):
         await ctx.send(prompt)
@@ -208,7 +250,10 @@ class textTools(commands.Cog):
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
-        return msg.attachments
+        try:
+            return msg.attachments
+        except Exception:
+            await ctx.send("Invalid input.  Try again.")
 
     async def getResponseThenDelete(ctx: commands.Context, prompt):
         messageOut = await ctx.send(prompt)

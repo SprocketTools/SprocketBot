@@ -10,7 +10,6 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
@@ -73,7 +72,7 @@ class VCfunctions(commands.Cog):
 
     @commands.command(name="trollVC", description="Play music with the bot")
     async def trollVC(self, ctx: commands.Context, channelID: int):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.owner_id:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             await ctx.send("You are not authorized to run this command.")
             return

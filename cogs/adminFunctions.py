@@ -14,7 +14,7 @@ from cogs.errorFunctions import errorFunctions
 import random, asyncio, datetime
 from discord.ext import tasks
 
-import main
+
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
 from cogs.blueprintFunctions import blueprintFunctions
@@ -24,9 +24,9 @@ from cogs.textTools import textTools
 
 serverConfig = {}
 userStrikes = {}
-nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "free gifts", "leak", "executor roblox", "roblox executor"]
+nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "free gifts", "leak", "executor roblox", "roblox executor", "earn", "earning"]
 scamFlags = ["$", "steam", "asdfghjkl"]
-linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "https://temu.com/s/", "discord.gg", "discord.com/invite"]
+linkFlags = ["steamcommunity.com/gift", "community.com", " https://steam", "bit.ly", "sc.link", "qptr.ru", "https://temu.com/s/", "discord.gg", "discord.com/invite", "https://t.me/"]
 strikethreshold = 3
 piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c"]
 colorint = -1
@@ -45,7 +45,7 @@ class adminFunctions(commands.Cog):
     async def updateServerConfig(self):
         for guild in self.bot.guilds:
             try:
-                serverConfig[guild.id] = [dict(row) for row in await SQLfunctions.databaseFetchFast(
+                serverConfig[guild.id] = [dict(row) for row in await self.bot.pool.execute(
                 f'SELECT * FROM serverconfig WHERE serverid = {guild.id}')][0]
             except Exception:
                 pass
@@ -79,7 +79,7 @@ class adminFunctions(commands.Cog):
         if ctx.author.id in [439836738064613378]: # blacklist
             await errorFunctions.sendCategorizedError(ctx, "insult")
             return False
-        if ctx.author.id == main.ownerID:
+        if ctx.author.id == self.bot.ownerID:
             return True
         if self.operational == True:
             return True
@@ -87,41 +87,65 @@ class adminFunctions(commands.Cog):
             await errorFunctions.sendCategorizedError(ctx, "catgirl")
             await ctx.send("Sprocket Bot is a bit too sleepy right now.  Come back when I've finished my catnap, please?")
 
-
+    # @commands.event
+    # async def on_command_error(ctx, error):
+    #     if isinstance(error, commands.MissingRequiredArgument):
+    #         await ctx.send('Missing required argument.')
+    #     elif isinstance(error, commands.CommandNotFound):
+    #         # if "-#" not in ctx.message.content and len(ctx.message.content) >= 3:
+    #         #     await errorFunctions.sendCategorizedError(ctx, "compliment")
+    #         #     await ctx.send("To see my list of commands, try using \n`-help`\n`-sprockethelp`\n`-campaignhelp`")
+    #         pass
+    #     elif isinstance(error, commands.HybridCommandError):
+    #         await ctx.send("Cannot find that user.  They are either already banned or something else went wrong.")
+    #         channel = ctx.bot.get_channel(1152377925916688484)
+    #         await channel.send(error)
+    #         await channel.send(f"<@{ctx.bot.owner_id}>")
+    #     else:
+    #         await errorFunctions.sendError(ctx)
+    #         channel = ctx.bot.get_channel(1152377925916688484)
+    #         await channel.send(error)
+    #         raise error  # Re-raise the error to see it in the console
 
     @commands.command(name="toggleOperation", description="Toggle operation of the bot")
     async def toggleOperation(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.ownerID:
             return
         self.operational = not self.operational
         await ctx.send(f'## Operational status is {self.operational}')
 
+    @commands.command(name="commandCount", description="Toggle operation of the bot")
+    async def commandCount(self, ctx: commands.Context):
+        command_count = len(self.bot.commands)
+        await ctx.send(f"Number of commands: {command_count}")
     @commands.command(name="killswitch", description="Toggle operation of the bot")
     async def killswitch(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.ownerID:
             return
         exit()
+
+
 
     @commands.command(name="testLatency", description="test the bot's latency")
     #@commands.check(adminFunctions.commands_check)
     async def testLatency(self, ctx: commands.Context):
         start_time = time.time()
-        await SQLfunctions.databaseExecute("SELECT * FROM serverconfig")
+        await ctx.bot.pool.execute("SELECT * FROM serverconfig")
         time2 = time.time()
         await ctx.send("Simple database selecting: --- %.10s seconds ---" % (time2 - start_time))
 
         start_time = time.time()
-        await SQLfunctions.databaseFetchdict("SELECT * FROM serverconfig")
+        await ctx.bot.pool.execute("SELECT * FROM serverconfig")
         time2 = time.time()
         await ctx.send("Database dict selecting: --- %.10s seconds ---" % (time2 - start_time))
 
         start_time = time.time()
-        await SQLfunctions.databaseExecute("UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
+        await ctx.bot.pool.execute("UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
         time2 = time.time()
         await ctx.send("Blank database updating: --- %.10s seconds ---" % (time2 - start_time))
 
         start_time = time.time()
-        await SQLfunctions.databaseExecute("SELECT * FROM serverconfig; SELECT * FROM serverconfig; UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
+        await ctx.bot.pool.execute("SELECT * FROM serverconfig; SELECT * FROM serverconfig; UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
         time2 = time.time()
         await ctx.send("All 3 queries at once: --- %.10s seconds ---" % (time2 - start_time))
 
@@ -141,9 +165,9 @@ class adminFunctions(commands.Cog):
             pass
         else:
             return
-        for cog in main.cogsList:
+        for cog in self.cogsList:
             await self.bot.reload_extension(cog)
-        if main.updateGithub == "Y":
+        if self.updateGithub == "Y":
             await self.bot.reload_extension("cogs.githubTools")
         await ctx.send("Reloaded!")
         await asyncio.sleep(10)
@@ -247,10 +271,33 @@ class adminFunctions(commands.Cog):
             "skibidi": "insult",
             "colon": "insult"
             }
-        if serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"] or message.author.id == main.ownerID:
+
+        if serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"] or message.author.id == self.bot.ownerID:
             guild = self.bot.get_guild(message.guild.id)
             prob = 1500 + len(guild.members)
             i = int(random.random()*prob)
+            j = random.random()
+            if message.content.lower() == "hi":
+                print(message.author.id)
+                if message.author.id == 712509599135301673:
+                    if j < 0.3:
+                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="catgirl"))
+                    elif j > 0.3:
+                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="insult"))
+                elif message.author.id == 437324319102730263:
+                    if j < 0.3:
+                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="compliment"))
+                    elif j > 0.75:
+                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="insult"))
+                    else:
+                        await message.reply("hi")
+                elif message.author.id == 834279720279474176:
+                    if j > 0.5:
+                        await message.reply(await errorFunctions.retrieveCategorizedError(category="mlp"))
+                else:
+                    if j < 500:
+                        await message.reply("hi")
+
             #print(i)
             if i == 1:
                 serverConfig[message.guild.id]["funnycounter"] = int((random.random()**2)*2+1)
@@ -352,11 +399,15 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="viewServerConfig", description="View my server configurations")
     async def viewServerConfig(self, ctx: commands.Context):
-        if ctx.author.guild_permissions.administrator == False and ctx.author.id != main.ownerID:
+
+        if ctx.author.guild_permissions.administrator == False and ctx.author.id != self.bot.owner_id:
             await ctx.send(await errorFunctions.retrieveError(ctx))
+
+
         else:
+            print("hi")
             try:
-                serverData = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+                serverData = [dict(row) for row in await ctx.bot.pool.execute(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
                 description = f'''
                 General chat:         <#{serverData['updateschannelid']}>
                 Bot commands chat:    <#{serverData['commandschannelid']}>
@@ -376,6 +427,7 @@ class adminFunctions(commands.Cog):
                 embed.set_thumbnail(url=ctx.guild.icon)
                 await ctx.send(embed=embed)
             except Exception:
+                print("hi")
                 await ctx.send(await errorFunctions.retrieveError(ctx))
                 await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
 
@@ -383,7 +435,7 @@ class adminFunctions(commands.Cog):
     async def setSlowmode(self, ctx: commands.Context, duration: int):
         serverConfig = await adminFunctions.getServerConfig(ctx)
         if str(serverConfig['botmanagerroleid']) not in str(ctx.author.roles):
-            if ctx.author.id == main.ownerID:
+            if ctx.author.id == self.bot.ownerID:
                 await ctx.send("You do not have permission to perform this action.  Proceed forward and override this?")
                 answer = await discordUIfunctions.getYesNoChoice(ctx)
                 if not answer:
@@ -427,7 +479,7 @@ class adminFunctions(commands.Cog):
     @commands.command(name="pruneServers", description="List all my servers.")
     async def pruneServers(self, ctx: commands.Context, count: int):
         i = 0
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.ownerID:
             return
         protectedServers = ["The Oteran Republic", "SkyFall Aerospace"]
         serverList = "Your server list:"
@@ -503,6 +555,21 @@ class adminFunctions(commands.Cog):
             return
         os.system("systemctl reboot -i")
 
+    @commands.command(name="adminDropColumn", description="add a column to a SQL table")
+    async def adminDropColumn(self, ctx: commands.Context):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        tablename = await errorFunctions.getResponse(ctx,"Whatis the table name?")
+        columnname = await errorFunctions.getResponse(ctx, "What are the column names?  Use all lowercase letters with no spaces, and split with spacebars.")
+        names = columnname.split(" ")
+        for name in names:
+            try:
+                await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} DROP {name};''')
+                await ctx.send(f"Dropped {name}")
+            except Exception:
+                await ctx.send("Something was incorrect.")
     @commands.command(name="adminAddColumn", description="add a column to a SQL table")
     async def adminAddColumn(self, ctx: commands.Context):
         if ctx.author.id == 712509599135301673:
@@ -531,9 +598,28 @@ class adminFunctions(commands.Cog):
         data = io.BytesIO(stringOut.encode())
         await ctx.send(file=discord.File(data, f'errors.json'))
 
+    @commands.command(name="adminExecute", description="register a contest")
+    async def adminExecute(self, ctx: commands.Context, *, prompt):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        await ctx.send(await SQLfunctions.databaseExecute(prompt))
+
+    @commands.command(name="adminFetch", description="register a contest")
+    async def adminFetch(self, ctx: commands.Context, *, prompt):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+
+        result = await SQLfunctions.databaseFetch(prompt)
+        print(result)
+        await ctx.send(result)
+
     @commands.command(name="adminGetTable", description="add a column to a SQL table")
     async def adminGetTable(self, ctx: commands.Context):
-        if ctx.author.id == main.ownerID:
+        if ctx.author.id == self.bot.ownerID:
             await errorFunctions.sendError(ctx)
             return
         tablename = await errorFunctions.getResponse(ctx, "What is the table name?")
@@ -559,35 +645,6 @@ class adminFunctions(commands.Cog):
             name = await textTools.getResponse(ctx, "What is your stream name?")
             url = await textTools.getResponse(ctx, "What URL are you streaming?")
             await self.bot.change_presence(activity=discord.Streaming(name=name, url=url))
-
-    @commands.command(name="setBotAvatar", description="setup the server")
-    async def setBotAvatar(self, ctx: commands.Context):
-        defaultURL = main.defaultURL
-        if ctx.author.id != main.ownerID:
-            return
-        url = await textTools.getResponse(ctx, "Reply with the image link")
-        waitTime = await textTools.getIntResponse(ctx, "How many seconds should it last?")
-        response = requests.get(url).content
-        await self.bot.user.edit(avatar=response)
-        await ctx.send("Hi there!")
-        await asyncio.sleep(waitTime)
-        response = requests.get(defaultURL).content
-        await self.bot.user.edit(avatar=response)
-        await ctx.send("Restored logo to default.")
-
-    @commands.command(name="setBotName", description="setup the server")
-    async def setBotName(self, ctx: commands.Context):
-        defaultName = main.defaultName
-        if ctx.author.guild_permissions.administrator == False:
-            return
-        url = await textTools.getResponse(ctx, "Reply with my new name!")
-        waitTime = await textTools.getIntResponse(ctx, "How many seconds should it last?")
-
-        await ctx.send("Hi there!")
-        await asyncio.sleep(waitTime)
-        await self.bot.user.edit(username=defaultName)
-        await ctx.send("Restored name to default.")
-
 
     @commands.command(name="setMusicRole", description="setup the server")
     async def setMusicRole(self, ctx: commands.Context):

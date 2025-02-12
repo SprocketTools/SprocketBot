@@ -3,7 +3,6 @@ import pandas as pd
 from discord.ext import commands
 from typing import List
 
-import main
 from cogs.campaignFunctions import campaignFunctions
 from cogs.campaignUpdateFunctions import campaignUpdateFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -21,7 +20,7 @@ class campaignManageFunctions(commands.Cog):
     @commands.command(name="manageCampaign", description="Add money to a faction")
     async def manageCampaign(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
-            if ctx.author.id == main.ownerID:
+            if ctx.author.id == self.bot.owner_id:
                 await ctx.send(
                     "You do not have permission to perform this action.  Proceed forward and override this?")
                 answer = await discordUIfunctions.getYesNoChoice(ctx)
@@ -32,12 +31,13 @@ class campaignManageFunctions(commands.Cog):
         i = 0
         while True:
             key = await campaignFunctions.getCampaignKey(ctx)
-            await campaignFunctions.showSettings(ctx)
-            await ctx.send("What statistic do you wish to modify?")
+            embedOut = await campaignFunctions.showSettings(ctx)
+            promptOut = await ctx.send("What statistic do you wish to modify?")
             answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit"]))
-            print(answer)
+            name_adj = ""
             if answer == "exit" or i > 1:
                 await ctx.send("Alright, have fun.")
+                await promptOut.delete()
                 return
             elif answer == "adjust time":
                 timestamp_adj = await textTools.getIntResponse(ctx, "How many days do you want to move forward?")
@@ -71,7 +71,10 @@ class campaignManageFunctions(commands.Cog):
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
                 i += 1
-            await ctx.send("## Done!")
+            await embedOut.delete()
+            await promptOut.delete()
+            notif = await ctx.send(f'Selection "{answer}" has been updated.')
+            await notif.delete(delay=7)
 
 
 
@@ -88,8 +91,8 @@ class campaignManageFunctions(commands.Cog):
         continue_val = True
         while continue_val:
             data = await campaignFunctions.getFactionData(key)
-            await campaignFunctions.showStats(ctx, data)
-            await ctx.send("What statistic do you wish to modify?")
+            embedOut = await campaignFunctions.showStats(ctx, data)
+            promptOut = await ctx.send("What statistic do you wish to modify?")
             if data['iscountry'] == False:
                 inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Move your company to a new country", "Delete faction", "Exit"]
             else:
@@ -159,6 +162,8 @@ class campaignManageFunctions(commands.Cog):
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
                 return
             await ctx.send("## Done!")
+            await embedOut.delete()
+            await promptOut.delete()
 
     @commands.command(name="manageAllFactions", description="Edit a faction un bulk")
     async def manageAllFactions(self, ctx: commands.Context):

@@ -5,7 +5,6 @@ from datetime import datetime
 import discord, time
 from discord.ext import commands
 
-import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
@@ -45,7 +44,7 @@ class campaignFunctions(commands.Cog):
             if data['active'] == False:
                 embed.add_field(name="Current status", value=f"**Campaign is NOT running**", inline=False)
             embed.set_footer(text=f"It is {hour}:{min} on {day}, {dt.year}")
-            await ctx.send(embed=embed)
+            return await ctx.send(embed=embed)
         except Exception as e:
             await ctx.send(f"Error:\n-# {e}\n\nMake sure that you have set up your server and joined, or started, a campaign.")
 
@@ -80,7 +79,7 @@ class campaignFunctions(commands.Cog):
         originName = factionData["factionname"]
         isVulnerable = False
         isIntercepted = False
-        if factionData["espionagestaff"] > 10 or ctx.author.id == main.ownerID:
+        if factionData["espionagestaff"] > 10 or ctx.author.id == self.bot.owner_id:
             messagetype = await discordUIfunctions.getButtonChoice(ctx, ["Send a diplomatic message", "Try to impersonate another country"])
             if messagetype == "Try to impersonate another country":
                 espionageStaff = factionData['espionagestaff']
@@ -235,13 +234,12 @@ class campaignFunctions(commands.Cog):
             embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
             embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 1)) + "%", inline=False)
             embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
-            embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
             embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 1)) + "%", inline=False)
         else:
             embed.add_field(name="Country of origin",value=await campaignFunctions.getFactionName(variablesList["landlordfactionkey"]), inline=False)
         embed.set_footer(text=f"\nIt is {hour}:{min} on {day}, {dt.year}")
         embed.set_thumbnail(url=variablesList["flagurl"])
-        await ctx.send(embed=embed)
+        return await ctx.send(embed=embed)
 
     async def showFinances(ctx: commands.Context, variablesList):
         campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
@@ -264,8 +262,6 @@ class campaignFunctions(commands.Cog):
         embed.add_field(name="Rich tax rate", value=f"{round(float(variablesList['taxrich']) * 100, 3)} %", inline=False)
         embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
         embed.add_field(name="Average salary", value=campaignInfoList["currencysymbol"] + str(round(float(variablesList["averagesalary"]), 1)) + " " + campaignInfoList["currencyname"],inline=False)
-        embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
-        embed.add_field(name="Educational funding boost", value=str(round(float(variablesList["educationspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Infrastructure investments", value=str(round(float(variablesList["infrastructurespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Espionage funding",value=str(round(float(variablesList["espionagespend"]) * 100, 2)) + "% of discretionary funds", inline=False)

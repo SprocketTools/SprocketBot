@@ -19,9 +19,11 @@ class discordUIfunctions(commands.Cog):
 
     async def getButtonChoice(ctx: commands.Context, inList: list):
         view = getButtonChoice(ctx, inList)
-        await ctx.send(view=view)
+        messageOut = await ctx.send(view=view)
         await view.wait()
+        await messageOut.delete(delay=10)
         return view.value
+
 
     async def getButtonChoiceReturnID(ctx: commands.Context, inList: list):
         view = getButtonChoiceReturnID(ctx, inList)

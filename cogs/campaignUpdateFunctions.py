@@ -10,7 +10,6 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -38,7 +37,7 @@ class campaignUpdateFunctions(commands.Cog):
     @tasks.loop(seconds=updateFrequency)
     async def loopUpdate(self):
         current_time = int(datetime.now().timestamp())
-        last_time = int(main.config["settings"]['lastupdated'])
+        last_time = int(self.bot.config["settings"]['lastupdated'])
         #print(f'{last_time} --> {current_time}')
         while last_time + (updateFrequency/2) < current_time:
             status_log_channel = self.bot.get_channel(1152377925916688484)
@@ -56,12 +55,12 @@ class campaignUpdateFunctions(commands.Cog):
                 await self.sendBackup()
             else:
                 print("Campaign update triggered")
-            main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
+            self.bot.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
             await status_log_channel.send(f"Campaigns have updated from <t:{last_time}:f> to <t:{last_time + updateFrequency}:f>")
             last_time = last_time + updateFrequency
-        main.config["settings"]['lastupdated'] = str(current_time)
-        with open(main.configurationFilepath, "w") as configfile:
-            main.config.write(configfile)
+        self.bot.config["settings"]['lastupdated'] = str(current_time)
+        with open(self.bot.configurationFilepath, "w") as configfile:
+            self.bot.config.write(configfile)
 
     async def errorPrevention(self):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE gdp/population < 0 AND iscountry = true AND hostactive = true;''')
@@ -233,7 +232,7 @@ class campaignUpdateFunctions(commands.Cog):
     @commands.command(name="forceUpdate", description="test")
     async def forceUpdate(self, ctx: commands.Context):
         current_time = int(datetime.now().timestamp())
-        last_time = int(main.config["settings"]['lastupdated'])
+        last_time = int(self.bot.config["settings"]['lastupdated'])
         print(f'{last_time} --> {current_time}')
         status_log_channel = self.bot.get_channel(1152377925916688484)
         await status_log_channel.send("Update is starting!")
@@ -258,11 +257,11 @@ class campaignUpdateFunctions(commands.Cog):
         #     await self.sendBackup()
         # else:
         #     await self.sendBackup()
-        main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
+        self.bot.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
         await status_log_channel.send("Update is complete!")
-        main.config["settings"]['lastupdated'] = str(current_time)
-        with open(main.configurationFilepath, "w") as configfile:
-            main.config.write(configfile)
+        self.bot.config["settings"]['lastupdated'] = str(current_time)
+        with open(self.bot.configurationFilepath, "w") as configfile:
+            self.bot.config.write(configfile)
         await ctx.send("## Done!")
 
     async def softUpdate(self):

@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-import main
+
 from cogs.SQLfunctions import SQLfunctions
 from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -79,6 +79,7 @@ class campaignInfoFunctions(commands.Cog):
         embed.add_field(name="viewFinances", value="View your faction's finances", inline=False)
         embed.add_field(name="purchase", value="Purchase an item", inline=False)
         embed.add_field(name="logMaintenance", value="[Placeholder] Pay for something", inline=False)
+        embed.add_field(name="settaxes", value="Purchase an item", inline=False)
         embed.add_field(name="logCivilSale", value="[Placeholder] Log revenue from civilians", inline=False)
         embed.add_field(name="sendMessage", value="Send a message in-character to another faction", inline=False)
         embed.set_thumbnail(url='https://sprockettools.github.io/SprocketToolsLogo.png')

@@ -1,15 +1,16 @@
+import asyncio
 import datetime as datetime
 import random
 import io
-
+from discord.ext import tasks
 import discord
+
 import pandas as pd
 from discord.ext import commands
 
-import main
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
-
+updateFrequency = 60
 promptResponses = {}
 from discord import app_commands
 from cogs.textTools import textTools
@@ -19,9 +20,46 @@ class serverFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        now = datetime.datetime.now()
+        current_minute = now.minute
+        current_second = now.second
+        seconds_count = int(3600 - (current_minute*60 + current_second))
+        seconds_count = seconds_count % updateFrequency
+        status_log_channel = self.bot.get_channel(1152377925916688484)
+        await status_log_channel.send(f"Auto unban cycle: **{int(seconds_count/60)} minutes,** **{int(seconds_count % 60)} seconds** from now.")
+        await asyncio.sleep(seconds_count)
+        await self.loopUpdate.start()
+    @tasks.loop(seconds=updateFrequency)
+    async def loopUpdate(self):
+        current_time = int(datetime.datetime.now().timestamp())
+        setdata = await SQLfunctions.databaseFetchdict('''SELECT * FROM modlogs WHERE name = 'Ban' AND endtime < now() AND timestamp < endtime;''')
+        for data in setdata:
+            try:
+                server = self.bot.get_guild(data['serverid'])
+                user = await self.bot.fetch_user(data['userid'])
+                await server.unban(user)
+                await SQLfunctions.databaseExecuteDynamic('''UPDATE modlogs SET name = 'Expired Ban' WHERE name = 'Ban' AND endtime < now() AND serverid = $1 AND userid = $2 AND timestamp < endtime;''', [server.id, user.id])
+            except Exception:
+                serverData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [data['serverid']])
+                try:
+                    server = self.bot.get_guild(data['serverid'])
+                    user = await self.bot.fetch_user(data['userid'])
+                    channel = self.bot.get_channel(serverData['managerchannelid'])
+                    await channel.send(f'I am unable to lift the ban for <@{data["userid"]}> (userID: {data["userid"]})')
+                    await SQLfunctions.databaseExecuteDynamic('''UPDATE modlogs SET name = 'Expired Ban' WHERE name = 'Ban' AND endtime < now() AND serverid = $1 AND userid = $2 AND timestamp < endtime;''',[server.id, user.id])
+                except Exception:
+                    pass
+
+
+
+
+
+
     @commands.command(name="setupmoderationdatabase", description="Setup the moderation database")
     async def setupmoderationdatabase(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
+        if ctx.author.id != self.bot.owner_id:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS modlogs;''')
@@ -78,6 +116,20 @@ class serverFunctions(commands.Cog):
             await SQLfunctions.databaseExecuteDynamic('''DELETE FROM modlogs WHERE userid = $1 AND serverid = $2 AND description = $3 AND timestamp = $4;''', [user.id, ctx.guild.id, warnChoice, warnData[warnChoice]])
             await ctx.send("Done!")
 
+    @commands.has_permissions(ban_members=True)
+    @commands.hybrid_command(name="note", description="Leave a mod-visible note about a user")
+    async def note(self, ctx: commands.Context, user: discord.Member, reason: str):
+        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT name, description, points FROM modrules WHERE serverid = $1;''', [ctx.guild.id])
+        dataOut = []
+        for rule in data:
+            dataOut.append(f'{rule["name"]} - {rule["description"]}')
+        await ctx.send("Select the applicable rule violation")
+        ruleName = "Staff note"
+        points = 0
+        # serverid BIGINT, userid BIGINT, moderatorid BIGINT, name VARCHAR, description VARCHAR, points INT, timestamp TIMESTAMP, endtime TIMESTAMP, type VARCHAR
+        logValues = [random.randint(1, 123456789), ctx.guild.id, user.id, ctx.author.id, ruleName, reason, points, datetime.datetime.now(), datetime.datetime.now(), "warning"]
+        await SQLfunctions.databaseExecuteDynamic('''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);''', logValues)
+        await ctx.send(f'Note logged for **{user.name}**.')
 
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="warn", description="Issue a warning")
@@ -85,7 +137,6 @@ class serverFunctions(commands.Cog):
         data = await SQLfunctions.databaseFetchdictDynamic('''SELECT name, description, points FROM modrules WHERE serverid = $1;''', [ctx.guild.id])
         dataOut = []
         for rule in data:
-            print(rule)
             dataOut.append(f'{rule["name"]} - {rule["description"]}')
         await ctx.send("Select the applicable rule violation")
         ruleName = await discordUIfunctions.getButtonChoice(ctx, dataOut)
@@ -99,11 +150,19 @@ class serverFunctions(commands.Cog):
             await user.send(messageDM)
         except Exception:
             await ctx.send("Failed to notify the user; they likely have Sprocket Bot blocked.")
-        await ctx.send(f'Warning issued to **{user.name}**.')
+        await ctx.send(f'Warning issued to **{user.name}**.\n')
+        points_total = points
+        for rule in data:
+            points_total += int(rule["points"])
+        await ctx.send(f"Total points: {points_total}")
 
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="ban", type="ban", description="Ban a user")
     async def ban(self, ctx: commands.Context, user: discord.Member, reason: str, days: int):
+        try:
+            print(user.name)
+        except Exception as e:
+            await ctx.send(f'Sprocket Bot could not ban this user: \n{e}')
         serverData = await adminFunctions.getServerConfig(ctx)
         ruleName = "Ban"
         points = 0
@@ -114,11 +173,13 @@ class serverFunctions(commands.Cog):
         try:
             messageDM = f"You have been banned from **{ctx.guild.name}**\nReason: {reason}\nDuration: {days}\n{serverData['banmessage']}"
             await user.send(messageDM)
-            await user.ban(reason=f"Banned by {ctx.author.name} - {reason}")
         except Exception:
             await ctx.send("Failed to notify the user; they likely have Sprocket Bot blocked.")
+        try:
             await user.ban(reason=f"Banned by {ctx.author.name} - {reason}")
-        await ctx.send(f'Ban issued to **{user.name}**.')
+            await ctx.send(f'Ban issued to **{user.name}**.')
+        except Exception as e:
+            await ctx.send(f'Sprocket Bot could not ban this user: \n{e}')
 
     @app_commands.command(name="roll", description="🎲 roll a dice")
     async def roll(self, interaction):
@@ -220,7 +281,7 @@ class serverFunctions(commands.Cog):
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
         if not ctx.message.author.guild_permissions.administrator:
-            if ctx.author.id == main.ownerID:
+            if ctx.author.id == self.bot.owner_id:
                 await ctx.send("You are the bot owner.  Override the restriction against your server permissions?")
                 answer = await discordUIfunctions.getYesNoChoice(ctx)
                 if not answer:
