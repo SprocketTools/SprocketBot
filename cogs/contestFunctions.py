@@ -4,7 +4,7 @@ from discord import app_commands
 import json, asyncio
 from pathlib import Path
 from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
+from main import SQLfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.blueprintFunctions import blueprintFunctions
 from cogs.discordUIfunctions import discordUIfunctions

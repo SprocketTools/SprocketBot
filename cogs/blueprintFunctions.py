@@ -8,7 +8,7 @@ from cogs.errorFunctions import errorFunctions
 
 from cogs.textTools import textTools
 from PIL import Image, ImageChops
-from cogs.SQLfunctions import SQLfunctions
+from main import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 
 class blueprintFunctions(commands.Cog):

@@ -10,7 +10,7 @@ from cogs.discordUIfunctions import discordUIfunctions
 from pathlib import Path
 from PIL import Image, ImageChops
 from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
+from main import SQLfunctions
 imageCategoryList = ["chalk inscriptions", "inscriptions", "labels", "letters", "memes", "numbers", "optics", "welding", "textures", "weathering"]
 
 if platform.system() == "Windows":

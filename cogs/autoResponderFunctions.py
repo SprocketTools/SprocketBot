@@ -1,7 +1,7 @@
 import discord, asyncio
 from discord.ext import commands
 from discord import app_commands
-from cogs.SQLfunctions import SQLfunctions
+from main import SQLfunctions
 from cogs.textTools import textTools
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions

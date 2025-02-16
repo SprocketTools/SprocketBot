@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.ui import view
 
 
-from cogs.SQLfunctions import SQLfunctions
+
 from cogs.discordUIfunctions import discordUIfunctions
 
 
@@ -51,12 +51,12 @@ class errorFunctions(commands.Cog):
     @commands.command(name="getError", description="higdffffffffffff")
     async def getError(self, ctx: commands.Context):
         ttsp = False
-        if ctx.author.id == self.bot.ownerID or ctx.author.guild_permissions.administrator == True:
+        if ctx.author.id == self.bot.owner_id or ctx.author.guild_permissions.administrator == True:
             await ctx.message.delete()
         else:
             serverID = (ctx.guild.id)
             try:
-                channel = int(await SQLfunctions.databaseFetchDynamic(f'SELECT commandschannelid FROM serverconfig WHERE serverid = $1', [serverID])['commandschannelid'])
+                channel = int(await databaseFetchDynamic(f'SELECT commandschannelid FROM serverconfig WHERE serverid = $1', [serverID])['commandschannelid'])
                 if ctx.channel.id != channel:
                     await ctx.send(f"This command is restricted to <#{channel}>")
                     return
