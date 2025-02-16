@@ -5,7 +5,7 @@ from datetime import datetime
 import discord, time
 from discord.ext import commands
 
-from cogs.SQLfunctions import SQLfunctions
+from main import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
@@ -323,5 +323,6 @@ async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignFunctions(bot))
 
 def updateCampaignsAtStartup():
-    campaignFunctions.campaignSettings = SQLfunctions.databaseFetchdict(f'''SELECT * FROM campaigns''')
-    campaignFunctions.campaignServers = SQLfunctions.databaseFetchdict(f'''SELECT * FROM campaignservers''')
+    pass
+    # campaignFunctions.campaignSettings = SQLfunctions.databaseFetchdict(f'''SELECT * FROM campaigns''')
+    # campaignFunctions.campaignServers = SQLfunctions.databaseFetchdict(f'''SELECT * FROM campaignservers''')

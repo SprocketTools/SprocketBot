@@ -16,7 +16,7 @@ from discord.ext import tasks
 
 
 from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
+from main import SQLfunctions
 from cogs.blueprintFunctions import blueprintFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from discord import app_commands
@@ -89,6 +89,7 @@ class adminFunctions(commands.Cog):
 
     # @commands.event
     # async def on_command_error(ctx, error):
+    #     print(error)
     #     if isinstance(error, commands.MissingRequiredArgument):
     #         await ctx.send('Missing required argument.')
     #     elif isinstance(error, commands.CommandNotFound):
@@ -399,37 +400,33 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="viewServerConfig", description="View my server configurations")
     async def viewServerConfig(self, ctx: commands.Context):
-
         if ctx.author.guild_permissions.administrator == False and ctx.author.id != self.bot.owner_id:
             await ctx.send(await errorFunctions.retrieveError(ctx))
-
-
         else:
-            print("hi")
-            try:
-                serverData = [dict(row) for row in await ctx.bot.pool.execute(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
-                description = f'''
-                General chat:         <#{serverData['updateschannelid']}>
-                Bot commands chat:    <#{serverData['commandschannelid']}>
-                Server managers chat: <#{serverData['managerchannelid']}>
-                
-                Server booster role:   {ctx.guild.get_role(int(serverData['serverboosterroleid']))}
-                Contest managers role: {ctx.guild.get_role(int(serverData['contestmanagerroleid']))}
-                Bot manager role:      {ctx.guild.get_role(int(serverData['botmanagerroleid']))}
-                Campaign manager role: {ctx.guild.get_role(int(serverData['campaignmanagerroleid']))}
-                Music player role: {ctx.guild.get_role(int(serverData['musicroleid']))}
-                
-                Allow the bot to try and be funny: {serverData['allowfunny']}
-                '''
-                embed = discord.Embed(title=f"Server Config: {ctx.guild.name}",
-                                      description=description,
-                                      color=discord.Color.random())
-                embed.set_thumbnail(url=ctx.guild.icon)
-                await ctx.send(embed=embed)
-            except Exception:
-                print("hi")
-                await ctx.send(await errorFunctions.retrieveError(ctx))
-                await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
+            serverData = [dict(row) for row in await ctx.bot.pool.fetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+            print(serverData)
+            description = f'''
+            General chat:         <#{serverData['updateschannelid']}>
+            Bot commands chat:    <#{serverData['commandschannelid']}>
+            Server managers chat: <#{serverData['managerchannelid']}>
+            
+            Server booster role:   {ctx.guild.get_role(int(serverData['serverboosterroleid']))}
+            Contest managers role: {ctx.guild.get_role(int(serverData['contestmanagerroleid']))}
+            Bot manager role:      {ctx.guild.get_role(int(serverData['botmanagerroleid']))}
+            Campaign manager role: {ctx.guild.get_role(int(serverData['campaignmanagerroleid']))}
+            Music player role: {ctx.guild.get_role(int(serverData['musicroleid']))}
+            
+            Allow the bot to try and be funny: {serverData['allowfunny']}
+            '''
+            embed = discord.Embed(title=f"Server Config: {ctx.guild.name}",
+                                  description=description,
+                                  color=discord.Color.random())
+            embed.set_thumbnail(url=ctx.guild.icon)
+            await ctx.send(embed=embed)
+            # except Exception:
+            #     print("hi")
+            #     await ctx.send(await errorFunctions.retrieveError(ctx))
+            #     await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
 
     @commands.command(name="setSlowmode", description="Set a slowmode.")
     async def setSlowmode(self, ctx: commands.Context, duration: int):

@@ -10,7 +10,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from cogs.SQLfunctions import SQLfunctions
+
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools

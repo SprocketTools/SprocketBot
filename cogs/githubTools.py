@@ -11,7 +11,7 @@ from git import Repo
 from PIL import Image, ImageChops
 
 from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
+from main import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 imageCategoryList = ["Featured", "Chalk", "Fictional Insignia", "Historical Insignia", "Inscriptions", "Labels", "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures", "Weathering", "Welding"]
 GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
@@ -181,7 +181,7 @@ class githubTools(commands.Cog):
             return
         try:
             while True:
-                decalInfo = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
+                decalInfo = [dict(row) for row in await ctx.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{decalInfo['strippedname']}"
                 imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{decalInfo['strippedname']}"
                 await ctx.send(file=discord.File(imageCatalogFilepath))

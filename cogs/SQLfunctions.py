@@ -1,48 +1,37 @@
+import asyncpg, asyncio
 import discord
 from discord.ext import commands
 from discord import app_commands
-#from main import SQLsettings
-import asyncpg
+class SQLfunctions(commands.Cog):
 
-class SQLfunctions():
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.pool = asyncpg.create_pool(**SQLsettings, command_timeout=60)
 
-    async def databaseExecute(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
-            return await connection.execute(prompt)
+    async def databaseExecute(self, prompt: str):
+        async with self.pool.acquire() as connection:
+            return connection.execute(prompt)
 
-    async def databaseExecuteDynamic(prompt: str, values: list):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseExecute2(self, prompt: str):
+        async with self.bot as connection:
+            return connection.execute(prompt)
+
+    async def databaseExecuteDynamic(self, prompt: str, values: list):
+        async with self.bot.pool.acquire() as connection:
             return await connection.execute(prompt, *values)
 
     async def databaseFetch(self, prompt: str):
-        async with self.pool.acquire() as connection:
+        async with self.bot.pool.acquire() as connection:
             return await connection.fetch(prompt)
 
-    async def databaseFetchFast(prompt: str):
+    async def databaseFetchDynamic(self, prompt: str, values: list):
         import main
-        async with main.bot.pool.acquire() as connection:
-            return await connection.fetch(prompt)
-
-    async def databaseMultiFetch(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
-            await connection.execute(prompt)
-            await connection.execute(prompt)
-            await connection.execute(prompt)
-            await connection.execute(prompt)
-            return await connection.execute(prompt)
-
-    async def databaseFetchDynamic(prompt: str, values: list):
-        import main
-        async with main.bot.pool.acquire() as connection:
+        async with self.bot.pool.acquire() as connection:
             return await connection.fetch(prompt, *values)
 
-    async def databaseFetchdict(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
-            return [dict(row) for row in await connection.fetch(prompt)]
+    async def databaseFetchdict(self, prompt: str):
+        async with self.pool.acquire() as connection:
+            return [dict(row) for row in connection.fetch(prompt)]
 
     async def databaseFetchrow(prompt: str):
         import main
@@ -72,6 +61,10 @@ class SQLfunctions():
         import main
         async with main.bot.pool.acquire() as connection:
             return [dict(row) for row in await connection.fetch(prompt, *values)][0]
+
+async def setup(bot:commands.Bot) -> None:
+    await bot.add_cog(SQLfunctions(bot))
+
 #
 #     @commands.command(name="adminExecute", description="register a contest")
 #     async def adminExecute(self, ctx: commands.Context, *, prompt):
@@ -118,7 +111,6 @@ class SQLfunctions():
 #         await ctx.send(await SQLfunctions.databaseFetchrow(f'''SELECT * FROM altertest'''))
 #         await ctx.send(await SQLfunctions.databaseFetchlist(f'''SELECT * FROM altertest'''))
 #
-# async def setup(bot:commands.Bot) -> None:
-#   await bot.add_cog(SQLfunctions(bot))
+
 
 
