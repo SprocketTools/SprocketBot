@@ -62,7 +62,9 @@ class textTools(commands.Cog):
         if action == "delete":
             await promptMsg.delete()
             await msg.delete()
-        return await textTools.mild_sanitize(msg.content)
+        if action != "raw":
+            return await textTools.mild_sanitize(msg.content)
+        return msg.content
 
     async def sendThenDelete(ctx: commands.Context, prompt):
         message = await ctx.reply(prompt)

@@ -8,6 +8,7 @@ import discord
 import pandas as pd
 from discord.ext import commands
 
+import main
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 updateFrequency = 60
@@ -59,7 +60,7 @@ class serverFunctions(commands.Cog):
 
     @commands.command(name="setupmoderationdatabase", description="Setup the moderation database")
     async def setupmoderationdatabase(self, ctx: commands.Context):
-        if ctx.author.id != self.bot.owner_id:
+        if ctx.author.id != main.ownerID:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS modlogs;''')
@@ -281,7 +282,7 @@ class serverFunctions(commands.Cog):
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
         if not ctx.message.author.guild_permissions.administrator:
-            if ctx.author.id == self.bot.owner_id:
+            if ctx.author.id == main.ownerID:
                 await ctx.send("You are the bot owner.  Override the restriction against your server permissions?")
                 answer = await discordUIfunctions.getYesNoChoice(ctx)
                 if not answer:

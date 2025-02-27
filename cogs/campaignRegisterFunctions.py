@@ -13,7 +13,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-
+import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -26,7 +26,7 @@ class campaignRegisterFunctions(commands.Cog):
 
     @commands.command(name="generateCampaignKey", description="generate a key that can be used to initiate a campaign")
     async def generateCampaignKey(self, ctx: commands.Context):
-        if ctx.author.id != self.bot.owner_id:
+        if ctx.author.id != main.ownerID:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you are the bot owner and try again.")
@@ -38,12 +38,12 @@ class campaignRegisterFunctions(commands.Cog):
 
     @commands.command(name="setupCampaignDatabase", description="generate a key that can be used to initiate a campaign")
     async def setupCampaignDatabase(self, ctx: commands.Context):
-        if ctx.author.id != self.bot.owner_id:
+        if ctx.author.id != main.ownerID:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaigns (campaignname VARCHAR, campaignrules VARCHAR(50000), hostserverid BIGINT, campaignkey BIGINT, timescale BIGINT, currencyname VARCHAR, currencysymbol VARCHAR, publiclogchannelid BIGINT, privatemoneychannelid BIGINT, defaultgdpgrowth REAL, defaultpopgrowth REAL, populationperkm INT, taxestoplayer REAL, poptoworkerratio REAL, active BOOLEAN, timedate TIMESTAMP, lastupdated TIMESTAMP);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, lifeexpectancy REAL, educationindex REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL, espionagespend REAL, espionagestaff INT, corespending BIGINT);''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, lifeexpectancy REAL, educationindex REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL, espionagespend REAL, espionagestaff INT, povertyrate REAL, latitude INT, infrastructureindex REAL, defensespend REAL, corespend REAL, educationspend REAL);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignautopurchases (campaignkey BIGINT, factionkey BIGINT, userid BIGINT, name VARCHAR, amount BIGINT, lastupdated TIMESTAMP, monthfrequency INT, status BOOLEAN);''')
         await ctx.send("## Done!")
@@ -66,7 +66,7 @@ class campaignRegisterFunctions(commands.Cog):
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
             return
-        if ctx.author.id == self.bot.owner_id:
+        if ctx.author.id == main.ownerID:
             await ctx.send("The current registration key is " + str(self.activeRegistKey))
             userKey = int(self.activeRegistKey)
         else:
@@ -225,7 +225,7 @@ class campaignRegisterFunctions(commands.Cog):
             # await ctx.send(f"Command has stopped:\n\n{e}")
 
 
-
+        await ctx.send("Starting processing...")
         datalist = [campaignKey,
                     factionkey,
                     landlordid,
@@ -241,24 +241,30 @@ class campaignRegisterFunctions(commands.Cog):
                     population, #population
                     land, #landsize
                     governanceScale, #governance
-                    round(0.70/governanceScale, 3), #happiness
-                    round((0.15*governanceScale), 3), #taxpoor
-                    round((0.10*governanceScale), 3), #taxrich
+                    round(0.8, 3), #happiness
+                    round((0.15*governanceScale + 0.2), 3), #taxpoor
+                    round((0.20*governanceScale + 0.2), 3), #taxrich
                     int(population/popworkerratio * (salary)), #gdp
                     campaignData["defaultgdpgrowth"], #gdpgrowth
                     round(70/governanceScale, 3), #lifeexpectency
                     0.9, #educationindex
                     0.05, #socialspend
-                    0.05, #infastructurespend
+                    0.05, #infrastructurespend
                     salary, #averagesalary
                     popworkerratio, #pop to worker ratio
                     0.01, #espionagespend
-                    0, #espionagestaff
-                    0 #corespend
+                    0, #staff
+                    0, #povertyrate
+                    round(latitude), #latitude
+                    0, #infrastructureindex
+                    0, #defense spending
+                    0, #corespend
+                    0.05 #educationspend
                     ]
+        print(len(datalist))
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, factionName])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34)''', datalist)
         nameTest = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
         if len(nameTest) > 1:
             await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2 AND factionkey = $3;''',[ctx.guild.id, factionName, factionkey])

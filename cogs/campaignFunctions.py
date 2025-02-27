@@ -5,6 +5,7 @@ from datetime import datetime
 import discord, time
 from discord.ext import commands
 
+import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
@@ -39,6 +40,8 @@ class campaignFunctions(commands.Cog):
             embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
             embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
             embed.add_field(name="Starting pop/worker ratio", value=f"{data['poptoworkerratio']}", inline=False)
+            embed.add_field(name="Cost of one ton of steel", value=f"{data['currencysymbol']}{data['steelcost']}", inline=False)
+            embed.add_field(name="Cost of barrel of oil", value=f"{data['currencysymbol']}{data['energycost']}",inline=False)
             if data['active'] == True:
                 embed.add_field(name="Current status", value=f"**Campaign is running**", inline=False)
             if data['active'] == False:
@@ -79,7 +82,7 @@ class campaignFunctions(commands.Cog):
         originName = factionData["factionname"]
         isVulnerable = False
         isIntercepted = False
-        if factionData["espionagestaff"] > 10 or ctx.author.id == self.bot.owner_id:
+        if factionData["espionagestaff"] > 10 or ctx.author.id == main.ownerID:
             messagetype = await discordUIfunctions.getButtonChoice(ctx, ["Send a diplomatic message", "Try to impersonate another country"])
             if messagetype == "Try to impersonate another country":
                 espionageStaff = factionData['espionagestaff']
@@ -159,18 +162,41 @@ class campaignFunctions(commands.Cog):
         options = ["Direct Democracy", "Multi Party System", "Two Party System", "Constitutional Monarchy", "Single Party System", "Appointed Successor"]
         prompt = "Pick a type of government."
         answer = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
-        if answer == "Direct Democracy":
-            return 0.8
+        if answer == "Open Council":
+            return -1
+        if answer == "Coalition Party System":
+            return -0.6
         if answer == "Multi Party System":
-            return 0.9
+            return -0.2
         if answer == "Two Party System":
-            return 1.0
-        if answer == "Constitutional Monarchy":
-            return 1.0
+            return 0.0
+        if answer == "Dominant Party System":
+            return 0.2
         if answer == "Single Party System":
-            return 1.1
+            return 0.6
         if answer == "Appointed Successor":
-            return 1.2
+            return 1.0
+        else:
+            return 0.0
+
+    async def getGovernmentName(answerIn: float):
+        answer = round(answerIn, 3)
+        if answer == -1:
+            return "Open Council"
+        if answer == -0.6:
+            return "Coalition Party System"
+        if answer == -0.2:
+            return "Multi Party System"
+        if answer == 0:
+            return "Two Party System"
+        if answer == 0.2:
+            return "Dominant Party System"
+        if answer == 0.6:
+            return "Single Party System"
+        if answer == 1.0:
+            return "Appointed Successor"
+        else:
+            return "Error"
 
     async def getTime(date_string: str):
         format_string = "%Y-%m-%d %H:%M:%S"
@@ -180,23 +206,6 @@ class campaignFunctions(commands.Cog):
         min = dt.strftime("%M %p")
         day = dt.strftime("%A %B %d")
         return f"{hour}:{min} on {day}, {dt.year}"
-
-    async def getGovernmentName(answerIn: float):
-        answer = round(answerIn, 3)
-        if answer == 0.8:
-            return "Direct Democracy"
-        if answer == 0.9:
-            return "Multi Party System"
-        if answer == 1.0:
-            return "Two Party System"
-        if answer == 1.05:
-            return "Constitutional Monarchy"
-        if answer == 1.1:
-            return "Single Party System"
-        if answer == 1.2:
-            return "Appointed Successor"
-        else:
-            return "Error"
 
     async def getFarmingLatitudeScalar(latitudeI: float):
         latitude = abs(latitudeI)
@@ -212,13 +221,16 @@ class campaignFunctions(commands.Cog):
     @commands.command(name="farmingTest", description="Ask Hamish a question.")
     async def farmingTest(self, ctx: commands.Context, latitude: float):
         await ctx.send(str(await campaignFunctions.getFarmingLatitudeScalar(latitude)))
-    async def showStats(ctx: commands.Context, variablesList):
+
+    async def showStats(ctx: commands.Context, variablesList, displayType = None):
+        if not displayType:
+            displayType = "general"
         campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
-        print(campaignInfoList)
+
         date_string = str(campaignInfoList['timedate'])
         format_string = "%Y-%m-%d %H:%M:%S"
         dt = datetime.strptime(date_string, format_string)
-        print(dt.year)
+        print(displayType)
         hour = dt.strftime("%I")
         min = dt.strftime("%M %p")
         day = dt.strftime("%A %B %d")
@@ -226,15 +238,28 @@ class campaignFunctions(commands.Cog):
         embed.add_field(name="Operational", value=str(variablesList["hostactive"]), inline=False)
         embed.add_field(name="Updates channel", value=f'<#{variablesList["logchannel"]}>', inline=False)
         embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
-        if variablesList["iscountry"] == True:
+        if variablesList["iscountry"] == True and displayType == "general":
             embed.add_field(name="Land", value="{:,}".format(int(variablesList["landsize"])) + " km²",inline=False)
             embed.add_field(name="Population size", value=("{:,}".format(int(variablesList["population"]))),inline=False)
             embed.add_field(name="Government type", value=await campaignFunctions.getGovernmentName(variablesList["governance"]), inline=False)
-            embed.add_field(name="Median salary", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["averagesalary"]))), inline=False)
             embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
+        elif variablesList["iscountry"] == True and displayType == "operations":
             embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 1)) + "%", inline=False)
+            embed.add_field(name="Poverty rate", value=str(round(float(variablesList["povertyrate"]) * 100, 1)) + "%",inline=False)
             embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
             embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 1)) + "%", inline=False)
+            embed.add_field(name="Infrastructure index", value=str(round(float(variablesList["infrastructureindex"]) * 100, 1)) + "%", inline=False)
+            embed.add_field(name="Core government spending", value=str(round(float(variablesList["corespend"]) * 100, 1)) + "% of tax income", inline=False)
+            embed.add_field(name="Infrastructure spending", value=str(round(float(variablesList["infrastructurespend"]) * 100, 1)) + "% of tax income", inline=False)
+            embed.add_field(name="Defense spending (your money)", value=str(round(float(variablesList["defensespend"]) * 100, 1)) + "% of tax income", inline=False)
+            embed.add_field(name="Espionage funding", value=str(round(float(variablesList["espionagespend"]) * 100, 2)) + "% of discretionary funds", inline=False)
+            embed.add_field(name="Spy agency staff", value=str(variablesList["espionagestaff"]) + " employees",inline=False)
+            embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of tax income", inline=False)
+        elif variablesList["iscountry"] == True and displayType == "payments":
+            embed.add_field(name="Median salary", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["averagesalary"]))), inline=False)
+            embed.add_field(name="GDP growth",value=str(round(float(variablesList["gdpgrowth"]) * 100, 1)) + "%",inline=False)
+            embed.add_field(name="Poor tax", value=str(round(float(variablesList["taxpoor"]) * 100, 1)) + "%", inline=False)
+            embed.add_field(name="Rich tax", value=str(round(float(variablesList["taxrich"]) * 100, 1)) + "%", inline=False)
         else:
             embed.add_field(name="Country of origin",value=await campaignFunctions.getFactionName(variablesList["landlordfactionkey"]), inline=False)
         embed.set_footer(text=f"\nIt is {hour}:{min} on {day}, {dt.year}")
@@ -262,6 +287,8 @@ class campaignFunctions(commands.Cog):
         embed.add_field(name="Rich tax rate", value=f"{round(float(variablesList['taxrich']) * 100, 3)} %", inline=False)
         embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
         embed.add_field(name="Average salary", value=campaignInfoList["currencysymbol"] + str(round(float(variablesList["averagesalary"]), 1)) + " " + campaignInfoList["currencyname"],inline=False)
+        embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
+        embed.add_field(name="Educational funding boost", value=str(round(float(variablesList["educationspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Infrastructure investments", value=str(round(float(variablesList["infrastructurespend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Espionage funding",value=str(round(float(variablesList["espionagespend"]) * 100, 2)) + "% of discretionary funds", inline=False)

@@ -3,6 +3,7 @@ import pandas as pd
 from discord.ext import commands
 from typing import List
 
+import main
 from cogs.campaignFunctions import campaignFunctions
 from cogs.campaignUpdateFunctions import campaignUpdateFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -20,7 +21,7 @@ class campaignManageFunctions(commands.Cog):
     @commands.command(name="manageCampaign", description="Add money to a faction")
     async def manageCampaign(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
-            if ctx.author.id == self.bot.owner_id:
+            if ctx.author.id == main.ownerID:
                 await ctx.send(
                     "You do not have permission to perform this action.  Proceed forward and override this?")
                 answer = await discordUIfunctions.getYesNoChoice(ctx)
@@ -33,7 +34,7 @@ class campaignManageFunctions(commands.Cog):
             key = await campaignFunctions.getCampaignKey(ctx)
             embedOut = await campaignFunctions.showSettings(ctx)
             promptOut = await ctx.send("What statistic do you wish to modify?")
-            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit"]))
+            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Energy cost", "Steel cost", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit", "Transfer Campaign Ownership"]))
             name_adj = ""
             if answer == "exit" or i > 1:
                 await ctx.send("Alright, have fun.")
@@ -65,9 +66,19 @@ class campaignManageFunctions(commands.Cog):
             elif answer == "transaction logs channel":
                 name_adj = await textTools.getChannelResponse(ctx, "What is your new transaction logging channel?")
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET privatemoneychannelid = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "energy cost":
+                name_adj = await textTools.getFlooredFloatResponse(ctx, "What is the new cost of a barrel of oil?\nWarning: this value should only be changed if you know what you're doing.  Changing this value without changing the steel cost can lead to major economic changes.", 1)
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET energycost = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "steel cost":
+                name_adj = await textTools.getFlooredFloatResponse(ctx, '''What is the new cost of a metric ton of steel?\nNote: this acts as the base "price" that rearranges the value of everything.  Be aware that ripple effects will occur throughout the entire system if this is adjusted.''', 2)
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET steelcost = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "announcement channel":
                 name_adj = await textTools.getChannelResponse(ctx, "What is your new channel for automated campaign update announcements?")
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET publiclogchannelid = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "transfer campaign ownership":
+                name_adj = await textTools.getIntResponse(ctx,"What is your new server ID?")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET hostserverid = $1 WHERE campaignkey = $2;''', [name_adj, key])
+                await ctx.send("Done!  Move to your new server to continue.")
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
                 i += 1
@@ -89,14 +100,21 @@ class campaignManageFunctions(commands.Cog):
             key = data["factionkey"]
         print(data)
         continue_val = True
+        displayType = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
         while continue_val:
             data = await campaignFunctions.getFactionData(key)
-            embedOut = await campaignFunctions.showStats(ctx, data)
+            embedOut = await campaignFunctions.showStats(ctx, data, displayType)
             promptOut = await ctx.send("What statistic do you wish to modify?")
             if data['iscountry'] == False:
                 inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Move your company to a new country", "Delete faction", "Exit"]
             else:
-                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Median salary", "Population", "GDP", "Espionage funding", "Delete faction", "Exit"]
+                if displayType == "general":
+                    inList = ["Name", "Description", "Flag", "Discretionary funds", "Land", "Government type", "Updates channel", "Population","GDP", "Delete faction", "Switch category", "Exit"]
+                if displayType == "operations":
+                    inList = ["Median salary", "Espionage funding", "Defense spending", "Infrastructure funding", "Switch category", "Exit"]
+                if displayType == "payments":
+                    inList = ["Discretionary funds", "Median salary", "GDP", "Poor tax", "Rich tax", "Switch category", "Exit"]
+
             answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, inList))
             print(answer)
             if answer == "exit":
@@ -115,6 +133,12 @@ class campaignManageFunctions(commands.Cog):
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = $1 * popworkerratio / population WHERE factionkey = $2;''',[salary_adj, key])
                 cog = self.bot.get_cog('campaignUpdateFunctions')
                 await cog.softUpdate()
+            elif answer == "land":
+                name_adj = await textTools.getFlooredIntResponse(ctx, "What is your new land size?  Reply with a number.", 1)
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landsize = $1 WHERE factionkey = $2;''',[name_adj, key])
+            elif answer == "government type":
+                name_adj = await campaignFunctions.getGovernmentType(ctx)
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET governance = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "name":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new name of the faction?", 64)
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET factionname = $1 WHERE factionkey = $2;''',[name_adj, key])
@@ -142,6 +166,18 @@ class campaignManageFunctions(commands.Cog):
             elif answer == "espionage funding":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards espionage funding?")
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET espionagespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+            elif answer == "infrastructure funding":
+                name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards infrastructure funding?")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET infrastructurespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+            elif answer == "defense spending":
+                name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards defense funding?")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET defensespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+            elif answer == "poor tax":
+                name_adj = await textTools.getPercentResponse(ctx, "What percentage do you want to set your poor tax rate to?  This is the taxation rate that generates most of your income.")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxpoor = $1 WHERE factionkey = $2;''',[name_adj, key])
+            elif answer == "rich tax":
+                name_adj = await textTools.getPercentResponse(ctx, "What percentage do you want to set your rich tax to?  This is the taxation rate that applies to companies and rich people.")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxrich = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "delete faction":
                 if await campaignFunctions.isCampaignHost(ctx) == False:
                     await errorFunctions.sendError(ctx)
@@ -158,6 +194,8 @@ class campaignManageFunctions(commands.Cog):
                     await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM campaignusers WHERE factionkey = $1;''',[key])
                     await ctx.send("## Done!")
                     return
+            elif answer == "switch category":
+                displayType = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
                 return
@@ -187,7 +225,7 @@ class campaignManageFunctions(commands.Cog):
                 return
             await ctx.send("Download this file and edit it in a spreadsheet editor.  When you're done, save it as a .csv and run the command again.")
             data = await SQLfunctions.databaseFetchdictDynamic(
-                '''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio,  FROM campaignfactions where campaignkey = $1;''',
+                '''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''',
                 [await campaignFunctions.getCampaignKey(ctx)])
             # credits: brave AI
             df = pd.DataFrame(data)

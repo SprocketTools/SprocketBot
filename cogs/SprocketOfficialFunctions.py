@@ -4,6 +4,7 @@ import random
 import discord
 from discord.ext import commands
 
+import main
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 class SprocketOfficialFunctions(commands.Cog):
@@ -40,7 +41,7 @@ class SprocketOfficialFunctions(commands.Cog):
         role = ctx.author.roles
 
 
-        if self.bot.mode == "development":
+        if main.botMode == "development":
             channel = self.bot.get_channel(1142053423370481747)
         else:
             channel = self.bot.get_channel(788410377268363264)
@@ -109,7 +110,7 @@ class SprocketOfficialFunctions(commands.Cog):
             embed.set_footer(text=f"Question by {userName}", icon_url=avatarURL)
             sent_message = await channel.send(embed=embed, content=messageOut)
             await sent_message.create_thread(name=f"Question by {userName}", auto_archive_duration=10080, reason=f"{ctx.author.name} asked for it.")
-            if self.bot.mode != "development":
+            if main.botMode != "development":
                 await sent_message.add_reaction(":plus1:881246627510239323")
                 await sent_message.add_reaction(":minus1:881246627770282015")
             for attachment in msg.attachments:

@@ -16,8 +16,9 @@ class SQLfunctions():
         async with main.bot.pool.acquire() as connection:
             return await connection.execute(prompt, *values)
 
-    async def databaseFetch(self, prompt: str):
-        async with self.pool.acquire() as connection:
+    async def databaseFetch(prompt: str):
+        import main
+        async with main.bot.pool.acquire() as connection:
             return await connection.fetch(prompt)
 
     async def databaseFetchFast(prompt: str):

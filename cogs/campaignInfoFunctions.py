@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-
+import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -123,7 +123,7 @@ class campaignInfoFunctions(commands.Cog):
     @commands.command(name="viewStats", description="View the statistics of your faction")
     async def viewStats(self, ctx: commands.Context):
         variablesList = await campaignFunctions.getUserFactionData(ctx)
-        await campaignFunctions.showStats(ctx, variablesList)
+        await campaignFunctions.showStats(ctx, variablesList, await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
 
     @commands.command(name="viewTime", description="View the statistics of your faction")
     async def viewTime(self, ctx: commands.Context):
@@ -161,6 +161,7 @@ class campaignInfoFunctions(commands.Cog):
             embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 1)) + "%", inline=False)
             embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
             embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
+            embed.add_field(name="Infrastructure index", value=str(round(float(variablesList["infrastructureindex"]) * 100, 1)) + "%", inline=False)
             embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 1)) + "%", inline=False)
             embed.add_field(name="Espionage funding", value=str(round(float(variablesList["espionagespend"]) * 100, 1)) + "% of GDP", inline=False)
             embed.add_field(name="Spy agency staff", value=str(variablesList["espionagestaff"]) + " employees", inline=False)

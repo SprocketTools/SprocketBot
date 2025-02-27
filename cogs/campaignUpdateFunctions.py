@@ -10,6 +10,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -37,7 +38,7 @@ class campaignUpdateFunctions(commands.Cog):
     @tasks.loop(seconds=updateFrequency)
     async def loopUpdate(self):
         current_time = int(datetime.now().timestamp())
-        last_time = int(self.bot.config["settings"]['lastupdated'])
+        last_time = int(main.config["settings"]['lastupdated'])
         #print(f'{last_time} --> {current_time}')
         while last_time + (updateFrequency/2) < current_time:
             status_log_channel = self.bot.get_channel(1152377925916688484)
@@ -55,49 +56,78 @@ class campaignUpdateFunctions(commands.Cog):
                 await self.sendBackup()
             else:
                 print("Campaign update triggered")
-            self.bot.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
+            main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
             await status_log_channel.send(f"Campaigns have updated from <t:{last_time}:f> to <t:{last_time + updateFrequency}:f>")
             last_time = last_time + updateFrequency
-        self.bot.config["settings"]['lastupdated'] = str(current_time)
-        with open(self.bot.configurationFilepath, "w") as configfile:
-            self.bot.config.write(configfile)
+        main.config["settings"]['lastupdated'] = str(current_time)
+        with open(main.configurationFilepath, "w") as configfile:
+            main.config.write(configfile)
 
     async def errorPrevention(self):
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE gdp/population < 0 AND iscountry = true AND hostactive = true;''')
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = 0 WHERE gdp/population < 0 AND iscountry = true AND hostactive = true;''')
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET gdp = 0 WHERE gdp < 0 AND iscountry = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0.01 WHERE happiness < 0.01 AND iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET averagesalary = 1 WHERE averagesalary < 1 AND iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET lifeexpectancy = 0.01 WHERE lifeexpectancy < 0.01 AND iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET infrastructureindex = 0.01 WHERE infrastructureindex < 0.01 AND iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET educationindex = 0.01 WHERE educationindex < 0.01 AND iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET gdp = 1 WHERE gdp < 0 AND iscountry = true;''')
     async def updateTime(self):
         await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET timedate = timedate + make_interval(secs => timescale * $1) WHERE active = true AND active = true;''', [updateFrequency])
 
     async def updatePopulation(self):
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET population = population + population * 0.1 * POWER((subquery.populationperkm/population), 0.1) * incomeindex * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale FROM (SELECT timescale, populationperkm FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
+        # data = await SQLfunctions.databaseFetch('''SELECT factionkey FROM campaignfactions;''')
+        # for faction in data:
+        #     print(faction)
+        #     await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions
+        #     SET population = GREATEST(population + ROUND(((CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT)) * population * ((0.5*ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(population) + LN(gdp))) + (1 - 0.3*educationindex) + (4-lifeexpectancy/20) + (0.5*POWER(povertyrate, 0.5) - 0.2)))), 0)
+        #     FROM (SELECT timescale, populationperkm FROM campaigns WHERE campaignkey = campaignkey) AS subquery
+        #     WHERE factionkey = $3 AND iscountry = true;''', [updateFrequency, secondsInYear, int(faction[0])]) #iscountry = true AND hostactive = true
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions 
+        SET population = GREATEST(population + ROUND(((CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT)) * population * ((0.5*ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(population) + LN(gdp))) + (1 - 0.3*educationindex) + (4-lifeexpectancy/20) + (0.5*POWER(povertyrate, 0.5) - 0.2)))), 0)
+        FROM (SELECT timescale, populationperkm FROM campaigns WHERE campaignkey = campaignkey) AS subquery 
+        WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear]) #iscountry = true AND hostactive = true
+
+    async def updatePoverty(self):
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions 
+        SET povertyrate = 2 * ATAN(POWER((subquery.energycost * subquery.steelcost / 7 * popworkerratio)/averagesalary, 2.4))/PI()
+        FROM (SELECT energycost, steelcost FROM campaigns WHERE campaignkey = campaignkey) AS subquery 
+        WHERE iscountry = true AND hostactive = true;''')
 
     async def collectTaxes(self):
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET money = money + (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)) * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale * subquery.taxestoplayer * (1 - espionagespend)) FROM (SELECT timescale, taxestoplayer FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET money = money + (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)) * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale * defensespend) FROM (SELECT timescale FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
 
     async def updateGDP(self):
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = averagesalary + averagesalary * defaultgdpgrowth * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale  FROM (SELECT timescale, defaultgdpgrowth FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
+        await SQLfunctions.databaseExecute(
+            f'''UPDATE campaignfactions 
+            SET gdpgrowth = defaultgdpgrowth + 5*(1 - EXP(-0.6*infrastructureindex + 0.4*taxpoor + 0.1*taxrich + 0.3*povertyrate - 0.5*educationindex)) 
+            FROM (SELECT defaultgdpgrowth FROM campaigns WHERE campaignkey = campaignkey) AS subquery 
+            WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET corespend = (1.0 - (socialspend + infrastructurespend + defensespend)) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = averagesalary + averagesalary * gdpgrowth * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale  FROM (SELECT timescale, defaultgdpgrowth FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET popworkerratio = 4 - 2.5*povertyrate WHERE iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET gdp = population * averagesalary / popworkerratio WHERE iscountry = true AND hostactive = true;''')
 
     async def updateIncome(self):
+        pass
         # await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = CASE WHEN @gdp/population > 20 THEN (1 - (3*(LN((gdp/population) + 182.5)/((gdp/population) + 2)))) ELSE 0 END;''')
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = 1 - 30*(ln((gdp/population)+EXP(1)) / ((gdp/population) + 2))/subquery.poptoworkerratio FROM (SELECT poptoworkerratio FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''')
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = 0.01 WHERE incomeindex < 0 AND iscountry = true AND hostactive = true;''')
+        #await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = 1 - 30*(ln((gdp/population)+EXP(1)) / ((gdp/population) + 2))/subquery.poptoworkerratio FROM (SELECT poptoworkerratio FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''')
+        #await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = 0.01 WHERE incomeindex < 0 AND iscountry = true AND hostactive = true;''')
 
     async def updateEspionage(self):
         # await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET incomeindex = CASE WHEN @gdp/population > 20 THEN (1 - (3*(LN((gdp/population) + 182.5)/((gdp/population) + 2)))) ELSE 0 END;''')
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET espionagestaff = ROUND(((money*espionagespend)/(averagesalary*10) - espionagestaff)*0.1 + espionagestaff) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET espionagestaff = ROUND((((gdp * ((taxrich * 0.25) + (taxpoor * 0.75))) * espionagespend)/(averagesalary*10) - espionagestaff)*0.1 + espionagestaff) WHERE iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET espionagestaff = 0 WHERE espionagestaff < 0 AND iscountry = true AND hostactive = true;''')
 
     async def updateEducation(self):
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET lifeexpectancy = 70/governance WHERE iscountry = true AND hostactive = true;''')
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET educationindex = EXP(-2/(POWER((incomeindex * 2000), 0.4))) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET lifeexpectancy = GREATEST(((50 + 30*(0.2*happiness + 0.3*LN(socialspend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)))/population  + 0.1) + 0.4*infrastructureindex)) - lifeexpectancy) * 0.1 + lifeexpectancy, 0) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET infrastructureindex = GREATEST(((1.6*ATAN(infrastructurespend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)))/population)/PI() + 0.1*governance) - infrastructureindex) * 0.1 + infrastructureindex, 0) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET educationindex = GREATEST(((0.5*LN(socialspend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)))/population + 0.1) + 0.3/(1 + EXP(-0.1*(population/landsize) - 100)) + 0.2*governance) - educationindex) * 0.1 + educationindex, 0) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET socialspend = corespend * (0.5 + governance/2) WHERE iscountry = true AND hostactive = true;''')
 
     async def updateHappiness(self):
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = POWER((incomeindex * (lifeexpectancy-20)/(85-20) * educationindex * (1 - (POWER(100*taxpoor + 8, 2)/(POWER(100*taxpoor + 8, 2) + 1000)))), 0.333) WHERE iscountry = true AND hostactive = true;''')
-        # cleanup for extreme cases, such as falling below zero
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE gdp/population < 0 AND iscountry = true AND hostactive = true;''')
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0 WHERE happiness < 0 AND iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions 
+        SET happiness = LEAST(1, GREATEST( (0.4*LOG(socialspend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75))) / population) + 0.25) / LOG(1.25) + (0.3*(lifeexpectancy/80)) + (0.2*LOG((gdp/population) + 0.25) / LOG(1.25)) + (0.1*((governance + 1) / 2)) - (0.1*(taxpoor*((4 - governance) / 5))), 0))
+        WHERE iscountry = true AND hostactive = true;''')
+
 
     async def sendBackup(self):
         tables = await SQLfunctions.databaseFetchdict('''SELECT table_schema, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema');''')
@@ -112,6 +142,11 @@ class campaignUpdateFunctions(commands.Cog):
             buffer.seek(0)
             channel = self.bot.get_channel(1156854471767367680)
             await channel.send(file=discord.File(buffer, f'{tablename}-{datetime.now()}.csv'))
+
+    @commands.command(name="backup", description="test")
+    async def backup(self, ctx):
+        await self.sendBackup()
+
 
     async def runAutoTransactions(self):
         #print("executing auto transactions")
@@ -232,14 +267,20 @@ class campaignUpdateFunctions(commands.Cog):
     @commands.command(name="forceUpdate", description="test")
     async def forceUpdate(self, ctx: commands.Context):
         current_time = int(datetime.now().timestamp())
-        last_time = int(self.bot.config["settings"]['lastupdated'])
+        last_time = int(main.config["settings"]['lastupdated'])
         print(f'{last_time} --> {current_time}')
         status_log_channel = self.bot.get_channel(1152377925916688484)
         await status_log_channel.send("Update is starting!")
+
         await self.updateTime()
         print("Time is complete!")
-        resultStr = await self.runAutoTransactions()
+        await self.errorPrevention()
         await self.updatePopulation()
+        await self.sendBackup()
+        await self.updatePoverty()
+        resultStr = await self.runAutoTransactions()
+
+
         print("Population is complete!")
         await self.collectTaxes()
         print("Taxes is complete!")
@@ -257,11 +298,11 @@ class campaignUpdateFunctions(commands.Cog):
         #     await self.sendBackup()
         # else:
         #     await self.sendBackup()
-        self.bot.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
+        main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
         await status_log_channel.send("Update is complete!")
-        self.bot.config["settings"]['lastupdated'] = str(current_time)
-        with open(self.bot.configurationFilepath, "w") as configfile:
-            self.bot.config.write(configfile)
+        main.config["settings"]['lastupdated'] = str(current_time)
+        with open(main.configurationFilepath, "w") as configfile:
+            main.config.write(configfile)
         await ctx.send("## Done!")
 
     async def softUpdate(self):

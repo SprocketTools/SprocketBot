@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+import main
 from cogs.SQLfunctions import SQLfunctions
 from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
@@ -24,7 +25,7 @@ class campaignTransactionFunctions(commands.Cog):
     @commands.is_owner()
     @commands.command(name="setupTransactionDatabase", description="testing some stuff")
     async def setupTransactionDatabase(self, ctx: commands.Context):
-        if ctx.author.id != self.bot.owner_id:
+        if ctx.author.id != main.ownerID:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS transactions;''')
