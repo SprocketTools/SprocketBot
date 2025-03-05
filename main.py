@@ -30,7 +30,7 @@ else:
     configurationFilepath = "/home/mumblepi/configuration.ini"
     OSslashLine = "/"
 
-#botMode = "official" # dev on live flag
+botMode = "official" # dev on live flag
 
 if botMode != "official":
     prefix = "?"
@@ -42,7 +42,7 @@ else:
     defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
     defaultName = "Sprocket Bot"
 
-#prefix = "?" # dev on live variable
+prefix = "?" # dev on live variable
 
 # general settings
 config = configparser.ConfigParser()
@@ -74,7 +74,6 @@ class Bot(commands.Bot):
         for ext in self.cogslist:
             await self.load_extension(ext)
 
-
     async def on_ready(self):
 
         await self.wait_until_ready()
@@ -87,20 +86,9 @@ class Bot(commands.Bot):
         print(f'Logged in as {bot.user} (ID: {bot.user.id})')
         print('------')
 
-
-
-sanitizeKeywords = ["@", "/", "invalid_tank"]
-async def sanitize(inputPhrase: str):
-    outputPhrase = inputPhrase
-    for phrase in sanitizeKeywords:
-        outputPhrase = outputPhrase.replace(phrase, "")
-    return outputPhrase
-
-async def addLine(inputOne: str, inputTwo: str):
-    return f"{inputOne}\n{inputTwo}"
 bot = Bot()
 # tree = app_commands.CommandTree(bot)
 bot.run(discordToken)
 
-blacklist_ids = ['712509599135301673']
+
 

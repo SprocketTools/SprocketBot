@@ -1,4 +1,5 @@
-import discord, json, io
+import discord, json, io, numpy
+import matplotlib.pyplot as plot
 import pandas as pd
 from discord.ext import commands
 from typing import List
@@ -34,7 +35,7 @@ class campaignManageFunctions(commands.Cog):
             key = await campaignFunctions.getCampaignKey(ctx)
             embedOut = await campaignFunctions.showSettings(ctx)
             promptOut = await ctx.send("What statistic do you wish to modify?")
-            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Energy cost", "Steel cost", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit", "Transfer Campaign Ownership"]))
+            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Baseline GDP growth", "Energy cost", "Steel cost", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit", "Transfer Campaign Ownership"]))
             name_adj = ""
             if answer == "exit" or i > 1:
                 await ctx.send("Alright, have fun.")
@@ -57,6 +58,9 @@ class campaignManageFunctions(commands.Cog):
             elif answer == "rules":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new rules of the campaign?", 256)
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET campaignrules = $1 WHERE campaignkey = $2;''',[name_adj, key])
+            elif answer == "baseline gdp growth":
+                name_adj = await textTools.getPercentResponse(ctx, "What is the new GDP growth?")
+                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET defaultgdpgrowth = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "currency name":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new currency name of the campaign?", 32)
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET currencyname = $1 WHERE campaignkey = $2;''',[name_adj, key])
@@ -91,29 +95,57 @@ class campaignManageFunctions(commands.Cog):
 
     @commands.command(name="manageFaction", description="Add money to a faction")
     async def manageFaction(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignHost(ctx):
+        if await campaignFunctions.isCampaignHost(ctx): # hosts
             data = await campaignFunctions.pickCampaignFaction(ctx, "Pick the faction you would like to manage.")
             factionName = data['factionname']
             key = data['factionkey']
-        else:
+        else: #players only
             data = await campaignFunctions.getUserFactionData(ctx)
             key = data["factionkey"]
-        print(data)
-        continue_val = True
-        displayType = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
-        while continue_val:
-            data = await campaignFunctions.getFactionData(key)
-            embedOut = await campaignFunctions.showStats(ctx, data, displayType)
-            promptOut = await ctx.send("What statistic do you wish to modify?")
+
+        if data['iscountry']:
+            displayType = str.lower(
+                await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+        else:
+            displayType = "general"
+        if await campaignFunctions.isCampaignHost(ctx):
             if data['iscountry'] == False:
-                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel", "Move your company to a new country", "Delete faction", "Exit"]
+                inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel",
+                          "Move your company to a new country", "Delete faction", "Exit"]
             else:
                 if displayType == "general":
-                    inList = ["Name", "Description", "Flag", "Discretionary funds", "Land", "Government type", "Updates channel", "Population","GDP", "Delete faction", "Switch category", "Exit"]
+                    inList = ["Name", "Description", "Flag", "Discretionary funds", "Land", "Government type",
+                              "Updates channel", "Population", "GDP", "Delete faction", "Switch category", "Exit"]
                 if displayType == "operations":
-                    inList = ["Median salary", "Espionage funding", "Defense spending", "Infrastructure funding", "Switch category", "Exit"]
+                    inList = ["Median salary", "Espionage funding", "Defense spending", "Infrastructure funding",
+                              "Switch category", "Exit"]
                 if displayType == "payments":
-                    inList = ["Discretionary funds", "Median salary", "GDP", "Poor tax", "Rich tax", "Switch category", "Exit"]
+                    inList = ["Discretionary funds", "Median salary", "GDP", "Poor tax", "Rich tax", "Switch category",
+                              "Exit"]
+
+        else:
+            displayType = str.lower(
+                await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+            if data['iscountry'] == False:
+                inList = ["Name", "Description", "Flag", "Updates channel", "Exit"]
+            else:
+                if displayType == "general":
+                    inList = ["Name", "Description", "Flag", "Government type", "Updates channel", "Switch category",
+                              "Exit"]
+                if displayType == "operations":
+                    inList = ["Espionage funding", "Defense spending", "Infrastructure funding", "Switch category",
+                              "Exit"]
+                if displayType == "payments":
+                    inList = ["Poor tax", "Rich tax", "Switch category", "Exit"]
+
+
+        print(data)
+        continue_val = True
+        while continue_val:
+            data = await campaignFunctions.getFactionData(key)
+
+            embedOut = await campaignFunctions.showStats(ctx, data, displayType)
+            promptOut = await ctx.send("What statistic do you wish to modify?")
 
             answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, inList))
             print(answer)
@@ -174,9 +206,13 @@ class campaignManageFunctions(commands.Cog):
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET defensespend = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "poor tax":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage do you want to set your poor tax rate to?  This is the taxation rate that generates most of your income.")
+                if name_adj > 1:
+                    name_adj = 1
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxpoor = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "rich tax":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage do you want to set your rich tax to?  This is the taxation rate that applies to companies and rich people.")
+                if name_adj > 1:
+                    name_adj = 1
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxrich = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "delete faction":
                 if await campaignFunctions.isCampaignHost(ctx) == False:
@@ -195,7 +231,43 @@ class campaignManageFunctions(commands.Cog):
                     await ctx.send("## Done!")
                     return
             elif answer == "switch category":
-                displayType = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+
+                if data['iscountry']:
+                    displayType = str.lower(
+                        await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+                else:
+                    displayType = "general"
+                if await campaignFunctions.isCampaignHost(ctx):
+                    if data['iscountry'] == False:
+                        inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel",
+                                  "Move your company to a new country", "Delete faction", "Exit"]
+                    else:
+                        if displayType == "general":
+                            inList = ["Name", "Description", "Flag", "Discretionary funds", "Land", "Government type",
+                                      "Updates channel", "Population", "GDP", "Delete faction", "Switch category",
+                                      "Exit"]
+                        if displayType == "operations":
+                            inList = ["Median salary", "Espionage funding", "Defense spending",
+                                      "Infrastructure funding", "Switch category", "Exit"]
+                        if displayType == "payments":
+                            inList = ["Discretionary funds", "Median salary", "GDP", "Poor tax", "Rich tax",
+                                      "Switch category", "Exit"]
+
+                else:
+                    displayType = str.lower(
+                        await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+                    if data['iscountry'] == False:
+                        inList = ["Name", "Description", "Flag", "Updates channel", "Exit"]
+                    else:
+                        if displayType == "general":
+                            inList = ["Name", "Description", "Flag", "Government type", "Updates channel",
+                                      "Switch category", "Exit"]
+                        if displayType == "operations":
+                            inList = ["Espionage funding", "Defense spending", "Infrastructure funding",
+                                      "Switch category", "Exit"]
+                        if displayType == "payments":
+                            inList = ["Poor tax", "Rich tax", "Switch category", "Exit"]
+
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
                 return
@@ -218,7 +290,7 @@ class campaignManageFunctions(commands.Cog):
             data = df.to_dict(orient='records')
             print(data)
             for faction in data:
-                await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET factionname = $1, money = $2, population = $3, landsize = $4, averagesalary = $5, gdp = $7 WHERE factionkey = $6''', [faction["factionname"], faction["money"], faction["population"], faction["landsize"], faction["averagesalary"], faction["factionkey"], faction["gdp"]])
+                await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET factionname = $1, money = $2, population = $3, landsize = $4, averagesalary = $5 WHERE factionkey = $6''', [faction["factionname"], faction["money"], faction["population"], faction["landsize"], faction["averagesalary"], faction["factionkey"]])
             await ctx.send(f"## Done!\n{len(data)} factions have been updated.")
         else:
             if await campaignFunctions.isCampaignHost(ctx) == False:
@@ -235,6 +307,65 @@ class campaignManageFunctions(commands.Cog):
             buffer.seek(0)
             await ctx.channel.send(file=discord.File(buffer, "data.csv"))
             await ctx.send("## Warning\nDo not change the faction keys - these are basically their social security numbers.")
+
+    @commands.command(name="plotData", description="Plot chart data")
+    async def plotData(self, ctx: commands.Context):
+        if await campaignFunctions.isCampaignHost(ctx) == False and ctx.author.id != main.ownerID:
+            return
+
+
+        hostData = await campaignFunctions.getUserCampaignData(ctx)
+        column_names = []
+        column_namesr = await SQLfunctions.databaseFetchdict('''SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'campaignfactions' AND data_type IN ('bigint', 'real');''')
+        str = ""
+        i = 0
+        for col in column_namesr:
+            if i > 4:
+                column_names.append(col['column_name'])
+                str = str + col['column_name'] + ", "
+            i+= 1
+        print(str[0:(len(str)-2)])
+        print(len(column_names))
+        data = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT {str[0:(len(str)-2)]} FROM campaignfactions WHERE campaignkey = $1 AND iscountry = true;''', [hostData['campaignkey']])
+        await ctx.send("Pick your x axis!")
+        x_axis = await discordUIfunctions.getButtonChoice(ctx, column_names)
+        x_data = []
+        for val in data:
+            x_data.append(val[x_axis])
+
+        await ctx.send("Pick your y axis!")
+        y_axis = await discordUIfunctions.getButtonChoice(ctx, column_names)
+        y_data = []
+        for val in data:
+            y_data.append(val[y_axis])
+        trim = await textTools.getIntResponse(ctx, "How many outliers do you want to trim off?\n-# Reply with a whole number")
+        plot.clf()
+
+        data_pair = zip(x_data, y_data)
+        sort_data = sorted(data_pair)
+        print(sort_data)
+
+
+        x_data, y_data = zip(*sort_data[0+trim:len(x_data)-1-trim])
+        print(x_data)
+        plot.scatter(x_data, y_data)
+        plot.ylabel(y_axis)
+        plot.xlabel(x_axis)
+
+        # x_data = outlist[0][0+trim:len(x_data)-1-trim]
+        # y_data = outlist[1][0+trim:len(x_data)-1-trim]
+
+        plot.title(x_axis + " vs. " + y_axis)
+
+        buffer = io.BytesIO()
+        plot.savefig(buffer, format='png')
+        buffer.seek(0)
+
+        # Create a discord.File object from the BytesIO object
+        image = discord.File(fp=buffer, filename='plot.png')
+
+        # Send the image to a Discord channel
+        await ctx.send(file=image)
 
     async def toggleCampaignProgress(ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:

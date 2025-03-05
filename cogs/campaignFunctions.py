@@ -40,6 +40,7 @@ class campaignFunctions(commands.Cog):
             embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
             embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
             embed.add_field(name="Starting pop/worker ratio", value=f"{data['poptoworkerratio']}", inline=False)
+            embed.add_field(name="Baseline GDP growth", value=f"{round(float(data['defaultgdpgrowth'])*100, 2)}%", inline=False)
             embed.add_field(name="Cost of one ton of steel", value=f"{data['currencysymbol']}{data['steelcost']}", inline=False)
             embed.add_field(name="Cost of barrel of oil", value=f"{data['currencysymbol']}{data['energycost']}",inline=False)
             if data['active'] == True:
@@ -180,7 +181,12 @@ class campaignFunctions(commands.Cog):
             return 0.0
 
     async def getGovernmentName(answerIn: float):
-        answer = round(answerIn, 3)
+        try:
+            print(answerIn)
+            answer = round(answerIn, 3)
+        except Exception:
+            return "SET GOVERNMENT TYPE ASAP"
+
         if answer == -1:
             return "Open Council"
         if answer == -0.6:
@@ -241,11 +247,12 @@ class campaignFunctions(commands.Cog):
         if variablesList["iscountry"] == True and displayType == "general":
             embed.add_field(name="Land", value="{:,}".format(int(variablesList["landsize"])) + " km²",inline=False)
             embed.add_field(name="Population size", value=("{:,}".format(int(variablesList["population"]))),inline=False)
+            embed.add_field(name="Population growth", value=str(round(float(variablesList["popgrowth"])*100, 1)) + "%", inline=False)
             embed.add_field(name="Government type", value=await campaignFunctions.getGovernmentName(variablesList["governance"]), inline=False)
             embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
         elif variablesList["iscountry"] == True and displayType == "operations":
             embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 1)) + "%", inline=False)
-            embed.add_field(name="Poverty rate", value=str(round(float(variablesList["povertyrate"]) * 100, 1)) + "%",inline=False)
+
             embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
             embed.add_field(name="Education index", value=str(round(float(variablesList["educationindex"]) * 100, 1)) + "%", inline=False)
             embed.add_field(name="Infrastructure index", value=str(round(float(variablesList["infrastructureindex"]) * 100, 1)) + "%", inline=False)
@@ -255,9 +262,14 @@ class campaignFunctions(commands.Cog):
             embed.add_field(name="Espionage funding", value=str(round(float(variablesList["espionagespend"]) * 100, 2)) + "% of discretionary funds", inline=False)
             embed.add_field(name="Spy agency staff", value=str(variablesList["espionagestaff"]) + " employees",inline=False)
             embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of tax income", inline=False)
+
         elif variablesList["iscountry"] == True and displayType == "payments":
+            povertySalary = campaignInfoList['energycost'] * campaignInfoList['steelcost'] / 7 * variablesList['popworkerratio']
+            embed.add_field(name="Poverty rate", value=str(round(float(variablesList["povertyrate"]) * 100, 1)) + "%",inline=False)
+            embed.add_field(name="Poverty salary",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(povertySalary))), inline=False)
             embed.add_field(name="Median salary", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["averagesalary"]))), inline=False)
             embed.add_field(name="GDP growth",value=str(round(float(variablesList["gdpgrowth"]) * 100, 1)) + "%",inline=False)
+            embed.add_field(name="Pop/Worker ratio", value=str(round(float(variablesList["popworkerratio"]), 1)),inline=False)
             embed.add_field(name="Poor tax", value=str(round(float(variablesList["taxpoor"]) * 100, 1)) + "%", inline=False)
             embed.add_field(name="Rich tax", value=str(round(float(variablesList["taxrich"]) * 100, 1)) + "%", inline=False)
         else:
@@ -287,7 +299,6 @@ class campaignFunctions(commands.Cog):
         embed.add_field(name="Rich tax rate", value=f"{round(float(variablesList['taxrich']) * 100, 3)} %", inline=False)
         embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
         embed.add_field(name="Average salary", value=campaignInfoList["currencysymbol"] + str(round(float(variablesList["averagesalary"]), 1)) + " " + campaignInfoList["currencyname"],inline=False)
-        embed.add_field(name="Economic index", value=str(round(float(variablesList["incomeindex"]) * 100, 1)) + "%", inline=False)
         embed.add_field(name="Educational funding boost", value=str(round(float(variablesList["educationspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Social spending", value=str(round(float(variablesList["socialspend"]) * 100, 1)) + "% of discretionary funds", inline=False)
         embed.add_field(name="Infrastructure investments", value=str(round(float(variablesList["infrastructurespend"]) * 100, 1)) + "% of discretionary funds", inline=False)

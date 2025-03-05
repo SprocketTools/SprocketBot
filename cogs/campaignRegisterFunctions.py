@@ -160,7 +160,10 @@ class campaignRegisterFunctions(commands.Cog):
 
     @commands.command(name="startFaction", description="Add a faction to a campaign")
     async def startFaction(self, ctx: commands.Context):
-        # try:
+        if ctx.guild.id == 1341982766555992075: # prop punk custom exclusion setup
+            await errorFunctions.sendCategorizedError(ctx, "mlp")
+            await ctx.send("Use a satellite server to run this command.")
+            return
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         defaultPWR = float(campaignData["poptoworkerratio"])
         landlordid = 0
@@ -246,7 +249,7 @@ class campaignRegisterFunctions(commands.Cog):
                     round((0.20*governanceScale + 0.2), 3), #taxrich
                     int(population/popworkerratio * (salary)), #gdp
                     campaignData["defaultgdpgrowth"], #gdpgrowth
-                    round(70/governanceScale, 3), #lifeexpectency
+                    round(60 + 10*governanceScale, 3), #lifeexpectency
                     0.9, #educationindex
                     0.05, #socialspend
                     0.05, #infrastructurespend
@@ -259,12 +262,13 @@ class campaignRegisterFunctions(commands.Cog):
                     0, #infrastructureindex
                     0, #defense spending
                     0, #corespend
-                    0.05 #educationspend
+                    0.05, #educationspend
+                    0.01 #population growth
                     ]
         print(len(datalist))
 
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, factionName])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35)''', datalist)
         nameTest = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
         if len(nameTest) > 1:
             await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2 AND factionkey = $3;''',[ctx.guild.id, factionName, factionkey])

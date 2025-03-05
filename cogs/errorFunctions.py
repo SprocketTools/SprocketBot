@@ -316,6 +316,7 @@ class errorFunctions(commands.Cog):
         else:
             error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
         error = await errorFunctions.errorfyText(ctx, error)
+        error = error.replace('@', '')
         return error
 
     async def retrieveCategorizedError(ctx: commands.Context, category: str):
@@ -324,6 +325,7 @@ class errorFunctions(commands.Cog):
         else:
             error = (await SQLfunctions.databaseFetchrowDynamic(f'''SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;''', [category]))["error"]
             error = await errorFunctions.errorfyText(ctx, error)
+            error = error.replace('@', '')
         return error
 
     async def sendCategorizedError(ctx: commands.Context, category: str):
@@ -332,6 +334,7 @@ class errorFunctions(commands.Cog):
         else:
             error = (await SQLfunctions.databaseFetchrowDynamic(f'''SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;''', [category]))["error"]
             error = await errorFunctions.errorfyText(ctx, error)
+            error = error.replace('@', '')
         await ctx.send(error)
         return
 
@@ -341,6 +344,7 @@ class errorFunctions(commands.Cog):
         else:
             error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
             error = await errorFunctions.errorfyText(ctx, error)
+            error = error.replace('@', '')
         await ctx.send(error)
         return
 
@@ -354,7 +358,6 @@ class errorFunctions(commands.Cog):
         error = error.replace('{day}', datetime.now().strftime('%A'))
         error = error.replace('{month}', datetime.now().strftime('%B'))
         error = error.replace('{year}', datetime.now().strftime('%Y'))
-        error = error.replace('@', '')
         return error
 
 async def setup(bot:commands.Bot) -> None:

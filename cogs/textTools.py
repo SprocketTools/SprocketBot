@@ -51,6 +51,19 @@ class textTools(commands.Cog):
         #print(values_string)
         return names_string, values_string
 
+    async def awaitResponse(ctx: commands.Context, action=None):
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+        if msg.content.lower() == "cancel":
+            await errorFunctions.sendCategorizedError(ctx, "insult")
+            raise ValueError("User termination")
+        if action == "delete":
+            await msg.delete()
+        if action != "raw":
+            return await textTools.mild_sanitize(msg.content)
+        return msg.content
+
     async def getResponse(ctx: commands.Context, prompt, action=None):
         promptMsg = await ctx.send(prompt)
         def check(m: discord.Message):
@@ -164,7 +177,7 @@ class textTools(commands.Cog):
             except Exception:
                 await ctx.send("Invalid input.  Try again.")
 
-    async def getPercentResponse(ctx: commands.Context, prompt: str):
+    async def getPercentResponse(ctx: commands.Context, prompt: str, action=None):
         messageSend = await ctx.send(prompt)
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -173,8 +186,12 @@ class textTools(commands.Cog):
         if msg.content.lower() == "cancel":
             await errorFunctions.sendError(ctx)
             raise ValueError("User termination")
+
         try:
             value = float(response)/100
+            if action != "uncap":
+                value = min(value, 1)
+                value = max(value, 0)
             return round(value, 6)
         except Exception:
             await messageSend.delete()

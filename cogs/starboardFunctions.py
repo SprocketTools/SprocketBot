@@ -1,4 +1,5 @@
 import io
+from datetime import datetime
 
 import discord
 import pandas as pd
@@ -39,6 +40,9 @@ class starboardFunctions(commands.Cog):
         except Exception:
             pass
 
+        if int(message.created_at.timestamp()) < 1738411320:
+            return
+
         msg_guild = self.bot.get_guild(payload.guild_id)
         data_rchannel = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM starboards WHERE sourcechannel = $1 OR (serverid = $2 AND sourcechannel < 5);''',[payload.channel_id, payload.guild_id])
         #print(data_rchannel)
@@ -51,6 +55,7 @@ class starboardFunctions(commands.Cog):
             if str(payload.emoji) != str(starboard["emoji"]):
                 #print("no match")
                 continue
+
 
 
             # Check if the user who reacted is the same as the message author

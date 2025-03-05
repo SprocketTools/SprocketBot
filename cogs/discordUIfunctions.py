@@ -1,9 +1,14 @@
+import textwrap
+
 import discord
 from unicodedata import lookup
 from discord.ext import commands
 # promptResponses = {}
 import os, platform, discord, configparser, ast, json
 from discord.ext import commands
+
+#from cogs.textTools import textTools
+
 
 class discordUIfunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -43,6 +48,18 @@ class discordUIfunctions(commands.Cog):
         await view.wait()
         return view.value
 
+    async def getResponse(ctx: commands.Context, prompt, action=None):
+        promptMsg = await ctx.send(prompt)
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+        if msg.content.lower() == "cancel":
+            raise ValueError("User termination")
+        if action == "delete":
+            await promptMsg.delete()
+            await msg.delete()
+        return msg.content
+
     async def getCategoryChoice(ctx: commands.Context, categoryList: list, userPrompt: str):
         chosen = False
         int = 0
@@ -77,9 +94,17 @@ class discordUIfunctions(commands.Cog):
         if len(categoryList) > 60:
             filtered_options = []
             while len(filtered_options) == 0:
-                options = ["ABC", "DEF", "GHI", "JKL", "MNOP", "QRS", "TUV", "WXYZ", "do not sort"]
+                options = ["AB", "CD", "EF", "GH", "IJ", "KL", "MN", "OP", "QR", "ST", "UV", "WX", "YZ", "do not sort", "search"]
                 await ctx.send(f"Yikes, there are {len(categoryList)} choices!  Pick the first letter of your desired option.")
                 sortChoice = await discordUIfunctions.getButtonChoice(ctx, options)
+                if sortChoice == "search":
+                    query = await discordUIfunctions.getResponse(ctx, "reply with your search query")
+                    filtered_options = [option for option in categoryList if query.lower() in option.lower()]  # ai suggestion
+                    if len(filtered_options) == 0:
+                        await ctx.send("There are no valid options that start with these letters - try again.")
+                    else:
+                        categoryList = filtered_options
+
                 if sortChoice != "do not sort":
                     filtered_options = [option for option in categoryList if option[0].lower() in sortChoice.lower()] #ai suggestion
                     if len(filtered_options) == 0:
