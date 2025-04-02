@@ -5,34 +5,15 @@ from discord import app_commands
 from git import Repo
 # Github config
 from pathlib import Path
+
+from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
+import difflib
 from cogs.blueprintFunctions import blueprintFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 
-
-if platform.system() == "Windows":
-    GithubURL = "https://github.com/SprocketTools/SprocketTools.github.io"
-    GithubDirectory = "C:\\Users\\colson\\Documents\\GitHub\\Testing\\SprocketTools.github.io"
-    OSslashLine = "\\"
-
-else:
-    # default settings (running on Rasbian)
-    GithubURL = "https://github.com/SprocketTools/SprocketTools.github.io"
-    GithubDirectory = "/home/mumblepi/SprocketTools.github.io"
-    OSslashLine = "/"
-imgCatalogFolder = "img"
-imgCandidateFolder = "imgbin"
-
-Path(GithubDirectory).mkdir(parents=True, exist_ok=True)
-try:
-    repo = Repo.clone_from(GithubURL, GithubDirectory)
-except Exception:
-    repo = Repo(GithubDirectory)
-
 memePhrase = "The covenanter is the best tank."
-
-
 
 class AprilFools(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -47,8 +28,9 @@ class AprilFools(commands.Cog):
         prompt = "DROP TABLE IF EXISTS codeconfig"
         await SQLfunctions.databaseExecute(prompt)
         prompt = ('''CREATE TABLE IF NOT EXISTS codeconfig (
-                              serverID BIGINT,
-                              channelID BIGINT,
+                              serverid BIGINT,
+                              channelid BIGINT,
+                              logid BIGINT,
                               message TEXT,
                               solved BIGINT);''')
         await SQLfunctions.databaseExecute(prompt)
@@ -90,6 +72,16 @@ class AprilFools(commands.Cog):
         try:
             msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
             responses["channelid"] = msg.channel_mentions[0].id
+        except asyncio.TimeoutError:
+            await ctx.send("Operation cancelled.")
+            return
+
+        await ctx.send("Where do you want posts to be logged to?  Reply to this message with a mention of that channel.")
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=30000.0)
+            responses["logid"] = msg.channel_mentions[0].id
         except asyncio.TimeoutError:
             await ctx.send("Operation cancelled.")
             return
@@ -143,19 +135,46 @@ class AprilFools(commands.Cog):
             return
         the_words = codeConfigList['message'].split(" ")
         print(the_words)
-        if(message.content.lower() == the_words[position].lower()):
-            await message.author.send('Correct!')
+        the_bool = False
+        try:
+            print(len(message.attachments))
+            if message.content.lower() == the_words[position].lower() and len(message.attachments) == 0:
+                the_bool = True
+        except Exception:
+            pass
+        if the_bool == True:
+            await message.add_reaction('✅')
+            #await message.author.send('Correct!')
             await SQLfunctions.databaseExecute(f'''UPDATE codeconfig SET solved = {position + 1} WHERE serverid = {serverID};''')
+            if position + 1 == len(the_words):
+                await message.channel.send("## Congrats!  \nThe puzzle has been solved!\nGreat job everyone.")
         else:
-            codeList = ["This meme has been removed due to voiding Sprocket Bot's patented content filter."]
+            codeList = ["This meme has been removed due to voiding my patented content filter."]
             ConfigList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM errorcodemessages')]
             for row in ConfigList:
                 codeList.append(row["errorcode"])
-            print(codeList)
-            random_val = random.randrange(0, len(codeList))
-            funny_response = codeList[random_val]
-
-            await self.bot.get_channel(msgChannel).send(funny_response, delete_after=15)
+            await self.bot.get_channel(int(codeConfigList['logid'])).send(f"From <@{message.author.id}>: `" + message.content + "`")
+            for attachm in message.attachments:
+                await self.bot.get_channel(int(codeConfigList['logid'])).send(attachm)
+            funny_response = await errorFunctions.retrieveCategorizedError(message, category="catgirl")
+            try:
+                ratio = difflib.SequenceMatcher(None, message.content.lower(), the_words[position].lower()).ratio()
+                if ratio > 0.1:
+                    funny_response = funny_response + (f"\n**Similarity of '{message.content}': {round(ratio*100)}%**\nDifference: {abs(len(message.content) - len(the_words[position]))}")
+                if random.random() < 0.05:
+                    try:
+                        funny_response = funny_response + (f"\nTry the letter {the_words[position][0]}!")
+                    except Exception:
+                        pass
+                if random.random() > 0.95:
+                    try:
+                        funny_response = funny_response + (f"\nTry the letter {the_words[position][len(the_words[position])]} at the end!")
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+            await message.reply(funny_response, delete_after=20)
+            await asyncio.sleep(5)
             await message.delete()
 
     @commands.command(name="IAmError", description="setup the server's code Puzzle")
@@ -177,7 +196,7 @@ class AprilFools(commands.Cog):
             return
 
         await ctx.send("## All data successfully collected!\nBeginning processing now...")
-        await SQLfunctions.databaseExecute(f'''INSERT INTO errorcodemessages (errorcode) VALUES ('{responseOut}');''')
+        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE codeconfig SET message = $1 WHERE serverid = $2;''', [responseOut, ctx.guild.id])
         await ctx.send("## Done!")
 
 async def setup(bot:commands.Bot) -> None:

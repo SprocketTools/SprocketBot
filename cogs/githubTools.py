@@ -54,6 +54,18 @@ class githubTools(commands.Cog):
         origin.pull(origin.refs[0].remote_head)
         await ctx.reply("# Done!")
 
+    @commands.command(name="pullRepository", description="Reload the repository onto the Pi")
+    async def pullRepository(self, ctx: commands.Context):
+        if ctx.author.id != 712509599135301673:
+            await ctx.send(await errorFunctions.retrieveError(ctx))
+            return
+        operatingRepo = Repo(GithubDirectory)
+        origin = operatingRepo.remote('origin')
+        origin.fetch()
+        origin.pull(origin.refs[0].remote_head)
+        await ctx.reply("# Done!")
+
+
     @commands.command(name="resetImageCatalog", description="Reset the image catalog")
     async def resetImageCatalog(self, ctx: commands.Context):
         if ctx.author.id != 712509599135301673:

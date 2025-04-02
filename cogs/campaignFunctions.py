@@ -53,6 +53,10 @@ class campaignFunctions(commands.Cog):
             await ctx.send(f"Error:\n-# {e}\n\nMake sure that you have set up your server and joined, or started, a campaign.")
 
     async def getUserFactionData(ctx: commands.Context):
+        ##
+
+
+        ##
         campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignData['campaignkey']
         factionUserData = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionkey FROM campaignusers WHERE status = true AND userid = $1 AND campaignkey = $2;''', [ctx.author.id, campaignKey])
@@ -160,7 +164,7 @@ class campaignFunctions(commands.Cog):
         return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = (SELECT campaignkey FROM campaignservers WHERE serverid = $1);''', [ctx.guild.id])
 
     async def getGovernmentType(ctx: commands.Context):
-        options = ["Direct Democracy", "Multi Party System", "Two Party System", "Constitutional Monarchy", "Single Party System", "Appointed Successor"]
+        options = ["Open Council", "Coalition Party System", "Multi Party System", "Two Party System", "Dominant Party System", "Single Party System", "Appointed Successor"]
         prompt = "Pick a type of government."
         answer = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
         if answer == "Open Council":
@@ -243,7 +247,11 @@ class campaignFunctions(commands.Cog):
         embed = discord.Embed(title=variablesList["factionname"],description=variablesList["description"], color=discord.Color.random())
         embed.add_field(name="Operational", value=str(variablesList["hostactive"]), inline=False)
         embed.add_field(name="Updates channel", value=f'<#{variablesList["logchannel"]}>', inline=False)
-        embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
+        try:
+            embed.add_field(name="Discretionary funds", value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["money"]))) + " " + campaignInfoList["currencyname"], inline=False)
+        except Exception:
+            await ctx.send("Somehow you had [null] money")
+
         if variablesList["iscountry"] == True and displayType == "general":
             embed.add_field(name="Land", value="{:,}".format(int(variablesList["landsize"])) + " km²",inline=False)
             embed.add_field(name="Population size", value=("{:,}".format(int(variablesList["population"]))),inline=False)

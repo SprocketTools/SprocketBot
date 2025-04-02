@@ -200,10 +200,16 @@ class campaignManageFunctions(commands.Cog):
                 await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET espionagespend = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "infrastructure funding":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards infrastructure funding?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET infrastructurespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+                if data['defensespend'] + name_adj > 0.99:
+                    await ctx.send(f"Unfortunately you are allocating {(data['defensespend'] + data['infrastructurespend'])*100}% of your available money!  Try again.")
+                else:
+                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET infrastructurespend = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "defense spending":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards defense funding?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET defensespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+                if name_adj + data['infrastructurespend'] > 0.99:
+                    await ctx.send(f"Unfortunately you are allocating {(data['defensespend'] + data['infrastructurespend'])*100}% of your available money!  Try again.")
+                else:
+                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET defensespend = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "poor tax":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage do you want to set your poor tax rate to?  This is the taxation rate that generates most of your income.")
                 if name_adj > 1:
@@ -316,7 +322,7 @@ class campaignManageFunctions(commands.Cog):
 
         hostData = await campaignFunctions.getUserCampaignData(ctx)
         column_names = []
-        column_namesr = await SQLfunctions.databaseFetchdict('''SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'campaignfactions' AND data_type IN ('bigint', 'real');''')
+        column_namesr = await SQLfunctions.databaseFetchdict('''SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'campaignfactions' AND data_type IN ('bigint', 'real', 'numeric');''')
         str = ""
         i = 0
         for col in column_namesr:

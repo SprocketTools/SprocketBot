@@ -8,6 +8,8 @@ from discord import app_commands
 from discord.ui import View
 import configparser
 import nest_asyncio
+from google import genai
+from google.genai import types
 nest_asyncio.apply()
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,60 +18,73 @@ intents.presences = False
 utc = datetime.timezone.utc
 import sys
 #sys.setrecursionlimit(100)
-# Determines whether this is the live version of the bot or the testing version.
-# development settings (running on Windows/PyCharm)
+
+## configuration
+
+###############################################################################
+## Sprocket Bot looks for two config files - the general config file, and the instance config file.
+## This name determines what configuration gets loaded.
+
+#configName = "official"
+configName = "development"
+#configName = "clone1"
+
+###############################################################################
+
+# Find the config file
 
 if platform.system() == "Windows":
-    botMode = "development"
     configurationFilepath = "C:\\SprocketBot\\configuration.ini"
+    instanceFilepath = "C:\\SprocketBot\\bots\\" + configName + ".ini"
     OSslashLine = "\\"
 
 else:
-    # default settings (running on Rasbian)
-    botMode = "official"
     configurationFilepath = "/home/mumblepi/configuration.ini"
+    instanceFilepath = "/home/mumblepi/bots/" + configName + ".ini"
     OSslashLine = "/"
 
-botMode = "official" # dev on live flag
+# load the config files
 
-if botMode != "official":
-    prefix = "?"
-    defaultURL = "https://github.com/SprocketTools/SprocketBot/blob/main/assets/SprocketBotDevLogo.gif?raw=true"
-    defaultName = "Testing Bot"
+baseConfig = configparser.ConfigParser()
+baseConfig.read(configurationFilepath)
+baseConfig.sections()
 
-else:
-    prefix = "-"
-    defaultURL = "https://sprockettools.github.io/SprocketToolsLogo.png"
-    defaultName = "Sprocket Bot"
+instanceConfig = configparser.ConfigParser()
+instanceConfig.read(instanceFilepath)
+instanceConfig.sections()
 
-prefix = "?" # dev on live variable
+# Set all the settings
 
-# general settings
-config = configparser.ConfigParser()
-config.read(configurationFilepath)
-config.sections()
-print(config)
-discordToken = config[f"settings.{botMode}"]["Token"]
-clientID = config[f"settings.{botMode}"]["clientID"]
-SQLsettings = config["SECURITY"]
-SQLsettings["database"] = config[f"settings.{botMode}"]["database"]
-ownerID = int(config["settings"]["ownerID"])
-githubPAT = str(config["settings"]["githubPAT"])
-updateGithub = str(config["settings"]["updateGithub"])
-cogsList = ["cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",  "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools"]
-
-
+botMode = False
+if instanceConfig[f"botinfo"]["master"] == "true":
+    botMode = True
+    print("Launching master instance")
+discordToken = instanceConfig[f"botinfo"]["Token"]
+clientID = instanceConfig[f"botinfo"]["clientid"]
+prefix = instanceConfig[f"botinfo"]["prefix"]
+SQLsettings = baseConfig["SECURITY"]
+SQLsettings["database"] = instanceConfig[f"botinfo"]["sqldatabase"]
+ownerID = int(baseConfig["settings"]["ownerID"])
+githubPAT = str(baseConfig["settings"]["githubPAT"])
+updateGithub = False
+if str(instanceConfig["botinfo"]["updateGithub"]) == "true":
+    updateGithub = True
+    print("Launching master instance")
+cogsList = ["cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",  "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools", "cogs.AprilFools"]
 
 class Bot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True) #
         self.cogslist = cogsList
         self.synced = False
+        self.serverids = []
+        self.geminikey = baseConfig['settings']['geminiapi']
 
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=60)
-        if updateGithub == "Y":
-            cogsList.append("cogs.githubTools")
+        print(baseConfig['settings']['geminiapi'])
+        #if updateGithub == "Y":
+            #cogsList.append("cogs.githubTools")
             #await self.load_extension("cogs.githubTools")
         for ext in self.cogslist:
             await self.load_extension(ext)
@@ -87,6 +102,7 @@ class Bot(commands.Bot):
         print('------')
 
 bot = Bot()
+bot.ishost = botMode
 # tree = app_commands.CommandTree(bot)
 bot.run(discordToken)
 

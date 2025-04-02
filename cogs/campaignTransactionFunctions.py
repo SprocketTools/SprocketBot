@@ -53,7 +53,7 @@ class campaignTransactionFunctions(commands.Cog):
             factionChoiceKey = factionChoiceData['factionkey']
 
         moneyAdd = await textTools.getFlooredIntResponse(ctx, "How much is the purchase or sale going to be?", 1)
-        if moneyAdd > factionData["money"]:
+        if moneyAdd > factionData["money"] and transactionType != "sales of equipment to civilians":
             await errorFunctions.sendError(ctx)
             await ctx.send("You don't have enough money to finance this transaction!")
             return

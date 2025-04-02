@@ -1,5 +1,6 @@
 import random
-
+from google import genai
+from google.genai import types
 import discord, datetime, time, io, random
 from datetime import timedelta
 from PIL import Image, ImageChops
@@ -13,7 +14,8 @@ from pathlib import Path
 from cogs.errorFunctions import errorFunctions
 import random, asyncio, datetime
 from discord.ext import tasks
-
+from discord import Webhook
+import aiohttp
 import main
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
@@ -77,7 +79,7 @@ class adminFunctions(commands.Cog):
         # except Exception:
         #     pass
 
-        if ctx.author.id in [439836738064613378]: # blacklist
+        if ctx.author.id in [439836738064613378]: # blacklist  -- , 171352085340618753 "scy"
             await errorFunctions.sendCategorizedError(ctx, "insult")
             return False
         if ctx.author.id == main.ownerID:
@@ -191,6 +193,7 @@ class adminFunctions(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+
         #await message.add_reaction('310177266011340803')
         if message.author.bot:
             return
@@ -614,7 +617,7 @@ class adminFunctions(commands.Cog):
     async def adminExecute(self, ctx: commands.Context, *, prompt):
         if ctx.author.id != main.ownerID:
             return
-        await ctx.send(await SQLfunctions.databaseExecute(prompt))
+        await ctx.send(await SQLfunctions.databaseExecute(prompt.replace("`", "")))
 
     @commands.command(name="adminFetch", description="register a contest")
     async def adminFetch(self, ctx: commands.Context, *, prompt):
@@ -883,21 +886,33 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="troll", description="send a message wherever you want")
     async def troll(self, ctx: commands.Context, channelin: str, *, message):
+        print("a")
         if ctx.author.id in [712509599135301673, 686640777505669141]:
+            print("b")
             tts = False
             import re
-            channelin = int(re.sub(r'[^0-9]', '', channelin))
-            print(channelin)
-            channel = self.bot.get_channel(channelin)
-            if ctx.author.id == 686640777505669141 and channel.guild.id in [788349365466038283, 1002673504002519121]:
-                return
             await ctx.send("Message is en route.  \nReminder that adding `-tts-` anywhere will enable TTS readout.")
             if "-tts-" in message:
                 tts = True
-            await channel.send(message.replace("-tts-", ""), tts=tts)
-            for attachment in ctx.message.attachments:
-                file = await attachment.to_file()
-                await channel.send(file=file, content="")
+            # webhook
+            if "api" in channelin:
+                async with aiohttp.ClientSession() as session:
+                    print("e")
+                    webhook = Webhook.from_url(channelin, session=session)
+                    await webhook.send(message)
+                    for attachment in ctx.message.attachments:
+                        file = await attachment.to_file()
+                        await webhook.send(file=file, content="")
+            else:
+                channelin = int(re.sub(r'[^0-9]', '', channelin))
+                print(channelin)
+                channel = self.bot.get_channel(channelin)
+                if ctx.author.id == 686640777505669141 and channel.guild.id in [788349365466038283, 1002673504002519121]:
+                    return
+                await channel.send(message.replace("-tts-", ""), tts=tts)
+                for attachment in ctx.message.attachments:
+                    file = await attachment.to_file()
+                    await channel.send(file=file, content="")
 
     @commands.command(name="trollReply", description="send a message wherever you want")
     async def trollReply(self, ctx: commands.Context, msglink: str, *, message):
@@ -914,6 +929,164 @@ class adminFunctions(commands.Cog):
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channelIn.send(file=file, content="")
+
+    @commands.command(name="complain", description="Get a response back from Google")
+    async def complain(self, ctx: commands.Context, msglink: str, *, style = None):
+        if ctx.author.id in [712509599135301673, 686640777505669141]:
+            import re
+            if "https" in msglink:
+                srvrid = int(msglink.split("/")[-3])
+                chnlid = int(msglink.split("/")[-2])
+                msgid = int(msglink.split("/")[-1])
+
+                serverIn = await self.bot.fetch_guild(srvrid)
+                channelIn = await self.bot.fetch_channel(chnlid)
+                messageIn = await channelIn.fetch_message(msgid)
+            else:
+                messageIn = None
+                mention_list = await self.bot.fetch_channel(int(re.sub('[^0-9\-]', '', msglink)))
+                print(mention_list)
+                async for message_l in mention_list.history(limit=1):
+                    messageIn = message_l
+                channelIn = messageIn.channel
+            init_prompt = messageIn.content
+            gemini = genai.Client(api_key=ctx.bot.geminikey)
+            if not style:
+                style = "drunk"
+            message = gemini.models.generate_content(model='gemini-2.0-flash-001', contents=f"Make a complaint in less than 250 words about this sentence: '{init_prompt}'.  Apply a {style} accent to your complaint.")
+            print(message.text)
+            await ctx.send("Message is en route.")
+
+            await messageIn.reply(message.text)
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await channelIn.send(file=file, content="")
+    @commands.command(name="trollreplyai", description="Get a response back from Google")
+    async def trollreplyai(self, ctx: commands.Context, msglink: str, *, prompt):
+        if ctx.author.id in [712509599135301673, 686640777505669141]:
+            import re
+            srvrid = int(msglink.split("/")[-3])
+            chnlid = int(msglink.split("/")[-2])
+            msgid = int(msglink.split("/")[-1])
+            serverIn = await self.bot.fetch_guild(srvrid)
+            channelIn = await self.bot.fetch_channel(chnlid)
+            messageIn = await channelIn.fetch_message(msgid)
+            gemini = genai.Client(api_key=ctx.bot.geminikey)
+            message = gemini.models.generate_content(model='gemini-2.0-flash-001', contents=prompt)
+            print(message.text)
+            await ctx.send("Message is en route.")
+
+            await messageIn.reply(message.text)
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await channelIn.send(file=file, content="")
+
+    @commands.command(name="trollcai", description="Troll a channel")
+    async def trollcai(self, ctx: commands.Context, channelin: str, *, prompt):
+        if ctx.author.id in [712509599135301673, 686640777505669141]:
+            import re
+            channelin = int(re.sub(r'[^0-9]', '', channelin))
+            print(channelin)
+            channel = self.bot.get_channel(channelin)
+            await ctx.send("Collecting message history")
+            gemini = genai.Client(api_key=ctx.bot.geminikey)
+            messages = []
+            message_raw = channel.history(limit=1000)
+            async for messagee in message_raw:
+                messages.append({'author': messagee.author, 'content': messagee.content})
+            print(messages)
+            await ctx.send("Getting AI response")
+            try:
+                message = gemini.models.generate_content(
+                    model='gemini-2.0-flash-001',
+                    contents=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your prompt cannot exceed 200 words in length. {prompt}"
+                )
+            except Exception:
+                await ctx.send("AI generation prompt failed.")
+                return
+            print(message.text)
+            whereSend = await discordUIfunctions.getButtonChoice(ctx, ["here", "there", "webhook"])
+            dest = None
+            if whereSend == "here":
+                dest = ctx.channel
+            if whereSend == "there":
+                dest = channel
+            if whereSend == "webhook":
+                async with aiohttp.ClientSession() as session:
+                    dest = Webhook.from_url(
+                        'https://discord.com/api/webhooks/1351525808484651008/C7EO5uUViQ5ZTPQcV06I88Vs0MTBMrbCofopyNd5aaDulqM_h0J-kgcS2U11pjDbhs83',session=session)
+            await dest.send(message.text)
+            await ctx.send("Message is en route.")
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await dest.send(file=file, content="")
+
+
+    @commands.command(name="trollai", description="Get a response back from Google")
+    async def trollai(self, ctx: commands.Context, channelin: str, *, prompt):
+        if ctx.author.id in [712509599135301673, 686640777505669141]:
+            import re
+            channelin = int(re.sub(r'[^0-9]', '', channelin))
+            print(channelin)
+            channel = self.bot.get_channel(channelin)
+            gemini = genai.Client(api_key=ctx.bot.geminikey)
+            message = gemini.models.generate_content(model='gemini-2.0-flash-001', contents=prompt)
+            print(message.text)
+            await ctx.send("Message is en route.")
+
+            await channel.send(message.text)
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await channel.send(file=file, content="")
+
+    @commands.command(name="trollai", description="Get a response back from Google")
+    async def trollai(self, ctx: commands.Context, channelin: str, *, prompt):
+        if ctx.author.id in [712509599135301673, 686640777505669141]:
+            import re
+            channelin = int(re.sub(r'[^0-9]', '', channelin))
+            print(channelin)
+            channel = self.bot.get_channel(channelin)
+            gemini = genai.Client(api_key=ctx.bot.geminikey)
+            message = gemini.models.generate_content(model='gemini-2.0-flash-001', contents=prompt)
+            print(message.text)
+            await ctx.send("Message is en route.")
+
+            await channel.send(message.text)
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await channel.send(file=file, content="")
+
+
+    @commands.command(name="trollReact", description="send a message wherever you want")
+    async def trollReact(self, ctx: commands.Context, msglink: str, *, message):
+        if ctx.author.id == 712509599135301673:
+            import re
+            srvrid = int(msglink.split("/")[-3])
+            chnlid = int(msglink.split("/")[-2])
+            msgid = int(msglink.split("/")[-1])
+            serverIn = await self.bot.fetch_guild(srvrid)
+            channelIn = await self.bot.fetch_channel(chnlid)
+            messageIn = await channelIn.fetch_message(msgid)
+            await ctx.send("Message is en route.")
+            message = message.replace("><", "> <")
+            emojis_out = message.split(" ")
+
+            for emoji_raw in emojis_out:
+                try:
+                    print(emoji_raw)
+                    emoji_id = emoji_raw.replace(">", "").split(":")[2]
+                    #print(emoji_id)
+                    await messageIn.add_reaction(ctx.bot.get_emoji(int(emoji_id)))
+                except Exception:
+                    print(emoji_raw)
+                    #emoji_id = emoji_raw.replace(">", "").split(":")[2]
+                    # print(emoji_id)
+                    await messageIn.add_reaction(emoji_raw)
+                await asyncio.sleep(1)
+
+            # for attachment in ctx.message.attachments:
+            #     file = await attachment.to_file()
+            #     await channelIn.send(file=file, content="")
 
     @commands.command(name="edit", description="send a message wherever you want")
     async def edit(self, ctx: commands.Context, msglink: str):
@@ -957,21 +1130,14 @@ class adminFunctions(commands.Cog):
                 file = await attachment.to_file()
                 await recipient.send(file=file, content="")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @commands.command(name="trollWebhookTest", description="send a message wherever you want")
+    async def trollweb(self, ctx: commands.Context, *, message):
+        from discord import Webhook
+        import aiohttp
+        if ctx.author.id in [712509599135301673, 686640777505669141]:
+            async with aiohttp.ClientSession() as session:
+                webhook = Webhook.from_url('https://discord.com/api/webhooks/1351525808484651008/C7EO5uUViQ5ZTPQcV06I88Vs0MTBMrbCofopyNd5aaDulqM_h0J-kgcS2U11pjDbhs83', session=session)
+                await webhook.send(message, username=ctx.author.nick, avatar_url=ctx.author.avatar.url)
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(adminFunctions(bot))

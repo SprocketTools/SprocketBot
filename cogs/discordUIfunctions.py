@@ -105,7 +105,7 @@ class discordUIfunctions(commands.Cog):
                     else:
                         categoryList = filtered_options
 
-                if sortChoice != "do not sort":
+                elif sortChoice != "do not sort":
                     filtered_options = [option for option in categoryList if option[0].lower() in sortChoice.lower()] #ai suggestion
                     if len(filtered_options) == 0:
                         await ctx.send("There are no valid options that start with these letters - try again.")

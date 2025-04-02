@@ -39,9 +39,10 @@ class serverFunctions(commands.Cog):
         for data in setdata:
             try:
                 server = self.bot.get_guild(data['serverid'])
-                user = await self.bot.fetch_user(data['userid'])
-                await server.unban(user)
-                await SQLfunctions.databaseExecuteDynamic('''UPDATE modlogs SET name = 'Expired Ban' WHERE name = 'Ban' AND endtime < now() AND serverid = $1 AND userid = $2 AND timestamp < endtime;''', [server.id, user.id])
+                if server in self.bot.guilds:
+                    user = await self.bot.fetch_user(data['userid'])
+                    await server.unban(user)
+                    await SQLfunctions.databaseExecuteDynamic('''UPDATE modlogs SET name = 'Expired Ban' WHERE name = 'Ban' AND endtime < now() AND serverid = $1 AND userid = $2 AND timestamp < endtime;''', [server.id, user.id])
             except Exception:
                 serverData = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [data['serverid']])
                 try:
@@ -151,11 +152,12 @@ class serverFunctions(commands.Cog):
             await user.send(messageDM)
         except Exception:
             await ctx.send("Failed to notify the user; they likely have Sprocket Bot blocked.")
-        await ctx.send(f'Warning issued to **{user.name}**.\n')
-        points_total = points
+        points_total = 0
+        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM modlogs WHERE userid = $1 AND serverid = $2;''', [user.id, ctx.guild.id])
         for rule in data:
             points_total += int(rule["points"])
-        await ctx.send(f"Total points: {points_total}")
+        await ctx.send(f"Warning issued to **{user.name}**.\n\nTotal points: {points_total}")
+
 
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="ban", type="ban", description="Ban a user")

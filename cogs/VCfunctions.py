@@ -15,7 +15,7 @@ from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
-FFMPEG_OPTIONS = {'options': '-vn -b 1k -af "volume=-15dB"'}
+FFMPEG_OPTIONS = {'options': '-vn -b:a 128k'}
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
 
 

@@ -3,7 +3,8 @@ import math
 import random
 import time
 import io
-
+from discord import Webhook
+import aiohttp
 import pandas as pd
 from discord.ext import tasks
 
@@ -34,15 +35,28 @@ class timedMessageTools(commands.Cog):
         tasks = []
         for message_data in data:
             print(data)
-            tasks.append(self.sendScheduledMessage(message_data))
+            try:
+                channel = await self.bot.fetch_channel((int(data['channelid'])))
+                tasks.append(self.sendScheduledMessage(message_data))
+            except Exception:
+                pass
         await asyncio.gather(*tasks)
     async def sendScheduledMessage(self, data):
         print(data)
         delay_secs = max(int(data['extract']), 0)
         await asyncio.sleep(delay_secs)
-        channel = await self.bot.fetch_channel((int(data['channelid'])))
-        await channel.send(data['content'])
-        await SQLfunctions.databaseFetchdictDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [data['id']])
+        try:
+            if data['channelid'] > 0:
+                channel = await self.bot.fetch_channel((int(data['channelid'])))
+                await channel.send(data['content'])
+                await SQLfunctions.databaseFetchdictDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [data['id']])
+        except Exception: pass
+        try:
+            if "https" in data['webhookid']:
+                async with aiohttp.ClientSession() as session:
+                    webhook = Webhook.from_url(data['webhookid'], session=session)
+                    await webhook.send(data['content'])
+        except Exception: pass
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -79,7 +93,7 @@ class timedMessageTools(commands.Cog):
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
         await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS timedmessages;''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS timedmessages (id VARCHAR, ownerid BIGINT, channelid BIGINT, content VARCHAR(2500), time TIMESTAMP);''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS timedmessages (id VARCHAR, ownerid BIGINT, channelid BIGINT, content VARCHAR(2500), time TIMESTAMP, webhookid VARCHAR);''')
         await ctx.send("## Done!")
 
     @commands.command(name="cancelMessage", description="generate a key that can be used to initiate a campaign")
@@ -93,14 +107,21 @@ class timedMessageTools(commands.Cog):
     async def scheduleMessage(self, ctx: commands.Context):
         if ctx.author.id not in [686640777505669141, 712509599135301673]:
             return
-        channelDest = await textTools.getChannelResponse(ctx, "What channel is the message going to?")
+        await ctx.send("Is this a webhook?")
+        type = await discordUIfunctions.getButtonChoice(ctx, ["Yes", "No", "Both"])
+        channelDest = 0
+        webhookDest = "n/a"
+        if type != "Yes":
+            channelDest = await textTools.getChannelResponse(ctx, "What channel is the message going to?")
+        if type != "No":
+            webhookDest = await textTools.getResponse(ctx, "What is the webhook you are sending to?", action="raw")
         time_stamp = str(await textTools.getResponse(ctx, "When do you want the message to send?  Reply with a timestamp generated at https://r.3v.fi/discord-timestamps/ (any type is fine)")).split(":")[1]
         print(time_stamp)
         content = await textTools.getResponse(ctx, "What do you want the message contents to contain?", "raw")
         id = time_stamp+str(int(random.random()*10000))
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5));''',[id, ctx.author.id, channelDest, content, int(time_stamp)])
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5), $6);''',[id, ctx.author.id, channelDest, content, int(time_stamp), webhookDest])
         await ctx.send(f"## Message queued!\nYour ID is: {id}")
-        await self.sendScheduledMessage({'id': id, 'ownerid': ctx.author.id, 'channelid': channelDest, 'content': content, 'extract': int(time_stamp)-time.time()})
+        await self.sendScheduledMessage({'id': id, 'ownerid': ctx.author.id, 'channelid': channelDest, 'content': content, 'extract': int(time_stamp)-time.time(), 'webhookid': webhookDest})
 
         print(await SQLfunctions.databaseFetchdict('''SELECT * FROM timedmessages;'''))
 
@@ -127,7 +148,7 @@ class timedMessageTools(commands.Cog):
         for message in data:
             id = str(time_stamp+random.random()*10000)
             ids = "\n" + str(id)
-            await SQLfunctions.databaseExecuteDynamic('''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5));''',[id, userDest, channelDest, message, int(time_stamp)])
+            await SQLfunctions.databaseExecuteDynamic('''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5), $6);''',[id, userDest, channelDest, message, int(time_stamp), "empty"])
             print(await SQLfunctions.databaseFetchdict('''SELECT * FROM timedmessages;'''))
         await ctx.send(f"## Message queued!\n{ids}")
 
@@ -150,7 +171,14 @@ class timedMessageTools(commands.Cog):
             await ctx.send("## Aborting...")
             return
 
-        channelDest = await textTools.getChannelResponse(ctx, "What channel is the message going to?")
+        await ctx.send("Is this a webhook?")
+        type = await discordUIfunctions.getButtonChoice(ctx, ["Yes", "No", "Both"])
+        channelDest = 0
+        webhookDest = "n/a"
+        if type != "Yes":
+            channelDest = await textTools.getChannelResponse(ctx, "What channel is the message going to?")
+        if type != "No":
+            webhookDest = await textTools.getResponse(ctx, "What is the webhook you are sending to?", action="raw")
         time_stamp_num = int(str(await textTools.getResponse(ctx,"When do you want the message to send?  Reply with a timestamp generated at https://r.3v.fi/discord-timestamps/ (any type is fine)")).split(":")[1])
         print(time_stamp_num)
         tasks = []
@@ -165,8 +193,8 @@ class timedMessageTools(commands.Cog):
             content = message
             if stagger:
                 time_stamp_num += int(len(content)/cpm + 0.5)  # assumes a 40 character?schedule per minute speed
-            await SQLfunctions.databaseExecuteDynamic('''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5));''',[id, ctx.author.id, channelDest, content, time_stamp_num])
-            tasks.append(self.sendScheduledMessage({'id': id, 'ownerid': ctx.author.id, 'channelid': channelDest, 'content': content,'extract': time_stamp_num - time.time()}))
+            await SQLfunctions.databaseExecuteDynamic('''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5), $6);''',[id, ctx.author.id, channelDest, content, time_stamp_num, webhookDest])
+            tasks.append(self.sendScheduledMessage({'id': id, 'ownerid': ctx.author.id, 'channelid': channelDest, 'content': content,'extract': time_stamp_num - time.time(), 'webhookid': webhookDest}))
             ids = ids + f"{id}\n"
         await ctx.send(f"## Message batch queued!\nYour IDs are: {ids}")
         await asyncio.gather(*tasks)

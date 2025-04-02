@@ -16,25 +16,27 @@ from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
-updateFrequency = 900 # time in seconds
+updateFrequency = 1200 # time in seconds
 
 secondsInYear = 31536000 + 21600
 ## secondsInYear = 20
 class campaignUpdateFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
     @commands.Cog.listener()
     async def on_ready(self):
-        now = datetime.now()
-        current_minute = now.minute
-        current_second = now.second
-        seconds_count = int(3600 - (current_minute*60 + current_second))
-        seconds_count = seconds_count % updateFrequency
         status_log_channel = self.bot.get_channel(1152377925916688484)
-        await status_log_channel.send(f"First campaign update is scheduled for: **{int(seconds_count/60)} minutes,** **{int(seconds_count % 60)} seconds** from now.")
-        await asyncio.sleep(seconds_count)
-        await self.loopUpdate.start()
+        if self.bot.ishost == True:
+            now = datetime.now()
+            current_minute = now.minute
+            current_second = now.second
+            seconds_count = int(3600 - (current_minute*60 + current_second))
+            seconds_count = seconds_count % updateFrequency
+            await status_log_channel.send(f"First campaign update is scheduled for: **{int(seconds_count/60)} minutes,** **{int(seconds_count % 60)} seconds** from now.")
+            await asyncio.sleep(seconds_count)
+            await self.loopUpdate.start()
+        else:
+            await status_log_channel.send(f"Not initiating campaign updates.")
     @tasks.loop(seconds=updateFrequency)
     async def loopUpdate(self):
         current_time = int(datetime.now().timestamp())
@@ -48,10 +50,9 @@ class campaignUpdateFunctions(commands.Cog):
             resultStr = await self.runAutoTransactions()
             await self.updateHappiness()
             await self.updatePopulation()
-
             await self.collectTaxes()
             await self.updateGDP()
-
+            await self.updateEducation()
             await self.updateEspionage()
             await self.updateLastUpdated()
             if datetime.now().minute < 2:
@@ -77,6 +78,10 @@ class campaignUpdateFunctions(commands.Cog):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET povertyrate = LEAST(GREATEST(povertyrate, 0), 1) WHERE iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET popworkerratio = LEAST(GREATEST(popworkerratio, 1), 5) WHERE iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET averagesalary = LEAST(GREATEST(averagesalary, 1), 50000) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET money = 12345678 WHERE money IS NULL;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET corespend = 0.1 WHERE corespend IS NULL;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET socialspend = 0.1 WHERE socialspend IS NULL;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET defensespend = 0.1 WHERE defensespend IS NULL;''')
 
 
     async def updateTime(self):
@@ -91,20 +96,20 @@ class campaignUpdateFunctions(commands.Cog):
         #     FROM (SELECT timescale, populationperkm FROM campaigns WHERE campaignkey = campaignkey) AS subquery
         #     WHERE factionkey = $3 AND iscountry = true;''', [updateFrequency, secondsInYear, int(faction[0])]) #iscountry = true AND hostactive = true
         await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions 
-        SET population = GREATEST(population + ROUND(((CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT)) * population * 0.001 * ((0.5*ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(population) + LN(gdp))) + (1 - 0.3*educationindex) + (4-lifeexpectancy/20) + (0.5*POWER(povertyrate, 0.5) - 0.2)))), 0)
+        SET population = GREATEST(population + ROUND(((CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT)) * population * ((0.5*ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(population) + LN(gdp))) + (1 - 0.3*educationindex) + (4-lifeexpectancy/20) + (0.5*POWER(povertyrate, 0.5) - 0.2)))), 0)
         FROM (SELECT timescale, populationperkm FROM campaigns WHERE campaignkey = campaignkey) AS subquery 
         WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear]) #iscountry = true AND hostactive = true
 
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions 
-                SET popgrowth = ((population * 0.001 * ((0.5*ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(population) + LN(gdp))) + (1 - 0.3*educationindex) + (4-lifeexpectancy/20) + (0.5*POWER(povertyrate, 0.5) - 0.2)))/population)
+                SET popgrowth = 0.005*((population * ((0.5*ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(population) + LN(gdp))) + (1 - 0.3*educationindex) + (4-lifeexpectancy/20) + (0.5*POWER(povertyrate, 0.5) - 0.2)))/population) - 0.02
                 FROM (SELECT timescale, populationperkm FROM campaigns WHERE campaignkey = campaignkey) AS subquery 
                 WHERE iscountry = true AND hostactive = true;''')  # iscountry = true AND hostactive = true
 
     async def updatePoverty(self):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions
-        SET povertyrate = (2 * (ATAN(POWER((subquery.energycost * subquery.steelcost / 7 * popworkerratio)/averagesalary, 2.4))/PI()))
+        SET povertyrate = (2 * (ATAN(POWER((subquery.energycost * subquery.steelcost / 7 * popworkerratio)/(averagesalary * (1.0-((taxpoor / 1.112) + (taxrich / 10)))), 2.4))/PI()))
         FROM campaigns AS subquery 
-        WHERE campaignfactions.iscountry = true AND subquery.campaignkey = campaignfactions.campaignkey AND campaignfactions.hostactive = true;''')
+        WHERE campaignfactions.iscountry = true AND subquery.campaignkey = campaignfactions.campaignkey AND campaignfactions.hostactive = true;''')  #      * ((0.9*CAST(taxpoor AS FLOAT) + 0.1*CAST(taxrich AS FLOAT)))
 
     async def collectTaxes(self):
         await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET money = money + (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)) * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale * defensespend) FROM (SELECT timescale FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
@@ -122,13 +127,13 @@ class campaignUpdateFunctions(commands.Cog):
         print("made it here")
         await SQLfunctions.databaseExecute(
             f'''UPDATE campaignfactions 
-            SET gdpgrowth = subquery.defaultgdpgrowth + (0.5 * (1-(1.000*(0.9*CAST(taxpoor AS FLOAT) + 0.1*CAST(taxrich AS FLOAT)))) * (0.5 * 2*ATAN(2*(infrastructureindex - 0.5)) + 0.5*2*ATAN(2*(0.5 - taxpoor)) + 0.5*2*ATAN(2*(0.5 - taxrich)) + 0.5*2*ATAN(2*(povertyrate - 0.5)) + 0.5*2*ATAN(2*(educationindex - 0.5))  ))/(2.71*PI()) 
+            SET gdpgrowth = subquery.defaultgdpgrowth + (0.25 * (0.4 * 2*ATAN(2*(infrastructureindex - 0.5)) + 0.6*2*ATAN(4*(0.5 - taxpoor)) + 0.4*2*ATAN(4*(0.5 - taxrich)) - 0.25*2*ATAN(2*(povertyrate - 0.5)) + 0.4*2*ATAN(2*(educationindex - 0.5)) - 2))/(2.71*PI()) 
             FROM (SELECT defaultgdpgrowth FROM campaigns WHERE campaignkey = campaignkey) AS subquery 
             WHERE iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET corespend = (1.0 - (socialspend + infrastructurespend + defensespend)) WHERE iscountry = true AND hostactive = true;''')
 
         await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = averagesalary + averagesalary * gdpgrowth * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * subquery.timescale  FROM (SELECT timescale, defaultgdpgrowth FROM campaigns WHERE campaignkey = campaignkey) AS subquery WHERE iscountry = true AND hostactive = true;''', [updateFrequency, secondsInYear])
-        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET gdp = population * averagesalary / popworkerratio / (1-(1.000*(0.9*CAST(taxpoor AS FLOAT) + 0.1*CAST(taxrich AS FLOAT)))) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET gdp = population * averagesalary / popworkerratio WHERE iscountry = true AND hostactive = true;''')
         #await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET averagesalary = CAST(averagesalary * (1-(1.00012*(0.9*CAST(taxpoor AS FLOAT) + 0.1*CAST(taxrich AS FLOAT)))) AS INT);''')
 
     async def updateIncome(self):
@@ -147,7 +152,7 @@ class campaignUpdateFunctions(commands.Cog):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET lifeexpectancy = GREATEST(((65 + 30*(0.2*happiness - 1*LN(povertyrate + taxpoor  + 1.5 - socialspend) + 0.4*infrastructureindex)) - lifeexpectancy) * 0.902 + lifeexpectancy, 0) WHERE iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET infrastructureindex = GREATEST(((1.6*ATAN(infrastructurespend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)))/population)/PI() + 0.1*governance) - infrastructureindex) * 0.902 + infrastructureindex, 0) WHERE iscountry = true AND hostactive = true;''')
 
-        #await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET educationindex = LEAST(GREATEST(((0.5*LN(socialspend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)))/population + 0.1) + 0.3/(1 + EXP(-0.1*(population/landsize))) + 0.2*governance) - educationindex) * 0.902 + educationindex, 0.005), 1) WHERE iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET educationindex = LEAST(GREATEST(((0.5*LN(socialspend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75)))/population + 0.1) + 0.3/(1 + EXP(-0.1*(population/landsize))) + 0.2*governance) - educationindex) * 0.902 + educationindex, 0.005), 1) WHERE iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET socialspend = corespend * (0.5 + governance/2) WHERE iscountry = true AND hostactive = true;''')
 
     async def updateHappiness(self):
@@ -190,78 +195,82 @@ class campaignUpdateFunctions(commands.Cog):
             subData = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM transactions WHERE repeat > 0 AND campaignkey = $1;''', [campaignData['campaignkey']])
             print(f"There are {len(subData)} auto transactions queued")
             for data in subData:
+                try:
+                    timeOut = datetime.strptime(str(campaignData['timedate']).split(" ")[0], "%Y-%m-%d")
+                    print((timeOut.month - 1) % data['repeat'])
+                    if (timeOut.month - 1) % data['repeat'] == 0:
+                        # customerkey BIGINT, sellerkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT
+                        transactionType = data['type']
+                        moneyAdd = data['cost']
+                        try:
+                            factionData = await campaignFunctions.getFactionData(data['customerkey'])
+                        except Exception:
+                            factionData = await campaignFunctions.getFactionData(data['sellerkey'])
+                        try:
+                            factionChoiceData = await campaignFunctions.getFactionData(data['sellerkey'])
+                            factionChoiceName = await campaignFunctions.getFactionName(data['sellerkey'])
+                        except Exception:
+                            factionChoiceData = await campaignFunctions.getFactionData(data['customerkey'])
+                            factionChoiceName = "Citizens"
+                        factionChoiceKey = data['sellerkey']
 
-                timeOut = datetime.strptime(str(campaignData['timedate']).split(" ")[0], "%Y-%m-%d")
-                print((timeOut.month - 1) % data['repeat'])
-                if (timeOut.month - 1) % data['repeat'] == 0:
-                    # customerkey BIGINT, sellerkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT
-                    transactionType = data['type']
-                    moneyAdd = data['cost']
-                    try:
-                        factionData = await campaignFunctions.getFactionData(data['customerkey'])
-                    except Exception:
-                        factionData = await campaignFunctions.getFactionData(data['sellerkey'])
-                    try:
-                        factionChoiceData = await campaignFunctions.getFactionData(data['sellerkey'])
-                        factionChoiceName = await campaignFunctions.getFactionName(data['sellerkey'])
-                    except Exception:
-                        factionChoiceData = await campaignFunctions.getFactionData(data['customerkey'])
-                        factionChoiceName = "Citizens"
-                    factionChoiceKey = data['sellerkey']
+                        logDetails = data['description']
+                        shipDate = data['repeat']
+                        repeatFrequency = data['repeat']
 
-                    logDetails = data['description']
-                    shipDate = data['repeat']
-                    repeatFrequency = data['repeat']
+                        if transactionType == "sales of equipment to civilians":
+                            await SQLfunctions.databaseExecuteDynamic(
+                                '''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',
+                                [moneyAdd, factionData["factionkey"]])  # the faction being purchased from
+                            customerID = 0
+                            sellerID = factionData["factionkey"]
+                            customerName = f"Citizens of {factionData['factionname']}"
+                            sellerName = factionData['factionname']
+                        if transactionType == "maintenance payments":
+                            await SQLfunctions.databaseExecuteDynamic(
+                                '''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''',
+                                [moneyAdd, factionData["factionkey"]])  # the faction being purchased from
+                            customerID = 0
+                            sellerID = factionData["factionkey"]
+                            customerName = f"Citizens of {factionData['factionname']}"
+                            sellerName = factionData['factionname']
+                        else:
+                            await SQLfunctions.databaseExecuteDynamic(
+                                '''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',
+                                [moneyAdd, factionChoiceKey])  # the faction being purchased from
+                            await SQLfunctions.databaseExecuteDynamic(
+                                '''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''',
+                                [moneyAdd, factionData["factionkey"]])  # the user's faction
+                            customerID = factionData["factionkey"]
+                            sellerID = factionChoiceKey
+                            customerName = factionData['factionname']
+                            sellerName = factionChoiceName
+                        time = await campaignFunctions.getTime(campaignData['timedate'])
+                        embed = discord.Embed(title=f"Automatic transaction log", color=discord.Color.random())
+                        embed.add_field(name="Customer:", value=f"{customerName}")
+                        embed.add_field(name="Seller", value=f"{sellerName}")
+                        embed.add_field(name="Cost", value=f"{campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}")
+                        embed.add_field(name="Time of purchase", value=f"{time}", inline=False)
+                        embed.add_field(name="Details", value=f"{logDetails}", inline=False)
+                        embed.set_thumbnail(url=factionData['flagurl'])
+                        newTime = campaignData['timedate'] + dtime.timedelta(days=shipDate * 30)
+                        format_string = "%Y-%m-%d %H:%M:%S"
+                        dt = datetime.strptime(str(newTime), format_string)
+                        hour = dt.strftime("%I")
+                        min = dt.strftime("%M %p")
+                        day = dt.strftime("%A %B %d")
+                        embed.add_field(name="Completion date:", value=f"{day}, {dt.year}", inline=False)
+                        if repeatFrequency > 0:
+                            embed.add_field(name="Repeat frequency:", value=f"{repeatFrequency} months", inline=False)
+                        channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
+                        await channel.send(embed=embed)
+                        if transactionType != "sales of equipment to civilians":
+                            channel2 = self.bot.get_channel(int(factionChoiceData["logchannel"]))
+                            await channel2.send(embed=embed)
+                except Exception as e:
+                    channel = self.bot.get_channel(1152377925916688484)
+                    await channel.send(f"An automatic transaction failed.  Description: {data['description']}\nError: {e}")
 
-                    if transactionType == "sales of equipment to civilians":
-                        await SQLfunctions.databaseExecuteDynamic(
-                            '''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',
-                            [moneyAdd, factionData["factionkey"]])  # the faction being purchased from
-                        customerID = 0
-                        sellerID = factionData["factionkey"]
-                        customerName = f"Citizens of {factionData['factionname']}"
-                        sellerName = factionData['factionname']
-                    if transactionType == "maintenance payments":
-                        await SQLfunctions.databaseExecuteDynamic(
-                            '''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''',
-                            [moneyAdd, factionData["factionkey"]])  # the faction being purchased from
-                        customerID = 0
-                        sellerID = factionData["factionkey"]
-                        customerName = f"Citizens of {factionData['factionname']}"
-                        sellerName = factionData['factionname']
-                    else:
-                        await SQLfunctions.databaseExecuteDynamic(
-                            '''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',
-                            [moneyAdd, factionChoiceKey])  # the faction being purchased from
-                        await SQLfunctions.databaseExecuteDynamic(
-                            '''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''',
-                            [moneyAdd, factionData["factionkey"]])  # the user's faction
-                        customerID = factionData["factionkey"]
-                        sellerID = factionChoiceKey
-                        customerName = factionData['factionname']
-                        sellerName = factionChoiceName
-                    time = await campaignFunctions.getTime(campaignData['timedate'])
-                    embed = discord.Embed(title=f"Automatic transaction log", color=discord.Color.random())
-                    embed.add_field(name="Customer:", value=f"{customerName}")
-                    embed.add_field(name="Seller", value=f"{sellerName}")
-                    embed.add_field(name="Cost", value=f"{campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']}")
-                    embed.add_field(name="Time of purchase", value=f"{time}", inline=False)
-                    embed.add_field(name="Details", value=f"{logDetails}", inline=False)
-                    embed.set_thumbnail(url=factionData['flagurl'])
-                    newTime = campaignData['timedate'] + dtime.timedelta(days=shipDate * 30)
-                    format_string = "%Y-%m-%d %H:%M:%S"
-                    dt = datetime.strptime(str(newTime), format_string)
-                    hour = dt.strftime("%I")
-                    min = dt.strftime("%M %p")
-                    day = dt.strftime("%A %B %d")
-                    embed.add_field(name="Completion date:", value=f"{day}, {dt.year}", inline=False)
-                    if repeatFrequency > 0:
-                        embed.add_field(name="Repeat frequency:", value=f"{repeatFrequency} months", inline=False)
-                    channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
-                    await channel.send(embed=embed)
-                    if transactionType != "sales of equipment to civilians":
-                        channel2 = self.bot.get_channel(int(factionChoiceData["logchannel"]))
-                        await channel2.send(embed=embed)
         return "Complete!"
 
 
@@ -342,6 +351,7 @@ class campaignUpdateFunctions(commands.Cog):
     async def softUpdate(self):
         await self.updateGDP()
         await self.updateHappiness()
+
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignUpdateFunctions(bot))
