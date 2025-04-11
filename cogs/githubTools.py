@@ -2,11 +2,11 @@ import shutil
 
 import discord, os, platform, time, asyncio, requests, io, datetime
 from pathlib import Path
-from cogs.errorFunctions import errorFunctions
+
 from discord.ext import commands
 from discord import app_commands
 from git import Repo
-
+import git
 # Github config
 from PIL import Image, ImageChops
 
@@ -14,30 +14,58 @@ import main
 from cogs.textTools import textTools
 from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
+from cogs.errorFunctions import errorFunctions
+
+
+## dev test
+import git
+
+try:
+    repo = git.Repo("/home/mumblepi/Github/SprocketTools.github.io")
+    origin = repo.remotes.origin
+    try:
+        origin.fetch('--verbose')
+    except Exception:
+        pass
+    print("Git fetch successful from python!")
+except git.exc.GitCommandError as e:
+    print(f"Git fetch error: {e}")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+
+
+
+
+
+
 imageCategoryList = ["Featured", "Chalk", "Fictional Insignia", "Historical Insignia", "Inscriptions", "Labels", "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures", "Weathering", "Welding"]
 GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
 username = 'SprocketTools'
 password = main.githubPAT
 if platform.system() == "Windows":
-
     GithubDirectory = "C:\\Users\\colson\\Documents\\GitHub\\SprocketTools.github.io"
     OSslashLine = "\\"
-
 else:
     # default settings (running on Rasbian)
     GithubDirectory = "/home/mumblepi/Github/SprocketTools.github.io"
     OSslashLine = "/"
+print(GithubDirectory)
 imgCatalogFolder = "img"
 imgDisplayFolder = "imgbin"
 Path(GithubDirectory).mkdir(parents=True, exist_ok=True)
+
 try:
     Repo.clone_from(GithubURL, GithubDirectory)
-except Exception:
-    pass
-operatingRepo = Repo(GithubDirectory)
-origin = operatingRepo.remote('origin')
-origin.fetch()
-origin.pull(origin.refs[0].remote_head)
+
+    operatingRepo = Repo(GithubDirectory)
+    origin = operatingRepo.remote('origin')
+    origin.fetch('--verbose')
+except git.exc.GitCommandError as e:
+    print(f"Git fetch error: {e}")
+except git.exc.InvalidGitRepositoryError as e:
+    print(f"Invalid Git Repo error: {e}")
+except Exception as e:
+    print(f"An unexpected error occured: {e}")
 
 class githubTools(commands.Cog):
     def __init__(self, bot: commands.Bot):

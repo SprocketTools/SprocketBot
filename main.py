@@ -65,12 +65,13 @@ prefix = instanceConfig[f"botinfo"]["prefix"]
 SQLsettings = baseConfig["SECURITY"]
 SQLsettings["database"] = instanceConfig[f"botinfo"]["sqldatabase"]
 ownerID = int(baseConfig["settings"]["ownerID"])
-githubPAT = str(baseConfig["settings"]["githubPAT"])
+githubPAT = str(baseConfig["settings"]["githubpat"])
+print("Gtok: " + githubPAT)
 updateGithub = False
 if str(instanceConfig["botinfo"]["updateGithub"]) == "true":
     updateGithub = True
     print("Launching master instance")
-cogsList = ["cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",  "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools", "cogs.AprilFools"]
+cogsList = ["cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",  "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools"]
 
 class Bot(commands.Bot):
     def __init__(self):
@@ -83,8 +84,8 @@ class Bot(commands.Bot):
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=60)
         print(baseConfig['settings']['geminiapi'])
-        #if updateGithub == "Y":
-            #cogsList.append("cogs.githubTools")
+        if updateGithub == True:
+            cogsList.append("cogs.githubTools")
             #await self.load_extension("cogs.githubTools")
         for ext in self.cogslist:
             await self.load_extension(ext)

@@ -483,7 +483,7 @@ class adminFunctions(commands.Cog):
             if i % 20 == 0:
                 await ctx.send(serverList)
                 serverList = ""
-        await ctx.send(serverList)
+        #await ctx.send(serverList)
         await ctx.send(f"count: {i} servers!")
         await ctx.send(f"serving: {c} members!")
 

@@ -15,7 +15,10 @@ from cogs.SQLfunctions import SQLfunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
-FFMPEG_OPTIONS = {'options': '-vn -b:a 128k'}
+FFMPEG_OPTIONS_CURSED = {
+    'options': '-vn -b:a 128k -filter:a "volume=0.115, asetrate=44100*1.9, atempo=0.55, bass=g=4" -c:a libopus'}
+FFMPEG_OPTIONS = {
+    'options': '-vn -b:a 128k -filter:a "volume=0.15, bass=g=4" -c:a libopus'}
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
 
 
@@ -42,17 +45,17 @@ class VCfunctions(commands.Cog):
 
         async with ctx.typing():
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                info = ydl.extract_info(f"ytsearch:{search}", download=False)
+                if "https" in search:
+                    info = ydl.extract_info(f"{search}", download=False)
+                else:
+                    info = ydl.extract_info(f"scsearch:{search}", download=False)
             print(info)
             try:
-                info = info['entries'][0]
+                url = info['url']
             except Exception:
-                await ctx.send(await errorFunctions.retrieveError(ctx))
-                await ctx.send("This link is not valid.  Note that videos cannot link to a playlist, or be a video inside a playlist.")
-                return
-            url = info['url']
+                url = info['webpage_url']
             title = info['title']
-            self.queue.append((url, title))
+            self.queue.append((url, title, FFMPEG_OPTIONS))
             await ctx.send(f'Added to queue: **{title}**')
         if not ctx.voice_client.is_playing():
 
@@ -64,15 +67,19 @@ class VCfunctions(commands.Cog):
 
         async with ctx.typing():
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                info = ydl.extract_info(f"ytsearch:{search}", download=False)
-            if 'entries' in info:
-                info = info['entries'][0]
+                info = ydl.extract_info(f"scsearch:{search}", download=False)
+            print('URL:   ' + info['url'])
+            # try:
+            #     info = info['entries'][0]
+            # except Exception:
+            #     await ctx.send(await errorFunctions.retrieveError(ctx))
+            #     await ctx.send("This link is not valid.  Note that videos cannot link to a playlist, or be a video inside a playlist.")
             url = info['url']
             title = info['title']
             await ctx.send(f'Result:\n**{title}**')
 
     @commands.command(name="trollVC", description="Play music with the bot")
-    async def trollVC(self, ctx: commands.Context, channelID: int):
+    async def trollVC(self, ctx: commands.Context, channelID: int, *, action=None):
         if ctx.author.id != main.ownerID:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             await ctx.send("You are not authorized to run this command.")
@@ -87,20 +94,27 @@ class VCfunctions(commands.Cog):
 
         async with ctx.typing():
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                info = ydl.extract_info(f"ytsearch:{search}", download=False)
-            if 'entries' in info:
-                info = info['entries'][0]
+                info = ydl.extract_info(f"{search}", download=False)
+            print('URL:   ' + info['url'])
+            # try:
+            #     info = info['entries'][0]
+            # except Exception:
+            #     await ctx.send(await errorFunctions.retrieveError(ctx))
+            #     await ctx.send("This link is not valid.  Note that videos cannot link to a playlist, or be a video inside a playlist.")
             url = info['url']
             title = info['title']
-            self.queue.append((url, title))
+            if action == "cursed":
+                self.queue.append((url, title, FFMPEG_OPTIONS_CURSED))
+            else:
+                self.queue.append((url, title, FFMPEG_OPTIONS))
             await ctx.send(f'Added to queue: **{title}**')
         if not ctx.voice_client.is_playing():
             await self.play_next(ctx)
 
     async def play_next(self, ctx):
         if self.queue:
-            url, title = self.queue.pop(0)
-            source = await discord.FFmpegOpusAudio.from_probe(url, **FFMPEG_OPTIONS)
+            url, title, ffoptions = self.queue.pop(0)
+            source = await discord.FFmpegOpusAudio.from_probe(url, **ffoptions)
             source.read()
             ctx.voice_client.play(source, after=lambda _:self.bot.loop.create_task(self.play_next(ctx)))
             await ctx.send(f'Now playing: **{title}**')

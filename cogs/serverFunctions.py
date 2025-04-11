@@ -120,14 +120,13 @@ class serverFunctions(commands.Cog):
 
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="note", description="Leave a mod-visible note about a user")
-    async def note(self, ctx: commands.Context, user: discord.Member, reason: str):
+    async def note(self, ctx: commands.Context, user: discord.Member, reason: str, points: int):
         data = await SQLfunctions.databaseFetchdictDynamic('''SELECT name, description, points FROM modrules WHERE serverid = $1;''', [ctx.guild.id])
         dataOut = []
         for rule in data:
             dataOut.append(f'{rule["name"]} - {rule["description"]}')
         await ctx.send("Select the applicable rule violation")
         ruleName = "Staff note"
-        points = 0
         # serverid BIGINT, userid BIGINT, moderatorid BIGINT, name VARCHAR, description VARCHAR, points INT, timestamp TIMESTAMP, endtime TIMESTAMP, type VARCHAR
         logValues = [random.randint(1, 123456789), ctx.guild.id, user.id, ctx.author.id, ruleName, reason, points, datetime.datetime.now(), datetime.datetime.now(), "warning"]
         await SQLfunctions.databaseExecuteDynamic('''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);''', logValues)
