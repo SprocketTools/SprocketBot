@@ -319,6 +319,15 @@ class errorFunctions(commands.Cog):
         error = error.replace('@', '')
         return error
 
+    async def retrieveTextError(ctx: commands.Context):
+        if ctx.author.id == 299330776162631680:
+            error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
+        else:
+            error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl', 'gif') ORDER BY RANDOM() LIMIT 1;'''))["error"]
+        error = await errorFunctions.errorfyText(ctx, error)
+        error = error.replace('@', '')
+        return error
+
     async def retrieveCategorizedError(ctx: commands.Context, category: str):
         if ctx.author.id == 299330776162631680:
             error = (await SQLfunctions.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]

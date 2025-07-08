@@ -79,7 +79,7 @@ class adminFunctions(commands.Cog):
         # except Exception:
         #     pass
 
-        if ctx.author.id in [439836738064613378]: # blacklist  -- , 171352085340618753 "scy"
+        if ctx.author.id in [439836738064613378, 670531747972251676, 171352085340618753]: # blacklist
             await errorFunctions.sendCategorizedError(ctx, "insult")
             return False
         if ctx.author.id == main.ownerID:
@@ -674,7 +674,6 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="setBotAvatar", description="setup the server")
     async def setBotAvatar(self, ctx: commands.Context):
-        defaultURL = main.defaultURL
         if ctx.author.id != main.ownerID:
             return
         url = await textTools.getResponse(ctx, "Reply with the image link")
@@ -998,8 +997,8 @@ class adminFunctions(commands.Cog):
             await ctx.send("Getting AI response")
             try:
                 message = gemini.models.generate_content(
-                    model='gemini-2.0-flash-001',
-                    contents=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your prompt cannot exceed 200 words in length. {prompt}"
+                    model='gemini-2.5-flash',
+                    contents=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your reply cannot exceed 250 words in length. {prompt}"
                 )
             except Exception:
                 await ctx.send("AI generation prompt failed.")

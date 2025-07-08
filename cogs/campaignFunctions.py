@@ -22,41 +22,37 @@ class campaignFunctions(commands.Cog):
         campaignFunctions.campaignSettings = await SQLfunctions.databaseFetchdict(f'''SELECT * FROM campaignservers''')
 
     async def showSettings(ctx: commands.Context):
-        try:
-            campaignKey = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
-            data = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
-            date_string = str(data['timedate'])
-            format_string = "%Y-%m-%d %H:%M:%S"
-            dt = datetime.strptime(date_string, format_string)
-            print(dt.year)
-            hour = dt.strftime("%I")
-            min = dt.strftime("%M %p")
-            day = dt.strftime("%A %B %d")
-            embed = discord.Embed(title=f"{data['campaignname']} settings", description="These are the settings encompassing your entire campaign!", color=discord.Color.random())
-            embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
-            embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
-            embed.add_field(name="Announcements channel", value=f"<#{data['publiclogchannelid']}>", inline=False)
-            embed.add_field(name="Transaction logger", value=f"<#{data['privatemoneychannelid']}>", inline=False)
-            embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
-            embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
-            embed.add_field(name="Starting pop/worker ratio", value=f"{data['poptoworkerratio']}", inline=False)
-            embed.add_field(name="Baseline GDP growth", value=f"{round(float(data['defaultgdpgrowth'])*100, 2)}%", inline=False)
-            embed.add_field(name="Cost of one ton of steel", value=f"{data['currencysymbol']}{data['steelcost']}", inline=False)
-            embed.add_field(name="Cost of barrel of oil", value=f"{data['currencysymbol']}{data['energycost']}",inline=False)
-            if data['active'] == True:
-                embed.add_field(name="Current status", value=f"**Campaign is running**", inline=False)
-            if data['active'] == False:
-                embed.add_field(name="Current status", value=f"**Campaign is NOT running**", inline=False)
-            embed.set_footer(text=f"It is {hour}:{min} on {day}, {dt.year}")
-            return await ctx.send(embed=embed)
-        except Exception as e:
-            await ctx.send(f"Error:\n-# {e}\n\nMake sure that you have set up your server and joined, or started, a campaign.")
+        #try:
+        campaignKey = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
+        data = await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM campaigns WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
+        date_string = str(data['timedate'])
+        format_string = "%Y-%m-%d %H:%M:%S"
+        dt = datetime.strptime(date_string, format_string)
+        print(dt.year)
+        hour = dt.strftime("%I")
+        min = dt.strftime("%M %p")
+        day = dt.strftime("%A %B %d")
+        embed = discord.Embed(title=f"{data['campaignname']} settings", description="These are the settings encompassing your entire campaign!", color=discord.Color.random())
+        embed.add_field(name="Campaign rules", value=f"{data['campaignrules']}", inline=False)
+        embed.add_field(name="Time scale", value=f"{data['timescale']}x", inline=False)
+        embed.add_field(name="Announcements channel", value=f"<#{data['publiclogchannelid']}>", inline=False)
+        embed.add_field(name="Transaction logger", value=f"<#{data['privatemoneychannelid']}>", inline=False)
+        embed.add_field(name="Currency symbol", value=f"{data['currencysymbol']}", inline=False)
+        embed.add_field(name="Currency name", value=f"{data['currencyname']}", inline=False)
+        embed.add_field(name="Baseline GDP growth", value=f"{round(float(data['defaultgdpgrowth'])*100, 2)}%", inline=False)
+        embed.add_field(name="Cost of one ton of steel", value=f"{data['currencysymbol']}{data['steelcost']}", inline=False)
+        embed.add_field(name="Cost of barrel of oil", value=f"{data['currencysymbol']}{data['energycost']}",inline=False)
+        if data['active'] == True:
+            embed.add_field(name="Current status", value=f"**Campaign is running**", inline=False)
+        if data['active'] == False:
+            embed.add_field(name="Current status", value=f"**Campaign is NOT running**", inline=False)
+        embed.set_footer(text=f"It is {hour}:{min} on {day}, {dt.year}")
+        return await ctx.send(embed=embed)
+        #except Exception as e:
+            #await ctx.send(f"Error:\n-# {e}\n\nMake sure that you have set up your server and joined, or started, a campaign.")
 
     async def getUserFactionData(ctx: commands.Context):
-        ##
 
-
-        ##
         campaignData = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignData['campaignkey']
         factionUserData = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionkey FROM campaignusers WHERE status = true AND userid = $1 AND campaignkey = $2;''', [ctx.author.id, campaignKey])

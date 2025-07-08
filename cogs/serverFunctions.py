@@ -160,7 +160,7 @@ class serverFunctions(commands.Cog):
 
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="ban", type="ban", description="Ban a user")
-    async def ban(self, ctx: commands.Context, user: discord.Member, reason: str, days: int):
+    async def ban(self, ctx: commands.Context, user: discord.Member, reason: str, days: int, delete_days: int):
         try:
             print(user.name)
         except Exception as e:
@@ -177,9 +177,10 @@ class serverFunctions(commands.Cog):
             await user.send(messageDM)
         except Exception:
             await ctx.send("Failed to notify the user; they likely have Sprocket Bot blocked.")
+        target_username = user.name
         try:
-            await user.ban(reason=f"Banned by {ctx.author.name} - {reason}")
-            await ctx.send(f'Ban issued to **{user.name}**.')
+            await user.ban(reason=f"Banned by {ctx.author.name} - {reason}", delete_message_days=delete_days)
+            await ctx.send(f'Ban issued to **{target_username}**.')
         except Exception as e:
             await ctx.send(f'Sprocket Bot could not ban this user: \n{e}')
 
@@ -187,9 +188,9 @@ class serverFunctions(commands.Cog):
     async def roll(self, interaction):
         result = random.randint(1, 6)
         embed = discord.Embed(
-            title="🎲 Dice Roll",
+            title=f"🎲 Dice Roll",
             description=f"**Result:** You rolled a `{result}`!",
-            color=discord.Color.blurple()
+            color=discord.Color.random()
         )
         await interaction.response.send_message(embed=embed)
 

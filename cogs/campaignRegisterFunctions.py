@@ -4,7 +4,7 @@ import math
 import time
 from urllib.request import urlopen
 
-from cogs.adminFunctions import adminFunctions
+
 
 locale.setlocale(locale.LC_ALL, '')
 import random
@@ -19,6 +19,7 @@ from cogs.campaignFunctions import campaignFunctions
 from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
+from cogs.adminFunctions import adminFunctions
 class campaignRegisterFunctions(commands.Cog):
     activeRegistKey = 569801354
     def __init__(self, bot: commands.Bot):
@@ -41,9 +42,13 @@ class campaignRegisterFunctions(commands.Cog):
         if ctx.author.id != main.ownerID:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaigns (campaignname VARCHAR, campaignrules VARCHAR(50000), hostserverid BIGINT, campaignkey BIGINT, timescale BIGINT, currencyname VARCHAR, currencysymbol VARCHAR, publiclogchannelid BIGINT, privatemoneychannelid BIGINT, defaultgdpgrowth REAL, defaultpopgrowth REAL, populationperkm INT, taxestoplayer REAL, poptoworkerratio REAL, active BOOLEAN, timedate TIMESTAMP, lastupdated TIMESTAMP);''')
+        await ctx.send("Confirm you want to wipe the database.")
+        if not await discordUIfunctions.getYesNoChoice(ctx):
+            return
+        await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS campaigns, campaignservers, campaignfactions, campaignusers, campaignautopurchases;''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaigns (campaignname VARCHAR, campaignrules VARCHAR(50000), hostserverid BIGINT, campaignkey BIGINT, timescale BIGINT, currencyname VARCHAR, currencysymbol VARCHAR, publiclogchannelid BIGINT, privatemoneychannelid BIGINT, companychannelid BIGINT, managerchannelid BIGINT, defaultgdpgrowth REAL, defaultpopgrowth REAL, populationperkm INT, steelcost REAL, energycost REAL, active BOOLEAN, timedate TIMESTAMP, lastupdated TIMESTAMP);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, lifeexpectancy REAL, educationindex REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL, espionagespend REAL, espionagestaff INT, povertyrate REAL, latitude INT, infrastructureindex REAL, defensespend REAL, corespend REAL, educationspend REAL);''')
+        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, companyowner BIGINT, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, lifeexpectancy REAL, educationindex REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL, espionagespend REAL, espionagestaff INT, povertyrate REAL, latitude INT, infrastructureindex REAL, defensespend REAL, corespend REAL, educationspend REAL, popgrowth REAL);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignautopurchases (campaignkey BIGINT, factionkey BIGINT, userid BIGINT, name VARCHAR, amount BIGINT, lastupdated TIMESTAMP, monthfrequency INT, status BOOLEAN);''')
         await ctx.send("## Done!")
@@ -70,7 +75,8 @@ class campaignRegisterFunctions(commands.Cog):
             await ctx.send("The current registration key is " + str(self.activeRegistKey))
             userKey = int(self.activeRegistKey)
         else:
-            userKey = await textTools.getIntResponse(ctx, "What is your campaign registration key?")
+            await ctx.send("Let's get started!\nYou will now be asked 6 questions to initialize the campaign, starting with this one.")
+            userKey = await textTools.getIntResponse(ctx, "What is your campaign registration key?\n-# If you do not have a registration key, contact the bot host in order to get one.")
             if userKey != self.activeRegistKey:
                 print(userKey)
                 print(self.activeRegistKey)
@@ -78,17 +84,19 @@ class campaignRegisterFunctions(commands.Cog):
                 return
 
         campaignName = await textTools.getCappedResponse(ctx, "What is the name of your campaign?", 128)
-        campaignRules = await textTools.getCappedResponse(ctx, "Provide a link to your campaign's rules.  This can be a google document, website, or similar.", 512)
-        speed = await textTools.getFlooredFloatResponse(ctx, "What is the speed of your campaign's time progression compared to IRL?", 1)
-        currencyName = await textTools.getCappedResponse(ctx, "What is the name of your currency?", 32)
-        currencySymbol = await textTools.getCappedResponse(ctx, "What is your currency's symbol?", 2)
-        publicAnnouncement = await textTools.getChannelResponse(ctx, "What channel do you want publicly-visible announcements to be sent to?  Reply with a mention of a channel.")
-        privateLogging = await textTools.getChannelResponse(ctx, "What channel do you want logs and other private information to be sent to?  Reply with a mention of a channel.")
-        defaultGDPgrowth = await textTools.getPercentResponse(ctx, "What is your average economic growth under ideal circumstances?  Reply with a percentage value.")
-        defaultpopgrowth = await textTools.getPercentResponse(ctx, "What is your average population growth under nominal circumstances?  Reply with a percentage value.")
-        poppersquarekm = await textTools.getFlooredIntResponse(ctx, "How many people should be able to live off a square kilometer of land?\n-# Real-world values average around 1,000 to 2,000 people", 100)
-        discretionaryratio = await textTools.getPercentResponse(ctx, "How much of your country's tax revenue should be available to the player?  Reply with a percentage value.")
-        popworkerratio = await textTools.getFlooredIntResponse(ctx, "What ratio of people to workers should countries start with?\nThis value should be a whole number between 2 and 4.", 2)
+        campaignRules = "N/A"
+        speed = 7
+        currencyName = "dollars"
+        currencySymbol = "$"
+        publicAnnouncement = await textTools.getChannelResponse(ctx, "What Discord channel do you want publicly-visible announcements to be sent to?  This will include things like new-year celebrations and important events.\nReply with a mention of the desired channel.")
+        privateLogging = await textTools.getChannelResponse(ctx, "What Discord channel do you want to use to log player actions?  This will contain alot of stuff that players should not be able to see, such as purchases made by countries.\nReply with a mention of the desired channel.")
+        companyChannel = await textTools.getChannelResponse(ctx,"What Discord channel do you want to use for companies?  Sprocket Bot will use this channel to create threads for companies so that they can conduct business. \nReply with a mention of a channel.")
+        managerChannel = await textTools.getChannelResponse(ctx,"What Discord channel do you want to use for processing new vehicle submissions?  This channel should only be visible to campaign managers. \nReply with a mention of a channel.")
+        defaultGDPgrowth = 0.05
+        defaultpopgrowth = 0.01
+        poppersquarekm = 1500
+        steelcost = 50
+        energycost = 3
         startingyear = await textTools.getIntResponse(ctx, "What calender year is your campaign starting with?")
 
         datalist = [campaignName,
@@ -100,14 +108,18 @@ class campaignRegisterFunctions(commands.Cog):
                     currencySymbol,
                     publicAnnouncement,
                     privateLogging,
+                    companyChannel,
+                    managerChannel,
                     defaultGDPgrowth,
                     defaultpopgrowth,
                     poppersquarekm,
-                    discretionaryratio,
-                    popworkerratio,
+                    steelcost,
+                    energycost,
                     False,
-                    datetime.datetime(startingyear, 1, 1)]
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaigns VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)''',datalist)
+                    datetime.datetime(startingyear, 1, 1),
+                    datetime.datetime.now()
+                    ]
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaigns VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)''',datalist)
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignservers WHERE serverid = $1''',[ctx.guild.id])
         await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignservers VALUES ($1, $2)''',[ctx.guild.id, userKey])
         await ctx.send(f"## Done!\nRemember to save your campaign registration key (**{userKey}**), as other servers will need this in order to join the campaign.")
@@ -160,17 +172,11 @@ class campaignRegisterFunctions(commands.Cog):
 
     @commands.command(name="startFaction", description="Add a faction to a campaign")
     async def startFaction(self, ctx: commands.Context):
-        if ctx.guild.id == 1341982766555992075: # prop punk custom exclusion setup
-            await errorFunctions.sendCategorizedError(ctx, "mlp")
-            await ctx.send("Use a satellite server to run this command.")
-            return
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
-        defaultPWR = float(campaignData["poptoworkerratio"])
-        landlordid = 0
         approvalStatus = await campaignFunctions.isCampaignHost(ctx)
         campaignKeyList = await SQLfunctions.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignKeyList['campaignkey']
-        await ctx.send("## Welcome!\nYou will now be asked between 7 and 15 questions about your country (dependent on its type)\nLet's begin: is your faction a country?")
+        await ctx.send("## Welcome!\nYou will now be asked several questions about your country to start the setup process!  Keep in mind that most of these settings can be changed later using the `-manageFaction` command.\nLet's begin: is your faction a country?")
         isCountry = await discordUIfunctions.getYesNoChoice(ctx)
         factionName = await textTools.getResponse(ctx, "What is the name of your faction?")
         nameStatus = False
@@ -180,53 +186,42 @@ class campaignRegisterFunctions(commands.Cog):
                 await ctx.send("A faction already exists with this name!")
                 return
             nameStatus = True
-        factionDescription = await textTools.getResponse(ctx, "What is your faction's description?")
-        factionRoleID = await textTools.getRoleResponse(ctx, "What role do you require for players to be able to join your faction?\n-# Reply with a ping of that role, or its role id.")
-        logChannelID = await textTools.getChannelResponse(ctx, "What channel do you want updates about your faction to be sent to?\n-# Reply with a mention of that channel.")
-        # https://stackoverflow.com/questions/10543940/check-if-a-url-to-an-image-is-up-and-exists-in-python
-        image_formats = ("image/png", "image/jpeg", "image/gif")
-        # site = urlopen(flagURL)
-        # meta = site.info()  # get header of the http request
+        factionDescription = "Add a fancy description here!"
+        if ctx.guild.id == campaignData["hostserverid"] and isCountry == False:
+            channel = ctx.bot.get_channel(campaignData["companychannelid"])
+            logChannel = await channel.create_thread(name=factionName, type=discord.ChannelType.private_thread)
+            logChannelID = logChannel.id
+        else:
+            logChannelID = ctx.channel.id
+
         factionkey = time.time() + round(random.random()*10000)
-        # if meta["content-type"] not in image_formats:  # check if the content-type is a image
-        #     await errorFunctions.sendError(ctx)
-        #     while meta["content-type"] not in image_formats:
-        #         flagURL = await textTools.getResponse(ctx, "Try again: what is your country's flag?\nReply with a direct URL to your flag's picture.")
-        #         site = urlopen(flagURL)
-        #         meta = site.info()  # get header of the http request
-        #         if meta["content-type"] not in image_formats:  # check if the content-type is a image
-        #             await errorFunctions.sendError(ctx)
         if isCountry == True: # country
+            factionRoleID = await textTools.getRoleResponse(ctx, "What Discord role is going to be required for players to be able to join your faction?\n-# Reply with a ping of that role, or its role id.")
             flagURL = await textTools.getFileURLResponse(ctx,"What is your country's flag?\n-# Upload a picture of your flag.")
-            discretionaryFunds = await textTools.getFlooredIntResponse(ctx, "How much money does your country's military have in the bank?  Consider this your starting discretionary funds.", 10000)
             population = await textTools.getFlooredIntResponse(ctx,"What is the population of your country?\n-# For numerical replies like this one, do not include any commas.", 1000)
-            popworkerratio = campaignData['poptoworkerratio']
-            await ctx.send("This next question will set your country's GDP and median salary.  You can plug in either value, and the other one will be auto-calculated from it.")
-            EEE = await textTools.getFlooredIntResponse(ctx, "Reply with any number below 5,000 to set your country's median salary.\nReply with any number greater than 10,000 to set your country's GDP.", 1)
-            if EEE < 5000:
-                salary = EEE
-                gdp = round(salary*population/popworkerratio)
-            else:
-                gdp = EEE
-                salary = round((gdp/population)*popworkerratio, 3)
-            latitude = await textTools.getFloatResponse(ctx,"What is the average latitude of your country on the globe?  Reply with a number in degrees.")
+            salary = await textTools.getFlooredIntResponse(ctx, "What is your country's average monthly salary?  Do not include unemployed people in your average.", 1)
+            latitude = await textTools.getFloatResponse(ctx,"What is the average latitude of your country on the globe?  Reply with a number in degrees.\nNote that this value does not need to be precise and can be estimated.")
             land = await textTools.getFlooredFloatResponse(ctx, "How many square kilometers of land does your country control?", 1)
             governanceScale = await campaignFunctions.getGovernmentType(ctx)
+            companyOwner = 0
             landlordid = 0
+            taxpoor = round((0.15*governanceScale + 0.2), 3)
+            popworkerratio = 3 - math.atan(salary/((campaignData['energycost'] + campaignData['steelcost'] + taxpoor*10)/10))
+            gdp = round(salary*population/popworkerratio)
+            discretionaryFunds = gdp/20
         else: #company
-            discretionaryFunds = await textTools.getFlooredIntResponse(ctx,"How much money does your company currently have in the bank?",10000)
+            factionRoleID = 0
+            discretionaryFunds = campaignData["steelcost"]*50000 + campaignData["energycost"]*50000
             flagURL = await textTools.getFileURLResponse(ctx,"What is your company's logo?\n-# Upload a picture of your flag.")
             population = 1000
             salary = 1000
-            popworkerratio = 1
+            popworkerratio = 3
             latitude = 0
+            companyOwner = ctx.author.id
             land = 2000
             governanceScale = 1.0
             landlorddata = await campaignFunctions.pickCampaignCountry(ctx, prompt="What country is your faction operating from?\n-# Note: this will affect your income taxes, so choose wisely.")
             landlordid = landlorddata['factionkey']
-        # except ValueError as e:
-            # await ctx.send(f"Command has stopped:\n\n{e}")
-
 
         await ctx.send("Starting processing...")
         datalist = [campaignKey,
@@ -234,6 +229,7 @@ class campaignRegisterFunctions(commands.Cog):
                     landlordid,
                     approvalStatus,
                     campaignData["active"],
+                    companyOwner,
                     factionName,
                     factionDescription,
                     flagURL,
@@ -265,22 +261,25 @@ class campaignRegisterFunctions(commands.Cog):
                     0.05, #educationspend
                     0.01 #population growth
                     ]
-        print(len(datalist))
-
         await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, factionName])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35)''', datalist)
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36)''', datalist)
         nameTest = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
         if len(nameTest) > 1:
             await SQLfunctions.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2 AND factionkey = $3;''',[ctx.guild.id, factionName, factionkey])
             await ctx.send("Somehow... there are now multiple factions with names matching this one.  As this is theoretically impossible without running bot exploits, I have cancelled the registration of this faction.")
             return
+        logChannel = ctx.bot.get_channel(logChannelID)
+        if isCountry == False:
+            await logChannel.send(ctx.author.mention)
+            await logChannel.send("Use this channel to conduct private operations.  If you wish to use another location, this can be set using `-manageFaction`.")
         if approvalStatus == True:
             await ctx.send(f"## Done!\n{factionName} is now registered as a faction!")
         else:
-            await ctx.send(f"## Done!\n{factionName} now awaits moderator approval.")
-            await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignusers VALUES ($1, $2, $3, true)''',[ctx.author.id, campaignKey, factionkey])
+            await logChannel.send(f"## Done!\n{factionName} now awaits moderator approval.\n")
             log_channel = self.bot.get_channel(campaignData['privatemoneychannelid'])
             await log_channel.send(f'### {ctx.author.mention} has submitted the faction "{factionName}" to {campaignData["campaignname"]} and now awaits approval!\n\n-# Use `-approveCampaignFactions` to approve queued faction submissions.')
+        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO campaignusers VALUES ($1, $2, $3, true)''',[ctx.author.id, campaignKey, factionkey])
+
 
         #except Exception:
             #await ctx.send(await errorFunctions.retrieveError(ctx))

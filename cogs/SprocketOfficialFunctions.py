@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import random
 
@@ -35,6 +36,24 @@ class SprocketOfficialFunctions(commands.Cog):
         for attachment in msg.attachments:
             file = await attachment.to_file()
             await channel.send(file=file, content="")
+
+    @main.bot.event
+    async def on_member_join(member):
+    # @commands.command(name="roleTest", description="Make a role test")
+    # async def roleTest(self, ctx: commands.Context):
+        await asyncio.sleep(60*60*2)
+        guild = member.guild
+        if guild.id != 788349365466038283:
+            return
+        roles = member.roles
+        print(roles)
+        if "788490656087277628" not in str(member.roles):
+            try:
+                await member.send("You have been kicked from Sprocket Official for failing to agree to the rules within 2 hours.  You are welcome to rejoin and try again at https://discord.gg/sprocket")
+            except Exception:
+                pass
+            await member.kick(reason="Did not claim member role in time.")
+
 
     @commands.command(name="askHamish", description="Ask Hamish a question.")
     async def askHamish(self, ctx: commands.Context):

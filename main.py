@@ -78,11 +78,14 @@ class Bot(commands.Bot):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True) #
         self.cogslist = cogsList
         self.synced = False
+        self.baseConfig = baseConfig
+        self.configurationFilepath = configurationFilepath
         self.serverids = []
         self.geminikey = baseConfig['settings']['geminiapi']
 
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=60)
+
         print(baseConfig['settings']['geminiapi'])
         if updateGithub == True:
             cogsList.append("cogs.githubTools")

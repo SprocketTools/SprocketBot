@@ -68,6 +68,7 @@ class campaignUpdateFunctions(commands.Cog):
 
     async def errorPrevention(self):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET happiness = 0.01 WHERE happiness < 0.01 AND iscountry = true AND hostactive = true;''')
+        await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET popgrowth = 0.01 WHERE popgrowth < 0.01 AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET averagesalary = 1 WHERE averagesalary < 1 AND iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET lifeexpectancy = 0.01 WHERE lifeexpectancy < 0.01 AND iscountry = true AND hostactive = true;''')
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions SET infrastructureindex = 0.01 WHERE infrastructureindex < 0.01 AND iscountry = true AND hostactive = true;''')
@@ -107,7 +108,7 @@ class campaignUpdateFunctions(commands.Cog):
 
     async def updatePoverty(self):
         await SQLfunctions.databaseExecute(f'''UPDATE campaignfactions
-        SET povertyrate = (2 * (ATAN(POWER((subquery.energycost * subquery.steelcost / 7 * popworkerratio)/(averagesalary * (1.0-((taxpoor / 1.112) + (taxrich / 10)))), 2.4))/PI()))
+        SET povertyrate = (2 * (ATAN(POWER((subquery.energycost * subquery.steelcost / 7 * popworkerratio)/(averagesalary * (1.0-((taxpoor / 1.112) + (taxrich / 10)))), 2))/PI()))
         FROM campaigns AS subquery 
         WHERE campaignfactions.iscountry = true AND subquery.campaignkey = campaignfactions.campaignkey AND campaignfactions.hostactive = true;''')  #      * ((0.9*CAST(taxpoor AS FLOAT) + 0.1*CAST(taxrich AS FLOAT)))
 
@@ -308,7 +309,7 @@ class campaignUpdateFunctions(commands.Cog):
     @commands.command(name="forceUpdate", description="test")
     async def forceUpdate(self, ctx: commands.Context):
         current_time = int(datetime.now().timestamp())
-        last_time = int(main.config["settings"]['lastupdated'])
+        last_time = int(ctx.bot.baseConfig["settings"]['lastupdated'])
         print(f'{last_time} --> {current_time}')
         status_log_channel = self.bot.get_channel(1152377925916688484)
         await status_log_channel.send("Update is starting!")
@@ -341,11 +342,11 @@ class campaignUpdateFunctions(commands.Cog):
         #     await self.sendBackup()
         # else:
         #     await self.sendBackup()
-        main.config["settings"]['lastupdated'] = str(last_time + updateFrequency)
+        ctx.bot.baseConfig["settings"]['lastupdated'] = str(last_time + updateFrequency)
         await status_log_channel.send("Update is complete!")
-        main.config["settings"]['lastupdated'] = str(current_time)
-        with open(main.configurationFilepath, "w") as configfile:
-            main.config.write(configfile)
+        ctx.bot.baseConfig["settings"]['lastupdated'] = str(current_time)
+        with open(ctx.bot.configurationFilepath, "w") as configfile:
+            ctx.bot.baseConfig.write(configfile)
         await ctx.send("## Done!")
 
     async def softUpdate(self):
