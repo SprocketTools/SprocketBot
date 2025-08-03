@@ -26,11 +26,11 @@ from cogs.textTools import textTools
 
 serverConfig = {}
 userStrikes = {}
-nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "free gifts", "gift", "leak", "executor roblox", "roblox executor", "earn", "earning"]
-scamFlags = ["$", "steam", "asdfghjkl"]
-linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "https://temu.com/s/", "https://", "http://", "discord.gg", "discord.com/invite", "https://t.me/"]
+nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "invite", "free gifts", "gift", "leak", "executor roblox", "roblox executor", "earn", "earning"]
+scamFlags = ["$", "steam", "asdfghjkl", "cdn.discordapp.com/attachments", "@everyone"]
+linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "https://temu.com/s/", "canary.discord.com", "https://", "http://", "discord.gg", "discordapp.com", "discord.com/invite", "https://t.me/"]
 strikethreshold = 3
-piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c"]
+piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c", "0.2.19.5", "0.2.30.0", "0.2.32.1"]
 colorint = -1
 class adminFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):

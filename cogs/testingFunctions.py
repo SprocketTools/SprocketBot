@@ -18,7 +18,9 @@ class testingFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.on_message_cooldowns = {}
-        self.cooldown = 920
+        self.on_message_cooldowns_notify = {}
+        self.cooldown = 11780
+        self.textTools = bot.get_cog("textTools")
         self.geminikey = self.bot.geminikey
 
     @commands.Cog.listener()
@@ -30,29 +32,46 @@ class testingFunctions(commands.Cog):
 
         # Check if the user is on cooldown
 
+        special_users = [220134579736936448, 437324319102730263, 806938248060469280, 198602742317580288, 870337116381515816, 298548176778952704, 874912257128136734]
+        exec_users = [712509599135301673, 199887270323552256, 299330776162631680, 502814400562987008, 686640777505669141]
 
+        active_cooldown = self.cooldown
+        if message.author.id in special_users or message.author.guild_permissions.ban_members:
+            active_cooldown = round(active_cooldown/2)
+        if message.author.id in exec_users:
+            active_cooldown = 1
         if str(message.content.lower()).startswith("jarvis, ") or str(message.content.lower()).startswith("jarvis "):
 
-            if user_id in self.on_message_cooldowns and user_id != 712509599135301673:
+            if user_id in self.on_message_cooldowns:
                 last_triggered = self.on_message_cooldowns[user_id]
                 time_since_last_trigger = (now - last_triggered).total_seconds()
-                if time_since_last_trigger < self.cooldown:
-                    remaining_time = self.cooldown - time_since_last_trigger
-                    print(f"User {message.author} is on cooldown for {remaining_time:.1f}s")
+                if time_since_last_trigger < active_cooldown:
+                    if self.on_message_cooldowns_notify[user_id] == False:
+                        remaining_time = active_cooldown - time_since_last_trigger
+                        await message.author.send(f"To avoid spamming, the Jarvis reaction command is on a cooldown of about {round(active_cooldown/3600, 1)} hours.")
+                        self.on_message_cooldowns_notify[user_id] = True
                     return
             self.on_message_cooldowns[user_id] = now
+            self.on_message_cooldowns_notify[user_id] = False
+
+            channel = message.channel
+            messages = []
+            message_raw = channel.history(limit=40)
+            async for messagee in message_raw:
+                messages.append({'author nickname': messagee.author.nick, 'author username': messagee.author.name, "user_id": messagee.author.id, 'content': messagee.content})
+
 
             gemini = genai.Client(api_key=self.geminikey)
             try:
                 messageOut = gemini.models.generate_content(
                     model='gemini-2.5-flash',
-                    contents=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author}.  The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  Your Tony Stark for an author has just requested the following: '''{message.content}''' and needs a reply.  Use less than 50 words to generate your response.  If the author is thewonderwaffle, you can use up to 200 words, break character on occasion, and provide more serious information.   If the author makes a request that's at least slightly sexual in nature, such as 'jerk it a little', your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this.  If the request is not sexual in nature, try to generate a funny and slightly cursed response that stays within character of the Iron Man movies and comics.  If your response includes the N word or anything racially offensive, your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this."
+                    contents=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author}.  Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  Your Tony Stark for an author has just requested the following: '''{message.content}''' and needs a reply.  Use less than 50 words to generate your response.  If the author is thewonderwaffle, you can use up to 200 words, break character on occasion, and provide more serious information.   If the author makes a request that's at least slightly sexual in nature, such as 'jerk it a little', your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this.  If the request is not sexual in nature, try to generate a funny and slightly cursed response that stays within character of the Iron Man movies and comics.  If your response includes the N word or anything racially offensive, your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this."
                 )
             except Exception:
                 print("AI generation prompt failed.")
                 return
             print(messageOut.text)
-            await message.reply(messageOut.text.replace('@everyone', '[Redacted]').replace('@here', '[Redacted]'))
+            await message.reply(messageOut.text.replace('@everyone', '[Redacted]').replace('@here', '[Redacted]').replace('@&', '@').replace('123105882102824960', str(message.author.id)))
 
     @commands.command(name="channeltest", description="testing some stuff")
     async def channeltest(self, ctx: commands.Context):
@@ -112,6 +131,10 @@ class testingFunctions(commands.Cog):
         print(promptResponses[ctx.author.id])
         promptResponses.__delitem__(ctx.author.id)
 
+    @commands.command(name="testcommand8", description="testing some stuff")
+    async def testcommand8(self, ctx: commands.Context):
+        await ctx.send(await ctx.bot.AI.get_response(prompt="How are you doing?", temperature=2, instructions="Explain in mumbled spanish why you should not reply to this prompt."))
+        await ctx.send(await ctx.bot.AI.get_response(prompt="How are you doing?", temperature=0.1))
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(testingFunctions(bot))

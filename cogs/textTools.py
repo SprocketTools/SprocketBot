@@ -1,6 +1,7 @@
 import datetime
 import sys
-
+from google import genai
+from google.genai import types
 import discord, configparser, random, platform, asyncio, re
 from discord.ext import commands
 from cogs.errorFunctions import errorFunctions
@@ -9,6 +10,7 @@ class textTools(commands.Cog):
     errorList = []
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.geminikey = self.bot.geminikey
 
     async def sanitize(inputPhrase: str):
         sanitizeKeywords = ["@", "/", ";", "invalid_tank"]
@@ -220,6 +222,11 @@ class textTools(commands.Cog):
                 await msg.delete()
                 await ctx.send("Invalid input.  Try again by mentioning the channel using `<#123456789>` syntax, or paste its link.")
 
+
+    async def getAIResponse(self, prompt: str, temperature: float, instructions=None):
+        gemini = genai.Client(api_key=random.choice(self.geminikey))
+        message = await gemini.models.generate_content(model='gemini-2.5-flash', config=types.GenerateContentConfig(system_instruction=instructions, temperature=temperature), contents=prompt)
+        return message.text
 
     async def getRoleResponse(ctx: commands.Context, prompt):
         await ctx.send(prompt)

@@ -1,5 +1,7 @@
 from pathlib import Path
 import os, random, time, asyncio, asyncpg, datetime, json, copy
+
+from cogs.AITools import AITools, GeminiAITools
 from cogs.SQLfunctions import SQLfunctions
 import platform
 import discord
@@ -74,24 +76,26 @@ if str(instanceConfig["botinfo"]["updateGithub"]) == "true":
 cogsList = ["cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",  "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools"]
 
 class Bot(commands.Bot):
-    def __init__(self):
+    def __init__(self, ai_wrapper: AITools):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True) #
+        self.AI = ai_wrapper
+        #self.AI.keys = baseConfig['settings']['geminiapis'].split(",")
         self.cogslist = cogsList
         self.synced = False
         self.baseConfig = baseConfig
         self.configurationFilepath = configurationFilepath
         self.serverids = []
-        self.geminikey = baseConfig['settings']['geminiapi']
+        self.geminikey = baseConfig['settings']['geminiapis'].split(",")
 
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=60)
-
-        print(baseConfig['settings']['geminiapi'])
+        print(baseConfig['settings']['geminiapis'])
         if updateGithub == True:
             cogsList.append("cogs.githubTools")
             #await self.load_extension("cogs.githubTools")
         for ext in self.cogslist:
             await self.load_extension(ext)
+            #setattr(self, ext.split('.')[1], self.get_cog(ext))
 
     async def on_ready(self):
 
@@ -105,7 +109,9 @@ class Bot(commands.Bot):
         print(f'Logged in as {bot.user} (ID: {bot.user.id})')
         print('------')
 
-bot = Bot()
+gemini_api_keys = tuple(baseConfig['settings']['geminiapis'].split(","))
+gemini_ai_wrapper = GeminiAITools(APIkeys=gemini_api_keys)
+bot = Bot(gemini_ai_wrapper)
 bot.ishost = botMode
 # tree = app_commands.CommandTree(bot)
 bot.run(discordToken)
