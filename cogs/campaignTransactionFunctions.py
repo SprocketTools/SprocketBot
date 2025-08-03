@@ -1,21 +1,14 @@
 import datetime
 
-import discord
-from discord.ext import commands
-from discord import app_commands
-
 import main
-from cogs.SQLfunctions import SQLfunctions
-from cogs.campaignFunctions import campaignFunctions
-from cogs.discordUIfunctions import discordUIfunctions
+from tools.campaignFunctions import campaignFunctions
+
 import discord
 from discord.ext import commands
-from discord.ui import Modal, TextInput
 
 from cogs.errorFunctions import errorFunctions
 
 promptResponses = {}
-from discord import app_commands
 from cogs.textTools import textTools
 
 class campaignTransactionFunctions(commands.Cog):
@@ -28,8 +21,8 @@ class campaignTransactionFunctions(commands.Cog):
         if ctx.author.id != main.ownerID:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
-        await SQLfunctions.databaseExecute('''DROP TABLE IF EXISTS transactions;''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS transactions (customerkey BIGINT, sellerkey BIGINT, campaignkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT);''')
+        await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS transactions;''')
+        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS transactions (customerkey BIGINT, sellerkey BIGINT, campaignkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT);''')
         await ctx.send("## Done!")
 
     @commands.command(name="purchase", description="Log a purchase made between players")
@@ -43,7 +36,7 @@ class campaignTransactionFunctions(commands.Cog):
         if not factionData['factionname']:
             return
         await ctx.send("What type of transaction are you making?")
-        transactionType = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["General purchase transaction", "Maintenance payments", "Sales of equipment to civilians"]))
+        transactionType = str.lower(await ctx.bot.ui.getButtonChoice(ctx, ["General purchase transaction", "Maintenance payments", "Sales of equipment to civilians"]))
         if transactionType == "sales of equipment to civilians" or transactionType == "maintenance payments":
             factionChoiceName = "N/A"
             factionChoiceKey = 0
@@ -59,32 +52,32 @@ class campaignTransactionFunctions(commands.Cog):
             return
 
         await ctx.send("Specify the desired frequency of this transaction recurring, in months.\nEx: selecting '12' means the transaction will repeat every 12 months.\nIf you do not want this transaction to repeat, select 0.")
-        repeatFrequency = int(await discordUIfunctions.getButtonChoice(ctx, ['0', '1', '2', '3', '4', '6', '12']))
+        repeatFrequency = int(await ctx.bot.ui.getButtonChoice(ctx, ['0', '1', '2', '3', '4', '6', '12']))
         # the processor for these will need to use a 12 - current_month
         shipDate = await textTools.getFlooredIntResponse(ctx, "How many months will this order take to complete?", 0)
         logDetails = await textTools.getResponse(ctx, "Describe anything else about the transaction, such as what equipment is being transferred.  This will be logged for the campaign managers to view.")
         if transactionType == "sales of equipment to civilians":
-            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]]) # the faction being purchased from
+            await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]]) # the faction being purchased from
             customerID = 0
             sellerID = factionData["factionkey"]
             customerName = f"Citizens of {factionData['factionname']}"
             sellerName = factionData['factionname']
         if transactionType == "maintenance payments":
-            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]]) # the faction being purchased from
+            await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]]) # the faction being purchased from
             customerID = 0
             sellerID = factionData["factionkey"]
             customerName = f"Citizens of {factionData['factionname']}"
             sellerName = factionData['factionname']
         else:
-            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',[moneyAdd, factionChoiceKey])  # the faction being purchased from
-            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''',[moneyAdd, factionData["factionkey"]]) # the user's faction
+            await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',[moneyAdd, factionChoiceKey])  # the faction being purchased from
+            await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''',[moneyAdd, factionData["factionkey"]]) # the user's faction
             customerID = factionData["factionkey"]
             sellerID = factionChoiceKey
             customerName = factionData['factionname']
             sellerName = factionChoiceName
         await ctx.send(f"## Done!\n{factionChoiceName} now has {campaignData['currencysymbol']}{moneyAdd} more {campaignData['currencyname']}!")
         time = await campaignFunctions.getTime(campaignData['timedate'])
-        await SQLfunctions.databaseExecuteDynamic('''INSERT INTO transactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)''', [customerID, sellerID, campaignData['campaignkey'], logDetails, moneyAdd, campaignData['timedate'], campaignData['timedate'] + datetime.timedelta(days=(shipDate*30)), 0, transactionType, repeatFrequency])
+        await self.bot.sql.databaseExecuteDynamic('''INSERT INTO transactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)''', [customerID, sellerID, campaignData['campaignkey'], logDetails, moneyAdd, campaignData['timedate'], campaignData['timedate'] + datetime.timedelta(days=(shipDate*30)), 0, transactionType, repeatFrequency])
         embed = discord.Embed(title=f"Transaction log", color=discord.Color.random())
         embed.add_field(name="Customer:", value=f"{customerName}", inline=False)
         embed.add_field(name="Seller", value=f"{sellerName}", inline=False)
@@ -112,17 +105,17 @@ class campaignTransactionFunctions(commands.Cog):
     async def cancelTransaction(self, ctx: commands.Context):
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         factionData = await campaignFunctions.getUserFactionData(ctx)
-        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM transactions WHERE customerkey = $1 AND repeat > 0;''', [factionData['factionkey']])
+        data = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM transactions WHERE customerkey = $1 AND repeat > 0;''', [factionData['factionkey']])
         nameList = []
         for item in data:
             nameList.append(f"{campaignData['currencysymbol']}{str(item['cost'])} - {item['description']}")
-        data = await SQLfunctions.databaseFetchdictDynamic(
+        data = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT * FROM transactions WHERE sellerkey = $1 AND customerkey = 0 AND repeat > 0;''', [factionData['factionkey']])
         for item in data:
             nameList.append(f"{campaignData['currencysymbol']}{str(item['cost'])} - {item['description']}")
-        nameChoice = await discordUIfunctions.getChoiceFromList(ctx, nameList, "Which automatic transaction do you want to cancel?")
+        nameChoice = await ctx.bot.ui.getChoiceFromList(ctx, nameList, "Which automatic transaction do you want to cancel?")
         dataOut = nameChoice.split(" - ")
-        await SQLfunctions.databaseExecuteDynamic('''DELETE FROM transactions WHERE cost = $1 AND description = $2 AND campaignkey = $3 AND factionkey = $4;''', [int(dataOut[0].strip(campaignData['currencysymbol'])), dataOut[1], campaignData['campaignkey'], factionData['factionkey']])
+        await self.bot.sql.databaseExecuteDynamic('''DELETE FROM transactions WHERE cost = $1 AND description = $2 AND campaignkey = $3 AND factionkey = $4;''', [int(dataOut[0].strip(campaignData['currencysymbol'])), dataOut[1], campaignData['campaignkey'], factionData['factionkey']])
         await ctx.send("Done!")
 
 async def setup(bot:commands.Bot) -> None:

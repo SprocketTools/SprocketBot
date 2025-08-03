@@ -1,16 +1,11 @@
 import random
 
-import discord, asyncio, requests, io, base64
+import discord, asyncio, requests, io
 from discord.ext import commands
 from cogs.errorFunctions import errorFunctions
-import asyncpg, platform
+import platform
 
-from discord import app_commands
-from cogs.discordUIfunctions import discordUIfunctions
-from pathlib import Path
 from PIL import Image, ImageChops
-from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
 imageCategoryList = ["chalk inscriptions", "inscriptions", "labels", "letters", "memes", "numbers", "optics", "welding", "textures", "weathering"]
 
 if platform.system() == "Windows":
@@ -39,7 +34,7 @@ class imageTools(commands.Cog):
         serverID = (ctx.guild.id)
 
         try:
-            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT commandschannelid FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            channel = int([dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT commandschannelid FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
             if ctx.channel.id != channel:
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return

@@ -1,27 +1,21 @@
 import random
-
 import discord, json, math, numpy, copy, io, requests
 from discord.ext import commands
 import cv2 as cv
-from discord import app_commands
 from cogs.errorFunctions import errorFunctions
 import main
 from cogs.textTools import textTools
-from PIL import Image, ImageChops
-from cogs.SQLfunctions import SQLfunctions
-from cogs.discordUIfunctions import discordUIfunctions
-
+from PIL import Image
 class blueprintFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command(name="bakeGeometry", description="merge compartment geometry into itself.")
     async def bakeGeometry(self, ctx: commands.Context):
-        import asyncio
         # country = await getUserCountry(ctx)
         serverID = (ctx.guild.id)
         try:
-            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            channel = int([dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
             if ctx.channel.id != channel and ctx.author.id != main.ownerID:
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
@@ -182,7 +176,7 @@ class blueprintFunctions(commands.Cog):
         #
         # userPrompt = f"Pick the name of the compartment you wish to apply {attachmentin.filename} to."
         # print(structureList)
-        # answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+        # answer = await ctx.bot.ui.getChoiceFromList(ctx, structureList, userPrompt)
         # Vuid = structureVuidList[answer]
         #
         #
@@ -604,7 +598,6 @@ class blueprintFunctions(commands.Cog):
                         blueprintDataSave["blueprints"][x]["data"] = data0
                     y += 1
             x += 1
-        import io
         await ctx.send("Done!")
 
         return blueprintDataSave
@@ -671,7 +664,7 @@ class blueprintFunctions(commands.Cog):
     async def getAddon(self, ctx: commands.Context):
         serverID = (ctx.guild.id)
         try:
-            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            channel = int([dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
             if ctx.channel.id != channel:
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
@@ -709,13 +702,13 @@ class blueprintFunctions(commands.Cog):
 
             userPrompt = "Pick the name of the compartment you wish to make an addon structure out of.  Note: unnamed structures are not listed"
             print(structureList)
-            answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+            answer = await ctx.bot.ui.getChoiceFromList(ctx, structureList, userPrompt)
 
             # get info on grid snap
             gridSnap = 1
             userPrompt = "Specify your desired grid snap setting"
             gridSnapOptions = ['0mm (disables grid snap)', '1mm (default)']
-            answer2 = await discordUIfunctions.getChoiceFromList(ctx, gridSnapOptions, userPrompt)
+            answer2 = await ctx.bot.ui.getChoiceFromList(ctx, gridSnapOptions, userPrompt)
             print(compartmentNameData)
             if answer == "All of them":
                 i = 0
@@ -798,7 +791,7 @@ class blueprintFunctions(commands.Cog):
     async def transplant(self, ctx: commands.Context):
         serverID = (ctx.guild.id)
         try:
-            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(
+            channel = int([dict(row) for row in await self.bot.sql.databaseFetch(
                 f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
             if ctx.channel.id != channel:
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
@@ -838,7 +831,7 @@ class blueprintFunctions(commands.Cog):
 
         userPrompt = "Pick the name of the source compartment.  Note: unnamed structures are not listed."
         print(structureList)
-        sourceCompartmentAnswer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+        sourceCompartmentAnswer = await ctx.bot.ui.getChoiceFromList(ctx, structureList, userPrompt)
 
         i = 0
         Vuid = structureVuidList[sourceCompartmentAnswer]
@@ -876,13 +869,13 @@ class blueprintFunctions(commands.Cog):
 
         userPrompt = "Pick the name of the target compartment.  Note: unnamed structures are not listed."
         print(structureList)
-        targetCompartmentAnswer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+        targetCompartmentAnswer = await ctx.bot.ui.getChoiceFromList(ctx, structureList, userPrompt)
 
         # get info on grid snap
         gridSnap = 1
         userPrompt = "Specify your desired grid snap setting for the resultant compartment"
         gridSnapOptions = ['0mm (disables grid snap)', '1mm (default)']
-        gridSnapAnswer = await discordUIfunctions.getChoiceFromList(ctx, gridSnapOptions, userPrompt)
+        gridSnapAnswer = await ctx.bot.ui.getChoiceFromList(ctx, gridSnapOptions, userPrompt)
         print(compartmentNameData)
 
         Vuid = structureVuidList[targetCompartmentAnswer]
@@ -1231,7 +1224,7 @@ class blueprintFunctions(commands.Cog):
 
         Prompt = "What profile do you want to use?"
         optionList = ["Top speed", "Rough terrain", "Custom"]
-        profileChoice = await discordUIfunctions.getChoiceFromList(ctx, optionList, Prompt)
+        profileChoice = await ctx.bot.ui.getChoiceFromList(ctx, optionList, Prompt)
 
         if profileChoice == "Rough terrain":
             eraPowerMod = eraPowerMod * 0.8
@@ -1427,14 +1420,13 @@ class blueprintFunctions(commands.Cog):
 
     @commands.command(name="tunePowertrain", description="merge compartment geometry into itself.")
     async def tunePowertrain(self, ctx: commands.Context):
-        import asyncio
         if not ctx.message.attachments:
             await ctx.reply(
                 "**-tunePowertrain** configures your engine's transmission to use the most optimal setup for your tank!\nTo use this command, attach one or more .blueprint files when running the **-tunePowertrain** command.\nNote: it is recommended to use twin transmissions on all vehicle builds, due to the tendency of Sprocket AI to have terrible clutch braking skills.\n# <:caatt:1151402846202376212>")
 
         serverID = (ctx.guild.id)
         try:
-            channel = int([dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            channel = int([dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
             if ctx.channel.id != channel:
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
@@ -2505,7 +2497,7 @@ class blueprintFunctions(commands.Cog):
 
                     userPrompt = f"Pick the name of the compartment you wish to apply {attachmentin.filename} to."
                     print(structureList)
-                    answer = await discordUIfunctions.getChoiceFromList(ctx, structureList, userPrompt)
+                    answer = await ctx.bot.ui.getChoiceFromList(ctx, structureList, userPrompt)
                     Vuid = structureVuidList[answer]
                     i = 0
                     for meshBase in blueprintData["meshes"]:

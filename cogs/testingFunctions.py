@@ -1,19 +1,12 @@
 from datetime import datetime
-
 import discord
 from discord.ext import commands
-from discord import app_commands
 
-import main
-from cogs.discordUIfunctions import discordUIfunctions
-import discord
-from discord.ext import commands
-from discord.ui import Modal, TextInput
 promptResponses = {}
-from discord import app_commands
 from cogs.textTools import textTools
 from google import genai
-from google.genai import types
+
+
 class testingFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -118,7 +111,7 @@ class testingFunctions(commands.Cog):
     async def testcommand6(self, ctx: commands.Context):
         list = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
         prompt = 'choose'
-        answer = await discordUIfunctions.getChoiceFromList(ctx, list, prompt)
+        answer = await ctx.bot.ui.getChoiceFromList(ctx, list, prompt)
         await ctx.send(f"You picked {answer}!")
     @commands.command(name="testcommand3", description="testing some stuff")
     async def testcommand3(self, ctx: commands.Context):

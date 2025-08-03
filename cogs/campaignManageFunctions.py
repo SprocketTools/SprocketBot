@@ -1,20 +1,15 @@
-import discord, json, io, numpy
+import discord, io
 import matplotlib.pyplot as plot
 import pandas as pd
 from discord.ext import commands
-from typing import List
 
 import main
-from cogs.campaignFunctions import campaignFunctions
-from cogs.campaignUpdateFunctions import campaignUpdateFunctions
-from cogs.discordUIfunctions import discordUIfunctions
+from tools.campaignFunctions import campaignFunctions
 from cogs.errorFunctions import errorFunctions
-from discord.ui import Button, View
+
 promptResponses = {}
-from discord import app_commands
 from cogs.textTools import textTools
 from cogs.adminFunctions import adminFunctions
-from cogs.SQLfunctions import SQLfunctions
 class campaignManageFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -25,7 +20,7 @@ class campaignManageFunctions(commands.Cog):
             if ctx.author.id == main.ownerID:
                 await ctx.send(
                     "You do not have permission to perform this action.  Proceed forward and override this?")
-                answer = await discordUIfunctions.getYesNoChoice(ctx)
+                answer = await ctx.bot.ui.getYesNoChoice(ctx)
                 if not answer:
                     return
             else:
@@ -35,7 +30,7 @@ class campaignManageFunctions(commands.Cog):
             key = await campaignFunctions.getCampaignKey(ctx)
             embedOut = await campaignFunctions.showSettings(ctx)
             promptOut = await ctx.send("What statistic do you wish to modify?")
-            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Baseline GDP growth", "Energy cost", "Steel cost", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit", "Transfer Campaign Ownership"]))
+            answer = str.lower(await ctx.bot.ui.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Baseline GDP growth", "Energy cost", "Steel cost", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit", "Transfer Campaign Ownership"]))
             name_adj = ""
             if answer == "exit" or i > 1:
                 await ctx.send("Alright, have fun.")
@@ -43,45 +38,45 @@ class campaignManageFunctions(commands.Cog):
                 return
             elif answer == "adjust time":
                 timestamp_adj = await textTools.getIntResponse(ctx, "How many days do you want to move forward?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET timedate = timedate + make_interval(days => CAST ($1 AS INT)) WHERE campaignkey = $2;''',[timestamp_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET timedate = timedate + make_interval(days => CAST ($1 AS INT)) WHERE campaignkey = $2;''',[timestamp_adj, key])
             elif answer == "start/stop campaign":
                 await campaignManageFunctions.toggleCampaignProgress(ctx)
             elif answer == "time scale":
                 timescale_adj = await textTools.getFlooredFloatResponse(ctx, "What is the new timescale you wish to use?", 1)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET timescale = $1 WHERE campaignkey = $2;''',[timescale_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET timescale = $1 WHERE campaignkey = $2;''',[timescale_adj, key])
             elif answer == "name":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new name of the campaign?", 128)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET campaignname = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET campaignname = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "pop to worker ratio":
                 ratio_adj = await textTools.getFlooredFloatResponse(ctx, "What is the new default pop/worker ratio you wish to use?", 1)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET poptoworkerratio = $1 WHERE campaignkey = $2;''',[ratio_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET poptoworkerratio = $1 WHERE campaignkey = $2;''',[ratio_adj, key])
             elif answer == "rules":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new rules of the campaign?", 256)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET campaignrules = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET campaignrules = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "baseline gdp growth":
                 name_adj = await textTools.getPercentResponse(ctx, "What is the new GDP growth?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET defaultgdpgrowth = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET defaultgdpgrowth = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "currency name":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new currency name of the campaign?", 32)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET currencyname = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET currencyname = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "currency symbol":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new currency symbol of the campaign?", 2)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET currencysymbol = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET currencysymbol = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "transaction logs channel":
                 name_adj = await textTools.getChannelResponse(ctx, "What is your new transaction logging channel?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET privatemoneychannelid = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET privatemoneychannelid = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "energy cost":
                 name_adj = await textTools.getFlooredFloatResponse(ctx, "What is the new cost of a barrel of oil?\nWarning: this value should only be changed if you know what you're doing.  Changing this value without changing the steel cost can lead to major economic changes.", 1)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET energycost = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET energycost = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "steel cost":
                 name_adj = await textTools.getFlooredFloatResponse(ctx, '''What is the new cost of a metric ton of steel?\nNote: this acts as the base "price" that rearranges the value of everything.  Be aware that ripple effects will occur throughout the entire system if this is adjusted.''', 2)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET steelcost = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET steelcost = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "announcement channel":
                 name_adj = await textTools.getChannelResponse(ctx, "What is your new channel for automated campaign update announcements?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET publiclogchannelid = $1 WHERE campaignkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET publiclogchannelid = $1 WHERE campaignkey = $2;''',[name_adj, key])
             elif answer == "transfer campaign ownership":
                 name_adj = await textTools.getIntResponse(ctx,"What is your new server ID?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET hostserverid = $1 WHERE campaignkey = $2;''', [name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET hostserverid = $1 WHERE campaignkey = $2;''', [name_adj, key])
                 await ctx.send("Done!  Move to your new server to continue.")
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
@@ -105,7 +100,7 @@ class campaignManageFunctions(commands.Cog):
 
         if data['iscountry']:
             displayType = str.lower(
-                await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+                await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
         else:
             displayType = "general"
         if await campaignFunctions.isCampaignHost(ctx):
@@ -125,7 +120,7 @@ class campaignManageFunctions(commands.Cog):
 
         else:
             displayType = str.lower(
-                await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+                await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
             if data['iscountry'] == False:
                 inList = ["Name", "Description", "Flag", "Updates channel", "Exit"]
             else:
@@ -147,79 +142,79 @@ class campaignManageFunctions(commands.Cog):
             embedOut = await campaignFunctions.showStats(ctx, data, displayType)
             promptOut = await ctx.send("What statistic do you wish to modify?")
 
-            answer = str.lower(await discordUIfunctions.getButtonChoice(ctx, inList))
+            answer = str.lower(await ctx.bot.ui.getButtonChoice(ctx, inList))
             print(answer)
             if answer == "exit":
                 await ctx.send("Alright, have fun.")
                 return
             elif answer == "discretionary funds":
                 money_adj = await textTools.getIntResponse(ctx, "What is your new discetionary balance?  Reply with a number.")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''',[money_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''',[money_adj, key])
             elif answer == "median salary":
                 salary_adj = await textTools.getFlooredIntResponse(ctx, "What is your new median salary?  Reply with a number.", 1)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''',[salary_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''',[salary_adj, key])
                 cog = self.bot.get_cog('campaignUpdateFunctions')
                 await cog.softUpdate()
             elif answer == "gdp":
                 salary_adj = await textTools.getFlooredIntResponse(ctx, "What is your new GDP?  Reply with a number.", 1)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = $1 * popworkerratio / population WHERE factionkey = $2;''',[salary_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET averagesalary = $1 * popworkerratio / population WHERE factionkey = $2;''',[salary_adj, key])
                 cog = self.bot.get_cog('campaignUpdateFunctions')
                 await cog.softUpdate()
             elif answer == "land":
                 name_adj = await textTools.getFlooredIntResponse(ctx, "What is your new land size?  Reply with a number.", 1)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landsize = $1 WHERE factionkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landsize = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "government type":
                 name_adj = await campaignFunctions.getGovernmentType(ctx)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET governance = $1 WHERE factionkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET governance = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "name":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new name of the faction?", 64)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET factionname = $1 WHERE factionkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET factionname = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "description":
                 desc_adj = await textTools.getCappedResponse(ctx, "What is the new description?", 256)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET description = $1 WHERE factionkey = $2;''',[desc_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET description = $1 WHERE factionkey = $2;''',[desc_adj, key])
             elif answer == "population":
                 pop_adj = await textTools.getFlooredIntResponse(ctx, "What is your new population?  Reply with a number.", 1000)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET population = $1 WHERE factionkey = $2;''',[pop_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET population = $1 WHERE factionkey = $2;''',[pop_adj, key])
             elif answer == "pop to worker ratio":
                 ratio_adj = await textTools.getFlooredFloatResponse(ctx, "What is the new default pop/worker ratio you wish to use?", 1)
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaigns SET poptoworkerratio = $1 WHERE factionkey = $2;''',[ratio_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET poptoworkerratio = $1 WHERE factionkey = $2;''',[ratio_adj, key])
             elif answer == "move your company to a new country":
                 if data['iscountry'] == False:
                     landlorddata = await campaignFunctions.pickCampaignCountry(ctx, "Where are you relocating your company to?")
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landlordfactionkey = $1 WHERE factionkey = $2;''',[landlorddata['factionkey'], key])
+                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landlordfactionkey = $1 WHERE factionkey = $2;''',[landlorddata['factionkey'], key])
                 else:
                     await ctx.send("Yeah, unfortunately surrendering to another country is not a part of the game here.")
             elif answer == "flag":
                 name_adj = await textTools.getFileURLResponse(ctx, "What is the new flag?  Upload an image.")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET flagurl = $1 WHERE factionkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET flagurl = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "updates channel":
                 name_adj = await textTools.getChannelResponse(ctx, "What is the new channel you want updates sent to?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET logchannel = $1 WHERE factionkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET logchannel = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "espionage funding":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards espionage funding?")
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET espionagespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET espionagespend = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "infrastructure funding":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards infrastructure funding?")
                 if data['defensespend'] + name_adj > 0.99:
                     await ctx.send(f"Unfortunately you are allocating {(data['defensespend'] + data['infrastructurespend'])*100}% of your available money!  Try again.")
                 else:
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET infrastructurespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET infrastructurespend = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "defense spending":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage of your discretionary funds do you wish to dedicate towards defense funding?")
                 if name_adj + data['infrastructurespend'] > 0.99:
                     await ctx.send(f"Unfortunately you are allocating {(data['defensespend'] + data['infrastructurespend'])*100}% of your available money!  Try again.")
                 else:
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET defensespend = $1 WHERE factionkey = $2;''',[name_adj, key])
+                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET defensespend = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "poor tax":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage do you want to set your poor tax rate to?  This is the taxation rate that generates most of your income.")
                 if name_adj > 1:
                     name_adj = 1
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxpoor = $1 WHERE factionkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxpoor = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "rich tax":
                 name_adj = await textTools.getPercentResponse(ctx, "What percentage do you want to set your rich tax to?  This is the taxation rate that applies to companies and rich people.")
                 if name_adj > 1:
                     name_adj = 1
-                await SQLfunctions.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxrich = $1 WHERE factionkey = $2;''',[name_adj, key])
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxrich = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "delete faction":
                 if await campaignFunctions.isCampaignHost(ctx) == False:
                     await errorFunctions.sendError(ctx)
@@ -227,20 +222,20 @@ class campaignManageFunctions(commands.Cog):
                     return
                 else:
                     await ctx.send(f"Please confirm that you intend to delete {factionName} and wipe all records of it from the bot.")
-                    if await discordUIfunctions.getYesNoChoice(ctx) == False:
+                    if await ctx.bot.ui.getYesNoChoice(ctx) == False:
                         return
                     await ctx.send(f"Please confirm again that you intend to delete {factionName}.  There won't be another confirmation after this one.")
-                    if await discordUIfunctions.getYesNoChoice(ctx) == False:
+                    if await ctx.bot.ui.getYesNoChoice(ctx) == False:
                         return
-                    await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM campaignfactions WHERE factionkey = $1;''',[key])
-                    await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM campaignusers WHERE factionkey = $1;''',[key])
+                    await self.bot.sql.databaseExecuteDynamic(f'''DELETE FROM campaignfactions WHERE factionkey = $1;''',[key])
+                    await self.bot.sql.databaseExecuteDynamic(f'''DELETE FROM campaignusers WHERE factionkey = $1;''',[key])
                     await ctx.send("## Done!")
                     return
             elif answer == "switch category":
 
                 if data['iscountry']:
                     displayType = str.lower(
-                        await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+                        await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
                 else:
                     displayType = "general"
                 if await campaignFunctions.isCampaignHost(ctx):
@@ -261,7 +256,7 @@ class campaignManageFunctions(commands.Cog):
 
                 else:
                     displayType = str.lower(
-                        await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+                        await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
                     if data['iscountry'] == False:
                         inList = ["Name", "Description", "Flag", "Updates channel", "Exit"]
                     else:
@@ -288,7 +283,7 @@ class campaignManageFunctions(commands.Cog):
         key = await campaignFunctions.getCampaignKey(ctx)
         name = await campaignFunctions.getCampaignName(key)
         await ctx.send("Do you have a .csv data file ready yet?")
-        isReady = await discordUIfunctions.getYesNoChoice(ctx)
+        isReady = await ctx.bot.ui.getYesNoChoice(ctx)
         if isReady:
 
             attachment = await textTools.getFileResponse(ctx, "Upload your .csv file containing all your faction's data.")
@@ -296,13 +291,13 @@ class campaignManageFunctions(commands.Cog):
             data = df.to_dict(orient='records')
             print(data)
             for faction in data:
-                await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET factionname = $1, money = $2, population = $3, landsize = $4, averagesalary = $5 WHERE factionkey = $6''', [faction["factionname"], faction["money"], faction["population"], faction["landsize"], faction["averagesalary"], faction["factionkey"]])
+                await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET factionname = $1, money = $2, population = $3, landsize = $4, averagesalary = $5 WHERE factionkey = $6''', [faction["factionname"], faction["money"], faction["population"], faction["landsize"], faction["averagesalary"], faction["factionkey"]])
             await ctx.send(f"## Done!\n{len(data)} factions have been updated.")
         else:
             if await campaignFunctions.isCampaignHost(ctx) == False:
                 return
             await ctx.send("Download this file and edit it in a spreadsheet editor.  When you're done, save it as a .csv and run the command again.")
-            data = await SQLfunctions.databaseFetchdictDynamic(
+            data = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''',
                 [await campaignFunctions.getCampaignKey(ctx)])
             # credits: brave AI
@@ -322,7 +317,7 @@ class campaignManageFunctions(commands.Cog):
 
         hostData = await campaignFunctions.getUserCampaignData(ctx)
         column_names = []
-        column_namesr = await SQLfunctions.databaseFetchdict('''SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'campaignfactions' AND data_type IN ('bigint', 'real', 'numeric');''')
+        column_namesr = await self.bot.sql.databaseFetchdict('''SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'campaignfactions' AND data_type IN ('bigint', 'real', 'numeric');''')
         str = ""
         i = 0
         for col in column_namesr:
@@ -332,15 +327,15 @@ class campaignManageFunctions(commands.Cog):
             i+= 1
         print(str[0:(len(str)-2)])
         print(len(column_names))
-        data = await SQLfunctions.databaseFetchdictDynamic(f'''SELECT {str[0:(len(str)-2)]} FROM campaignfactions WHERE campaignkey = $1 AND iscountry = true;''', [hostData['campaignkey']])
+        data = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT {str[0:(len(str)-2)]} FROM campaignfactions WHERE campaignkey = $1 AND iscountry = true;''', [hostData['campaignkey']])
         await ctx.send("Pick your x axis!")
-        x_axis = await discordUIfunctions.getButtonChoice(ctx, column_names)
+        x_axis = await ctx.bot.ui.getButtonChoice(ctx, column_names)
         x_data = []
         for val in data:
             x_data.append(val[x_axis])
 
         await ctx.send("Pick your y axis!")
-        y_axis = await discordUIfunctions.getButtonChoice(ctx, column_names)
+        y_axis = await ctx.bot.ui.getButtonChoice(ctx, column_names)
         y_data = []
         for val in data:
             y_data.append(val[y_axis])
@@ -373,7 +368,7 @@ class campaignManageFunctions(commands.Cog):
         # Send the image to a Discord channel
         await ctx.send(file=image)
 
-    async def toggleCampaignProgress(ctx: commands.Context):
+    async def toggleCampaignProgress(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
@@ -383,10 +378,10 @@ class campaignManageFunctions(commands.Cog):
         if campaignData["hostserverid"] != ctx.guild.id:
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             return
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaigns SET active = NOT active WHERE hostserverid = $1;''',[ctx.guild.id])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaigns SET active = NOT active WHERE hostserverid = $1;''',[ctx.guild.id])
 
-        result = await SQLfunctions.databaseFetchlistDynamic('''SELECT campaignname, active, campaignkey FROM campaigns WHERE hostserverid = $1;''',[ctx.guild.id])
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET hostactive = $1 WHERE campaignkey = $2;''', [result[1], result[2]])
+        result = await self.bot.sql.databaseFetchlistDynamic('''SELECT campaignname, active, campaignkey FROM campaigns WHERE hostserverid = $1;''',[ctx.guild.id])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET hostactive = $1 WHERE campaignkey = $2;''', [result[1], result[2]])
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignManageFunctions(bot))
 

@@ -1,13 +1,10 @@
-import os, platform, discord, configparser, ast, json, csv
+import platform, discord, csv
 from discord.ext import commands
-from discord import app_commands
-import json, asyncio
+import json
 from pathlib import Path
 from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.blueprintFunctions import blueprintFunctions
-from cogs.discordUIfunctions import discordUIfunctions
 # from cogs.githubTools import githubTools
 
 if platform.system() == "Windows":
@@ -222,7 +219,7 @@ class contestFunctions(commands.Cog):
         contestHostID = ctx.author.id
         contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE ownerID = {contestHostID}')]
         userPrompt = "Pick a contest you want to add your category to!"
-        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        contestName = await ctx.bot.ui.getContestChoice(ctx, contestList, f'{userPrompt}')
         await ctx.send(f"You selected the {contestName}!  Beginning processing now.")
         contestConfig = [list(await SQLfunctions.databaseFetch(f"SELECT * FROM contests WHERE name = '{contestName}' AND ownerID = {contestHostID}"))]
         for attachment in ctx.message.attachments:
@@ -263,7 +260,7 @@ class contestFunctions(commands.Cog):
             contestHostID = ctx.author.id
             contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE ownerID = {contestHostID}')]
             userPrompt = "What contest are you looking to update the configuration of?"
-            contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+            contestName = await ctx.bot.ui.getContestChoice(ctx, contestList, f'{userPrompt}')
 
             # except Exception:
             #     pass
@@ -298,7 +295,7 @@ class contestFunctions(commands.Cog):
         contestHostID = ctx.author.id
         contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE serverID = {ctx.message.guild.id}')]
         userPrompt = "What contest are you looking to get details on?"
-        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        contestName = await ctx.bot.ui.getContestChoice(ctx, contestList, f'{userPrompt}')
         categoryList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contestcategories WHERE contestname = '{contestName}';''')]
 
         print (categoryList)
@@ -323,7 +320,7 @@ class contestFunctions(commands.Cog):
         contestName = ""
         contestListText = ""
         allowEntry = True
-        contestType = await discordUIfunctions.getContestTypeChoice(ctx)
+        contestType = await ctx.bot.ui.getContestTypeChoice(ctx)
         if contestType == "Global":
             contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE crossServer = 'True';''')]
         if contestType == "Server":
@@ -332,7 +329,7 @@ class contestFunctions(commands.Cog):
             await ctx.send(f"There are no {contestType.lower()} contests running!")
             return
         userPrompt = "What contest are you submitting to?"
-        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        contestName = await ctx.bot.ui.getContestChoice(ctx, contestList, f'{userPrompt}')
         contestConfigList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE name = '{contestName}';''')]
         contestConfig = contestConfigList[0]
 
@@ -342,7 +339,7 @@ class contestFunctions(commands.Cog):
             categoryName = categoryList[0]["categoryname"]
         else:
             userPrompt = "What category are you submitting to?"
-            categoryName = await discordUIfunctions.getCategoryChoice(ctx, categoryList, f'{userPrompt}')
+            categoryName = await ctx.bot.ui.getCategoryChoice(ctx, categoryList, f'{userPrompt}')
         await ctx.send(f"You are submitting to the {categoryName} category!")
         configuration = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contestcategories WHERE contestname = '{contestName}' AND categoryname = '{categoryName}';''')]
         config = configuration[0]
@@ -416,7 +413,7 @@ class contestFunctions(commands.Cog):
         contestHostID = ctx.author.id
         contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE ownerID = {contestHostID}')]
         userPrompt = "What contest are you looking to get a list of submissions for?"
-        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        contestName = await ctx.bot.ui.getContestChoice(ctx, contestList, f'{userPrompt}')
 
         file_location = f"{storageFilepath}{OSslashLine}{'contests'}{OSslashLine}{contestName}{OSslashLine}{contestName}Entries.csv"
         tanksList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contesttanks WHERE contestname = '{contestName}';''')]
@@ -436,7 +433,7 @@ class contestFunctions(commands.Cog):
         contestHostID = ctx.author.id
         contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM contests WHERE serverID = {ctx.message.guild.id}')]
         userPrompt = "What contest are you looking to get a list of submissions for?"
-        contestName = await discordUIfunctions.getContestChoice(ctx, contestList, f'{userPrompt}')
+        contestName = await ctx.bot.ui.getContestChoice(ctx, contestList, f'{userPrompt}')
         categoryList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT categoryname FROM contestcategories WHERE contestname = '{contestName}';''')]
         print(categoryList)
         for categoryname in categoryList:

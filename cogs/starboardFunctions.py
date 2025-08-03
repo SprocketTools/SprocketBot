@@ -1,22 +1,8 @@
-import io
-from datetime import datetime
-
-import discord
-import pandas as pd
-from discord.ext import commands
-from discord import app_commands
-
 import main
-from cogs.SQLfunctions import SQLfunctions
-from cogs.discordUIfunctions import discordUIfunctions
 import discord
 from discord.ext import commands
-from discord.ui import Modal, TextInput
-
 from cogs.errorFunctions import errorFunctions
-
 promptResponses = {}
-from discord import app_commands
 from cogs.textTools import textTools
 
 class starboardFunctions(commands.Cog):
@@ -44,10 +30,10 @@ class starboardFunctions(commands.Cog):
             return
 
         msg_guild = self.bot.get_guild(payload.guild_id)
-        data_rchannel = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM starboards WHERE sourcechannel = $1 OR (serverid = $2 AND sourcechannel < 5);''',[payload.channel_id, payload.guild_id])
+        data_rchannel = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboards WHERE sourcechannel = $1 OR (serverid = $2 AND sourcechannel < 5);''',[payload.channel_id, payload.guild_id])
         #print(data_rchannel)
         if len(data_rchannel) == 0:
-            data_rchannel = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM starboards WHERE serverid = $1 AND sourcechannel < 5;''',[msg_guild.id])
+            data_rchannel = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboards WHERE serverid = $1 AND sourcechannel < 5;''',[msg_guild.id])
         #print(data_rchannel)
         for starboard in data_rchannel:
             #print(starboard["emoji"] + " vs. " + str(payload.emoji))
@@ -69,7 +55,7 @@ class starboardFunctions(commands.Cog):
                     #await channel.send(f"{payload.member.mention}, you cannot star bot messages.")
                     continue
 
-            if len(await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM starboarded WHERE messageid = $1;''', [message.id])) > 0:
+            if len(await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboarded WHERE messageid = $1;''', [message.id])) > 0:
                 continue
             # Fetch the starboard channel
             starboard_channel = self.bot.get_channel(starboard["channelsend"])
@@ -104,14 +90,14 @@ class starboardFunctions(commands.Cog):
 
                 # Send the embed to the starboard channel
                 await starboard_channel.send(embed=embed)
-                await SQLfunctions.databaseExecuteDynamic('''INSERT INTO starboarded VALUES ($1)''', [message.id])
+                await self.bot.sql.databaseExecuteDynamic('''INSERT INTO starboarded VALUES ($1)''', [message.id])
 
     @commands.command(name="setupStarboardDatabase", description="Set up the starboards")
     async def setupStarboardDatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
             return
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS starboards (serverid BIGINT, emoji VARCHAR, count INT, channelsend BIGINT, sourcechannel BIGINT)''')
-        await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS starboarded (messageid BIGINT)''')
+        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS starboards (serverid BIGINT, emoji VARCHAR, count INT, channelsend BIGINT, sourcechannel BIGINT)''')
+        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS starboarded (messageid BIGINT)''')
         await ctx.send("Done!")
 
     @commands.command(name="addStarboard", description="Add a new starboard")
@@ -123,14 +109,14 @@ class starboardFunctions(commands.Cog):
         count = await textTools.getIntResponse(ctx, "What is the reaction requirement?")
         channelsend = await textTools.getChannelResponse(ctx, "What is the destination channel?")
         await ctx.send("Do you want to make this setting only apply to one channel?")
-        if await discordUIfunctions.getYesNoChoice(ctx):
+        if await ctx.bot.ui.getYesNoChoice(ctx):
             sourcechannel = await textTools.getChannelResponse(ctx, "What is the source channel?")
         else:
             sourcechannel = 0
         for emoji in emojis:
             print(emoji)
             try:
-                await SQLfunctions.databaseExecuteDynamic('''INSERT INTO starboards VALUES ($1, $2, $3, $4, $5)''', [serverid, emoji, count, channelsend, sourcechannel])
+                await self.bot.sql.databaseExecuteDynamic('''INSERT INTO starboards VALUES ($1, $2, $3, $4, $5)''', [serverid, emoji, count, channelsend, sourcechannel])
                 await ctx.send("## Done!")
             except Exception as e:
                 await ctx.send(await errorFunctions.getError(ctx) + "\n\nSomething went wrong: " + e)

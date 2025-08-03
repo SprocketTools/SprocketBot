@@ -1,17 +1,11 @@
-import discord, os, platform, asyncio, random
-from pathlib import Path
+import discord, asyncio, random
 from discord.ext import commands
-from discord import app_commands
-from git import Repo
 # Github config
-from pathlib import Path
 
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
+
 import difflib
-from cogs.blueprintFunctions import blueprintFunctions
-from cogs.discordUIfunctions import discordUIfunctions
 
 memePhrase = "The covenanter is the best tank."
 
@@ -26,20 +20,20 @@ class AprilFools(commands.Cog):
         else:
             return
         prompt = "DROP TABLE IF EXISTS codeconfig"
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
         prompt = ('''CREATE TABLE IF NOT EXISTS codeconfig (
                               serverid BIGINT,
                               channelid BIGINT,
                               logid BIGINT,
                               message TEXT,
                               solved BIGINT);''')
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
 
         prompt = "DROP TABLE IF EXISTS errorcodemessages"
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
         prompt = ('''CREATE TABLE IF NOT EXISTS errorcodemessages (
                               errorcode VARCHAR);''')
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
 
         await ctx.send("Code configs are wiped!")
 
@@ -98,8 +92,8 @@ class AprilFools(commands.Cog):
 
         await ctx.send("## All data successfully collected!\nBeginning processing now...")
         keystr, valuestr = await textTools.getSQLprompt(responses)
-        await SQLfunctions.databaseExecute(f'''DELETE FROM codeconfig WHERE serverid = {ctx.guild.id};''')
-        await SQLfunctions.databaseExecute(f'''INSERT INTO codeconfig ({keystr}) VALUES ({valuestr});''')
+        await self.bot.sql.databaseExecute(f'''DELETE FROM codeconfig WHERE serverid = {ctx.guild.id};''')
+        await self.bot.sql.databaseExecute(f'''INSERT INTO codeconfig ({keystr}) VALUES ({valuestr});''')
 
 
 
@@ -115,7 +109,7 @@ class AprilFools(commands.Cog):
             pass
         else:
             return
-        await SQLfunctions.databaseExecute(
+        await self.bot.sql.databaseExecute(
             f'''UPDATE codeconfig SET solved = {0} WHERE serverid = {ctx.guild.id};''')
         await ctx.send('## Reset!')
 
@@ -128,7 +122,7 @@ class AprilFools(commands.Cog):
             return
         serverID = message.guild.id
         msgChannel = message.channel.id
-        codeConfigList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM codeconfig WHERE serverid = {serverID}')][0]
+        codeConfigList = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM codeconfig WHERE serverid = {serverID}')][0]
         position = int(codeConfigList['solved'])
         channel = int(codeConfigList['channelid'])
         if msgChannel != channel:
@@ -145,12 +139,12 @@ class AprilFools(commands.Cog):
         if the_bool == True:
             await message.add_reaction('✅')
             #await message.author.send('Correct!')
-            await SQLfunctions.databaseExecute(f'''UPDATE codeconfig SET solved = {position + 1} WHERE serverid = {serverID};''')
+            await self.bot.sql.databaseExecute(f'''UPDATE codeconfig SET solved = {position + 1} WHERE serverid = {serverID};''')
             if position + 1 == len(the_words):
                 await message.channel.send("## Congrats!  \nThe puzzle has been solved!\nGreat job everyone.")
         else:
             codeList = ["This meme has been removed due to voiding my patented content filter."]
-            ConfigList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM errorcodemessages')]
+            ConfigList = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM errorcodemessages')]
             for row in ConfigList:
                 codeList.append(row["errorcode"])
             await self.bot.get_channel(int(codeConfigList['logid'])).send(f"From <@{message.author.id}>: `" + message.content + "`")
@@ -196,7 +190,7 @@ class AprilFools(commands.Cog):
             return
 
         await ctx.send("## All data successfully collected!\nBeginning processing now...")
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE codeconfig SET message = $1 WHERE serverid = $2;''', [responseOut, ctx.guild.id])
+        await self.bot.sql.databaseExecuteDynamic(f'''UPDATE codeconfig SET message = $1 WHERE serverid = $2;''', [responseOut, ctx.guild.id])
         await ctx.send("## Done!")
 
 async def setup(bot:commands.Bot) -> None:

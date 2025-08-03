@@ -1,13 +1,7 @@
-import main, discord, datetime, json, pandas
+from tools.campaignFunctions import campaignFunctions
 from discord.ext import commands
-from discord import app_commands
-from cogs.SQLfunctions import SQLfunctions
-from cogs.campaignFunctions import campaignFunctions
-from cogs.discordUIfunctions import discordUIfunctions
-from discord.ext import commands
-from discord.ui import Modal, TextInput
 from cogs.errorFunctions import errorFunctions
-from cogs.textTools import textTools
+
 
 class campaignMapsFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):

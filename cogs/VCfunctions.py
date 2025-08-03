@@ -1,18 +1,14 @@
 import asyncio
-import json, locale, yt_dlp
+import locale, yt_dlp
 
 from cogs.adminFunctions import adminFunctions
 
 locale.setlocale(locale.LC_ALL, '')
-import random
 from discord.ext.music import MusicClient, WAVAudio, Track
 import discord
 from discord.ext import commands
-from discord import app_commands
 
 import main
-from cogs.SQLfunctions import SQLfunctions
-from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 FFMPEG_OPTIONS_CURSED = {

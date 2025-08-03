@@ -4,16 +4,12 @@ import discord, os, platform, time, asyncio, requests, io, datetime
 from pathlib import Path
 
 from discord.ext import commands
-from discord import app_commands
 from git import Repo
-import git
 # Github config
-from PIL import Image, ImageChops
+from PIL import Image
 
 import main
 from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
-from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 
 
@@ -100,7 +96,7 @@ class githubTools(commands.Cog):
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         prompt = "DROP TABLE IF EXISTS imagecatalog"
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
         prompt = ('''CREATE TABLE IF NOT EXISTS imagecatalog (
                                       name VARCHAR,
                                       tags VARCHAR,
@@ -109,7 +105,7 @@ class githubTools(commands.Cog):
                                       ownername VARCHAR,
                                       ownerid BIGINT,
                                       category VARCHAR);''')
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
         imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}"
         imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}"
 
@@ -128,8 +124,8 @@ class githubTools(commands.Cog):
         newAuthorID = await textTools.getIntResponse(ctx, f"What is the new author's ID?")
         author = self.bot.get_user(newAuthorID)
         authorName = await textTools.mild_sanitize(author.name)
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownerid = $1 WHERE name = $2''', [newAuthorID, name])
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownername = $1 WHERE name = $2''',[authorName, name])
+        await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownerid = $1 WHERE name = $2''', [newAuthorID, name])
+        await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownername = $1 WHERE name = $2''',[authorName, name])
         await ctx.send(f"### The image has been updated.")
 
     @commands.command(name="submitDecal", description="Submit a decal to the SprocketTools website")
@@ -144,7 +140,7 @@ class githubTools(commands.Cog):
             await errorFunctions.sendError(ctx)
             return
         userPrompt = "What category should the image(s) go into?"
-        category = await discordUIfunctions.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+        category = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
         tags = await textTools.getCappedResponse(ctx, "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`", 32)
         await ctx.send(f"Alright, let's get the names down for your images.")
         print(category)
@@ -183,7 +179,7 @@ class githubTools(commands.Cog):
                     # await ctx.send(file=file)
 
                     values = [name, tags, strippedname, 'Pending', str(self.bot.get_user(ctx.author.id)), ctx.author.id, category]
-                    await SQLfunctions.databaseExecuteDynamic(f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''', values)
+                    await self.bot.sql.databaseExecuteDynamic(f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''', values)
                     await ctx.send(f"### The image {strippedname} has been sent off for approval!")
                     channel = self.bot.get_channel(1152377925916688484)
                     await channel.send(f"<@{main.ownerID}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
@@ -207,7 +203,7 @@ class githubTools(commands.Cog):
             values = [delete]
             imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{delete}"
             imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{delete}"
-            await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''', values)
+            await self.bot.sql.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''', values)
             os.remove(imageCatalogFilepath)
             os.remove(imageDisplayFilepath)
             await ctx.send("Removed!")
@@ -222,16 +218,16 @@ class githubTools(commands.Cog):
             return
         try:
             while True:
-                decalInfo = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
+                decalInfo = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{decalInfo['strippedname']}"
                 imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{decalInfo['strippedname']}"
                 await ctx.send(file=discord.File(imageCatalogFilepath))
                 userPrompt = f"Do you want to approve this decal? \nName: {decalInfo['name']}\nFilename: {decalInfo['strippedname']}\nOwner: {decalInfo['ownername']} (<@{decalInfo['ownerid']}>)\nCategory: {decalInfo['category']}"
                 responseList = ["Too inappropriate", "Invalid category", "Inadequate image quality", "Image descriptions are not consistent", "Rejection was requested by submitter", "Other", "No", "Override Name", "Override Category", "Yes"]
-                answer = await discordUIfunctions.getChoiceFromList(ctx, responseList, userPrompt)
+                answer = await ctx.bot.ui.getChoiceFromList(ctx, responseList, userPrompt)
                 if answer == "Yes":
                     values = [decalInfo['strippedname']]
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
+                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!')
                     await ctx.send("## Approved!")
@@ -240,10 +236,10 @@ class githubTools(commands.Cog):
                 elif answer == "Override Category":
                     userPrompt = f"Alright then, pick a new category to use with this decal."
                     values = [decalInfo['strippedname']]
-                    newCategory = await discordUIfunctions.getChoiceFromList(ctx, imageCategoryList, userPrompt)
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
+                    newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
                     values = [newCategory, decalInfo['strippedname']]
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
+                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the category was changed to "{newCategory}."')
                     await ctx.send("## Approved! \n(with a category change)")
@@ -260,9 +256,9 @@ class githubTools(commands.Cog):
                     except asyncio.TimeoutError:
                         await ctx.send("Operation cancelled.")
                         return
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
+                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
                     values = [newName, decalInfo['strippedname']]
-                    await SQLfunctions.databaseExecuteDynamic(f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
+                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the image name was changed to "{newName}."')
                     await ctx.send("## Approved! \n(with a name change)")
@@ -270,7 +266,7 @@ class githubTools(commands.Cog):
                     operatingRepo.index.add(imageDisplayFilepath)
                 else:
                     values = [decalInfo['strippedname']]
-                    await SQLfunctions.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''', values)
+                    await self.bot.sql.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     os.remove(imageCatalogFilepath)
                     os.remove(imageDisplayFilepath)
@@ -350,7 +346,7 @@ class githubTools(commands.Cog):
                 </div>
                 <ul class="catalog">'''
             HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
-            decalList = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' ORDER BY name;''')]
+            decalList = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' ORDER BY name;''')]
             for decalInfo in decalList:
                 print("Hi!")
                 decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
@@ -436,9 +432,9 @@ class githubTools(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
         userPrompt = f"Alright then, pick a new category to use with this decal."
-        newCategory = await discordUIfunctions.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+        newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
         values = [newCategory, decalName]
-        await SQLfunctions.databaseExecuteDynamic(
+        await self.bot.sql.databaseExecuteDynamic(
             f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
         await ctx.send("## Config updated!")
 
@@ -466,12 +462,12 @@ class githubTools(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
         values = [newName, decalName]
-        await SQLfunctions.databaseExecuteDynamic(
+        await self.bot.sql.databaseExecuteDynamic(
             f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
         await ctx.send("## Config updated!")
     async def updateActiveContests(self):
         currentTime = int(time.time())
-        contests = [dict(row) for row in await SQLfunctions.databaseFetch(f'''SELECT * FROM contests WHERE starttimestamp < '{currentTime}' AND endtimestamp > '{currentTime}' AND crossServer = 'True';''')]
+        contests = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM contests WHERE starttimestamp < '{currentTime}' AND endtimestamp > '{currentTime}' AND crossServer = 'True';''')]
         startHTML = '''
         <html>
         <head>

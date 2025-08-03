@@ -1,9 +1,7 @@
-import json
-import random
-import json, io, sys
+import json, io
 import discord
 from discord.ext import commands
-from cogs.campaignFunctions import campaignFunctions
+from tools.campaignFunctions import campaignFunctions
 from cogs.errorFunctions import errorFunctions
 
 from cogs.textTools import textTools

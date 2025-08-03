@@ -1,9 +1,5 @@
 import discord, asyncio
 from discord.ext import commands
-from discord import app_commands
-from cogs.SQLfunctions import SQLfunctions
-from cogs.textTools import textTools
-from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 class autoResponderFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -16,17 +12,17 @@ class autoResponderFunctions(commands.Cog):
         else:
             return
         prompt = "DROP TABLE IF EXISTS sprockethelplist"
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
         prompt = ('''CREATE TABLE IF NOT EXISTS sprockethelplist (
                               prompt TEXT,
                               serverid BIGINT,
                               response TEXT);''')
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!  Now go add some help answers in.")
 
     @commands.command(name="addHelpResponse", description="Add a help button")
     async def addHelpResponse(self, ctx: commands.Context):
-        contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+        contestList = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
         if str(contestList["botmanagerroleid"]) not in str(ctx.author.roles):
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
@@ -53,35 +49,35 @@ class autoResponderFunctions(commands.Cog):
 
         values = [promptMessage, ctx.guild.id, responseMessage]
 
-        await SQLfunctions.databaseExecuteDynamic(f'INSERT INTO sprockethelplist VALUES ($1, $2, $3);', values)
+        await self.bot.sql.databaseExecuteDynamic(f'INSERT INTO sprockethelplist VALUES ($1, $2, $3);', values)
         await ctx.send("## Done!")
 
     @commands.command(name="removeHelpResponse", description="Add a help button")
     async def removeHelpResponse(self, ctx: commands.Context):
         await ctx.send("Beginning processing now...")
-        contestList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT botmanagerroleid FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+        contestList = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT botmanagerroleid FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
         print(contestList)
         if str(contestList["botmanagerroleid"]) not in str(ctx.author.roles):
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
-        helpList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM sprockethelplist')]
+        helpList = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM sprockethelplist')]
         helpPrompts = []
         for prompt in helpList:
             helpPrompts.append(prompt["prompt"])
         userPrompt = "What entry are you looking to remove?"
-        promptMessage = await discordUIfunctions.getChoiceFromList(ctx, helpPrompts, userPrompt)
+        promptMessage = await ctx.bot.ui.getChoiceFromList(ctx, helpPrompts, userPrompt)
         values = [promptMessage]
-        await SQLfunctions.databaseExecuteDynamic(f'DELETE FROM sprockethelplist WHERE prompt = $1;', values)
+        await self.bot.sql.databaseExecuteDynamic(f'DELETE FROM sprockethelplist WHERE prompt = $1;', values)
         await ctx.send("## Done!")
 
     @commands.command(name="SprocketHelp", description="Add a help button")
     async def SprocketHelp(self, ctx: commands.Context):
-        helpList = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM sprockethelplist')]
+        helpList = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM sprockethelplist')]
         helpPrompts = []
         for prompt in helpList:
             helpPrompts.append(prompt["prompt"])
         userPrompt = "What do you need help with today?"
-        selection = await discordUIfunctions.getChoiceFromList(ctx, helpPrompts, userPrompt)
+        selection = await ctx.bot.ui.getChoiceFromList(ctx, helpPrompts, userPrompt)
         helpResults = {}
         for prompt in helpList:
             helpResults[prompt["prompt"]] = prompt["response"]

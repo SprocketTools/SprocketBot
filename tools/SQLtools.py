@@ -4,74 +4,64 @@ from discord import app_commands
 #from main import SQLsettings
 import asyncpg
 
-class SQLfunctions():
+class SQLtools():
 
-    async def databaseExecute(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    def __init__(self, pool: asyncpg.Pool):
+        self.pool = pool
+    async def databaseExecute(self, prompt: str):
+        async with self.pool.acquire() as connection:
             return await connection.execute(prompt)
 
-    async def databaseExecuteDynamic(prompt: str, values: list):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseExecuteDynamic(self, prompt: str, values: list):
+        async with self.pool.acquire() as connection:
             return await connection.execute(prompt, *values)
 
-    async def databaseFetch(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetch(self, prompt: str):
+        async with self.pool.acquire() as connection:
             return await connection.fetch(prompt)
 
-    async def databaseFetchFast(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetchFast(self, prompt: str):
+        async with self.pool.acquire() as connection:
             return await connection.fetch(prompt)
 
-    async def databaseMultiFetch(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseMultiFetch(self, prompt: str):
+        async with self.pool.acquire() as connection:
             await connection.execute(prompt)
             await connection.execute(prompt)
             await connection.execute(prompt)
             await connection.execute(prompt)
             return await connection.execute(prompt)
 
-    async def databaseFetchDynamic(prompt: str, values: list):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetchDynamic(self, prompt: str, values: list):
+        async with self.pool.acquire() as connection:
             return await connection.fetch(prompt, *values)
 
-    async def databaseFetchdict(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetchdict(self, prompt: str):
+        async with self.pool.acquire() as connection:
             return [dict(row) for row in await connection.fetch(prompt)]
 
-    async def databaseFetchrow(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetchrow(self, prompt: str):
+        async with self.pool.acquire() as connection:
             return dict(await connection.fetchrow(prompt))
 
-    async def databaseFetchlist(prompt: str):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetchlist(self, prompt: str):
+        async with self.pool.acquire() as connection:
             return list(await connection.fetchrow(prompt))
 
-    async def databaseFetchdictDynamic(prompt: str, values: list):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetchdictDynamic(self, prompt: str, values: list):
+        async with self.pool.acquire() as connection:
             return [dict(row) for row in await connection.fetch(prompt, *values)]
-    async def databaseFetchrowDynamic(prompt: str, values: list):
-        import main
-        async with main.bot.pool.acquire() as connection:
+
+    async def databaseFetchrowDynamic(self, prompt: str, values: list):
+        async with self.pool.acquire() as connection:
             return dict(await connection.fetchrow(prompt, *values))
 
-    async def databaseFetchlistDynamic(prompt: str, values: list):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetchlistDynamic(self, prompt: str, values: list):
+        async with self.pool.acquire() as connection:
             return list(await connection.fetchrow(prompt, *values))
 
-    async def databaseFetchlineDynamic(prompt: str, values: list):
-        import main
-        async with main.bot.pool.acquire() as connection:
+    async def databaseFetchlineDynamic(self, prompt: str, values: list):
+        async with self.pool.acquire() as connection:
             return [dict(row) for row in await connection.fetch(prompt, *values)][0]
 #
 #     @commands.command(name="adminExecute", description="register a contest")

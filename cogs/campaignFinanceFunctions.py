@@ -1,17 +1,9 @@
-import json
-import random
-from datetime import datetime
-
-import discord
 from discord.ext import commands
-from discord import app_commands
+from tools.campaignFunctions import campaignFunctions
 
-import main
-from cogs.SQLfunctions import SQLfunctions
-from cogs.campaignFunctions import campaignFunctions
-from cogs.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
+
 class campaignFinanceFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -22,7 +14,7 @@ class campaignFinanceFunctions(commands.Cog):
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
         campaignKey = await campaignFunctions.getCampaignKey(ctx)
-        availableFactionsList = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey])
+        availableFactionsList = await self.bot.sql.databaseFetchdictDynamic('''SELECT factionname, factionkey, money FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey])
         factionList = []
         factionData = {}
         print(availableFactionsList)
@@ -34,12 +26,12 @@ class campaignFinanceFunctions(commands.Cog):
             subFactionData["money"] = faction["money"]
             factionData[name] = subFactionData
         prompt = "Select the faction you'd like to add money to."
-        factionChoice = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
+        factionChoice = await ctx.bot.ui.getChoiceFromList(ctx, factionList, prompt)
         moneyAdd = await textTools.getIntResponse(ctx, "How much money do you want to add?")
         campaignData = await campaignFunctions.getUserCampaignData(ctx)
         print(factionData)
         money = int(factionData[factionChoice]["money"]) + moneyAdd
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [money, factionData[factionChoice]["factionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [money, factionData[factionChoice]["factionkey"]])
         await ctx.send(f"## Done!\n{factionChoice} now has {campaignData['currencysymbol']}{money} {campaignData['currencyname']}!")
 
     @commands.command(name="viewFinances", description="View the statistics of your faction")
@@ -54,7 +46,7 @@ class campaignFinanceFunctions(commands.Cog):
         moneyAdd = await textTools.getFlooredIntResponse(ctx, "How much is the maintenance going to be?  Reply with a number.", 1)
         logDetails = await textTools.getResponse(ctx, "Reply with a short description for the maintenance and what it entails.  This will be logged for the campaign managers to view.")
         logDetails = await textTools.mild_sanitize(logDetails)
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]])
         time = await campaignFunctions.getTime(campaignData['timedate'])
         await ctx.send(f"## Done!\n{factionData['factionname']} has spent {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']} on maintenance costs!")
         channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
@@ -71,8 +63,8 @@ class campaignFinanceFunctions(commands.Cog):
         taxTransfer = 0
         logDetails = await textTools.getResponse(ctx, "Reply with a short description for the sale and what it entails.  This will be logged for the campaign managers to view.")
         logDetails = await textTools.mild_sanitize(logDetails)
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 - $2 WHERE factionkey = $3;''', [moneyAdd, taxTransfer, factionData["factionkey"]])
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''', [taxTransfer, factionData["landlordfactionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 - $2 WHERE factionkey = $3;''', [moneyAdd, taxTransfer, factionData["factionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''', [taxTransfer, factionData["landlordfactionkey"]])
         await ctx.send(f"## Done!\n{factionData['factionname']} has spent {campaignData['currencysymbol']}{moneyAdd} {campaignData['currencyname']} on maintenance costs!")
         channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
         time = await campaignFunctions.getTime(campaignData['timedate'])
@@ -132,9 +124,9 @@ class campaignFinanceFunctions(commands.Cog):
         shipDate = await textTools.getResponse(ctx, "When do you anticipate the order being completed?  Specify the month and year.")
         logDetails = await textTools.getResponse(ctx, "Describe anything else about the transaction, such as what equipment is being transferred.  This will be logged for the campaign managers to view.")
         logDetails = await textTools.mild_sanitize(logDetails)
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 - $3 WHERE factionkey = $2;''', [moneyAdd, factionChoiceKey, taxTransfer]) # the faction being purchased from
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]])
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',[taxTransfer, factionChoiceData["landlordfactionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 - $3 WHERE factionkey = $2;''', [moneyAdd, factionChoiceKey, taxTransfer]) # the faction being purchased from
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;''', [moneyAdd, factionData["factionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;''',[taxTransfer, factionChoiceData["landlordfactionkey"]])
         await ctx.send(f"## Done!\n{factionChoiceName} now has {campaignData['currencysymbol']}{moneyAdd} more {campaignData['currencyname']}!")
         channel = self.bot.get_channel(int(campaignData["privatemoneychannelid"]))
         time = await campaignFunctions.getTime(campaignData['timedate'])
@@ -153,9 +145,9 @@ class campaignFinanceFunctions(commands.Cog):
         if factionData['iscountry'] == True:
             await campaignFunctions.showStats(ctx, factionData)
             salary = await textTools.getFlooredIntResponse(ctx, "What will your new median salary be?  Reply with a whole number.  \nTake note that this will directly affect your GDP.  The equation is:\n\n `GDP` = `population` * `average salary` / `population per worker ratio`", 1)
-            await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''', [salary, factionData["factionkey"]])
+            await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET averagesalary = $1 WHERE factionkey = $2;''', [salary, factionData["factionkey"]])
         bankbal = await textTools.getFlooredIntResponse(ctx,"How much money does your faction have in storage now?  Reply with a whole number.", 1)
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [bankbal, factionData["factionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET money = $1 WHERE factionkey = $2;''', [bankbal, factionData["factionkey"]])
         await ctx.send(f"## Done!\nYour new stats have been set!")
 
 
@@ -171,8 +163,8 @@ class campaignFinanceFunctions(commands.Cog):
         if richTax > 500 or richTax < -8:
             await ctx.send(await errorFunctions.retrieveError(ctx))
             return
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET taxpoor = $1 WHERE factionkey = $2;''', [round(poorTax/100, 4), factionData["factionkey"]])
-        await SQLfunctions.databaseExecuteDynamic('''UPDATE campaignfactions SET taxrich = $1 WHERE factionkey = $2;''', [round(richTax/100, 4), factionData["factionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET taxpoor = $1 WHERE factionkey = $2;''', [round(poorTax/100, 4), factionData["factionkey"]])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET taxrich = $1 WHERE factionkey = $2;''', [round(richTax/100, 4), factionData["factionkey"]])
         await ctx.send(f"## Done!\nYour new tax rates have been set!")
 
 

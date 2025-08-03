@@ -1,24 +1,18 @@
 import datetime
 from datetime import datetime
-import json
-import random
 from io import StringIO
 import pandas as pd
 import discord
 from discord.ext import commands
-from discord import app_commands
-
-import main
-from cogs.SQLfunctions import SQLfunctions
-from cogs.campaignFunctions import campaignFunctions
-from cogs.discordUIfunctions import discordUIfunctions
+from tools.campaignFunctions import campaignFunctions
 from cogs.errorFunctions import errorFunctions
-from cogs.textTools import textTools
+
+
 class campaignInfoFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # await SQLfunctions.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, factionname VARCHAR, description VARCHAR(5000), joinrole BIGINT, money BIGINT);''')
+    # await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, factionname VARCHAR, description VARCHAR(5000), joinrole BIGINT, money BIGINT);''')
 
     @commands.command(name="campaignSettings", description="generate a key that can be used to initiate a campaign")
     async def campaignSettings(self, ctx: commands.Context):
@@ -30,7 +24,7 @@ class campaignInfoFunctions(commands.Cog):
             userid = ctx.author.id
         campaignKey = await campaignFunctions.getUserCampaignData(ctx)
         print(campaignKey['campaignkey'])
-        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT * FROM campaignusers WHERE userid = $1 AND campaignkey = $2;''',[userid, campaignKey['campaignkey']])
+        data = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM campaignusers WHERE userid = $1 AND campaignkey = $2;''',[userid, campaignKey['campaignkey']])
         if len(data) == 0:
             await errorFunctions.sendError(ctx)
         else:
@@ -49,7 +43,7 @@ class campaignInfoFunctions(commands.Cog):
     async def viewFactions(self, ctx: commands.Context):
         campaignKey = await campaignFunctions.getUserCampaignData(ctx)
         print(campaignKey)
-        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionname FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
+        data = await self.bot.sql.databaseFetchdictDynamic('''SELECT factionname FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
         if len(str(data)) > 200:
             text = ""
             print(data)
@@ -111,7 +105,7 @@ class campaignInfoFunctions(commands.Cog):
     async def downloadStats(self, ctx: commands.Context):
         if await campaignFunctions.isCampaignHost(ctx) == False:
             return
-        data = await SQLfunctions.databaseFetchdictDynamic('''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''', [await campaignFunctions.getCampaignKey(ctx)])
+        data = await self.bot.sql.databaseFetchdictDynamic('''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''', [await campaignFunctions.getCampaignKey(ctx)])
         # credits: brave AI
         df = pd.DataFrame(data)
         buffer = StringIO()
@@ -123,7 +117,7 @@ class campaignInfoFunctions(commands.Cog):
     @commands.command(name="viewStats", description="View the statistics of your faction")
     async def viewStats(self, ctx: commands.Context):
         variablesList = await campaignFunctions.getUserFactionData(ctx)
-        await campaignFunctions.showStats(ctx, variablesList, await discordUIfunctions.getButtonChoice(ctx, ["general", "operations", "payments"]))
+        await campaignFunctions.showStats(ctx, variablesList, await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
 
     @commands.command(name="viewTime", description="View the statistics of your faction")
     async def viewTime(self, ctx: commands.Context):

@@ -1,24 +1,20 @@
-from pathlib import Path
-import os, random, time, asyncio, asyncpg, datetime, json, copy
+import asyncpg, datetime
 
-from cogs.AITools import AITools, GeminiAITools
-from cogs.SQLfunctions import SQLfunctions
+from tools.AITools import AITools, GeminiAITools
+from tools.SQLtools import SQLtools
+from tools.UItools import UItools
 import platform
 import discord
-from discord.ext import tasks, commands
-from discord import app_commands
-from discord.ui import View
+from discord.ext import commands
 import configparser
 import nest_asyncio
-from google import genai
-from google.genai import types
+
 nest_asyncio.apply()
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 intents.presences = False
 utc = datetime.timezone.utc
-import sys
 #sys.setrecursionlimit(100)
 
 ## configuration
@@ -73,7 +69,7 @@ updateGithub = False
 if str(instanceConfig["botinfo"]["updateGithub"]) == "true":
     updateGithub = True
     print("Launching master instance")
-cogsList = ["cogs.errorFunctions", "cogs.textTools",  "cogs.registerFunctions", "cogs.VCfunctions", "cogs.campaignFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions",  "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools"]
+cogsList = ["cogs.errorFunctions", "cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools"] #"cogs.VCfunctions",
 
 class Bot(commands.Bot):
     def __init__(self, ai_wrapper: AITools):
@@ -84,11 +80,18 @@ class Bot(commands.Bot):
         self.synced = False
         self.baseConfig = baseConfig
         self.configurationFilepath = configurationFilepath
+        self.ownerid = ownerID
+        self.botMode = botMode
         self.serverids = []
         self.geminikey = baseConfig['settings']['geminiapis'].split(",")
+        self.sql: SQLtools = None
+        self.ui: UItools = None
+        self.pool: asyncpg.Pool = None
 
     async def setup_hook(self):
-        self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=60)
+        self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=20)
+        self.sql = SQLtools(self.pool)
+        self.ui = UItools(self)
         print(baseConfig['settings']['geminiapis'])
         if updateGithub == True:
             cogsList.append("cogs.githubTools")

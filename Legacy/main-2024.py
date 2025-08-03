@@ -1,11 +1,7 @@
-from pathlib import Path
-import os, random, time, asyncio, asyncpg, datetime, json, copy
-from cogs.SQLfunctions import SQLfunctions
+import asyncpg, datetime
 import platform
 import discord
-from discord.ext import tasks, commands
-from discord import app_commands
-from discord.ui import View
+from discord.ext import commands
 import configparser
 import nest_asyncio
 nest_asyncio.apply()
@@ -14,7 +10,6 @@ intents.message_content = True
 intents.members = True
 intents.presences = False
 utc = datetime.timezone.utc
-import sys
 #sys.setrecursionlimit(100)
 # Determines whether this is the live version of the bot or the testing version.
 # development settings (running on Windows/PyCharm)

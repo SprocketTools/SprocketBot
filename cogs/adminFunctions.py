@@ -1,27 +1,13 @@
-import random
 from google import genai
-from google.genai import types
-import discord, datetime, time, io, random
-from datetime import timedelta
-from PIL import Image, ImageChops
-import requests
+import time, io
+import os, discord
 from discord.ext import commands
-import os, platform, discord, configparser, ast, json
-from discord.ext import commands
-from discord import app_commands
-import json, asyncio, requests
-from pathlib import Path
+import json, requests
 from cogs.errorFunctions import errorFunctions
 import random, asyncio, datetime
-from discord.ext import tasks
 from discord import Webhook
 import aiohttp
 import main
-from cogs.textTools import textTools
-from cogs.SQLfunctions import SQLfunctions
-from cogs.blueprintFunctions import blueprintFunctions
-from cogs.discordUIfunctions import discordUIfunctions
-from discord import app_commands
 from cogs.textTools import textTools
 
 serverConfig = {}
@@ -48,7 +34,7 @@ class adminFunctions(commands.Cog):
     async def updateServerConfig(self):
         for guild in self.bot.guilds:
             try:
-                serverConfig[guild.id] = [dict(row) for row in await SQLfunctions.databaseFetchFast(
+                serverConfig[guild.id] = [dict(row) for row in await self.bot.sql.databaseFetchFast(
                 f'SELECT * FROM serverconfig WHERE serverid = {guild.id}')][0]
             except Exception:
                 pass
@@ -134,32 +120,32 @@ class adminFunctions(commands.Cog):
     #@commands.check(adminFunctions.commands_check)
     async def testLatency(self, ctx: commands.Context):
         start_time = time.time()
-        await SQLfunctions.databaseExecute("SELECT * FROM serverconfig")
+        await self.bot.sql.databaseExecute("SELECT * FROM serverconfig")
         time2 = time.time()
         await ctx.send("Simple database selecting: --- %.10s seconds ---" % (time2 - start_time))
 
         start_time = time.time()
-        await SQLfunctions.databaseFetchdict("SELECT * FROM serverconfig")
+        await self.bot.sql.databaseFetchdict("SELECT * FROM serverconfig")
         time2 = time.time()
         await ctx.send("Database dict selecting: --- %.10s seconds ---" % (time2 - start_time))
 
         start_time = time.time()
-        await SQLfunctions.databaseExecute("UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
+        await self.bot.sql.databaseExecute("UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
         time2 = time.time()
         await ctx.send("Blank database updating: --- %.10s seconds ---" % (time2 - start_time))
 
         start_time = time.time()
-        await SQLfunctions.databaseExecute("SELECT * FROM serverconfig; SELECT * FROM serverconfig; UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
+        await self.bot.sql.databaseExecute("SELECT * FROM serverconfig; SELECT * FROM serverconfig; UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
         time2 = time.time()
         await ctx.send("All 3 queries at once: --- %.10s seconds ---" % (time2 - start_time))
 
         start_time = time.time()
-        await SQLfunctions.databaseFetchFast("SELECT * FROM serverconfig;")
+        await self.bot.sql.databaseFetchFast("SELECT * FROM serverconfig;")
         time2 = time.time()
         await ctx.send("Non-pooled database updating: --- %.10s seconds ---" % (time2 - start_time))
 
         start_time = time.time()
-        await SQLfunctions.databaseMultiFetch("SELECT * FROM serverconfig; SELECT * FROM serverconfig; UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
+        await self.bot.sql.databaseMultiFetch("SELECT * FROM serverconfig; SELECT * FROM serverconfig; UPDATE serverconfig SET serverid = 2 WHERE serverid = 59;")
         time2 = time.time()
         await ctx.send("multi-fetch pooled database updating: --- %.10s seconds ---" % (time2 - start_time))
 
@@ -176,7 +162,7 @@ class adminFunctions(commands.Cog):
         await ctx.send("Reloaded!")
         await asyncio.sleep(10)
         await ctx.send("Update slash command tree?")
-        if await discordUIfunctions.getYesNoChoice(ctx) == True:
+        if await ctx.bot.ui.getYesNoChoice(ctx) == True:
             for guild in self.bot.guilds:
                 self.bot.tree.clear_commands(guild=guild)
                 await self.bot.tree.sync(guild=guild)
@@ -387,7 +373,7 @@ class adminFunctions(commands.Cog):
                               flagaction VARCHAR,
                               flagping VARCHAR,
                               flagpingid BIGINT);''')
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!  Now go DM everyone that their config was reset.")
 
     @commands.command(name="addScamConfig", description="Reset everyone's server configurations")
@@ -401,7 +387,7 @@ class adminFunctions(commands.Cog):
                               ADD COLUMN IF NOT EXISTS flagaction VARCHAR,
                               ADD COLUMN IF NOT EXISTS flagping VARCHAR,
                               ADD COLUMN IF NOT EXISTS flagpingid BIGINT;''')
-        await SQLfunctions.databaseExecute(prompt)
+        await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!")
         await adminFunctions.updateServerConfig(self)
 
@@ -434,7 +420,7 @@ class adminFunctions(commands.Cog):
             await ctx.send(await errorFunctions.retrieveError(ctx))
         else:
             try:
-                serverData = [dict(row) for row in await SQLfunctions.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+                serverData = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
                 description = f'''
                 General chat:         <#{serverData['updateschannelid']}>
                 Bot commands chat:    <#{serverData['commandschannelid']}>
@@ -463,7 +449,7 @@ class adminFunctions(commands.Cog):
         if str(serverConfig['botmanagerroleid']) not in str(ctx.author.roles):
             if ctx.author.id == main.ownerID:
                 await ctx.send("You do not have permission to perform this action.  Proceed forward and override this?")
-                answer = await discordUIfunctions.getYesNoChoice(ctx)
+                answer = await ctx.bot.ui.getYesNoChoice(ctx)
                 if not answer:
                     return
             else:
@@ -552,7 +538,7 @@ class adminFunctions(commands.Cog):
                     serverOwner = self.bot.get_user(server.owner.id)
                     await serverOwner.send(message_out_text)
         else:
-            channelList = await SQLfunctions.databaseFetchdict(f'SELECT * FROM serverconfig;')
+            channelList = await self.bot.sql.databaseFetchdict(f'SELECT * FROM serverconfig;')
             for serverDat in channelList:
                 serverChn = serverDat[str(result)]
                 try:
@@ -593,13 +579,13 @@ class adminFunctions(commands.Cog):
         columnname = await errorFunctions.getResponse(ctx, "What will the column be named?  Use all lowercase letters with no spaces.")
         options = ["VARCHAR", "BIGINT", "REAL", "BOOLEAN", "TIMESTAMP"]
         prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, REALs are for floats, BOOLEANs are true/false, and TIMESTAMPs are for timestamps."
-        varType = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
+        varType = await ctx.bot.ui.getChoiceFromList(ctx, options, prompt)
         try:
             if varType == "VARCHAR" or varType == "TIMESTAMP":
-                await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType};''')
+                await self.bot.sql.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType};''')
             else:
                 defaultVal = await errorFunctions.getResponse(ctx,"What will the default value be?")
-                await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType} DEFAULT {defaultVal};''')
+                await self.bot.sql.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType} DEFAULT {defaultVal};''')
             await ctx.send("Operation successful!")
         except Exception as e:
             await ctx.send(f"Something was incorrect: {e}")
@@ -608,7 +594,7 @@ class adminFunctions(commands.Cog):
     async def adminDownloadErrors(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
             return
-        data = await SQLfunctions.databaseFetchdict('''SELECT * FROM errorlist''')
+        data = await self.bot.sql.databaseFetchdict('''SELECT * FROM errorlist''')
         stringOut = json.dumps(data, indent=4)
         data = io.BytesIO(stringOut.encode())
         await ctx.send(file=discord.File(data, f'errors.json'))
@@ -617,13 +603,13 @@ class adminFunctions(commands.Cog):
     async def adminExecute(self, ctx: commands.Context, *, prompt):
         if ctx.author.id != main.ownerID:
             return
-        await ctx.send(await SQLfunctions.databaseExecute(prompt.replace("`", "")))
+        await ctx.send(await self.bot.sql.databaseExecute(prompt.replace("`", "")))
 
     @commands.command(name="adminFetch", description="register a contest")
     async def adminFetch(self, ctx: commands.Context, *, prompt):
         if ctx.author.id != main.ownerID:
             return
-        result = await SQLfunctions.databaseFetch(prompt)
+        result = await self.bot.sql.databaseFetch(prompt)
         print(result)
         await ctx.send(result)
 
@@ -633,7 +619,7 @@ class adminFunctions(commands.Cog):
             await errorFunctions.sendError(ctx)
             return
         tablename = await errorFunctions.getResponse(ctx, "What is the table name?")
-        await ctx.send(await SQLfunctions.databaseFetchdict(f"SELECT * FROM {tablename};"))
+        await ctx.send(await self.bot.sql.databaseFetchdict(f"SELECT * FROM {tablename};"))
 
     @commands.command(name="adminDropColumn", description="add a column to a SQL table")
     async def adminDropColumn(self, ctx: commands.Context):
@@ -646,7 +632,7 @@ class adminFunctions(commands.Cog):
         names = columnname.split(" ")
         for name in names:
             try:
-                await SQLfunctions.databaseExecute(f''' ALTER TABLE {tablename} DROP COLUMN {name};''')
+                await self.bot.sql.databaseExecute(f''' ALTER TABLE {tablename} DROP COLUMN {name};''')
                 await ctx.send(f"Dropped {name}")
             except Exception as e:
                 await ctx.send(f"Something was incorrect: {e}")
@@ -657,7 +643,7 @@ class adminFunctions(commands.Cog):
             pass
         else:
             return
-        activityType = await discordUIfunctions.getButtonChoice(ctx, ["Playing", "Watching", "Listening", "Streaming"])
+        activityType = await ctx.bot.ui.getButtonChoice(ctx, ["Playing", "Watching", "Listening", "Streaming"])
         if activityType == "Playing":
             name = await textTools.getResponse(ctx, "What game are you playing?")
             await self.bot.change_presence(activity=discord.Game(name=name))
@@ -677,14 +663,14 @@ class adminFunctions(commands.Cog):
         if ctx.author.id != main.ownerID:
             return
         url = await textTools.getResponse(ctx, "Reply with the image link")
-        waitTime = await textTools.getIntResponse(ctx, "How many seconds should it last?")
+        #waitTime = await textTools.getIntResponse(ctx, "How many seconds should it last?")
         response = requests.get(url).content
         await self.bot.user.edit(avatar=response)
         await ctx.send("Hi there!")
-        await asyncio.sleep(waitTime)
-        response = requests.get(defaultURL).content
-        await self.bot.user.edit(avatar=response)
-        await ctx.send("Restored logo to default.")
+        #await asyncio.sleep(waitTime)
+        # response = requests.get(defaultURL).content
+        # await self.bot.user.edit(avatar=response)
+        # await ctx.send("Restored logo to default.")
 
     @commands.command(name="setBotName", description="setup the server")
     async def setBotName(self, ctx: commands.Context):
@@ -703,7 +689,7 @@ class adminFunctions(commands.Cog):
     @commands.command(name="setMusicRole", description="setup the server")
     async def setMusicRole(self, ctx: commands.Context):
         intO = await textTools.getRoleResponse(ctx, "What role do you want to allow to play music?  Reply to this message with a ping of that role.")
-        await SQLfunctions.databaseExecuteDynamic(f'''UPDATE serverconfig SET musicroleid = $1 WHERE serverid = $2;''', [intO, ctx.guild.id])
+        await self.bot.sql.databaseExecuteDynamic(f'''UPDATE serverconfig SET musicroleid = $1 WHERE serverid = $2;''', [intO, ctx.guild.id])
         await adminFunctions.updateServerConfig(self)
         await ctx.send("## Done! \nYour server is now configured.")
 
@@ -822,12 +808,12 @@ class adminFunctions(commands.Cog):
 
         scamActionPrompt = "What action do you want Sprocket Bot to take, if any?"
         scamActionList = ["nothing", "timeout for 12 hours", "kick"]
-        scamAction = await discordUIfunctions.getChoiceFromList(ctx, scamActionList, scamActionPrompt)
+        scamAction = await ctx.bot.ui.getChoiceFromList(ctx, scamActionList, scamActionPrompt)
         responses["flagaction"] = scamAction
 
         scamPingPrompt = "What do you want Sprocket Bot to ping when it detects a hacked account?  \n\nThese pings will be sent into the management channel you defined previously, with some information about the hacked account."
         scamPingList = ["nobody", "everyone", "here", "custom"]
-        scamPing = await discordUIfunctions.getChoiceFromList(ctx, scamPingList, scamPingPrompt)
+        scamPing = await ctx.bot.ui.getChoiceFromList(ctx, scamPingList, scamPingPrompt)
         responses["flagping"] = scamPing
         if scamPing == "custom":
             await ctx.send("What role do you want to designate to be pinged when a hacked account is detected?  Reply to this message with a ping of that role.")
@@ -871,8 +857,8 @@ class adminFunctions(commands.Cog):
 
         await ctx.send("## All data successfully collected!\nBeginning processing now...")
         keystr, valuestr = await textTools.getSQLprompt(responses)
-        await SQLfunctions.databaseExecute(f'''DELETE FROM serverconfig WHERE serverid = {ctx.guild.id};''')
-        await SQLfunctions.databaseExecute(f'''INSERT INTO serverconfig ({keystr}) VALUES ({valuestr});''')
+        await self.bot.sql.databaseExecute(f'''DELETE FROM serverconfig WHERE serverid = {ctx.guild.id};''')
+        await self.bot.sql.databaseExecute(f'''INSERT INTO serverconfig ({keystr}) VALUES ({valuestr});''')
         await adminFunctions.updateServerConfig(self)
         await ctx.send("## Done! \nYour server is now configured and can fully utilize its commands.")
 
@@ -1004,7 +990,7 @@ class adminFunctions(commands.Cog):
                 await ctx.send("AI generation prompt failed.")
                 return
             print(message.text)
-            whereSend = await discordUIfunctions.getButtonChoice(ctx, ["here", "there", "webhook"])
+            whereSend = await ctx.bot.ui.getButtonChoice(ctx, ["here", "there", "webhook"])
             dest = None
             if whereSend == "here":
                 dest = ctx.channel
@@ -1115,8 +1101,8 @@ class adminFunctions(commands.Cog):
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")
 
-    async def getServerConfig(ctx: commands.Context):
-        return await SQLfunctions.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
+    async def getServerConfig(self, ctx: commands.Context):
+        return await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
 
     @commands.command(name="DM", description="send a message to anyone's DM")
     async def DM(self, ctx: commands.Context, userID: str, *, message):
