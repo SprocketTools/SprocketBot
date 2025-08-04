@@ -12,7 +12,7 @@ class testingFunctions(commands.Cog):
         self.bot = bot
         self.on_message_cooldowns = {}
         self.on_message_cooldowns_notify = {}
-        self.cooldown = 11780
+        self.cooldown = 11880
         self.textTools = bot.get_cog("textTools")
         self.geminikey = self.bot.geminikey
 
@@ -33,6 +33,8 @@ class testingFunctions(commands.Cog):
             active_cooldown = round(active_cooldown/2)
         if message.author.id in exec_users:
             active_cooldown = 1
+        if message.author.premium_since is not None:
+            active_cooldown = round(active_cooldown/24)
         if str(message.content.lower()).startswith("jarvis, ") or str(message.content.lower()).startswith("jarvis "):
 
             if user_id in self.on_message_cooldowns:
@@ -52,19 +54,9 @@ class testingFunctions(commands.Cog):
             message_raw = channel.history(limit=40)
             async for messagee in message_raw:
                 messages.append({'author nickname': messagee.author.nick, 'author username': messagee.author.name, "user_id": messagee.author.id, 'content': messagee.content})
-
-
-            gemini = genai.Client(api_key=self.geminikey)
-            try:
-                messageOut = gemini.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author}.  Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  Your Tony Stark for an author has just requested the following: '''{message.content}''' and needs a reply.  Use less than 50 words to generate your response.  If the author is thewonderwaffle, you can use up to 200 words, break character on occasion, and provide more serious information.   If the author makes a request that's at least slightly sexual in nature, such as 'jerk it a little', your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this.  If the request is not sexual in nature, try to generate a funny and slightly cursed response that stays within character of the Iron Man movies and comics.  If your response includes the N word or anything racially offensive, your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this."
-                )
-            except Exception:
-                print("AI generation prompt failed.")
-                return
-            print(messageOut.text)
-            await message.reply(messageOut.text.replace('@everyone', '[Redacted]').replace('@here', '[Redacted]').replace('@&', '@').replace('123105882102824960', str(message.author.id)))
+            async with channel.typing():
+                messageOut = await self.bot.AI.get_response(prompt=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author}.  Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  Your Tony Stark for an author has just requested the following: '''{message.content}''' and needs a reply.  Use less than 50 words to generate your response.  If the author is thewonderwaffle, you can use up to 200 words, break character on occasion, and provide more serious information.   If the author makes a request that's at least slightly sexual in nature, such as 'jerk it a little', your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this.  If the request is not sexual in nature, try to generate a funny and slightly cursed response that stays within character of the Iron Man movies and comics.  If your response includes the N word or anything racially offensive, your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this.", temperature=1.77)
+                await message.reply(messageOut.replace('@everyone', '[Redacted]').replace('@here', '[Redacted]').replace('@&', '@').replace('123105882102824960', str(message.author.id)))
 
     @commands.command(name="channeltest", description="testing some stuff")
     async def channeltest(self, ctx: commands.Context):

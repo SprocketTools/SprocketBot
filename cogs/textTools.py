@@ -4,7 +4,6 @@ from google import genai
 from google.genai import types
 import discord, configparser, random, platform, asyncio, re
 from discord.ext import commands
-from cogs.errorFunctions import errorFunctions
 from discord import app_commands
 class textTools(commands.Cog):
     errorList = []
@@ -58,7 +57,7 @@ class textTools(commands.Cog):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
-            await errorFunctions.sendCategorizedError(ctx, "insult")
+            await ctx.bot.error.sendCategorizedError(ctx, "insult")
             raise ValueError("User termination")
         if action == "delete":
             await msg.delete()
@@ -72,7 +71,7 @@ class textTools(commands.Cog):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
-            await errorFunctions.sendCategorizedError(ctx, "insult")
+            await ctx.bot.error.sendCategorizedError(ctx, "insult")
             raise ValueError("User termination")
         if action == "delete":
             await promptMsg.delete()
@@ -93,14 +92,14 @@ class textTools(commands.Cog):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
-                await errorFunctions.sendError(ctx)
+                await ctx.bot.error.sendError(ctx)
                 raise ValueError("User termination")
             if action == "delete":
                 await promptMsg.delete()
                 await msg.delete()
             if len(msg.content) <= leng:
                 return await textTools.mild_sanitize(msg.content)
-            await errorFunctions.sendError(ctx)
+            await ctx.bot.error.sendError(ctx)
             await ctx.send(f"Error: response should not exceed {leng} characters in length.")
             await ctx.send(prompt)
 
@@ -111,7 +110,7 @@ class textTools(commands.Cog):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
-                await errorFunctions.sendError(ctx)
+                await ctx.bot.error.sendError(ctx)
                 raise ValueError("User termination")
             textOut = msg.content.replace(",", "")
             textSplit = textOut.split(".")
@@ -131,7 +130,7 @@ class textTools(commands.Cog):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
-                await errorFunctions.sendError(ctx)
+                await ctx.bot.error.sendError(ctx)
                 raise ValueError("User termination")
             textOut = msg.content.replace(",", "")
             textSplit = textOut.split(".")
@@ -153,7 +152,7 @@ class textTools(commands.Cog):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
-                await errorFunctions.sendError(ctx)
+                await ctx.bot.error.sendError(ctx)
                 raise ValueError("User termination")
             try:
                 val = float(msg.content)
@@ -172,7 +171,7 @@ class textTools(commands.Cog):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
-                await errorFunctions.sendError(ctx)
+                await ctx.bot.error.sendError(ctx)
                 raise ValueError("User termination")
             try:
                 return round(float(msg.content), 7)
@@ -186,7 +185,7 @@ class textTools(commands.Cog):
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         response = msg.content.replace("%", "")
         if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
+            await ctx.bot.error.sendError(ctx)
             raise ValueError("User termination")
 
         try:
@@ -206,7 +205,7 @@ class textTools(commands.Cog):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
-                await errorFunctions.sendError(ctx)
+                await ctx.bot.error.sendError(ctx)
                 raise ValueError("User termination")
             try:
                 if str(msg.channel_mentions) == '[]':
@@ -235,7 +234,7 @@ class textTools(commands.Cog):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
-                await errorFunctions.sendError(ctx)
+                await ctx.bot.error.sendError(ctx)
                 raise ValueError("User termination")
             try:
                 return int(msg.content)
@@ -251,7 +250,7 @@ class textTools(commands.Cog):
                 return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             if msg.content.lower() == "cancel":
-                await errorFunctions.sendError(ctx)
+                await ctx.bot.error.sendError(ctx)
             try:
                 return msg.attachments[0]
             except Exception:
@@ -263,7 +262,7 @@ class textTools(commands.Cog):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
+            await ctx.bot.error.sendError(ctx)
         try:
             return msg.attachments[0].url
         except Exception:
@@ -275,7 +274,7 @@ class textTools(commands.Cog):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
+            await ctx.bot.error.sendError(ctx)
         try:
             return msg.attachments
         except Exception:
@@ -287,7 +286,7 @@ class textTools(commands.Cog):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
         msg = await ctx.bot.wait_for('message', check=check, timeout=900)
         if msg.content.lower() == "cancel":
-            await errorFunctions.sendError(ctx)
+            await ctx.bot.error.sendError(ctx)
             raise ValueError("User termination")
         outVal = msg.content
         await msg.delete()
@@ -302,7 +301,7 @@ class textTools(commands.Cog):
             msg = await ctx.bot.wait_for('message', check=check, timeout=900)
             return msg.content
         except Exception:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await ctx.bot.error.retrieveError(ctx))
             return ""
 
     async def addLine(inputOne: str, inputTwo: str):

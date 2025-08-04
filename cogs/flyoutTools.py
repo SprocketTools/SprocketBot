@@ -1,9 +1,6 @@
 import json, io
 import discord
 from discord.ext import commands
-from tools.campaignFunctions import campaignFunctions
-from cogs.errorFunctions import errorFunctions
-
 from cogs.textTools import textTools
 
 class flyoutTools(commands.Cog):
@@ -23,8 +20,8 @@ class flyoutTools(commands.Cog):
 
     @commands.command(name="verifyVehicle", description="Add a moderation rule or subrule")
     async def verifyVehicle(self, ctx: commands.Context):
-        campaignData = await campaignFunctions.getUserCampaignData(ctx)
-        factionData = await campaignFunctions.getUserFactionData(ctx)
+        campaignData = await ctx.bot.campaignTools.getUserCampaignData(ctx)
+        factionData = await ctx.bot.campaignTools.getUserFactionData(ctx)
         gdp = max(min(factionData['gdp'],10000000000), 1000000000)
         attachments = await textTools.getManyFilesResponse(ctx, "Upload your data.txt files (search through `%userprofile%\AppData\LocalLow\Stonext Games\Flyout\Craft` to find them)")
         for attachment in attachments:
@@ -43,16 +40,16 @@ class flyoutTools(commands.Cog):
                         compression_int = (444/1000)*gdp/1000000000+(5556/1000)
                         valve_diam_int = (4444/1000)*gdp/1000000000+(5556/100)
                         if specific_power_active > specific_power_int:
-                            await errorFunctions.sendCategorizedError(ctx, "blueprint")
+                            await self.bot.error.sendCategorizedError(ctx, "blueprint")
                             await ctx.send(f"Your specific power is invalid and should not exceed {round(specific_power_int, 3)}kW/L.")
                         elif octane_active > octane_int:
-                            await errorFunctions.sendCategorizedError(ctx, "blueprint")
+                            await self.bot.error.sendCategorizedError(ctx, "blueprint")
                             await ctx.send(f"Your octane rating is invalid and should not exceed {round(octane_int, 7)}.")
                         elif compression_active > compression_int:
-                            await errorFunctions.sendCategorizedError(ctx, "blueprint")
+                            await self.bot.error.sendCategorizedError(ctx, "blueprint")
                             await ctx.send(f"Your compression ratio of {compression_active} is invalid and should not exceed {round(compression_int, 3)}x.")
                         elif valve_diam_active > valve_diam_int/99.999:
-                            await errorFunctions.sendCategorizedError(ctx, "blueprint")
+                            await self.bot.error.sendCategorizedError(ctx, "blueprint")
                             await ctx.send(f"Your valve diameter of {valve_diam_active} is invalid and should not exceed {round(valve_diam_int, 3)}% of your maximum rating.")
                         else:
                             await ctx.send("All good here!")

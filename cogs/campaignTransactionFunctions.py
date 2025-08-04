@@ -1,13 +1,8 @@
 import datetime
-
+from random import random
 import main
-from tools.campaignFunctions import campaignFunctions
-
 import discord
 from discord.ext import commands
-
-from cogs.errorFunctions import errorFunctions
-
 promptResponses = {}
 from cogs.textTools import textTools
 
@@ -19,7 +14,7 @@ class campaignTransactionFunctions(commands.Cog):
     @commands.command(name="setupTransactionDatabase", description="testing some stuff")
     async def setupTransactionDatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
-            await errorFunctions.sendCategorizedError(ctx, "campaign")
+            await self.bot.error.sendCategorizedError(ctx, "campaign")
             return
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS transactions;''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS transactions (customerkey BIGINT, sellerkey BIGINT, campaignkey BIGINT, description VARCHAR, cost BIGINT, saldedate TIMESTAMP, completiondate TIMESTAMP, vehicleid BIGINT, type VARCHAR, repeat INT);''')
@@ -27,12 +22,12 @@ class campaignTransactionFunctions(commands.Cog):
 
     @commands.command(name="purchase", description="Log a purchase made between players")
     async def purchase(self, ctx: commands.Context):
-        campaignData = await campaignFunctions.getUserCampaignData(ctx)
+        campaignData = await ctx.bot.campaignTools.getUserCampaignData(ctx)
         if ctx.channel.id == campaignData['privatemoneychannelid'] or ctx.channel.id == campaignData['publiclogchannelid']:
-            await errorFunctions.sendCategorizedError(ctx, "insult")
+            await self.bot.error.sendCategorizedError(ctx, "insult")
             await ctx.send("\nLast I checked, this was your server's logging channel.  Typically these are not for running bot commands in.")
             return
-        factionData = await campaignFunctions.getUserFactionData(ctx)
+        factionData = await ctx.bot.campaignTools.getUserFactionData(ctx)
         if not factionData['factionname']:
             return
         await ctx.send("What type of transaction are you making?")
@@ -41,13 +36,13 @@ class campaignTransactionFunctions(commands.Cog):
             factionChoiceName = "N/A"
             factionChoiceKey = 0
         else:
-            factionChoiceData = await campaignFunctions.pickCampaignFaction(ctx, "Who are you purchasing equipment from?")
+            factionChoiceData = await ctx.bot.campaignTools.pickCampaignFaction(ctx, "Who are you purchasing equipment from?")
             factionChoiceName = factionChoiceData['factionname']
             factionChoiceKey = factionChoiceData['factionkey']
 
         moneyAdd = await textTools.getFlooredIntResponse(ctx, "How much is the purchase or sale going to be?", 1)
         if moneyAdd > factionData["money"] and transactionType != "sales of equipment to civilians":
-            await errorFunctions.sendError(ctx)
+            await self.bot.error.sendError(ctx)
             await ctx.send("You don't have enough money to finance this transaction!")
             return
 
@@ -76,7 +71,7 @@ class campaignTransactionFunctions(commands.Cog):
             customerName = factionData['factionname']
             sellerName = factionChoiceName
         await ctx.send(f"## Done!\n{factionChoiceName} now has {campaignData['currencysymbol']}{moneyAdd} more {campaignData['currencyname']}!")
-        time = await campaignFunctions.getTime(campaignData['timedate'])
+        time = await ctx.bot.campaignTools.getTime(campaignData['timedate'])
         await self.bot.sql.databaseExecuteDynamic('''INSERT INTO transactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)''', [customerID, sellerID, campaignData['campaignkey'], logDetails, moneyAdd, campaignData['timedate'], campaignData['timedate'] + datetime.timedelta(days=(shipDate*30)), 0, transactionType, repeatFrequency])
         embed = discord.Embed(title=f"Transaction log", color=discord.Color.random())
         embed.add_field(name="Customer:", value=f"{customerName}", inline=False)
@@ -101,10 +96,37 @@ class campaignTransactionFunctions(commands.Cog):
             channel2 = self.bot.get_channel(int(factionChoiceData["logchannel"]))
             await channel2.send(embed=embed)
 
+    @commands.command(name="sendMessage", description="Send a message to a campaign")
+    async def sendMessage(self, ctx: commands.Context):
+        factionData = await self.getUserFactionData(ctx)
+        targetData = await self.pickCampaignFaction(ctx, "Choose who you're sending your message to.")
+        originName = factionData["factionname"]
+        isVulnerable = False
+        isIntercepted = False
+        if factionData["espionagestaff"] > 10 or ctx.author.id == ctx.bot.ownerID:
+            messagetype = await ctx.bot.ui.getButtonChoice(ctx, ["Send a diplomatic message", "Try to impersonate another country"])
+            if messagetype == "Try to impersonate another country":
+                espionageStaff = factionData['espionagestaff']
+                vulnerableThreshold = espionageStaff/(1000+espionageStaff)
+                originData = await self.pickCampaignFaction(ctx,"Choose who you're trying to impersonate.")
+                originName = originData["factionname"]
+                opponentStaff = targetData['espionagestaff']
+                interceptThreshold = opponentStaff / (50 + opponentStaff)
+                isVulnerable = random() > vulnerableThreshold
+                isIntercepted = random() < interceptThreshold
+
+        message = await textTools.getCappedResponse(ctx, "Type out your message here!", 1700)
+        messageDescriptor = f"## Message from {originName}:"
+        if isVulnerable and isIntercepted:
+            messageDescriptor = f"**{factionData['factionname']}** tried to impersonate **{originName}** and sent you this message under their name:"
+        await self.sendMessageToFaction(targetData['factionkey'], messageDescriptor)
+        await self.sendMessageToFaction(targetData['factionkey'], message)
+        await ctx.send(f"## Message delivered to {targetData['factionname']}!")
+
     @commands.command(name="cancelTransaction", description="Cancel an automatic purchase")
     async def cancelTransaction(self, ctx: commands.Context):
-        campaignData = await campaignFunctions.getUserCampaignData(ctx)
-        factionData = await campaignFunctions.getUserFactionData(ctx)
+        campaignData = await ctx.bot.campaignTools.getUserCampaignData(ctx)
+        factionData = await ctx.bot.campaignTools.getUserFactionData(ctx)
         data = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM transactions WHERE customerkey = $1 AND repeat > 0;''', [factionData['factionkey']])
         nameList = []
         for item in data:

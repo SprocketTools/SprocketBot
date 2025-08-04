@@ -16,34 +16,14 @@ class errorFunctions(commands.Cog):
         await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!  Now go add some errors in.")
 
-    # @app_commands.command(name="error", description="Get an error message")
-    # async def errorSlash(self, interaction, error_type: str):
-    #     await interaction.response.send_message("What would you categorize this error under?")
-    #     ttsp = False
-    #     if interaction.author.id == main.ownerID or interaction.author.guild_permissions.administrator == True:
-    #         await interaction.message.delete()
-    #     else:
-    #         serverID = (interaction.guild.id)
-    #         try:
-    #             channel = int([dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
-    #             if interaction.channel.id != channel:
-    #                 await interaction.response.send(f"This command is restricted to <#{channel}>")
-    #                 return
-    #         except Exception:
-    #                 error = await errorFunctions.retrieveError(interaction)
-    #                 await interaction.response.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
-    #                 return
-    #     if random.random() < 0.005:
-    #         ttsp = True
-    #     await interaction.send(await errorFunctions.retrieveCategorizedError(interaction, error_type), tts=ttsp)
     @commands.hybrid_command(name="error", description="Get an error from the bot's catalog")
     async def error(self, ctx: commands.Context):
-        await errorFunctions.sendError(ctx)
+        await self.bot.error.sendError(ctx)
 
     @commands.command(name="getError", description="higdffffffffffff")
     async def getError(self, ctx: commands.Context):
         ttsp = False
-        if ctx.author.id == ctx.bot.ownerID or ctx.author.guild_permissions.administrator == True:
+        if ctx.author.id == self.bot.ownerid or ctx.author.guild_permissions.administrator == True:
             await ctx.message.delete()
         else:
             serverID = (ctx.guild.id)
@@ -53,12 +33,12 @@ class errorFunctions(commands.Cog):
                     await ctx.send(f"This command is restricted to <#{channel}>")
                     return
             except Exception:
-                    error = await errorFunctions.retrieveError(ctx)
+                    error = await self.bot.error.retrieveError(ctx)
                     await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                     return
         if random.random() < 0.001:
             ttsp = True
-        await ctx.send(await errorFunctions.retrieveError(ctx), tts=ttsp)
+        await ctx.send(await self.bot.error.retrieveError(ctx), tts=ttsp)
 
     @commands.command(name="getCError", description="higdffffffffffff")
     async def getCategorizedError(self, ctx: commands.Context):
@@ -79,16 +59,16 @@ class errorFunctions(commands.Cog):
                     await ctx.send(f"This command is restricted to <#{channel}>")
                     return
             except Exception:
-                    error = await errorFunctions.retrieveError(ctx)
+                    error = await self.bot.error.retrieveError(ctx)
                     await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                     return
         if random.random() < 0.001:
             ttsp = True
-        await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, category), tts=ttsp)
+        await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, category), tts=ttsp)
 
     @commands.command(name="removeError", description="higdffffffffffff")
     async def removeError(self, ctx: commands.Context):
-        errorMessage = await errorFunctions.getTextResponse(ctx, "What error message do you want to remove?")
+        errorMessage = await self.bot.error.getTextResponse(ctx, "What error message do you want to remove?")
         if ctx.author.id == 712509599135301673:
             await self.bot.sql.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [errorMessage])
         else:
@@ -116,7 +96,7 @@ class errorFunctions(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
         if len(responseMessage) > 1024:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
             await ctx.send("This error message is too big.  Please trim the length down and try again.")
         if ctx.channel.id == 1310539603144343603:
             category = "mlp"
@@ -139,9 +119,9 @@ class errorFunctions(commands.Cog):
         values = [responseMessage, status, ctx.author.id, category]
         await self.bot.sql.databaseExecuteDynamic(f'INSERT INTO errorlist VALUES ($1, $2, $3, $4);', values)
         errorDict = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT error FROM errorlist WHERE status = true;')]
-        errorFunctions.errorList = []
+        self.bot.error.errorList = []
         for error in errorDict:
-            errorFunctions.errorList.append(error["error"])
+            self.bot.error.errorList.append(error["error"])
         await ctx.send("## Done!")
         if status == False:
             await ctx.send("This error message has been sent off for approval.")
@@ -203,13 +183,12 @@ class errorFunctions(commands.Cog):
     async def approveErrors(self, ctx: commands.Context):
 
         if ctx.author.id != ctx.bot.ownerID:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
             await ctx.send("You aren't authorized to run this command!")
             return
         errorDict = await self.bot.sql.databaseFetchdict('''SELECT * FROM errorlist WHERE status = false;''')
         print(errorDict)
         for error in errorDict:
-            view = YesNoMaybeButtons()
             await ctx.send(content=f"Submitter: <@{error['userid']}>\nCategory: {error['errortype']}\nError message:")
             str = error['error'][:1000]
             if len(str) < 2:
@@ -236,7 +215,7 @@ class errorFunctions(commands.Cog):
                     await recipient.send(f"Your error message:\n{error['error']}\nHas been added to the catalog!  Thanks for the submission!")
 
                 elif value == "Modify text":
-                    newMessage = await errorFunctions.getTextResponse(ctx, "What do you want the modified error message to be?")
+                    newMessage = await self.bot.error.getTextResponse(ctx, "What do you want the modified error message to be?")
                     await self.bot.sql.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [error["error"]])
                     await self.bot.sql.databaseExecuteDynamic('''INSERT INTO errorlist VALUES ($1, $2, $3, $4);''',[newMessage, True, error["userid"], error["errortype"]])
                     await ctx.send("Modified message added!")
@@ -254,7 +233,7 @@ class errorFunctions(commands.Cog):
                     await recipient.send(f"Your error message:\n{error['error'][:800]}\nwas modified to the category:\n{category}\nIt has now entered the catalog.  Thanks for submitting it!")
 
                 elif value == "Modify both":
-                    newMessage = await errorFunctions.getTextResponse(ctx, "What do you want the modified error message to be?")
+                    newMessage = await self.bot.error.getTextResponse(ctx, "What do you want the modified error message to be?")
                     await ctx.send("What would you categorize this error under?")
                     categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"], ["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"], ["Campaign", "campaign"], ["Blueprint", "blueprint"], ["Only a catgirl would say that", "catgirl"],["[Specialty]", "mlp"]]
                     category = await ctx.bot.ui.getButtonChoiceReturnID(ctx, categories)
@@ -278,116 +257,5 @@ class errorFunctions(commands.Cog):
                     return
         await ctx.send("All good here!")
 
-    async def getTextResponse(ctx: commands.Context, prompt):
-        await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        try:
-            msg = await ctx.bot.wait_for('message', check=check)
-            return msg.content
-        except Exception:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-
-
-
-
-
-    async def getResponse(ctx: commands.Context, prompt):
-        await ctx.send(prompt)
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-        try:
-            msg = await ctx.bot.wait_for('message', check=check)
-            return msg.content
-        except Exception:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
-
-    async def retrieveError(ctx: commands.Context):
-        if ctx.author.id == 299330776162631680:
-            error = (await ctx.bot.sql.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
-        else:
-            error = (await ctx.bot.sql.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
-        error = await errorFunctions.errorfyText(ctx, error)
-        error = error.replace('@', '')
-        return error
-
-    async def retrieveTextError(ctx: commands.Context):
-        if ctx.author.id == 299330776162631680:
-            error = (await ctx.bot.sql.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
-        else:
-            error = (await ctx.bot.sql.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl', 'gif') ORDER BY RANDOM() LIMIT 1;'''))["error"]
-        error = await errorFunctions.errorfyText(ctx, error)
-        error = error.replace('@', '')
-        return error
-
-    async def retrieveCategorizedError(ctx: commands.Context, category: str):
-        if ctx.author.id == 299330776162631680:
-            error = (await ctx.bot.sql.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
-        else:
-            error = (await ctx.bot.sql.databaseFetchrowDynamic(f'''SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;''', [category]))["error"]
-            error = await errorFunctions.errorfyText(ctx, error)
-            error = error.replace('@', '')
-        return error
-
-    async def sendCategorizedError(ctx: commands.Context, category: str):
-        if ctx.author.id == 299330776162631680:
-            error = (await ctx.bot.sql.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
-        else:
-            error = (await ctx.bot.sql.databaseFetchrowDynamic(f'''SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;''', [category]))["error"]
-            error = await errorFunctions.errorfyText(ctx, error)
-            error = error.replace('@', '')
-        await ctx.send(error)
-        return
-
-    async def sendError(ctx: commands.Context):
-        if ctx.author.id == 299330776162631680:
-            error = (await ctx.bot.sql.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype = 'mlp' ORDER BY RANDOM() LIMIT 1;'''))["error"]
-        else:
-            error = (await ctx.bot.sql.databaseFetchrow(f'''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''))["error"]
-            error = await errorFunctions.errorfyText(ctx, error)
-            error = error.replace('@', '')
-        await ctx.send(error)
-        return
-
-    async def errorfyText(ctx: commands.Context, error):
-        error = error.replace('{user}', ctx.author.display_name)
-        error = error.replace('{server}', ctx.guild.name)
-        error = error.replace('{second}', str(datetime.now().strftime('%S')))
-        error = error.replace('{minute}', str(datetime.now().strftime('%M')))
-        error = error.replace('{hour}', str(datetime.now().strftime('%I')))
-        error = error.replace('{meridian}', datetime.now().strftime('%p'))
-        error = error.replace('{day}', datetime.now().strftime('%A'))
-        error = error.replace('{month}', datetime.now().strftime('%B'))
-        error = error.replace('{year}', datetime.now().strftime('%Y'))
-        return error
-
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(errorFunctions(bot))
-
-class YesNoMaybeButtons(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=180)
-        self.value = 0
-    @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
-    async def callbackYes(self, a, b):
-        self.value = 1
-        await a.response.defer()
-        self.stop()
-
-    @discord.ui.button(label="Modify", style=discord.ButtonStyle.gray)
-    async def callbackModify(self, a, b):
-        self.value = 2
-        await a.response.defer()
-        self.stop()
-
-    @discord.ui.button(label="No", style=discord.ButtonStyle.red)
-    async def callbackNo(self, a, b):
-        self.value = 3
-        await a.response.defer()
-        self.stop()
-
-    @discord.ui.button(label="Stop processing errors", style=discord.ButtonStyle.blurple)
-    async def callbackStop(self, a, b):
-        self.value = 4
-        await a.response.defer()
-        self.stop()

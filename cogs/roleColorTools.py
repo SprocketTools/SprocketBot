@@ -5,7 +5,6 @@ import discord
 from discord.ext import commands
 import main
 from datetime import datetime, timedelta
-from cogs.errorFunctions import errorFunctions
 
 promptResponses = {}
 from cogs.textTools import textTools
@@ -93,7 +92,7 @@ class roleColorTools(commands.Cog):
     @commands.command(name="resetRoleColorDatabase", description="generate a key that can be used to initiate a campaign")
     async def setupRoleColorDatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
-            await errorFunctions.sendCategorizedError(ctx, "campaign")
+            await self.bot.error.sendCategorizedError(ctx, "campaign")
             return
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS colorchangers;''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS colorchangers (serverid BIGINT, roleid BIGINT, r_i INT, g_i INT, b_i INT, r_f INT, g_f INT, b_f INT, percent REAL, duration BIGINT, type VARCHAR);''')

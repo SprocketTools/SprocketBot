@@ -2,7 +2,6 @@ import discord, asyncio, random
 from discord.ext import commands
 # Github config
 
-from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 
 import difflib
@@ -150,7 +149,7 @@ class AprilFools(commands.Cog):
             await self.bot.get_channel(int(codeConfigList['logid'])).send(f"From <@{message.author.id}>: `" + message.content + "`")
             for attachm in message.attachments:
                 await self.bot.get_channel(int(codeConfigList['logid'])).send(attachm)
-            funny_response = await errorFunctions.retrieveCategorizedError(message, category="catgirl")
+            funny_response = await self.bot.error.retrieveCategorizedError(message, category="catgirl")
             try:
                 ratio = difflib.SequenceMatcher(None, message.content.lower(), the_words[position].lower()).ratio()
                 if ratio > 0.1:

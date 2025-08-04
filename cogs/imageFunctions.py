@@ -2,7 +2,6 @@ import random
 
 import discord, asyncio, requests, io
 from discord.ext import commands
-from cogs.errorFunctions import errorFunctions
 import platform
 
 from PIL import Image, ImageChops
@@ -70,7 +69,7 @@ class imageTools(commands.Cog):
         for item in attachments:
             # Brave AI actually works fairly decent
             if int(item.size) > 25000000:
-                errorText = await errorFunctions.retrieveError(ctx)
+                errorText = await self.bot.error.retrieveError(ctx)
                 await ctx.send(f"{errorText}\n\n{item.filename} is bigger than 25MB.  Please optimize this image a bit more to avoid issues when trying to use the decal.")
                 return
 

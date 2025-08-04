@@ -9,7 +9,6 @@ import discord
 from discord.ext import commands
 
 import main
-from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 FFMPEG_OPTIONS_CURSED = {
     'options': '-vn -b:a 128k -filter:a "volume=0.115, asetrate=44100*1.9, atempo=0.55, bass=g=4" -c:a libopus'}
@@ -28,13 +27,13 @@ class VCfunctions(commands.Cog):
         serverConfig = await adminFunctions.getServerConfig(ctx)
         if str(serverConfig["musicroleid"]) not in str(ctx.author.roles):
             if ctx.author.guild_permissions.administrator == False:
-                await ctx.send(await errorFunctions.retrieveError(ctx))
+                await ctx.send(await self.bot.error.retrieveError(ctx))
                 await ctx.send("You are not authorized to run this command.")
                 return
         search = await textTools.mild_sanitize(searchIn)
         voice_channel = ctx.author.voice.channel if ctx.author.voice else None
         if not voice_channel:
-            return await ctx.send(await errorFunctions.retrieveError(ctx))
+            return await ctx.send(await self.bot.error.retrieveError(ctx))
         if not ctx.voice_client:
             await voice_channel.connect()
 
@@ -68,7 +67,7 @@ class VCfunctions(commands.Cog):
             # try:
             #     info = info['entries'][0]
             # except Exception:
-            #     await ctx.send(await errorFunctions.retrieveError(ctx))
+            #     await ctx.send(await self.bot.error.retrieveError(ctx))
             #     await ctx.send("This link is not valid.  Note that videos cannot link to a playlist, or be a video inside a playlist.")
             url = info['url']
             title = info['title']
@@ -77,14 +76,14 @@ class VCfunctions(commands.Cog):
     @commands.command(name="trollVC", description="Play music with the bot")
     async def trollVC(self, ctx: commands.Context, channelID: int, *, action=None):
         if ctx.author.id != main.ownerID:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
             await ctx.send("You are not authorized to run this command.")
             return
         channel = self.bot.get_channel(channelID)
         search = await textTools.mild_sanitize(await textTools.getResponse(ctx, "What is the song's search query?"))
         voice_channel = channel
         if not voice_channel:
-            return await ctx.send(await errorFunctions.retrieveError(ctx))
+            return await ctx.send(await self.bot.error.retrieveError(ctx))
         if not ctx.voice_client:
             await voice_channel.connect()
 
@@ -95,7 +94,7 @@ class VCfunctions(commands.Cog):
             # try:
             #     info = info['entries'][0]
             # except Exception:
-            #     await ctx.send(await errorFunctions.retrieveError(ctx))
+            #     await ctx.send(await self.bot.error.retrieveError(ctx))
             #     await ctx.send("This link is not valid.  Note that videos cannot link to a playlist, or be a video inside a playlist.")
             url = info['url']
             title = info['title']
@@ -123,7 +122,7 @@ class VCfunctions(commands.Cog):
         serverConfig = await adminFunctions.getServerConfig(ctx)
         if str(serverConfig["musicroleid"]) not in str(ctx.author.roles):
             if ctx.author.guild_permissions.administrator == False:
-                await ctx.send(await errorFunctions.retrieveError(ctx))
+                await ctx.send(await self.bot.error.retrieveError(ctx))
                 await ctx.send("You are not authorized to run this command.")
                 return
         if ctx.voice_client and ctx.voice_client.is_playing():

@@ -7,7 +7,6 @@ from discord.ext import tasks
 import discord
 from discord.ext import commands
 import main
-from tools.campaignFunctions import campaignFunctions
 
 updateFrequency = 1200 # time in seconds
 
@@ -197,14 +196,14 @@ class campaignUpdateFunctions(commands.Cog):
                         transactionType = data['type']
                         moneyAdd = data['cost']
                         try:
-                            factionData = await campaignFunctions.getFactionData(data['customerkey'])
+                            factionData = await self.bot.campaignTools.getFactionData(data['customerkey'])
                         except Exception:
-                            factionData = await campaignFunctions.getFactionData(data['sellerkey'])
+                            factionData = await self.bot.campaignTools.getFactionData(data['sellerkey'])
                         try:
-                            factionChoiceData = await campaignFunctions.getFactionData(data['sellerkey'])
-                            factionChoiceName = await campaignFunctions.getFactionName(data['sellerkey'])
+                            factionChoiceData = await self.bot.campaignTools.getFactionData(data['sellerkey'])
+                            factionChoiceName = await self.bot.campaignTools.getFactionName(data['sellerkey'])
                         except Exception:
-                            factionChoiceData = await campaignFunctions.getFactionData(data['customerkey'])
+                            factionChoiceData = await self.bot.campaignTools.getFactionData(data['customerkey'])
                             factionChoiceName = "Citizens"
                         factionChoiceKey = data['sellerkey']
 
@@ -239,7 +238,7 @@ class campaignUpdateFunctions(commands.Cog):
                             sellerID = factionChoiceKey
                             customerName = factionData['factionname']
                             sellerName = factionChoiceName
-                        time = await campaignFunctions.getTime(campaignData['timedate'])
+                        time = await self.bot.campaignTools.getTime(campaignData['timedate'])
                         embed = discord.Embed(title=f"Automatic transaction log", color=discord.Color.random())
                         embed.add_field(name="Customer:", value=f"{customerName}")
                         embed.add_field(name="Seller", value=f"{sellerName}")

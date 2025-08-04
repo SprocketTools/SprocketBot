@@ -2,7 +2,6 @@ import random
 import discord, json, math, numpy, copy, io, requests
 from discord.ext import commands
 import cv2 as cv
-from cogs.errorFunctions import errorFunctions
 import main
 from cogs.textTools import textTools
 from PIL import Image
@@ -20,7 +19,7 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
+            await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, "blueprint"))
             await ctx.send(f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
             return
         # received if else statement from stackoverflow: https://stackoverflow.com/questions/65169339/download-csv-file-sent-by-user-discord-py
@@ -164,7 +163,7 @@ class blueprintFunctions(commands.Cog):
         #     if component["type"] == "structure":
         #         nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
         #         if nameOut in structureList and dupeStatus == False:
-        #             await ctx.send(await errorFunctions.retrieveError(ctx))
+        #             await ctx.send(await self.bot.error.retrieveError(ctx))
         #             await ctx.send(
         #                 f"Note: you have multiple compartments named {nameOut}.  To make things easier for yourself later, it's recommended to through your blueprint and give your compartments unique names.")
         #             dupeStatus = True
@@ -502,8 +501,8 @@ class blueprintFunctions(commands.Cog):
         name = blueprintData["header"]["name"]
         version = blueprintData["header"]["gameVersion"]
         if "0.12" not in version:
-            errorText = await errorFunctions.retrieveError(ctx)
-            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
+            errorText = await self.bot.error.retrieveError(ctx)
+            await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, "blueprint"))
             await ctx.reply(f"{errorText}\n\nThis command does not support the Geometric Internals build yet.")
 
         x = 0
@@ -669,7 +668,7 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-                error = await errorFunctions.retrieveCategorizedError(ctx, "blueprint")
+                error = await self.bot.error.retrieveCategorizedError(ctx, "blueprint")
                 await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
         if len(ctx.message.attachments) == 0:
@@ -715,7 +714,7 @@ class blueprintFunctions(commands.Cog):
                 for meshBase in blueprintData["meshes"]:
                     if compartmentNameData[meshBase["vuid"]] != "Unnamed Structure":
                         if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
+                            await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send(
                                 "Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                             return
@@ -738,7 +737,7 @@ class blueprintFunctions(commands.Cog):
                             data = io.BytesIO(stringOut.encode())
                             await ctx.send(file=discord.File(data, f'{compartmentNameData[meshBase["vuid"]]}.json'))
                         else:
-                            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
+                            await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send(
                                 "I was unable to download the base .json file needed to create the compartment.  Maybe the GitHub servers are down or something.")
                         i += 1
@@ -750,7 +749,7 @@ class blueprintFunctions(commands.Cog):
                 for meshBase in blueprintData["meshes"]:
                     if meshBase["vuid"] == Vuid:
                         if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
+                            await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send("Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                             return
                         compartmentData = blueprintData["meshes"][i]["meshData"]
@@ -782,7 +781,7 @@ class blueprintFunctions(commands.Cog):
                             await ctx.author.send(content=f"addon structure {answer}", file=fileOut)
                             await ctx.send("Place this model into `C:\Program Files (x86)\Steam\steamapps\common\Sprocket\Sprocket_Data\StreamingAssets\Parts` and reload the game for it to appear.")
                         else:
-                            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
+                            await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, "blueprint"))
                             await ctx.send("I was unable to download the base .json file needed to create the compartment.  Maybe the GitHub servers are down or something.")
 
                     i += 1
@@ -797,7 +796,7 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-            await ctx.send(await errorFunctions.retrieveCategorizedError(ctx, "blueprint"))
+            await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, "blueprint"))
             await ctx.send(
                 f"Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
             return
@@ -838,7 +837,7 @@ class blueprintFunctions(commands.Cog):
         for meshBase in blueprintData["meshes"]:
             if meshBase["vuid"] == Vuid:
                 if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                    await ctx.send(await errorFunctions.retrieveError(ctx))
+                    await ctx.send(await self.bot.error.retrieveError(ctx))
                     await ctx.send(
                         "Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                     return
@@ -884,7 +883,7 @@ class blueprintFunctions(commands.Cog):
         for meshBase in blueprintData["meshes"]:
             if meshBase["vuid"] == Vuid:
                 if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                    await ctx.send(await errorFunctions.retrieveError(ctx))
+                    await ctx.send(await self.bot.error.retrieveError(ctx))
                     await ctx.send(
                         "Error: generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                     return
@@ -1431,7 +1430,7 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send(f"Utility commands are restricted to <#{channel}>")
                 return
         except Exception:
-                error = await errorFunctions.retrieveError(ctx)
+                error = await self.bot.error.retrieveError(ctx)
                 await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
 
@@ -1439,7 +1438,7 @@ class blueprintFunctions(commands.Cog):
             print(attachment.content_type)
             try:
                 if "image" in attachment.content_type:
-                    errorStr = await errorFunctions.retrieveError(ctx)
+                    errorStr = await self.bot.error.retrieveError(ctx)
                     await ctx.reply(errorStr)
                     #await ctx.reply("Ah yes, I love eating random pictures instead of working with tank blueprints *like I was meant to do*! \n\n# <:caatt:1151402846202376212>")
                     return
@@ -2391,7 +2390,7 @@ class blueprintFunctions(commands.Cog):
         try:
             msgBP = await ctx.bot.wait_for('message', check=check, timeout=200.0)
         except Exception:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
             await ctx.send("Gonna need a blueprint file next time.")
             return
 
@@ -2401,7 +2400,7 @@ class blueprintFunctions(commands.Cog):
         try:
             msg = await ctx.bot.wait_for('message', check=check, timeout=240.0)
         except Exception:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
             return
 
         armorThickness = 1
@@ -2412,7 +2411,7 @@ class blueprintFunctions(commands.Cog):
             msg2 = await ctx.bot.wait_for('message', check=check, timeout=240.0)
             armorThickness = int(msg2.content)
         except Exception:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
             await ctx.send("This number was invalid!  Using the recommended value...")
             return
 
@@ -2449,7 +2448,7 @@ class blueprintFunctions(commands.Cog):
                                 faceSet.append(point)
                             thicknessSet = [armorThickness] * len(faceSet)
                             # if len(faceSet) > 4:
-                            #     await ctx.send(await errorFunctions.retrieveError(ctx))
+                            #     await ctx.send(await self.bot.error.retrieveError(ctx))
                             #     await ctx.send("### Your model is not triangulated properly!\n Open your mesh in Blender and apply a **Triangulate** modifier, using these settings.  Export it as a .obj file, then run the command again.")
                             #     await ctx.send("https://raw.githubusercontent.com/SprocketTools/SprocketBot/main/blender-settings.png")
                             #     return
@@ -2487,7 +2486,7 @@ class blueprintFunctions(commands.Cog):
                         if component["type"] == "structure":
                             nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
                             if nameOut in structureList and dupeStatus == False:
-                                await ctx.send(await errorFunctions.retrieveError(ctx))
+                                await ctx.send(await self.bot.error.retrieveError(ctx))
                                 await ctx.send(f"Note: you have multiple compartments named {nameOut}.  To make things easier for yourself later, it's recommended to through your blueprint and give your compartments unique names.")
                                 dupeStatus = True
                                 nameOut = f"{nameOut} (Vuid {i})"
@@ -2503,14 +2502,14 @@ class blueprintFunctions(commands.Cog):
                     for meshBase in blueprintData["meshes"]:
                         if meshBase["vuid"] == Vuid:
                             if blueprintData["meshes"][i]["meshData"]["format"] != "freeform":
-                                await ctx.send(await errorFunctions.retrieveError(ctx))
+                                await ctx.send(await self.bot.error.retrieveError(ctx))
                                 await ctx.send("Generated compartments cannot be imported into.  Convert your generated compartments to freeform and try again.")
                                 return
                             blueprintData["meshes"][i]["meshData"]["mesh"]["vertices"] = verticesList
                             blueprintData["meshes"][i]["meshData"]["mesh"]["faces"] = ftList
                         i += 1
                 except Exception as error:
-                    await ctx.send(await errorFunctions.retrieveError(ctx))
+                    await ctx.send(await self.bot.error.retrieveError(ctx))
                     await ctx.send(f"## The mesh import failed!  \n\n### Reason: \n{error}")
                     return
 

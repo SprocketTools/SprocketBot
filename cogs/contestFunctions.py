@@ -3,7 +3,6 @@ from discord.ext import commands
 import json
 from pathlib import Path
 from cogs.textTools import textTools
-from cogs.errorFunctions import errorFunctions
 from cogs.blueprintFunctions import blueprintFunctions
 # from cogs.githubTools import githubTools
 
@@ -160,7 +159,7 @@ class contestFunctions(commands.Cog):
         print(contestList["contestmanagerroleid"])
         print(ctx.author.roles)
         if str(contestList["contestmanagerroleid"]) not in str(ctx.author.roles):
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
             return
         await ctx.send("Beginning processing now.")
         contestHostID = ctx.author.id

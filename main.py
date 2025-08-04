@@ -3,6 +3,9 @@ import asyncpg, datetime
 from tools.AITools import AITools, GeminiAITools
 from tools.SQLtools import SQLtools
 from tools.UItools import UItools
+from tools.errorTools import errorTools
+from tools.campaignTools import campaignTools
+
 import platform
 import discord
 from discord.ext import commands
@@ -23,8 +26,8 @@ utc = datetime.timezone.utc
 ## Sprocket Bot looks for two config files - the general config file, and the instance config file.
 ## This name determines what configuration gets loaded.
 
-#configName = "official"
-configName = "development"
+configName = "official"
+#configName = "development"
 #configName = "clone1"
 
 ###############################################################################
@@ -42,21 +45,20 @@ else:
     OSslashLine = "/"
 
 # load the config files
-
 baseConfig = configparser.ConfigParser()
 baseConfig.read(configurationFilepath)
 baseConfig.sections()
-
 instanceConfig = configparser.ConfigParser()
 instanceConfig.read(instanceFilepath)
 instanceConfig.sections()
 
-# Set all the settings
-
+# determine if this bot is a main instance or slave
 botMode = False
 if instanceConfig[f"botinfo"]["master"] == "true":
     botMode = True
     print("Launching master instance")
+
+# Set all the settings
 discordToken = instanceConfig[f"botinfo"]["Token"]
 clientID = instanceConfig[f"botinfo"]["clientid"]
 prefix = instanceConfig[f"botinfo"]["prefix"]
@@ -69,13 +71,13 @@ updateGithub = False
 if str(instanceConfig["botinfo"]["updateGithub"]) == "true":
     updateGithub = True
     print("Launching master instance")
-cogsList = ["cogs.errorFunctions", "cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools"] #"cogs.VCfunctions",
+
+# list of all the cogs to load
+cogsList = ["cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",  "cogs.blueprintFunctions", "cogs.errorFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions",  "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.VCfunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.starboardFunctions", "cogs.roleColorTools"] #
 
 class Bot(commands.Bot):
     def __init__(self, ai_wrapper: AITools):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True) #
-        self.AI = ai_wrapper
-        #self.AI.keys = baseConfig['settings']['geminiapis'].split(",")
         self.cogslist = cogsList
         self.synced = False
         self.baseConfig = baseConfig
@@ -84,21 +86,25 @@ class Bot(commands.Bot):
         self.botMode = botMode
         self.serverids = []
         self.geminikey = baseConfig['settings']['geminiapis'].split(",")
+
+        # integrating "tools" into the bot
+        self.AI = ai_wrapper
         self.sql: SQLtools = None
         self.ui: UItools = None
         self.pool: asyncpg.Pool = None
+        self.campaignTools: campaignTools = None
+        self.error: errorTools = None
 
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=20)
         self.sql = SQLtools(self.pool)
         self.ui = UItools(self)
-        print(baseConfig['settings']['geminiapis'])
+        self.campaignTools = campaignTools(self)
+        self.error = errorTools(self)
         if updateGithub == True:
             cogsList.append("cogs.githubTools")
-            #await self.load_extension("cogs.githubTools")
         for ext in self.cogslist:
             await self.load_extension(ext)
-            #setattr(self, ext.split('.')[1], self.get_cog(ext))
 
     async def on_ready(self):
 

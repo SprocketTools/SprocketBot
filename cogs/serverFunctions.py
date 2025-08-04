@@ -7,7 +7,6 @@ import discord
 import pandas as pd
 from discord.ext import commands
 import main
-from cogs.errorFunctions import errorFunctions
 updateFrequency = 60
 promptResponses = {}
 from discord import app_commands
@@ -58,7 +57,7 @@ class serverFunctions(commands.Cog):
     @commands.command(name="setupmoderationdatabase", description="Setup the moderation database")
     async def setupmoderationdatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
-            await errorFunctions.sendCategorizedError(ctx, "campaign")
+            await self.bot.error.sendCategorizedError(ctx, "campaign")
             return
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS modlogs;''')
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS modrules;''')
@@ -273,7 +272,7 @@ class serverFunctions(commands.Cog):
         embed.set_thumbnail(url=ctx.guild.icon)
         await ctx.send(embed=embed)
         # except Exception:
-        #     await ctx.send(await errorFunctions.retrieveError(ctx))
+        #     await ctx.send(await self.bot.error.retrieveError(ctx))
         #     await ctx.send(
         #         "It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
 

@@ -3,7 +3,6 @@ import time, io
 import os, discord
 from discord.ext import commands
 import json, requests
-from cogs.errorFunctions import errorFunctions
 import random, asyncio, datetime
 from discord import Webhook
 import aiohttp
@@ -46,12 +45,12 @@ class adminFunctions(commands.Cog):
         try:
             await ctx.message.add_reaction('310177266011340803')
         except discord.Forbidden:
-            await errorFunctions.sendCategorizedError(ctx, "compliment")
+            await self.bot.error.sendCategorizedError(ctx, "compliment")
             await ctx.send("Sprocket Bot has noticed that you have blocked him.  Unblock the bot and run the command again.")
             return False
         except Exception as e:
             # if "Forbidden" in str(e):
-            #     await errorFunctions.sendCategorizedError(ctx, "compliment")
+            #     await self.bot.error.sendCategorizedError(ctx, "compliment")
             #     await ctx.send("Sprocket Bot has noticed that you have blocked him.  Unblock the bot and run the command again.")
             #     return False
             pass
@@ -59,21 +58,21 @@ class adminFunctions(commands.Cog):
         # try:
         #     print("hi")
         # except discord.Forbidden:
-        #     await errorFunctions.sendCategorizedError(ctx, "compliment")
+        #     await self.bot.error.sendCategorizedError(ctx, "compliment")
         #     await ctx.send("Sprocket Bot has noticed that you have blocked him.  Unblock the bot and run the command again.")
         #     return False
         # except Exception:
         #     pass
 
         if ctx.author.id in [439836738064613378, 670531747972251676, 171352085340618753]: # blacklist
-            await errorFunctions.sendCategorizedError(ctx, "insult")
+            await self.bot.error.sendCategorizedError(ctx, "insult")
             return False
         if ctx.author.id == main.ownerID:
             return True
         if self.operational == True:
             return True
         else:
-            await errorFunctions.sendCategorizedError(ctx, "catgirl")
+            await self.bot.error.sendCategorizedError(ctx, "catgirl")
             await ctx.send("Sprocket Bot is a bit too sleepy right now.  Come back when I've finished my catnap, please?")
 
     @main.bot.event
@@ -83,7 +82,7 @@ class adminFunctions(commands.Cog):
             await ctx.send('Missing required argument.')
         elif isinstance(error, commands.CommandNotFound):
             # if "-#" not in ctx.message.content and len(ctx.message.content) >= 3:
-            #     await errorFunctions.sendCategorizedError(ctx, "compliment")
+            #     await self.bot.error.sendCategorizedError(ctx, "compliment")
             #     await ctx.send("To see my list of commands, try using \n`-help`\n`-sprockethelp`\n`-campaignhelp`")
             pass
         elif isinstance(error, commands.HybridCommandError):
@@ -92,7 +91,7 @@ class adminFunctions(commands.Cog):
             await channel.send(error)
             await channel.send(f"<@{main.ownerID}>")
         else:
-            await errorFunctions.sendError(ctx)
+            await ctx.bot.error.sendError(ctx)
             channel = main.bot.get_channel(1152377925916688484)
             await channel.send(error)
             raise error  # Re-raise the error to see it in the console
@@ -277,32 +276,32 @@ class adminFunctions(commands.Cog):
                 self.cooldown += 100
                 print(message.author.id)
                 if self.cooldown > 300:
-                    await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="insult"))
+                    await message.reply(await self.bot.error.retrieveCategorizedError(ctx=message, category="insult"))
                     self.cooldown = -500
                 elif message.author.id == 712509599135301673:
                     if j < 0.15:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="catgirl"))
+                        await message.reply(await self.bot.error.retrieveCategorizedError(ctx=message, category="catgirl"))
                     elif j > 0.6:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="insult"))
+                        await message.reply(await self.bot.error.retrieveCategorizedError(ctx=message, category="insult"))
                     else:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="gif"))
+                        await message.reply(await self.bot.error.retrieveCategorizedError(ctx=message, category="gif"))
                 elif message.author.id == 437324319102730263:
                     if j < 0.35:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="compliment"))
+                        await message.reply(await self.bot.error.retrieveCategorizedError(ctx=message, category="compliment"))
                     elif j > 0.85:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="insult"))
+                        await message.reply(await self.bot.error.retrieveCategorizedError(ctx=message, category="insult"))
                     else:
                         await message.reply("hi")
                 elif message.author.id == 220134579736936448:
                     if j < 0.6:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="compliment"))
+                        await message.reply(await self.bot.error.retrieveCategorizedError(ctx=message, category="compliment"))
                     elif j > 0.9:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(ctx=message, category="catgirl"))
+                        await message.reply(await self.bot.error.retrieveCategorizedError(ctx=message, category="catgirl"))
                     else:
                         await message.reply("hi")
                 elif message.author.id == 834279720279474176:
                     if j > 0.5:
-                        await message.reply(await errorFunctions.retrieveCategorizedError(category="mlp"))
+                        await message.reply(await self.bot.error.retrieveCategorizedError(category="mlp"))
                 else:
                     if j < 0.3:
                         await message.reply("hi")
@@ -321,12 +320,12 @@ class adminFunctions(commands.Cog):
             if i <= prob/4:
                 for x in special_list:
                     if x in message.content.lower():
-                        await textTools.sendThenDelete(message, await errorFunctions.retrieveCategorizedError(message, special_list[x]))
+                        await textTools.sendThenDelete(message, await self.bot.error.retrieveCategorizedError(message, special_list[x]))
             try:
                 if serverConfig[message.guild.id]["funnycounter"] > 0 and i < 700:
                     serverConfig[message.guild.id]["funnycounter"] = serverConfig[message.guild.id]["funnycounter"] - 1
                     category = random.choice(["compliment", "insult", "sprocket", "flyout", "video", "gif", "joke", "campaign", "blueprint"])
-                    await message.reply(await errorFunctions.retrieveCategorizedError(message, category))
+                    await message.reply(await self.bot.error.retrieveCategorizedError(message, category))
             except Exception:
                 serverConfig[message.guild.id]["funnycounter"] = 0
 
@@ -411,13 +410,13 @@ class adminFunctions(commands.Cog):
         embed.add_field(name="help", value="Shows this message", inline=False)
         embed.add_field(name="settings", value="Adjust the server configuration", inline=False)
         embed.set_thumbnail(url='https://sprockettools.github.io/SprocketToolsLogo.png')
-        embed.set_footer(text=await errorFunctions.retrieveError(ctx))
+        embed.set_footer(text=await self.bot.error.retrieveError(ctx))
         await ctx.send(embed=embed)
 
     @commands.command(name="viewServerConfig", description="View my server configurations")
     async def viewServerConfig(self, ctx: commands.Context):
         if ctx.author.guild_permissions.administrator == False and ctx.author.id != main.ownerID:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
         else:
             try:
                 serverData = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
@@ -440,7 +439,7 @@ class adminFunctions(commands.Cog):
                 embed.set_thumbnail(url=ctx.guild.icon)
                 await ctx.send(embed=embed)
             except Exception:
-                await ctx.send(await errorFunctions.retrieveError(ctx))
+                await ctx.send(await self.bot.error.retrieveError(ctx))
                 await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
 
     @commands.command(name="setSlowmode", description="Set a slowmode.")
@@ -455,7 +454,7 @@ class adminFunctions(commands.Cog):
             else:
                 return
         await ctx.channel.edit(slowmode_delay = duration)
-        await ctx.send(f"Slowmode is now set to a {duration} second delay!\n\n{await errorFunctions.retrieveError(ctx)}")
+        await ctx.send(f"Slowmode is now set to a {duration} second delay!\n\n{await self.bot.error.retrieveError(ctx)}")
 
     @commands.command(name="listMyServers", description="List all my servers.")
     async def listMyServers(self, ctx: commands.Context):
@@ -575,8 +574,8 @@ class adminFunctions(commands.Cog):
             pass
         else:
             return
-        tablename = await errorFunctions.getResponse(ctx,"Whatis the table name?")
-        columnname = await errorFunctions.getResponse(ctx, "What will the column be named?  Use all lowercase letters with no spaces.")
+        tablename = await self.bot.error.getResponse(ctx,"Whatis the table name?")
+        columnname = await self.bot.error.getResponse(ctx, "What will the column be named?  Use all lowercase letters with no spaces.")
         options = ["VARCHAR", "BIGINT", "REAL", "BOOLEAN", "TIMESTAMP"]
         prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, REALs are for floats, BOOLEANs are true/false, and TIMESTAMPs are for timestamps."
         varType = await ctx.bot.ui.getChoiceFromList(ctx, options, prompt)
@@ -584,7 +583,7 @@ class adminFunctions(commands.Cog):
             if varType == "VARCHAR" or varType == "TIMESTAMP":
                 await self.bot.sql.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType};''')
             else:
-                defaultVal = await errorFunctions.getResponse(ctx,"What will the default value be?")
+                defaultVal = await self.bot.error.getResponse(ctx,"What will the default value be?")
                 await self.bot.sql.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType} DEFAULT {defaultVal};''')
             await ctx.send("Operation successful!")
         except Exception as e:
@@ -616,9 +615,9 @@ class adminFunctions(commands.Cog):
     @commands.command(name="adminGetTable", description="add a column to a SQL table")
     async def adminGetTable(self, ctx: commands.Context):
         if ctx.author.id == main.ownerID:
-            await errorFunctions.sendError(ctx)
+            await self.bot.error.sendError(ctx)
             return
-        tablename = await errorFunctions.getResponse(ctx, "What is the table name?")
+        tablename = await self.bot.error.getResponse(ctx, "What is the table name?")
         await ctx.send(await self.bot.sql.databaseFetchdict(f"SELECT * FROM {tablename};"))
 
     @commands.command(name="adminDropColumn", description="add a column to a SQL table")
@@ -627,8 +626,8 @@ class adminFunctions(commands.Cog):
             pass
         else:
             return
-        tablename = await errorFunctions.getResponse(ctx,"Whatis the table name?")
-        columnname = await errorFunctions.getResponse(ctx, "What are the column names?  Use all lowercase letters with no spaces, and split with spacebars.")
+        tablename = await self.bot.error.getResponse(ctx,"Whatis the table name?")
+        columnname = await self.bot.error.getResponse(ctx, "What are the column names?  Use all lowercase letters with no spaces, and split with spacebars.")
         names = columnname.split(" ")
         for name in names:
             try:
@@ -865,7 +864,7 @@ class adminFunctions(commands.Cog):
     @commands.command(name="hey_alexa_kill_the_lights", description="send a message wherever you want")
     async def exit(self, ctx: commands.Context):
         if ctx.author.id != 712509599135301673:
-            await ctx.send(await errorFunctions.retrieveError(ctx))
+            await ctx.send(await self.bot.error.retrieveError(ctx))
             return
         await exit(1)
 
@@ -1096,7 +1095,7 @@ class adminFunctions(commands.Cog):
             print(channelin)
             channel = self.bot.get_channel(channelin)
             await ctx.send("Message is en route.")
-            await channel.send(await errorFunctions.retrieveError(ctx))
+            await channel.send(await self.bot.error.retrieveError(ctx))
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")

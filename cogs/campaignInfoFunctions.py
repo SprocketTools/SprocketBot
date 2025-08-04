@@ -4,9 +4,6 @@ from io import StringIO
 import pandas as pd
 import discord
 from discord.ext import commands
-from tools.campaignFunctions import campaignFunctions
-from cogs.errorFunctions import errorFunctions
-
 
 class campaignInfoFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -16,24 +13,24 @@ class campaignInfoFunctions(commands.Cog):
 
     @commands.command(name="campaignSettings", description="generate a key that can be used to initiate a campaign")
     async def campaignSettings(self, ctx: commands.Context):
-        await campaignFunctions.showSettings(ctx)
+        await ctx.bot.campaignTools.showSettings(ctx)
 
     @commands.command(name="viewFactionHistory", description="Get a list of all the factions in your campaign")
     async def viewFactionHistory(self, ctx: commands.Context, *, userid: int=None):
         if not userid:
             userid = ctx.author.id
-        campaignKey = await campaignFunctions.getUserCampaignData(ctx)
+        campaignKey = await ctx.bot.campaignTools.getUserCampaignData(ctx)
         print(campaignKey['campaignkey'])
         data = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM campaignusers WHERE userid = $1 AND campaignkey = $2;''',[userid, campaignKey['campaignkey']])
         if len(data) == 0:
-            await errorFunctions.sendError(ctx)
+            await self.bot.error.sendError(ctx)
         else:
             embed = discord.Embed(title=f"{self.bot.get_user(userid).name}'s faction history", color=discord.Color.random())
             for faction in data:
                 if faction['status'] == True:
-                    embed.add_field(name=await campaignFunctions.getFactionName(faction['factionkey']), value="Active member", inline=False)
+                    embed.add_field(name=await ctx.bot.campaignTools.getFactionName(faction['factionkey']), value="Active member", inline=False)
                 if faction['status'] == False:
-                    embed.add_field(name=await campaignFunctions.getFactionName(faction['factionkey']), value="Former member", inline=False)
+                    embed.add_field(name=await ctx.bot.campaignTools.getFactionName(faction['factionkey']), value="Former member", inline=False)
             embed.set_thumbnail(url=self.bot.get_user(userid).avatar.url)
             await ctx.send(embed=embed)
 
@@ -41,7 +38,7 @@ class campaignInfoFunctions(commands.Cog):
 
     @commands.command(name="viewFactions", description="Get a list of all the factions in your campaign")
     async def viewFactions(self, ctx: commands.Context):
-        campaignKey = await campaignFunctions.getUserCampaignData(ctx)
+        campaignKey = await ctx.bot.campaignTools.getUserCampaignData(ctx)
         print(campaignKey)
         data = await self.bot.sql.databaseFetchdictDynamic('''SELECT factionname FROM campaignfactions WHERE campaignkey = $1;''', [campaignKey["campaignkey"]])
         if len(str(data)) > 200:
@@ -103,9 +100,9 @@ class campaignInfoFunctions(commands.Cog):
 
     @commands.command(name="downloadStats", description="Download the campaign data")
     async def downloadStats(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignHost(ctx) == False:
+        if await ctx.bot.campaignTools.isCampaignHost(ctx) == False:
             return
-        data = await self.bot.sql.databaseFetchdictDynamic('''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''', [await campaignFunctions.getCampaignKey(ctx)])
+        data = await self.bot.sql.databaseFetchdictDynamic('''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, gdp, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''', [await ctx.bot.campaignTools.getCampaignKey(ctx)])
         # credits: brave AI
         df = pd.DataFrame(data)
         buffer = StringIO()
@@ -116,12 +113,12 @@ class campaignInfoFunctions(commands.Cog):
 
     @commands.command(name="viewStats", description="View the statistics of your faction")
     async def viewStats(self, ctx: commands.Context):
-        variablesList = await campaignFunctions.getUserFactionData(ctx)
-        await campaignFunctions.showStats(ctx, variablesList, await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
+        variablesList = await ctx.bot.campaignTools.getUserFactionData(ctx)
+        await ctx.bot.campaignTools.showStats(ctx, variablesList, await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
 
     @commands.command(name="viewTime", description="View the statistics of your faction")
     async def viewTime(self, ctx: commands.Context):
-        campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
+        campaignInfoList = await ctx.bot.campaignTools.getUserCampaignData(ctx)
         print(campaignInfoList)
         date_string = str(campaignInfoList['timedate'])
         format_string = "%Y-%m-%d %H:%M:%S"
@@ -132,11 +129,11 @@ class campaignInfoFunctions(commands.Cog):
         day = dt.strftime("%A %B %d")
         embed = discord.Embed(title=f"\nIt is {hour}:{min} on {day}, {dt.year} in {campaignInfoList['campaignname']}", color=discord.Color.random())
         embed.add_field(name="Time scale", value=f"{campaignInfoList['timescale']}x", inline=True)
-        embed.set_footer(text=(await errorFunctions.retrieveCategorizedError(ctx, "campaign")))
+        embed.set_footer(text=(await self.bot.error.retrieveCategorizedError(ctx, "campaign")))
         await ctx.send(embed=embed)
 
     async def showStats(ctx: commands.Context, variablesList):
-        campaignInfoList = await campaignFunctions.getUserCampaignData(ctx)
+        campaignInfoList = await ctx.bot.campaignTools.getUserCampaignData(ctx)
         print(campaignInfoList)
         date_string = str(campaignInfoList['timedate'])
         format_string = "%Y-%m-%d %H:%M:%S"
@@ -150,7 +147,7 @@ class campaignInfoFunctions(commands.Cog):
         if variablesList["iscountry"] == True:
             embed.add_field(name="Land", value="{:,}".format(int(variablesList["landsize"])) + " km²",inline=False)
             embed.add_field(name="Population size", value=("{:,}".format(int(variablesList["population"]))),inline=False)
-            embed.add_field(name="Government type", value=await campaignFunctions.getGovernmentName(variablesList["governance"]), inline=False)
+            embed.add_field(name="Government type", value=await ctx.bot.campaignTools.getGovernmentName(variablesList["governance"]), inline=False)
             embed.add_field(name="GDP",value=campaignInfoList["currencysymbol"] + ("{:,}".format(int(variablesList["gdp"]))), inline=False)
             embed.add_field(name="Populace happiness", value=str(round(float(variablesList["happiness"])*100, 1)) + "%", inline=False)
             embed.add_field(name="Average lifespan", value=str(round(float(variablesList["lifeexpectancy"]), 1)) + " years", inline=False)
@@ -160,7 +157,7 @@ class campaignInfoFunctions(commands.Cog):
             embed.add_field(name="Espionage funding", value=str(round(float(variablesList["espionagespend"]) * 100, 1)) + "% of GDP", inline=False)
             embed.add_field(name="Spy agency staff", value=str(variablesList["espionagestaff"]) + " employees", inline=False)
         else:
-            embed.add_field(name="Country of origin",value=await campaignFunctions.getFactionName(variablesList["landlordfactionkey"]), inline=False)
+            embed.add_field(name="Country of origin",value=await ctx.bot.campaignTools.getFactionName(variablesList["landlordfactionkey"]), inline=False)
         embed.set_footer(text=f"\nIt is {hour}:{min} on {day}, {dt.year}")
         embed.set_thumbnail(url=variablesList["flagurl"])
         await ctx.send(embed=embed)

@@ -4,12 +4,9 @@ import random
 from datetime import datetime
 import discord
 from discord.ext import commands
-
-from tools.discordUIfunctions import discordUIfunctions
 from cogs.errorFunctions import errorFunctions
-from cogs.textTools import textTools
 
-class campaignFunctions(commands.Cog):
+class campaignTools:
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -60,38 +57,11 @@ class campaignFunctions(commands.Cog):
             await errorFunctions.sendCategorizedError(ctx, "campaign")
             await ctx.send("You aren't a part of any factions within this campaign!  Join one using `-joinFaction` and then try again.")
         else:
-            factionName = await discordUIfunctions.getChoiceFromList(ctx, campaignNameList, "Choose your faction below:")
+            factionName = await ctx.bot.ui.getChoiceFromList(ctx, campaignNameList, "Choose your faction below:")
             factionKey = campaignDataList[factionName]
 
         factionData = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionkey = $1;''', [factionKey])
         return factionData
-
-    @commands.command(name="sendMessage", description="Send a message to a campaign")
-    async def sendMessage(self, ctx: commands.Context):
-        factionData = await self.getUserFactionData(ctx)
-        targetData = await self.pickCampaignFaction(ctx, "Choose who you're sending your message to.")
-        originName = factionData["factionname"]
-        isVulnerable = False
-        isIntercepted = False
-        if factionData["espionagestaff"] > 10 or ctx.author.id == ctx.bot.ownerID:
-            messagetype = await discordUIfunctions.getButtonChoice(ctx, ["Send a diplomatic message", "Try to impersonate another country"])
-            if messagetype == "Try to impersonate another country":
-                espionageStaff = factionData['espionagestaff']
-                vulnerableThreshold = espionageStaff/(1000+espionageStaff)
-                originData = await self.pickCampaignFaction(ctx,"Choose who you're trying to impersonate.")
-                originName = originData["factionname"]
-                opponentStaff = targetData['espionagestaff']
-                interceptThreshold = opponentStaff / (50 + opponentStaff)
-                isVulnerable = random.random() > vulnerableThreshold
-                isIntercepted = random.random() < interceptThreshold
-
-        message = await textTools.getCappedResponse(ctx, "Type out your message here!", 1700)
-        messageDescriptor = f"## Message from {originName}:"
-        if isVulnerable and isIntercepted:
-            messageDescriptor = f"**{factionData['factionname']}** tried to impersonate **{originName}** and sent you this message under their name:"
-        await self.sendMessageToFaction(targetData['factionkey'], messageDescriptor)
-        await self.sendMessageToFaction(targetData['factionkey'], message)
-        await ctx.send(f"## Message delivered to {targetData['factionname']}!")
 
     async def sendMessageToFaction(self, factionkey: int, message: str):
         data = await self.bot.sql.databaseFetchrowDynamic('''SELECT logchannel FROM campaignfactions WHERE factionkey = $1;''', [factionkey])
@@ -119,7 +89,7 @@ class campaignFunctions(commands.Cog):
                 subFactionData["factionkey"] = faction["factionkey"]
                 subFactionData["money"] = faction["money"]
                 factionData[name] = subFactionData
-        factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
+        factionChoiceName = await ctx.bot.ui.getChoiceFromList(ctx, factionList, prompt)
         dataout = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM campaignfactions WHERE factionname = $1;''', [factionChoiceName])
         return dataout
 
@@ -133,7 +103,7 @@ class campaignFunctions(commands.Cog):
             name = faction["factionname"]
             factionList.append(name)
             factionData[name] = faction
-        factionChoiceName = await discordUIfunctions.getChoiceFromList(ctx, factionList, prompt)
+        factionChoiceName = await ctx.bot.ui.getChoiceFromList(ctx, factionList, prompt)
         return factionData[factionChoiceName]
 
     async def getUserCampaignData(self, ctx: commands.Context):
@@ -142,7 +112,7 @@ class campaignFunctions(commands.Cog):
     async def getGovernmentType(self, ctx: commands.Context):
         options = ["Open Council", "Coalition Party System", "Multi Party System", "Two Party System", "Dominant Party System", "Single Party System", "Appointed Successor"]
         prompt = "Pick a type of government."
-        answer = await discordUIfunctions.getChoiceFromList(ctx, options, prompt)
+        answer = await ctx.bot.ui.getChoiceFromList(ctx, options, prompt)
         if answer == "Open Council":
             return -1
         if answer == "Coalition Party System":
@@ -201,10 +171,6 @@ class campaignFunctions(commands.Cog):
             return round(1/(math.exp(k*(latitude - init))), 3)
         else:
             return 0.25
-
-    @commands.command(name="farmingTest", description="Ask Hamish a question.")
-    async def farmingTest(self, ctx: commands.Context, latitude: float):
-        await ctx.send(str(await self.getFarmingLatitudeScalar(latitude)))
 
     async def showStats(self, ctx: commands.Context, variablesList, displayType = None):
         if not displayType:
@@ -325,6 +291,3 @@ class campaignFunctions(commands.Cog):
 
         if ctx.author.roles.__contains__():
             return status
-
-async def setup(bot:commands.Bot) -> None:
-    await bot.add_cog(campaignFunctions(bot))

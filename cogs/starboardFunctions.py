@@ -1,7 +1,6 @@
 import main
 import discord
 from discord.ext import commands
-from cogs.errorFunctions import errorFunctions
 promptResponses = {}
 from cogs.textTools import textTools
 
@@ -119,7 +118,7 @@ class starboardFunctions(commands.Cog):
                 await self.bot.sql.databaseExecuteDynamic('''INSERT INTO starboards VALUES ($1, $2, $3, $4, $5)''', [serverid, emoji, count, channelsend, sourcechannel])
                 await ctx.send("## Done!")
             except Exception as e:
-                await ctx.send(await errorFunctions.getError(ctx) + "\n\nSomething went wrong: " + e)
+                await ctx.send(await self.bot.error.getError(ctx) + "\n\nSomething went wrong: " + e)
 
 
 

@@ -3,11 +3,8 @@ import random
 import time
 from discord import Webhook
 import aiohttp
-
 from discord.ext import commands
-
 import main
-from cogs.errorFunctions import errorFunctions
 
 promptResponses = {}
 from cogs.textTools import textTools
@@ -52,7 +49,7 @@ class timedMessageTools(commands.Cog):
     async def on_message(self, message):
         data = (await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM timedmessages WHERE (EXTRACT(EPOCH FROM (time)) < 2) AND (ownerid = $1) AND ((channelid = $2) OR (channelid = 0)) LIMIT 1;''', [message.author.id, message.channel.id]))
         for msg in data:
-            string = await errorFunctions.errorfyText(message, msg['content'])
+            string = await self.bot.error.errorfyText(message, msg['content'])
             await message.reply(string)
             await self.bot.sql.databaseFetchdictDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [msg['id']])
     # @tasks.loop(seconds=300)
@@ -80,7 +77,7 @@ class timedMessageTools(commands.Cog):
     @commands.command(name="setupTimedMessageDatabase", description="generate a key that can be used to initiate a campaign")
     async def setupTimedMessageDatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
-            await errorFunctions.sendCategorizedError(ctx, "campaign")
+            await self.bot.error.sendCategorizedError(ctx, "campaign")
             return
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS timedmessages;''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS timedmessages (id VARCHAR, ownerid BIGINT, channelid BIGINT, content VARCHAR(2500), time TIMESTAMP, webhookid VARCHAR);''')

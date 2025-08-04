@@ -1,12 +1,9 @@
 import asyncio
 import datetime
 import random
-
 import discord
 from discord.ext import commands
-
 import main
-from cogs.errorFunctions import errorFunctions
 from cogs.textTools import textTools
 class SprocketOfficialFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -58,17 +55,15 @@ class SprocketOfficialFunctions(commands.Cog):
     @commands.command(name="askHamish", description="Ask Hamish a question.")
     async def askHamish(self, ctx: commands.Context):
         role = ctx.author.roles
-
-
-        if main.botMode == "development":
+        if ctx.bot.botMode != True:
             channel = self.bot.get_channel(1142053423370481747)
         else:
             channel = self.bot.get_channel(788410377268363264)
             if str(879050882107473990) not in str(role):
-                await ctx.send(f'{await errorFunctions.retrieveError(ctx)}\n\nYou need the FAQ enjoyer role to use this command.  Look in <#882618434834284594> for more info.')
+                await ctx.send(f'{await self.bot.error.retrieveError(ctx)}\n\nYou need the FAQ enjoyer role to use this command.  Look in <#882618434834284594> for more info.')
                 return
 
-        await ctx.send(f"## Process started. \n\nSend a message containing your question.\n- Make sure that you have searched for previous replies on similar questions\n- Do not use this to post game suggestions, use the [Github tracker](https://github.com/Muushy/Sprocket-Feedback/issues) for this.")
+        await ctx.send(f"## Process started. \n\nSend a message containing your question.\n- Make sure that you have searched for previous replies on similar questions\n- Do not use this to post game suggestions, use the [Github tracker](<https://github.com/Muushy/Sprocket-Feedback/issues>) for this.")
         messageOut = "This is a default response"
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -77,7 +72,23 @@ class SprocketOfficialFunctions(commands.Cog):
             msg = await ctx.bot.wait_for('message', check=check, timeout=1800.0)
             messageOut = await textTools.mild_sanitize(msg.content)
         except Exception:
-            await ctx.reply(await errorFunctions.retrieveError(ctx))
+            await ctx.reply(await self.bot.error.retrieveError(ctx))
+            return
+        print(channel.name)
+        messages = []
+        message_raw = channel.history(limit=1000)
+        await ctx.send("Running checks...")
+        async for messagee in message_raw:
+            messages.append({'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
+                             "user_id": messagee.author.id, 'content': messagee.content, 'message_url': messagee.jump_url})
+        ai_response = await ctx.bot.AI.get_response(prompt=f"Here is the question asked by the user: {messageOut}\n----------------\nHere is the recent history in reverse order: {messages}", temperature=0.1, instructions="Analyze the attached message history and see if the developer 'Hamish' has already answered the question.  If he has answered it, reply with a comma-separated list of the 'message_url' URLs that link to answers from Hamish.  If the user's question is only a game suggestion, and not an more general question for the developer, reply with exactly 'no' so that the processing code allows the user to continue.  Otherwise, reply with exactly 'yes'")
+
+        if "https://" in ai_response:
+            await ctx.message.reply(f"It seems like this question has already been answered here: {ai_response}")
+            await ctx.send("")
+            return
+        elif "no" in ai_response.lower():
+            await ctx.message.reply(f"{await self.bot.error.retrieveError(ctx)}\nIt seems like this question is a game suggestion and not a question for the developer.")
             return
 
         await ctx.send(f"Confirm that you wish to send the following question: \n\n{messageOut}\n\nReply with 'yes' to confirm.")
@@ -128,6 +139,7 @@ class SprocketOfficialFunctions(commands.Cog):
             embed = discord.Embed(color=discord.Color.random(), description=messageOut)
             embed.set_footer(text=f"Question by {userName}", icon_url=avatarURL)
             sent_message = await channel.send(embed=embed, content=messageOut)
+            await asyncio.sleep(4)
             await sent_message.create_thread(name=f"Question by {userName}", auto_archive_duration=10080, reason=f"{ctx.author.name} asked for it.")
             if main.botMode != "development":
                 await sent_message.add_reaction(":plus1:881246627510239323")
@@ -136,7 +148,7 @@ class SprocketOfficialFunctions(commands.Cog):
                 file = await attachment.to_file()
                 await channel.send(file=file, content=" ")
         except Exception:
-            await ctx.reply(await errorFunctions.retrieveError(ctx))
+            await ctx.reply(await self.bot.error.retrieveError(ctx))
             return
 
 

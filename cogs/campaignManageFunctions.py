@@ -2,10 +2,7 @@ import discord, io
 import matplotlib.pyplot as plot
 import pandas as pd
 from discord.ext import commands
-
 import main
-from tools.campaignFunctions import campaignFunctions
-from cogs.errorFunctions import errorFunctions
 
 promptResponses = {}
 from cogs.textTools import textTools
@@ -16,7 +13,7 @@ class campaignManageFunctions(commands.Cog):
 
     @commands.command(name="manageCampaign", description="Add money to a faction")
     async def manageCampaign(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignHost(ctx) == False:
+        if await ctx.bot.campaignTools.isCampaignHost(ctx) == False:
             if ctx.author.id == main.ownerID:
                 await ctx.send(
                     "You do not have permission to perform this action.  Proceed forward and override this?")
@@ -27,8 +24,8 @@ class campaignManageFunctions(commands.Cog):
                 return
         i = 0
         while True:
-            key = await campaignFunctions.getCampaignKey(ctx)
-            embedOut = await campaignFunctions.showSettings(ctx)
+            key = await ctx.bot.campaignTools.getCampaignKey(ctx)
+            embedOut = await ctx.bot.campaignTools.showSettings(ctx)
             promptOut = await ctx.send("What statistic do you wish to modify?")
             answer = str.lower(await ctx.bot.ui.getButtonChoice(ctx, ["Name", "Rules", "Time scale", "Adjust time", "Currency name", "Currency symbol", "Baseline GDP growth", "Energy cost", "Steel cost", "Pop to worker ratio", "Start/stop campaign", "Transaction logs channel", "Announcement channel", "Exit", "Transfer Campaign Ownership"]))
             name_adj = ""
@@ -90,12 +87,12 @@ class campaignManageFunctions(commands.Cog):
 
     @commands.command(name="manageFaction", description="Add money to a faction")
     async def manageFaction(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignHost(ctx): # hosts
-            data = await campaignFunctions.pickCampaignFaction(ctx, "Pick the faction you would like to manage.")
+        if await ctx.bot.campaignTools.isCampaignHost(ctx): # hosts
+            data = await ctx.bot.campaignTools.pickCampaignFaction(ctx, "Pick the faction you would like to manage.")
             factionName = data['factionname']
             key = data['factionkey']
         else: #players only
-            data = await campaignFunctions.getUserFactionData(ctx)
+            data = await ctx.bot.campaignTools.getUserFactionData(ctx)
             key = data["factionkey"]
 
         if data['iscountry']:
@@ -103,7 +100,7 @@ class campaignManageFunctions(commands.Cog):
                 await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
         else:
             displayType = "general"
-        if await campaignFunctions.isCampaignHost(ctx):
+        if await ctx.bot.campaignTools.isCampaignHost(ctx):
             if data['iscountry'] == False:
                 inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel",
                           "Move your company to a new country", "Delete faction", "Exit"]
@@ -137,9 +134,9 @@ class campaignManageFunctions(commands.Cog):
         print(data)
         continue_val = True
         while continue_val:
-            data = await campaignFunctions.getFactionData(key)
+            data = await ctx.bot.campaignTools.getFactionData(key)
 
-            embedOut = await campaignFunctions.showStats(ctx, data, displayType)
+            embedOut = await ctx.bot.campaignTools.showStats(ctx, data, displayType)
             promptOut = await ctx.send("What statistic do you wish to modify?")
 
             answer = str.lower(await ctx.bot.ui.getButtonChoice(ctx, inList))
@@ -164,7 +161,7 @@ class campaignManageFunctions(commands.Cog):
                 name_adj = await textTools.getFlooredIntResponse(ctx, "What is your new land size?  Reply with a number.", 1)
                 await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landsize = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "government type":
-                name_adj = await campaignFunctions.getGovernmentType(ctx)
+                name_adj = await ctx.bot.campaignTools.getGovernmentType(ctx)
                 await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET governance = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "name":
                 name_adj = await textTools.getCappedResponse(ctx, "What is the new name of the faction?", 64)
@@ -180,7 +177,7 @@ class campaignManageFunctions(commands.Cog):
                 await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET poptoworkerratio = $1 WHERE factionkey = $2;''',[ratio_adj, key])
             elif answer == "move your company to a new country":
                 if data['iscountry'] == False:
-                    landlorddata = await campaignFunctions.pickCampaignCountry(ctx, "Where are you relocating your company to?")
+                    landlorddata = await ctx.bot.campaignTools.pickCampaignCountry(ctx, "Where are you relocating your company to?")
                     await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET landlordfactionkey = $1 WHERE factionkey = $2;''',[landlorddata['factionkey'], key])
                 else:
                     await ctx.send("Yeah, unfortunately surrendering to another country is not a part of the game here.")
@@ -216,8 +213,8 @@ class campaignManageFunctions(commands.Cog):
                     name_adj = 1
                 await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaignfactions SET taxrich = $1 WHERE factionkey = $2;''',[name_adj, key])
             elif answer == "delete faction":
-                if await campaignFunctions.isCampaignHost(ctx) == False:
-                    await errorFunctions.sendError(ctx)
+                if await ctx.bot.campaignTools.isCampaignHost(ctx) == False:
+                    await self.bot.error.sendError(ctx)
                     await ctx.send("You are not a campaign host; please contact a campaign host to delete your faction.")
                     return
                 else:
@@ -238,7 +235,7 @@ class campaignManageFunctions(commands.Cog):
                         await ctx.bot.ui.getButtonChoice(ctx, ["general", "operations", "payments"]))
                 else:
                     displayType = "general"
-                if await campaignFunctions.isCampaignHost(ctx):
+                if await ctx.bot.campaignTools.isCampaignHost(ctx):
                     if data['iscountry'] == False:
                         inList = ["Name", "Description", "Flag", "Discretionary funds", "Updates channel",
                                   "Move your company to a new country", "Delete faction", "Exit"]
@@ -278,10 +275,10 @@ class campaignManageFunctions(commands.Cog):
 
     @commands.command(name="manageAllFactions", description="Edit a faction un bulk")
     async def manageAllFactions(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignHost(ctx) == False:
+        if await ctx.bot.campaignTools.isCampaignHost(ctx) == False:
             return
-        key = await campaignFunctions.getCampaignKey(ctx)
-        name = await campaignFunctions.getCampaignName(key)
+        key = await ctx.bot.campaignTools.getCampaignKey(ctx)
+        name = await ctx.bot.campaignTools.getCampaignName(key)
         await ctx.send("Do you have a .csv data file ready yet?")
         isReady = await ctx.bot.ui.getYesNoChoice(ctx)
         if isReady:
@@ -294,12 +291,12 @@ class campaignManageFunctions(commands.Cog):
                 await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET factionname = $1, money = $2, population = $3, landsize = $4, averagesalary = $5 WHERE factionkey = $6''', [faction["factionname"], faction["money"], faction["population"], faction["landsize"], faction["averagesalary"], faction["factionkey"]])
             await ctx.send(f"## Done!\n{len(data)} factions have been updated.")
         else:
-            if await campaignFunctions.isCampaignHost(ctx) == False:
+            if await ctx.bot.campaignTools.isCampaignHost(ctx) == False:
                 return
             await ctx.send("Download this file and edit it in a spreadsheet editor.  When you're done, save it as a .csv and run the command again.")
             data = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT factionkey, approved, factionname, iscountry, money, population, landsize, averagesalary, popworkerratio FROM campaignfactions where campaignkey = $1;''',
-                [await campaignFunctions.getCampaignKey(ctx)])
+                [await ctx.bot.campaignTools.getCampaignKey(ctx)])
             # credits: brave AI
             df = pd.DataFrame(data)
             buffer = io.StringIO()
@@ -311,11 +308,11 @@ class campaignManageFunctions(commands.Cog):
 
     @commands.command(name="plotData", description="Plot chart data")
     async def plotData(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignHost(ctx) == False and ctx.author.id != main.ownerID:
+        if await ctx.bot.campaignTools.isCampaignHost(ctx) == False and ctx.author.id != main.ownerID:
             return
 
 
-        hostData = await campaignFunctions.getUserCampaignData(ctx)
+        hostData = await ctx.bot.campaignTools.getUserCampaignData(ctx)
         column_names = []
         column_namesr = await self.bot.sql.databaseFetchdict('''SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'campaignfactions' AND data_type IN ('bigint', 'real', 'numeric');''')
         str = ""
@@ -369,14 +366,14 @@ class campaignManageFunctions(commands.Cog):
         await ctx.send(file=image)
 
     async def toggleCampaignProgress(self, ctx: commands.Context):
-        if await campaignFunctions.isCampaignHost(ctx) == False:
-            await errorFunctions.sendCategorizedError(ctx, "campaign")
+        if await ctx.bot.campaignTools.isCampaignHost(ctx) == False:
+            await self.bot.error.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
             return
-        campaignData = await campaignFunctions.getUserCampaignData(ctx)
+        campaignData = await ctx.bot.campaignTools.getUserCampaignData(ctx)
         if campaignData["hostserverid"] != ctx.guild.id:
-            await errorFunctions.sendCategorizedError(ctx, "campaign")
+            await self.bot.error.sendCategorizedError(ctx, "campaign")
             return
         await self.bot.sql.databaseExecuteDynamic('''UPDATE campaigns SET active = NOT active WHERE hostserverid = $1;''',[ctx.guild.id])
 
