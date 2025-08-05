@@ -10,6 +10,7 @@ class AITools(Protocol):
 class GeminiAITools:
     def __init__(self, APIkeys: tuple[str, ...]):
         self.keys = APIkeys
+        print("Looks like your file copy thing is working like it should.")
     async def get_response(self, prompt: str, temperature: float = None, instructions: str = None) -> str:
         if not temperature:
             temperature = 1

@@ -6,11 +6,8 @@ from tools.UItools import UItools
 from tools.errorTools import errorTools
 from tools.campaignTools import campaignTools
 
-import platform
-import discord
+import platform, shutil, os, git, discord, configparser, nest_asyncio
 from discord.ext import commands
-import configparser
-import nest_asyncio
 
 nest_asyncio.apply()
 intents = discord.Intents.default()
@@ -21,19 +18,22 @@ utc = datetime.timezone.utc
 #sys.setrecursionlimit(100)
 
 ## configuration
+if platform.system() == "Windows":
+    configName = "development"
+else:
+    configName = "official"
 
 ###############################################################################
 ## Sprocket Bot looks for two config files - the general config file, and the instance config file.
-## This name determines what configuration gets loaded.
+## This name overrides what mode is used.
 
-configName = "official"
+#configName = "official"
 #configName = "development"
 #configName = "clone1"
 
 ###############################################################################
 
 # Find the config file
-
 if platform.system() == "Windows":
     configurationFilepath = "C:\\SprocketBot\\configuration.ini"
     instanceFilepath = "C:\\SprocketBot\\bots\\" + configName + ".ini"
@@ -43,6 +43,41 @@ else:
     configurationFilepath = "/home/mumblepi/configuration.ini"
     instanceFilepath = "/home/mumblepi/bots/" + configName + ".ini"
     OSslashLine = "/"
+
+    # Automatic download of latest code from the SprocketBot GitHub repository
+    try:
+        repo = git.Repo("/home/mumblepi/Github/SprocketBot")
+        origin = repo.remotes.origin
+        try:
+            origin.fetch('--verbose')
+        except Exception:
+            pass
+        print("Sprocket Bot code downloaded successfully!")
+    except git.exc.GitCommandError as e:
+        print(f"Git fetch error: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    #copy code over from the GitHub clone to the running code
+    source_folder = "/home/mumblepi/Github/SprocketBot"
+    destination_folder = "/home/mumblepi/sprocket_bot"
+    try:
+        # Remove the destination folders
+        if os.path.exists(destination_folder + "/cogs"):
+            shutil.rmtree(destination_folder)
+        if os.path.exists(destination_folder + "/tools"):
+            shutil.rmtree(destination_folder)
+
+        # Copy the entire directory tree from source to destination
+        shutil.copytree(source_folder + "/cogs", destination_folder + "/cogs")
+        shutil.copytree(source_folder + "/tools", destination_folder + "/tools")
+        shutil.copy(source_folder + "/main.py", destination_folder + "/main.py")
+        print(f"Successfully copied '{source_folder}' to '{destination_folder}' and overwrote existing content.")
+    except FileNotFoundError:
+        print(f"Error: Source folder '{source_folder}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 
 # load the config files
 baseConfig = configparser.ConfigParser()
