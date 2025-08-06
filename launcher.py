@@ -6,7 +6,6 @@ import os
 import time
 import glob
 
-
 def run_git_pull():
     """Runs the git pull command and prints the status."""
     print("Checking for updates from GitHub...")
@@ -68,3 +67,6 @@ if __name__ == "__main__":
     print(f"Launched {len(processes)} bot instances.")
     # You can add logic here to monitor the processes if needed
     # For example, using a loop to check if they are still running.
+
+    while True:
+        time.sleep(1)
