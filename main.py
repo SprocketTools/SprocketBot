@@ -64,9 +64,9 @@ else:
     try:
         # Remove the destination folders
         if os.path.exists(destination_folder + "/cogs"):
-            shutil.rmtree(destination_folder)
+            shutil.rmtree(destination_folder + "/cogs")
         if os.path.exists(destination_folder + "/tools"):
-            shutil.rmtree(destination_folder)
+            shutil.rmtree(destination_folder + "/tools")
 
         # Copy the entire directory tree from source to destination
         shutil.copytree(source_folder + "/cogs", destination_folder + "/cogs")
