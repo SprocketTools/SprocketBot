@@ -1,4 +1,4 @@
-import asyncpg, datetime
+import asyncpg, datetime, sys
 
 from tools.AITools import AITools, GeminiAITools
 from tools.SQLtools import SQLtools
@@ -18,10 +18,13 @@ utc = datetime.timezone.utc
 #sys.setrecursionlimit(100)
 
 ## configuration
-if platform.system() == "Windows":
-    configName = "development"
+if len(sys.argv) > 1:
+    configName = sys.argv[1]
 else:
-    configName = "official"
+    if platform.system() == "Windows":
+        configName = "development"
+    else:
+        configName = "official"
 
 print("Did the update work??????!!!!????!!!!!!!!!!!?????????????")
 ###############################################################################

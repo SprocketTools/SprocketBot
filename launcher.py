@@ -1,8 +1,11 @@
 # launcher.py
+import platform
 import subprocess
 import sys
 import os
 import time
+import glob
+
 
 def run_git_pull():
     """Runs the git pull command and prints the status."""
@@ -25,21 +28,43 @@ def run_git_pull():
     except subprocess.CalledProcessError as e:
         print("ERROR: 'git pull' failed. Please resolve conflicts manually.")
         print(e.stderr)
-        # We exit here to prevent running the bot with broken/conflicted code
         sys.exit(1)
 
-def start_bot():
-    """Starts the main bot process."""
-    print("Starting main.py...")
-    # os.execv replaces the current process (launcher.py) with the new one (main.py).
-    # This is efficient and ensures the launcher doesn't keep running in the background.
-    try:
-        os.execv(sys.executable, ['python3'] + ['main.py'])
-    except FileNotFoundError:
-        print("ERROR: Could not find main.py. Make sure you are in the correct directory.")
-        sys.exit(1)
+
+def start_bot_instance(config_name):
+    """Starts a single bot instance with a specified configuration."""
+    print(f"Starting main.py for configuration: {config_name}...")
+    # Use subprocess.Popen to run the bot instance as a separate process.
+    # We pass the configuration name as a command-line argument.
+    # The main.py script would need to be modified to accept this argument.
+    process = subprocess.Popen([sys.executable, 'main.py', config_name])
+    return process
 
 
 if __name__ == "__main__":
     run_git_pull()
-    start_bot()
+
+    # Define the directory where your configuration files are located
+    if platform.system() == "Windows":
+        config_dir = "C:\SprocketBot\\bots\\"
+    else:
+        config_dir = "/home/mumblepi/bots/"
+
+    # Find all .ini files in the configuration directory
+    config_files = glob.glob(os.path.join(config_dir, "*.ini"))
+
+    if not config_files:
+        print(f"No configuration files found in {config_dir}. Exiting.")
+        sys.exit(1)
+
+    processes = []
+    for config_file in config_files:
+        # Extract the configuration name from the filename (e.g., "official" from "official.ini")
+        config_name = os.path.basename(config_file).replace('.ini', '')
+        # Start a bot instance for each configuration
+        process = start_bot_instance(config_name)
+        processes.append(process)
+
+    print(f"Launched {len(processes)} bot instances.")
+    # You can add logic here to monitor the processes if needed
+    # For example, using a loop to check if they are still running.

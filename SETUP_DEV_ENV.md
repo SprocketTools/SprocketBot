@@ -70,15 +70,7 @@ githubPAT = if you have a clone of the SprocketTools repository, place your SSH 
 ## Set up the development IDE
 
 Install either PyCharm (easiest) or VScodium.  You will then want to open the SprocketBot repository folder in your IDE.
-You will need to install the following list of Python packages to operate the bot:
-- discord.py
-- asyncpg
-- nest-asyncio
-- pillow
-- requests
-- yt-dlp
-- discord-ext-music
-- gitpython
+Use the attached requirements.txt file to install the necessary packages.
 
 ## Run the bot
 
