@@ -1,6 +1,6 @@
 from datetime import datetime
 import random
-from google import genai
+import google.genai as genai
 from google.genai import types
 from typing import Protocol
 
