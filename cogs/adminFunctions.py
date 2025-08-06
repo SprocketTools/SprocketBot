@@ -566,7 +566,15 @@ class adminFunctions(commands.Cog):
             pass
         else:
             return
-        os.system("systemctl reboot -i")
+        os.system("sudo reboot -r now")
+
+    @commands.command(name="restart", description="setup the server")
+    async def restart(self, ctx: commands.Context):
+        if ctx.author.id == 712509599135301673:
+            pass
+        else:
+            return
+        exit()
 
     @commands.command(name="adminAddColumn", description="add a column to a SQL table")
     async def adminAddColumn(self, ctx: commands.Context):
