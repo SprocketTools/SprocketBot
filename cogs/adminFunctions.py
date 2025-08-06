@@ -988,15 +988,7 @@ class adminFunctions(commands.Cog):
                 messages.append({'author': messagee.author, 'content': messagee.content})
             print(messages)
             await ctx.send("Getting AI response")
-            try:
-                message = gemini.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your reply cannot exceed 250 words in length. {prompt}"
-                )
-            except Exception:
-                await ctx.send("AI generation prompt failed.")
-                return
-            print(message.text)
+            message_out = ctx.bot.AI.get_response(prompt=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your reply cannot exceed 250 words in length. {prompt}", temperature=1.5)
             whereSend = await ctx.bot.ui.getButtonChoice(ctx, ["here", "there", "webhook"])
             dest = None
             if whereSend == "here":
@@ -1007,7 +999,7 @@ class adminFunctions(commands.Cog):
                 async with aiohttp.ClientSession() as session:
                     dest = Webhook.from_url(
                         'https://discord.com/api/webhooks/1351525808484651008/C7EO5uUViQ5ZTPQcV06I88Vs0MTBMrbCofopyNd5aaDulqM_h0J-kgcS2U11pjDbhs83',session=session)
-            await dest.send(message.text)
+            await dest.send(message_out)
             await ctx.send("Message is en route.")
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
