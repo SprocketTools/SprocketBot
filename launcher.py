@@ -1,5 +1,3 @@
-# launcher.py
-import platform
 import subprocess
 import sys
 import os
@@ -10,7 +8,6 @@ def run_git_pull():
     """Runs the git pull command and prints the status."""
     print("Checking for updates from GitHub...")
     try:
-        # Run the command
         result = subprocess.run(
             ["git", "pull"],
             check=True,
@@ -29,27 +26,17 @@ def run_git_pull():
         print(e.stderr)
         sys.exit(1)
 
-
 def start_bot_instance(config_name):
     """Starts a single bot instance with a specified configuration."""
     print(f"Starting main.py for configuration: {config_name}...")
     # Use subprocess.Popen to run the bot instance as a separate process.
-    # We pass the configuration name as a command-line argument.
-    # The main.py script would need to be modified to accept this argument.
     process = subprocess.Popen([sys.executable, 'main.py', config_name])
     return process
-
 
 if __name__ == "__main__":
     run_git_pull()
 
-    # Define the directory where your configuration files are located
-    if platform.system() == "Windows":
-        config_dir = "C:\SprocketBot\\bots\\"
-    else:
-        config_dir = "/home/mumblepi/bots/"
-
-    # Find all .ini files in the configuration directory
+    config_dir = "/home/mumblepi/bots/"
     config_files = glob.glob(os.path.join(config_dir, "*.ini"))
 
     if not config_files:
@@ -58,15 +45,30 @@ if __name__ == "__main__":
 
     processes = []
     for config_file in config_files:
-        # Extract the configuration name from the filename (e.g., "official" from "official.ini")
         config_name = os.path.basename(config_file).replace('.ini', '')
-        # Start a bot instance for each configuration
         process = start_bot_instance(config_name)
         processes.append(process)
 
-    print(f"Launched {len(processes)} bot instances.")
-    # You can add logic here to monitor the processes if needed
-    # For example, using a loop to check if they are still running.
+    print(f"Launched {len(processes)} bot instances. Launcher is now monitoring processes.")
 
-    while True:
-        time.sleep(1)
+    # Wait for all child processes to finish before exiting.
+    # Since the bots are designed to run indefinitely, this will keep the launcher.py script,
+    # and thus the systemd service, running.
+    try:
+        while True:
+            # Check if all processes are still alive
+            all_alive = all(p.poll() is None for p in processes)
+            if not all_alive:
+                # If any process has died, this is where you could add restart logic.
+                # For now, we'll just wait.
+                print("One or more bot processes have terminated.")
+                # You might want to break here and let systemd handle the restart,
+                # or add logic to restart the dead bot instance.
+                # break
+            time.sleep(10) # Wait for 10 seconds before checking again
+    except KeyboardInterrupt:
+        print("Launcher script terminated. Shutting down bot processes.")
+        for p in processes:
+            p.terminate()
+        for p in processes:
+            p.wait()
