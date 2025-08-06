@@ -981,14 +981,13 @@ class adminFunctions(commands.Cog):
             print(channelin)
             channel = self.bot.get_channel(channelin)
             await ctx.send("Collecting message history")
-            gemini = genai.Client(api_key=ctx.bot.geminikey)
             messages = []
             message_raw = channel.history(limit=1000)
             async for messagee in message_raw:
                 messages.append({'author': messagee.author, 'content': messagee.content})
             print(messages)
             await ctx.send("Getting AI response")
-            message_out = ctx.bot.AI.get_response(prompt=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your reply cannot exceed 250 words in length. {prompt}", temperature=1.5)
+            message_out = await ctx.bot.AI.get_response(prompt=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your reply cannot exceed 250 words in length. {prompt}", temperature=1.5)
             whereSend = await ctx.bot.ui.getButtonChoice(ctx, ["here", "there", "webhook"])
             dest = None
             if whereSend == "here":
