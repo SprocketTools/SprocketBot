@@ -29,7 +29,6 @@ class adminFunctions(commands.Cog):
         #self.bot.add_check(adminFunctions.blacklist_test)
         print("Hi")
 
-
     async def updateServerConfig(self):
         for guild in self.bot.guilds:
             try:
@@ -112,8 +111,6 @@ class adminFunctions(commands.Cog):
         if ctx.author.id != main.ownerID:
             return
         exit()
-
-
 
     @commands.command(name="testLatency", description="test the bot's latency")
     #@commands.check(adminFunctions.commands_check)
@@ -344,12 +341,6 @@ class adminFunctions(commands.Cog):
         except Exception as e:
             await ctx.send(str(e))
 
-
-
-
-
-
-
     @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
     async def resetServerConfig(self, ctx: commands.Context):
         if ctx.author.id == 712509599135301673:
@@ -557,9 +548,7 @@ class adminFunctions(commands.Cog):
                     except Exception:
                         print(f"Failed to update server of ID {serverDat['serverid']}.  Sprocket Bot is likely not in this server.")
 
-
         await ctx.send("## Delivered!")
-
     @commands.command(name="rebootServer", description="setup the server")
     async def rebootServer(self, ctx: commands.Context):
         if ctx.author.id == 712509599135301673:
@@ -691,7 +680,6 @@ class adminFunctions(commands.Cog):
         await asyncio.sleep(waitTime)
         await self.bot.user.edit(username=defaultName)
         await ctx.send("Restored name to default.")
-
 
     @commands.command(name="setMusicRole", description="setup the server")
     async def setMusicRole(self, ctx: commands.Context):
@@ -1004,7 +992,6 @@ class adminFunctions(commands.Cog):
                 file = await attachment.to_file()
                 await dest.send(file=file, content="")
 
-
     @commands.command(name="trollai", description="Get a response back from Google")
     async def trollai(self, ctx: commands.Context, channelin: str, *, prompt):
         if ctx.author.id in [712509599135301673, 686640777505669141]:
@@ -1038,7 +1025,6 @@ class adminFunctions(commands.Cog):
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")
-
 
     @commands.command(name="trollReact", description="send a message wherever you want")
     async def trollReact(self, ctx: commands.Context, msglink: str, *, message):
@@ -1132,7 +1118,6 @@ class globalSendDropdown(discord.ui.Select):
         options.append(discord.SelectOption(label="General Chats", emoji='🏆', value="generalchannelID"))
         options.append(discord.SelectOption(label="Bot Updates", emoji='🏆', value="updateschannelID"))
         options.append(discord.SelectOption(label="Server Managers", emoji='🏆', value="managerchannelID"))
-
         super().__init__(placeholder='Select an option here...', min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
