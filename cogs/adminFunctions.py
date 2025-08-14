@@ -435,7 +435,7 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="setSlowmode", description="Set a slowmode.")
     async def setSlowmode(self, ctx: commands.Context, duration: int):
-        serverConfig = await adminFunctions.getServerConfig(ctx)
+        serverConfig = await adminFunctions.getServerConfig(self, ctx)
         if str(serverConfig['botmanagerroleid']) not in str(ctx.author.roles):
             if ctx.author.id == main.ownerID:
                 await ctx.send("You do not have permission to perform this action.  Proceed forward and override this?")
@@ -1068,7 +1068,7 @@ class adminFunctions(commands.Cog):
             channelIn = await self.bot.fetch_channel(chnlid)
             messageIn = await channelIn.fetch_message(msgid)
             await ctx.send(messageIn.content)
-            newText = await textTools.getResponse(ctx, "What do you want the result to be?")
+            newText = await textTools.getResponse(ctx, "What do you want the result to be?", action="raw")
             await messageIn.edit(content=newText)
             await ctx.send("## Done!")
 
