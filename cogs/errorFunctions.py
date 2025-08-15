@@ -80,7 +80,7 @@ class errorFunctions(commands.Cog):
     @commands.command(name="addError", description="higdffffffffffff")
     async def addError(self, ctx: commands.Context):
 
-        if ctx.author.id == ctx.bot.ownerID and ctx.bot.botMode == "official":
+        if ctx.author.id == ctx.bot.ownerid and ctx.bot.botMode == "official":
             status = True
         else:
             status = False
