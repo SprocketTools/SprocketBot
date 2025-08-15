@@ -8,7 +8,9 @@ class errorFunctions(commands.Cog):
         self.bot = bot
     @commands.command(name="resetErrorConfig", description="Reset everyone's server configurations")
     async def resetErrorConfig(self, ctx: commands.Context):
-        if ctx.author.id != ctx.bot.ownerID:
+        print(ctx.author.id)
+        print(ctx.bot.ownerid)
+        if ctx.author.id != ctx.bot.ownerid:
             return
         prompt = "DROP TABLE IF EXISTS errorlist"
         await self.bot.sql.databaseExecute(prompt)
