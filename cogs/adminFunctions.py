@@ -437,7 +437,7 @@ class adminFunctions(commands.Cog):
     async def setSlowmode(self, ctx: commands.Context, duration: int):
         serverConfig = await adminFunctions.getServerConfig(self, ctx)
         if str(serverConfig['botmanagerroleid']) not in str(ctx.author.roles):
-            if ctx.author.id == main.ownerID:
+            if ctx.author.id == ctx.bot.ownerid:
                 await ctx.send("You do not have permission to perform this action.  Proceed forward and override this?")
                 answer = await ctx.bot.ui.getYesNoChoice(ctx)
                 if not answer:

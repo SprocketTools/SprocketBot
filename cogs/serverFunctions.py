@@ -160,7 +160,7 @@ class serverFunctions(commands.Cog):
             print(user.name)
         except Exception as e:
             await ctx.send(f'Sprocket Bot could not ban this user: \n{e}')
-        serverData = await adminFunctions.getServerConfig(ctx)
+        serverData = await adminFunctions.getServerConfig(self, ctx)
         ruleName = "Ban"
         points = 0
         # serverid BIGINT, userid BIGINT, moderatorid BIGINT, name VARCHAR, description VARCHAR, points INT, timestamp TIMESTAMP, endtime TIMESTAMP, type VARCHAR
