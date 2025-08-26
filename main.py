@@ -14,6 +14,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 intents.presences = False
+intents.voice_states = True
 utc = datetime.timezone.utc
 #sys.setrecursionlimit(100)
 

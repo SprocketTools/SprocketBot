@@ -156,6 +156,7 @@ class serverFunctions(commands.Cog):
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="ban", type="ban", description="Ban a user")
     async def ban(self, ctx: commands.Context, user: discord.Member, reason: str, days: int, delete_days: int):
+        user_to_ban = user
         try:
             print(user.name)
         except Exception as e:
@@ -169,12 +170,12 @@ class serverFunctions(commands.Cog):
         await self.bot.sql.databaseExecuteDynamic('''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);''', logValues)
         try:
             messageDM = f"You have been banned from **{ctx.guild.name}**\nReason: {reason}\nDuration: {days}\n{serverData['banmessage']}"
-            await user.send(messageDM)
+            await user_to_ban.send(messageDM)
         except Exception:
             await ctx.send("Failed to notify the user; they likely have Sprocket Bot blocked.")
-        target_username = user.name
+        target_username = user_to_ban.name
         try:
-            await user.ban(reason=f"Banned by {ctx.author.name} - {reason}", delete_message_days=delete_days)
+            await user_to_ban.ban(reason=f"Banned by {ctx.author.name} - {reason}", delete_message_days=delete_days)
             await ctx.send(f'Ban issued to **{target_username}**.')
         except Exception as e:
             await ctx.send(f'Sprocket Bot could not ban this user: \n{e}')

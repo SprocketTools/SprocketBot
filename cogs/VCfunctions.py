@@ -11,10 +11,14 @@ from discord.ext import commands
 import main
 from cogs.textTools import textTools
 FFMPEG_OPTIONS_CURSED = {
-    'options': '-vn -b:a 128k -filter:a "volume=0.115, asetrate=44100*1.9, atempo=0.55, bass=g=4" -c:a libopus'}
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn -b:a 128k -filter:a "volume=0.115, asetrate=44100*1.9, atempo=0.55, bass=g=4" -c:a libopus'
+}
 FFMPEG_OPTIONS = {
-    'options': '-vn -b:a 128k -filter:a "volume=0.15, bass=g=4" -c:a libopus'}
-YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn -b:a 128k -filter:a "volume=0.15, bass=g=4" -c:a libopus'
+}
+YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': True}
 
 
 class VCfunctions(commands.Cog):
@@ -24,19 +28,34 @@ class VCfunctions(commands.Cog):
 
     @commands.command(name="play", description="Play music with the bot")
     async def play(self, ctx: commands.Context, *, searchIn):
-        serverConfig = await adminFunctions.getServerConfig(ctx)
+        serverConfig = await adminFunctions.getServerConfig(self, ctx)
         if str(serverConfig["musicroleid"]) not in str(ctx.author.roles):
-            if ctx.author.guild_permissions.administrator == False:
-                await ctx.send(await self.bot.error.retrieveError(ctx))
+            if not ctx.author.guild_permissions.administrator:
                 await ctx.send("You are not authorized to run this command.")
                 return
+
         search = await textTools.mild_sanitize(searchIn)
         voice_channel = ctx.author.voice.channel if ctx.author.voice else None
-        if not voice_channel:
-            return await ctx.send(await self.bot.error.retrieveError(ctx))
-        if not ctx.voice_client:
-            await voice_channel.connect()
 
+        if not voice_channel:
+            return await ctx.send("You need to be in a voice channel to play music!")
+
+        # --- START OF CORRECTION ---
+
+        # If the bot is not connected, try to connect.
+        if not ctx.voice_client:
+            try:
+                await voice_channel.connect()
+            except Exception as e:
+                await ctx.send(f"Failed to connect to the voice channel. Please try again.\nError: `{e}`")
+                return
+
+        # Add a crucial check to ensure the connection was successful before proceeding.
+        if not ctx.voice_client:
+            await ctx.send("Could not establish a voice connection. Please check my permissions and try again.")
+            return
+
+        # --- END OF CORRECTION ---
 
         async with ctx.typing():
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -44,7 +63,7 @@ class VCfunctions(commands.Cog):
                     info = ydl.extract_info(f"{search}", download=False)
                 else:
                     info = ydl.extract_info(f"scsearch:{search}", download=False)
-            print(info)
+
             try:
                 url = info['url']
             except Exception:
@@ -52,8 +71,8 @@ class VCfunctions(commands.Cog):
             title = info['title']
             self.queue.append((url, title, FFMPEG_OPTIONS))
             await ctx.send(f'Added to queue: **{title}**')
-        if not ctx.voice_client.is_playing():
 
+        if not ctx.voice_client.is_playing():
             await self.play_next(ctx)
 
     @commands.command(name="search", description="Search for music with the bot")
@@ -109,13 +128,20 @@ class VCfunctions(commands.Cog):
     async def play_next(self, ctx):
         if self.queue:
             url, title, ffoptions = self.queue.pop(0)
+
+            # The corrected streaming implementation
             source = await discord.FFmpegOpusAudio.from_probe(url, **ffoptions)
-            source.read()
-            ctx.voice_client.play(source, after=lambda _:self.bot.loop.create_task(self.play_next(ctx)))
+            # REMOVED the source.read() line
+
+            ctx.voice_client.play(source, after=lambda _: self.bot.loop.create_task(self.play_next(ctx)))
             await ctx.send(f'Now playing: **{title}**')
-        if not ctx.voice_client.is_playing():
+
+        # This logic can be simplified slightly
+        elif not ctx.voice_client.is_playing():
             await ctx.send("Queue is empty!")
-            await ctx.voice_client.disconnect()
+            await asyncio.sleep(5)  # Give a small delay before disconnecting
+            if not ctx.voice_client.is_playing():  # Check again before leaving
+                await ctx.voice_client.disconnect()
 
     @commands.command(name="skip", description="Skip the current track")
     async def skip(self, ctx: commands.Context):

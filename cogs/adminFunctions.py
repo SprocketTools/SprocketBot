@@ -14,6 +14,7 @@ userStrikes = {}
 nudeFlags = ["18+", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "invite", "free gifts", "gift", "leak", "executor roblox", "roblox executor", "earn", "earning"]
 scamFlags = ["$", "steam", "asdfghjkl", "cdn.discordapp.com/attachments", "@everyone"]
 linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "qptr.ru", "https://temu.com/s/", "canary.discord.com", "https://", "http://", "discord.gg", "discordapp.com", "discord.com/invite", "https://t.me/"]
+whitelist = ["https://tenor.com/view/", "https://cdn.discordapp.com/attachments"]
 strikethreshold = 3
 piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c", "0.2.19.5", "0.2.30.0", "0.2.32.1"]
 colorint = -1
@@ -208,9 +209,9 @@ class adminFunctions(commands.Cog):
             if flag in messageParse:
                 linkTrigger += 1
 
-        if linkTrigger == 0 and (nudeTrigger == 0 or scamTrigger == 0):
+        if linkTrigger == 0 and (nudeTrigger == 0 or scamTrigger == 0) and len(message.content) > 0 and not any(keyword in message.content for keyword in whitelist):
             userStrikes[message.author.id] = 0
-        if linkTrigger > 0 and (nudeTrigger > 0 or scamTrigger > 0):
+        if linkTrigger > 0 and (nudeTrigger > 0 or scamTrigger > 0) and len(message.content) > 0 and not any(keyword in message.content for keyword in whitelist):
             print(f"{nudeTrigger}{scamTrigger}{linkTrigger}")
             logChannel = self.bot.get_channel(1152377925916688484)
             try:
