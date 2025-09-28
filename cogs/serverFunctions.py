@@ -249,7 +249,7 @@ class serverFunctions(commands.Cog):
             # print("hi")
             data = await self._generate_best_guess_config(ctx.guild)
             print("hi")
-            await self.bot.sql.databaseExecuteDynamic('''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);''', list(data.values()))
+            await self.bot.sql.databaseExecuteDynamic('''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);''', list(data.values()))
             await ctx.send("Done!")
         serverData = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
         for key, value in serverData.items():
@@ -273,6 +273,11 @@ class serverFunctions(commands.Cog):
         if serverData['flagping'] == "custom":
             embed.add_field(name="Role pinged on scam action", value=(f"<@&{serverData['flagpingid']}>"), inline=False)
         embed.add_field(name="Ban message", value=serverData['banmessage'], inline=False)
+        if serverData['clickupkey'] != "0":
+            embed.add_field(name="ClickUp integration", value=f"True", inline=False)
+        else:
+            embed.add_field(name="ClickUp integration", value=f"False", inline=False)
+
         embed.set_thumbnail(url=ctx.guild.icon)
         await ctx.send(embed=embed)
         # except Exception:
@@ -337,7 +342,8 @@ class serverFunctions(commands.Cog):
             "flagping": "nobody",
             "flagpingid": 0,
             "musicroleid": 0,
-            "banmessage": f"You have been banned from {guild.name}."  # Default to an empty string
+            "banmessage": f"You have been banned from {guild.name}.",  # Default to an empty string
+            "clickupkey": "0"
         }
         return config
 
@@ -358,7 +364,7 @@ class serverFunctions(commands.Cog):
             print(data)
             await serverFunctions.showSettings(self, ctx)
             await ctx.send("What statistic do you wish to modify?")
-            inList = ["General channel", "Announcements channel", "Bot commands channel", "Server managers channel", "Server booster role", "Contest manager role", "Bot manager role", "Campaign manager role", "Music player role", "Toggle the fun module", "Scam message threshold", "Action taken on scammer", "Who to ping post-action", "Ban message", "Exit"]
+            inList = ["General channel", "Announcements channel", "Bot commands channel", "Server managers channel", "Server booster role", "Contest manager role", "Bot manager role", "Campaign manager role", "Music player role", "Toggle the fun module", "Scam message threshold", "Action taken on scammer", "Who to ping post-action", "Ban message", "Clickup Integration", "Exit"]
             answer = str.lower(await ctx.bot.ui.getButtonChoice(ctx, inList))
             if answer == "exit":
                 await ctx.send("Alright, have fun.")
@@ -409,6 +415,9 @@ class serverFunctions(commands.Cog):
             elif answer == "ban message":
                 new_value = await textTools.getResponse(ctx, "What do you want your ban message to include?  Include ban appeals forms or other links in your reply if desired.")
                 await self.bot.sql.databaseExecuteDynamic(f'''UPDATE serverconfig SET banmessage = $1 WHERE serverid = $2;''',[new_value, ctx.guild.id])
+            elif answer == "clickup integration":
+                new_value = await textTools.getResponse(ctx, "What is the API key to your CLickUp setup?  Reply with a 0 to clear your key.", 0)
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE serverconfig SET clickupkey = $1 WHERE serverid = $2;''',[new_value, ctx.guild.id])
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
                 return
