@@ -26,9 +26,9 @@ class clickupFunctions(commands.Cog):
         self.daily_report.cancel()
 
     @tasks.loop(time=[
-        datetime.time(hour=9, minute=0, tzinfo=datetime.timezone.utc),  # Monday, Wednesday, Friday at 9:00 AM UTC
-        datetime.time(hour=9, minute=0, tzinfo=datetime.timezone.utc),
-        datetime.time(hour=9, minute=0, tzinfo=datetime.timezone.utc)
+        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc),  # Monday, Wednesday, Friday at 9:00 AM UTC
+        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc),
+        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc)
     ])
     async def daily_report(self):
         """Runs on a schedule to send daily ClickUp reports."""
