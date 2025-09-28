@@ -37,7 +37,7 @@ class clickupFunctions(commands.Cog):
         """Runs on a schedule to send daily ClickUp reports."""
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         # 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday
-        if now_utc.weekday() in [0, 2, 4]:  # Monday (0), Wednesday (2), Friday (4)
+        if now_utc.weekday() in [0, 2, 4, 6]:  # Monday (0), Wednesday (2), Friday (4)
             await self._send_global_clickup_report()
 
     @commands.command(name="clickupreport", description="Manually generate and send the daily ClickUp report.")
