@@ -14,7 +14,7 @@ class errorFunctions(commands.Cog):
             return
         prompt = "DROP TABLE IF EXISTS errorlist"
         await self.bot.sql.databaseExecute(prompt)
-        prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (error TEXT, status BOOLEAN, userid BIGINT);''')
+        prompt = ('''CREATE TABLE IF NOT EXISTS errorlist (error TEXT, status BOOLEAN, userid BIGINT, errortype VARCHAR);''')
         await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!  Now go add some errors in.")
 
@@ -183,8 +183,7 @@ class errorFunctions(commands.Cog):
 
     @commands.command(name="approveErrors", description="higdffffffffffff")
     async def approveErrors(self, ctx: commands.Context):
-
-        if ctx.author.id != ctx.bot.ownerID:
+        if ctx.author.id != ctx.bot.ownerid:
             await ctx.send(await self.bot.error.retrieveError(ctx))
             await ctx.send("You aren't authorized to run this command!")
             return

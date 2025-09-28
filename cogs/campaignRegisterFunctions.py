@@ -6,7 +6,7 @@ locale.setlocale(locale.LC_ALL, '')
 import random
 import discord
 from discord.ext import commands
-
+from scipy.spatial.transform import Rotation as R
 import main
 from cogs.textTools import textTools
 from cogs.adminFunctions import adminFunctions
@@ -273,6 +273,8 @@ class campaignRegisterFunctions(commands.Cog):
 
         #except Exception:
             #await ctx.send(await self.bot.error.retrieveError(ctx))
+
+
 
     @commands.command(name="approveCampaignFactions", description="higdffffffffffff")
     async def approveCampaignFactions(self, ctx: commands.Context):

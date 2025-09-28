@@ -228,27 +228,30 @@ class serverFunctions(commands.Cog):
             serverData = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
         except Exception:
             await ctx.send("No server configuration detected!  Adding a default config...")
-            data = {}
-            data['serverid'] = ctx.guild.id
-            data['ownerid'] = ctx.guild.owner.id
-            data['generalchannelid'] = ctx.guild.channels[0].id
-            data['allowfunny'] = True
-            data['updateschannelid'] = ctx.guild.channels[0].id
-            data['commandschannelid'] = ctx.guild.channels[0].id
-            data['managerchannelid'] = ctx.guild.channels[0].id
-            data['serverboosterroleid'] = ctx.guild.roles[len(ctx.guild.roles)-1].id
-            data['contestmanagerroleid'] = ctx.guild.roles[0].id
-            data['botmanagerroleid'] = ctx.guild.roles[0].id
-            data['campaignmanagerroleid'] = ctx.guild.roles[0].id
-            data['flagthreshold'] = 3
-            data['flagaction'] = 'nothing'
-            data['flagping'] = 'nobody'
-            data['flagpingid'] = ctx.guild.roles[0].id
-            data['musicroleid'] = ctx.guild.roles[len(ctx.guild.roles)-1].id
-            data['banmessage'] = "`VALUE MISSING`"
-            await self.bot.sql.databaseExecuteDynamic('''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);''', data)
+            # data = {}
+            # data['serverid'] = ctx.guild.id
+            # data['ownerid'] = ctx.guild.owner.id
+            # data['generalchannelid'] = ctx.guild.channels[0].id
+            # data['allowfunny'] = True
+            # data['updateschannelid'] = ctx.guild.channels[0].id
+            # data['commandschannelid'] = ctx.guild.channels[0].id
+            # data['managerchannelid'] = ctx.guild.channels[0].id
+            # data['serverboosterroleid'] = ctx.guild.roles[len(ctx.guild.roles)-1].id
+            # data['contestmanagerroleid'] = ctx.guild.roles[0].id
+            # data['botmanagerroleid'] = ctx.guild.roles[0].id
+            # data['campaignmanagerroleid'] = ctx.guild.roles[0].id
+            # data['flagthreshold'] = 3
+            # data['flagaction'] = 'nothing'
+            # data['flagping'] = 'nobody'
+            # data['flagpingid'] = ctx.guild.roles[0].id
+            # data['musicroleid'] = ctx.guild.roles[len(ctx.guild.roles)-1].id
+            # data['banmessage'] = "`VALUE MISSING`"
+            # print("hi")
+            data = await self._generate_best_guess_config(ctx.guild)
+            print("hi")
+            await self.bot.sql.databaseExecuteDynamic('''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);''', list(data.values()))
             await ctx.send("Done!")
-            serverData = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
+        serverData = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
         for key, value in serverData.items():
             if value == None:
                 serverData[key] = "`UPDATE THIS VALUE`"
@@ -276,6 +279,67 @@ class serverFunctions(commands.Cog):
         #     await ctx.send(await self.bot.error.retrieveError(ctx))
         #     await ctx.send(
         #         "It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
+
+    async def _generate_best_guess_config(self, guild: discord.Guild) -> dict:
+        """Generates a best-guess configuration for a server."""
+
+        # Helper to find a channel by a list of common names
+        def find_channel_by_names(names_to_check):
+            for channel in guild.text_channels:
+                for name in names_to_check:
+                    # A more robust check for channel names
+                    if name in channel.name.lower().replace('-', '').replace('_', ''):
+                        return channel
+            # If no match, return the first text channel or system channel
+            return guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
+
+        # Helper to find a role by a list of common names
+        def find_role_by_names(names_to_check):
+            matching_roles = []
+            # First, find all roles that match the search terms
+            for role in guild.roles:
+                for name in names_to_check:
+                    if name in role.name.lower():
+                        matching_roles.append(role)
+
+            # If we found any matching roles, return the one with the highest position
+            if matching_roles:
+                return max(matching_roles, key=lambda r: r.position)
+
+            # As a fallback, return the server's highest-ranked role
+            # guild.roles is sorted from lowest to highest, so the last role is the highest.
+            return guild.roles[-1] if guild.roles else guild.default_role
+
+        # Find best-guess roles or default to 0 (which means 'Not Set')
+        manager_role = find_role_by_names(["admin", "moderator", "staff", "manager"])
+        booster_role = find_role_by_names(["booster"])
+
+        # Safely get channel IDs
+        general_channel = find_channel_by_names(["general", "chat", "lounge"])
+        updates_channel = find_channel_by_names(["updates", "announcements", "news"])
+        commands_channel = find_channel_by_names(["botcommands", "commands", "botspam"])
+        manager_channel = find_channel_by_names(["staff", "admin", "moderator"])
+
+        config = {
+            "serverid": guild.id,
+            "ownerid": guild.owner_id,
+            "generalchannelid": general_channel.id if general_channel else 0,
+            "allowfunny": True,
+            "updateschannelid": updates_channel.id if updates_channel else 0,
+            "commandschannelid": commands_channel.id if commands_channel else 0,
+            "managerchannelid": manager_channel.id if manager_channel else 0,
+            "serverboosterroleid": booster_role.id if booster_role else 0,
+            "contestmanagerroleid": manager_role.id if manager_role else 0,
+            "campaignmanagerroleid": manager_role.id if manager_role else 0,
+            "botmanagerroleid": manager_role.id if manager_role else 0,
+            "flagthreshold": 3,
+            "flagaction": "timeout for 12 hours",
+            "flagping": "nobody",
+            "flagpingid": 0,
+            "musicroleid": 0,
+            "banmessage": f"You have been banned from {guild.name}."  # Default to an empty string
+        }
+        return config
 
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):

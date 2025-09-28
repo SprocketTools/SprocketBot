@@ -34,7 +34,7 @@ print("Did the update work??????!!!!????!!!!!!!!!!!?????????????")
 
 #configName = "official"
 #configName = "development"
-#configName = "clone1"
+configName = "clone1"
 
 ###############################################################################
 

@@ -75,26 +75,26 @@ class adminFunctions(commands.Cog):
             await self.bot.error.sendCategorizedError(ctx, "catgirl")
             await ctx.send("Sprocket Bot is a bit too sleepy right now.  Come back when I've finished my catnap, please?")
 
-    @main.bot.event
-    async def on_command_error(ctx, error):
-
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send('Missing required argument.')
-        elif isinstance(error, commands.CommandNotFound):
-            # if "-#" not in ctx.message.content and len(ctx.message.content) >= 3:
-            #     await self.bot.error.sendCategorizedError(ctx, "compliment")
-            #     await ctx.send("To see my list of commands, try using \n`-help`\n`-sprockethelp`\n`-campaignhelp`")
-            pass
-        elif isinstance(error, commands.HybridCommandError):
-            await ctx.send("Cannot find that user.  They are either already banned or something else went wrong.")
-            channel = main.bot.get_channel(1152377925916688484)
-            await channel.send(error)
-            await channel.send(f"<@{main.ownerID}>")
-        else:
-            await ctx.bot.error.sendError(ctx)
-            channel = main.bot.get_channel(1152377925916688484)
-            await channel.send(error)
-            raise error  # Re-raise the error to see it in the console
+    # @main.bot.event
+    # async def on_command_error(ctx, error):
+    #
+    #     if isinstance(error, commands.MissingRequiredArgument):
+    #         await ctx.send('Missing required argument.')
+    #     elif isinstance(error, commands.CommandNotFound):
+    #         # if "-#" not in ctx.message.content and len(ctx.message.content) >= 3:
+    #         #     await self.bot.error.sendCategorizedError(ctx, "compliment")
+    #         #     await ctx.send("To see my list of commands, try using \n`-help`\n`-sprockethelp`\n`-campaignhelp`")
+    #         pass
+    #     elif isinstance(error, commands.HybridCommandError):
+    #         await ctx.send("Cannot find that user.  They are either already banned or something else went wrong.")
+    #         channel = main.bot.get_channel(1152377925916688484)
+    #         await channel.send(error)
+    #         await channel.send(f"<@{main.ownerID}>")
+    #     else:
+    #         await ctx.bot.error.sendError(ctx)
+    #         channel = main.bot.get_channel(1152377925916688484)
+    #         await channel.send(error)
+    #         raise error  # Re-raise the error to see it in the console
 
     @commands.command(name="toggleOperation", description="Toggle operation of the bot")
     async def toggleOperation(self, ctx: commands.Context):
@@ -344,10 +344,16 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
     async def resetServerConfig(self, ctx: commands.Context):
-        if ctx.author.id == 712509599135301673:
-            pass
-        else:
+        print("hi")
+        if ctx.author.id != 712509599135301673:
+            # This message will show if the ID check fails
+            await ctx.send(f"Permission denied. Your ID is {ctx.author.id}.")
             return
+
+        # Drop the? old table to ensure a clean reset
+        await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS serverconfig;''')
+        print("hi")
+        # Create the new table with the updated schema
         prompt = ('''CREATE TABLE IF NOT EXISTS serverconfig (
                               serverid BIGINT,
                               ownerID BIGINT,
@@ -363,9 +369,12 @@ class adminFunctions(commands.Cog):
                               flagthreshold INT,
                               flagaction VARCHAR,
                               flagping VARCHAR,
-                              flagpingid BIGINT);''')
+                              flagpingid BIGINT,
+                              musicroleid BIGINT,
+                              banmessage VARCHAR,
+                              clickupkey BIGINT);''')  # Added musicroleid and banmessage
         await self.bot.sql.databaseExecute(prompt)
-        await ctx.send("Done!  Now go DM everyone that their config was reset.")
+        await ctx.send("Done!  Now go DM everyone that their config was reset...")
 
     @commands.command(name="addScamConfig", description="Reset everyone's server configurations")
     async def resetScamConfig(self, ctx: commands.Context):
@@ -405,34 +414,34 @@ class adminFunctions(commands.Cog):
         embed.set_footer(text=await self.bot.error.retrieveError(ctx))
         await ctx.send(embed=embed)
 
-    @commands.command(name="viewServerConfig", description="View my server configurations")
-    async def viewServerConfig(self, ctx: commands.Context):
-        if ctx.author.guild_permissions.administrator == False and ctx.author.id != main.ownerID:
-            await ctx.send(await self.bot.error.retrieveError(ctx))
-        else:
-            try:
-                serverData = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
-                description = f'''
-                General chat:         <#{serverData['updateschannelid']}>
-                Bot commands chat:    <#{serverData['commandschannelid']}>
-                Server managers chat: <#{serverData['managerchannelid']}>
-                
-                Server booster role:   {ctx.guild.get_role(int(serverData['serverboosterroleid']))}
-                Contest managers role: {ctx.guild.get_role(int(serverData['contestmanagerroleid']))}
-                Bot manager role:      {ctx.guild.get_role(int(serverData['botmanagerroleid']))}
-                Campaign manager role: {ctx.guild.get_role(int(serverData['campaignmanagerroleid']))}
-                Music player role: {ctx.guild.get_role(int(serverData['musicroleid']))}
-                
-                Allow the bot to try and be funny: {serverData['allowfunny']}
-                '''
-                embed = discord.Embed(title=f"Server Config: {ctx.guild.name}",
-                                      description=description,
-                                      color=discord.Color.random())
-                embed.set_thumbnail(url=ctx.guild.icon)
-                await ctx.send(embed=embed)
-            except Exception:
-                await ctx.send(await self.bot.error.retrieveError(ctx))
-                await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
+    # @commands.command(name="viewServerConfig", description="View my server configurations")
+    # async def viewServerConfig(self, ctx: commands.Context):
+    #     if ctx.author.guild_permissions.administrator == False and ctx.author.id != main.ownerID:
+    #         await ctx.send(await self.bot.error.retrieveError(ctx))
+    #     else:
+    #         try:
+    #             serverData = [dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {ctx.guild.id}')][0]
+    #             description = f'''
+    #             General chat:         <#{serverData['updateschannelid']}>
+    #             Bot commands chat:    <#{serverData['commandschannelid']}>
+    #             Server managers chat: <#{serverData['managerchannelid']}>
+    #
+    #             Server booster role:   {ctx.guild.get_role(int(serverData['serverboosterroleid']))}
+    #             Contest managers role: {ctx.guild.get_role(int(serverData['contestmanagerroleid']))}
+    #             Bot manager role:      {ctx.guild.get_role(int(serverData['botmanagerroleid']))}
+    #             Campaign manager role: {ctx.guild.get_role(int(serverData['campaignmanagerroleid']))}
+    #             Music player role: {ctx.guild.get_role(int(serverData['musicroleid']))}
+    #
+    #             Allow the bot to try and be funny: {serverData['allowfunny']}
+    #             '''
+    #             embed = discord.Embed(title=f"Server Config: {ctx.guild.name}",
+    #                                   description=description,
+    #                                   color=discord.Color.random())
+    #             embed.set_thumbnail(url=ctx.guild.icon)
+    #             await ctx.send(embed=embed)
+    #         except Exception:
+    #             await ctx.send(await self.bot.error.retrieveError(ctx))
+    #             await ctx.send("It appears that your configuration is out of date and needs to be updated.  Use `-setup` to update your server settings.")
 
     @commands.command(name="setSlowmode", description="Set a slowmode.")
     async def setSlowmode(self, ctx: commands.Context, duration: int):
@@ -572,8 +581,8 @@ class adminFunctions(commands.Cog):
             pass
         else:
             return
-        tablename = await self.bot.error.getResponse(ctx,"Whatis the table name?")
-        columnname = await self.bot.error.getResponse(ctx, "What will the column be named?  Use all lowercase letters with no spaces.")
+        tablename = await textTools.getResponse(ctx,"What is the table name?")
+        columnname = await textTools.getResponse(ctx, "What will the column be named?  Use all lowercase letters with no spaces.")
         options = ["VARCHAR", "BIGINT", "REAL", "BOOLEAN", "TIMESTAMP"]
         prompt = "What variable type do you want to use?  VARCHAR is for strings, BIGINT is for ints, REALs are for floats, BOOLEANs are true/false, and TIMESTAMPs are for timestamps."
         varType = await ctx.bot.ui.getChoiceFromList(ctx, options, prompt)
@@ -581,7 +590,7 @@ class adminFunctions(commands.Cog):
             if varType == "VARCHAR" or varType == "TIMESTAMP":
                 await self.bot.sql.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType};''')
             else:
-                defaultVal = await self.bot.error.getResponse(ctx,"What will the default value be?")
+                defaultVal = await textTools.getResponse(ctx,"What will the default value be?")
                 await self.bot.sql.databaseExecute(f''' ALTER TABLE {tablename} ADD {columnname} {varType} DEFAULT {defaultVal};''')
             await ctx.send("Operation successful!")
         except Exception as e:

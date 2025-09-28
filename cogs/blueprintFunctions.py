@@ -1,9 +1,12 @@
 import random
 import discord, json, math, numpy, copy, io, requests
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from discord.ext import commands
 import cv2 as cv
 import main
 from cogs.textTools import textTools
+from scipy.spatial.transform import Rotation as R
 from PIL import Image
 class blueprintFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -352,7 +355,7 @@ class blueprintFunctions(commands.Cog):
             i += 1
         # i = 0
         compartmentListOriginal = compartmentList.copy()
-        if len(str(compartmentListOriginal)) > 10000:
+        if len(str(compartmentListOriginal)) > 90000:
             await ctx.send("This tank is too big to process!")
             return
         # # apply structure offsets to have all compartments centered at [0,0,0] and save their meshes to the base vehicle
@@ -659,6 +662,144 @@ class blueprintFunctions(commands.Cog):
         # shared point lists (adjusted to not overlap with current faces)
         return sourcePartPoints
 
+    async def _get_world_transform(self, vuid: int, objects_by_vuid: dict, memo: dict) -> numpy.ndarray:
+        """
+        Calculates the final world matrix with the corrected ZYX rotation order and
+        a standard LHS-to-RHS angle conversion.
+        """
+        if vuid in memo:
+            return memo[vuid]
+
+        if vuid == -1:
+            return numpy.identity(4)
+
+        obj = objects_by_vuid[vuid]
+        pos = obj["transform"]["pos"]
+        base_scale = numpy.array(obj["transform"]["scale"])
+        rot_data = obj["transform"]["rot"]
+
+        # 1. --- SCALE ---
+        scale_3x3 = numpy.diag(base_scale)
+
+        # 2. --- MIRROR ---
+        flags = obj.get("flags")
+        mirror_flags = {}
+        if isinstance(flags, dict):
+            mirror_flags = flags.get("mirror", {})
+
+        mirror_vector = numpy.array([
+            -1.0 if mirror_flags.get("x", False) else 1.0,
+            -1.0 if mirror_flags.get("y", False) else 1.0,
+            -1.0 if mirror_flags.get("z", False) else 1.0
+        ])
+        mirror_3x3 = numpy.diag(mirror_vector)
+
+        # 3. --- ROTATE ---
+        rot_matrix = numpy.identity(3)
+        if len(rot_data) >= 3 and numpy.any(rot_data[:3]):
+            # --- THE FINAL SYNTHESIS ---
+            # Use the 'zyx' order that works for structural parts like the square.
+            # Use a standard Left-Handed to Right-Handed conversion for the angles.
+            euler_raw = rot_data[:3]
+            euler_angles = [-euler_raw[0], -euler_raw[1], euler_raw[2]]
+            rot_matrix = R.from_euler('zyx', euler_angles, degrees=True).as_matrix()
+            # --- END SYNTHESIS ---
+
+        # Combine in the R @ M @ S order
+        mirror_scale_3x3 = numpy.dot(mirror_3x3, scale_3x3)
+        transform_3x3 = numpy.dot(rot_matrix, mirror_scale_3x3)
+
+        # 4. --- TRANSLATE ---
+        local_matrix = numpy.identity(4)
+        local_matrix[0:3, 0:3] = transform_3x3
+        local_matrix[0:3, 3] = pos
+
+        # Get parent's transform and apply it in the standard Parent -> Local order
+        parent_vuid = int(obj["pvuid"])
+        parent_world_transform = await self._get_world_transform(parent_vuid, objects_by_vuid, memo)
+        world_transform = numpy.dot(parent_world_transform, local_matrix)
+
+        memo[vuid] = world_transform
+        return world_transform
+
+    async def bakeGeometry210(self, attachment):
+        blueprintData = json.loads(await attachment.read())
+
+        objects_by_vuid = {int(obj["vuid"]): obj for obj in blueprintData["objects"]}
+        meshes_by_vuid = {int(mesh["vuid"]): mesh for mesh in blueprintData["meshes"]}
+
+        structures_to_process = []
+        for bp in blueprintData["blueprints"]:
+            if bp["type"] == "structure":
+                for obj in objects_by_vuid.values():
+                    if obj.get("structureBlueprintVuid") == bp["id"]:
+                        structures_to_process.append({
+                            "object_vuid": obj["vuid"],
+                            "mesh_vuid": bp["blueprint"]["bodyMeshVuid"]
+                        })
+                        break
+
+        transform_cache = {}
+        all_processed_meshes = []
+
+        for structure in structures_to_process:
+            obj_vuid = structure["object_vuid"]
+            mesh_vuid = structure["mesh_vuid"]
+
+            if mesh_vuid not in meshes_by_vuid:
+                continue
+
+            # Calculate the single, final transformation matrix for this part
+            world_transform = await self._get_world_transform(obj_vuid, objects_by_vuid, transform_cache)
+
+            original_mesh = meshes_by_vuid[mesh_vuid]
+            vertices_flat = original_mesh["meshData"]["mesh"]["vertices"]
+
+            if not vertices_flat:
+                continue
+
+            vertices = numpy.array(vertices_flat).reshape(-1, 3)
+            vertices_homogeneous = numpy.hstack([vertices, numpy.ones((vertices.shape[0], 1))])
+
+            # Apply the final transform to all vertices at once
+            transformed_vertices_homogeneous = numpy.dot(world_transform, vertices_homogeneous.T).T
+            transformed_vertices = transformed_vertices_homogeneous[:, :3]
+
+            # Check for mirrored faces to prevent them from rendering inside-out
+            det = numpy.linalg.det(world_transform[0:3, 0:3])
+            flip_faces = (det < 0)
+
+            all_processed_meshes.append({
+                "vertices": transformed_vertices.tolist(),
+                "faces": original_mesh["meshData"]["mesh"]["faces"],
+                "flip": flip_faces
+            })
+
+        # Combine all transformed meshes into the final result
+        final_vertices = []
+        final_faces = []
+        vertex_offset = 0
+
+        for mesh in all_processed_meshes:
+            final_vertices.extend(mesh["vertices"])
+
+            for face in mesh["faces"]:
+                new_face = copy.deepcopy(face)
+                face_indices = [v_idx + vertex_offset for v_idx in new_face["v"]]
+
+                if mesh["flip"]:
+                    new_face["v"] = [face_indices[0], face_indices[2], face_indices[1]]
+                else:
+                    new_face["v"] = face_indices
+                final_faces.append(new_face)
+            vertex_offset += len(mesh["vertices"])
+
+        blueprintData["meshes"][0]["meshData"]["mesh"]["vertices"] = [coord for vertex in final_vertices for coord in
+                                                                      vertex]
+        blueprintData["meshes"][0]["meshData"]["mesh"]["faces"] = final_faces
+
+        return blueprintData
+
     @commands.hybrid_command(name="getaddon", description="merge compartment geometry into itself.")
     async def getAddon(self, ctx: commands.Context):
         serverID = (ctx.guild.id)
@@ -901,8 +1042,111 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send("Place this model into `%userprofile%\Documents\My Games\Sprocket\Factions\Default\Blueprints\Vehicles` and load the new tank.")
             i += 1
 
+    @commands.command(name="drawFrameV2", description="Renders a 3D wireframe GIF of a vehicle blueprint.")
+    async def drawFrameV2(self, ctx: commands.Context):
+        await ctx.send("Beginning processing now. This may take a while...")
+        for attachment in ctx.message.attachments:
+            try:
+                # --- 1. Data Preparation ---
+                blueprintData = json.loads(await attachment.read())
+                name = blueprintData["header"]["name"]
 
+                if "0.2" in blueprintData["header"]["gameVersion"]:
+                    blueprintDataSave = await blueprintFunctions.bakeGeometry210(self, attachment)
+                else:
+                    await ctx.send("This command only supports v0.2+ blueprints for rendering.")
+                    return
 
+                meshData = blueprintDataSave["meshes"][0]["meshData"]["mesh"]
+                verticesList = meshData["vertices"]
+                faceList = meshData["faces"]
+
+                # Convert flat vertex list to a NumPy array of [x, y, z] coordinates
+                if not verticesList:
+                    await ctx.send("Could not find any vertices to render.")
+                    return
+                vertices = numpy.array(verticesList).reshape(-1, 3)
+                vertices = vertices[:, [0, 2, 1]]
+
+                # --- 2. Setup for Rendering Loop ---
+                images = []
+                iframes = 100  # Increase frames for a smoother GIF
+
+                # Pre-calculate the model's bounds to keep the camera framing consistent
+                x_min, x_max = vertices[:, 0].min(), vertices[:, 0].max()
+                y_min, y_max = vertices[:, 1].min(), vertices[:, 1].max()
+                z_min, z_max = vertices[:, 2].min(), vertices[:, 2].max()
+
+                # Find the center and the largest dimension to create a cubic plot area
+                center = numpy.array(
+                    [numpy.mean([x_min, x_max]), numpy.mean([y_min, y_max]), numpy.mean([z_min, z_max])])
+                max_range = numpy.array(
+                    [x_max - x_min, y_max - y_min, z_max - z_min]).max() / 2.0 * 1.1  # Add 10% padding
+
+                # --- 3. Rendering Loop ---
+                for i in range(iframes):
+                    # Create a Matplotlib Figure and a 3D subplot
+                    fig = plt.figure(figsize=(8, 8), dpi=300)  # Control image size and resolution
+                    ax = fig.add_subplot(111, projection='3d')
+
+                    # Create a list of polygons from the vertex and face data for the mesh
+                    polygons = [vertices[face['v']] for face in faceList]
+
+                    # Add the mesh to the plot using Poly3DCollection
+                    mesh_collection = Poly3DCollection(
+                        polygons,
+                        edgecolors=(0.8, 1.0, 1.0),  # Light cyan edges
+                        facecolors=(0.1, 0.2, 0.3, 0.5),  # Semi-transparent dark blue faces
+                        linewidths=0.5
+                    )
+                    ax.add_collection3d(mesh_collection)
+
+                    # Set the camera's viewing angle for this frame
+                    azim = (360 / iframes) * i  # Azimuthal angle (horizontal rotation)
+                    elev = 15  # Elevation angle (vertical tilt)
+                    ax.view_init(elev=elev, azim=azim)
+
+                    # Set the plot limits to be a cube centered on the object
+                    ax.set_xlim(center[0] - max_range, center[0] + max_range)
+                    ax.set_ylim(center[1] - max_range, center[1] + max_range)
+                    ax.set_zlim(center[2] - max_range, center[2] + max_range)
+
+                    # Set a dark background and hide the grid/axes for a clean look
+                    ax.set_facecolor((0.05, 0.05, 0.1))
+                    ax.axis('off')
+
+                    # Render the current frame to an in-memory buffer
+                    buf = io.BytesIO()
+                    plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, facecolor=ax.get_facecolor())
+                    plt.close(fig)  # IMPORTANT: Close the figure to free up memory
+
+                    buf.seek(0)
+                    pil_img = Image.open(buf)
+                    images.append(pil_img)
+
+                # --- 4. GIF Compilation (your existing code) ---
+                if not images:
+                    await ctx.send("Failed to generate any frames.")
+                    return
+
+                gif_buffer = io.BytesIO()
+                images[0].save(
+                    gif_buffer,
+                    format='GIF',
+                    save_all=True,
+                    append_images=images[1:],
+                    duration=300,  # milliseconds per frame
+                    loop=0
+                )
+                gif_buffer.seek(0)
+
+                imageOut = discord.File(gif_buffer, filename=f'{name}_render.gif')
+                await ctx.send(file=imageOut)
+
+            except Exception as e:
+                await ctx.send(f"An error occurred during rendering: `{e}`")
+                import traceback
+                traceback.print_exc()  # For debugging
 
 
     @commands.command(name="drawFrame", description="merge compartment geometry into itself.")
