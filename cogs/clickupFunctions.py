@@ -74,7 +74,7 @@ class clickupFunctions(commands.Cog):
         # This will fetch all server configurations with a clickupkey
         try:
             all_configs = await self.bot.sql.databaseFetchdict(
-                'SELECT serverid, clickupkey, managerchannelid FROM serverconfig WHERE clickupkey IS NOT NULL AND clickupkey != \'0\';')
+                'SELECT serverid, clickupkey, updateschannelid FROM serverconfig WHERE clickupkey IS NOT NULL AND clickupkey != \'0\';')
             for config in all_configs:
                 # Get guild object for member access
                 guild = self.bot.get_guild(config['serverid'])
@@ -95,9 +95,9 @@ class clickupFunctions(commands.Cog):
         """Generates and sends the ClickUp report for a single server."""
         try:
             config = await self.bot.sql.databaseFetchrowDynamic(
-                'SELECT clickupkey, managerchannelid FROM serverconfig WHERE serverid = $1;', [server_id])
+                'SELECT clickupkey, updateschannelid FROM serverconfig WHERE serverid = $1;', [server_id])
             api_key = config.get('clickupkey')
-            manager_channel_id = config.get('managerchannelid')
+            manager_channel_id = config.get('updateschannelid')
 
             if not api_key or api_key == '0':
                 return  # No key set
