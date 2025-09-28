@@ -9,7 +9,7 @@ import main  # To access main.ownerID and other main settings
 from cogs.adminFunctions import adminFunctions  # For getServerConfig
 
 
-# from difflib import SequenceMatcher # No longer needed
+# from difflib import SequenceMatcher # This synchronous module is removed to prevent blocking.
 
 # ClickUp API Endpoints
 # Note: ClickUp API requires a Personal API Token.
@@ -18,8 +18,8 @@ from cogs.adminFunctions import adminFunctions  # For getServerConfig
 class clickupFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        # Updated AI instructions for: Task Title (bolded) \n Assigned to: [User]
-        self.ai_instructions = "You are a professional project manager tasked with summarizing the most pressing tasks for the day and the upcoming week from a list of ClickUp tasks. You have also been given a separate JSON list of Discord users and their roles for a server. Your summary must be extremely concise and should be presented as a bulleted or numbered list. **For each task, use the format: Task Title (bolded) followed by a newline, then Assigned to: [BEST DISCORD @PING, OR ClickUp Name], and finally a period followed by the Summary of work required from Description**. The 'Assigned to' field must contain ONLY the Discord ping if a match is found, or ONLY the ClickUp Name if no match is found. Avoid using phrases like 'This involves' or 'The task is to'. **Ensure all task titles are bolded in the final summary.** Group tasks by their urgency (Overdue, Due Today, Due This Week). The summary must be under 500 words. Do not use any introductory phrases."
+        # Final, rigid AI instructions for SUMMARY: Word limit kept low for stability.
+        self.ai_instructions = "You are a professional project manager tasked with summarizing the most pressing tasks for the day and the upcoming week from a list of ClickUp tasks. Your summary should be clear, concise, and professional. Group tasks by urgency (Overdue, Due Today, Due This Week), using a new section heading for each. **For every task, start a new bullet point.** The **STRICT** format for each bullet must be: **Task Title (bolded)\nAssigned to: [User @PING or ClickUp Name]. Summary of work required from Description**. The summary must be under 100 words. Do not use any introductory phrases."
         # Start the scheduled task loop
         self.daily_report.start()
 
@@ -29,9 +29,10 @@ class clickupFunctions(commands.Cog):
 
     @tasks.loop(time=[
         # UPDATED TIME TO 16:00 UTC
-        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc),  # Monday, Wednesday, Friday at 16:00 PM UTC
-        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc),
-        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc)
+        datetime.time(hour=14, minute=32, tzinfo=datetime.timezone.utc),  # Monday, Wednesday, Friday at 16:00 PM UTC
+        datetime.time(hour=14, minute=32, tzinfo=datetime.timezone.utc),
+        datetime.time(hour=14, minute=32, tzinfo=datetime.timezone.utc),
+        datetime.time(hour=14, minute=32, tzinfo=datetime.timezone.utc)
     ])
     async def daily_report(self):
         """Runs on a schedule to send daily ClickUp reports."""
@@ -74,7 +75,7 @@ class clickupFunctions(commands.Cog):
         # This will fetch all server configurations with a clickupkey
         try:
             all_configs = await self.bot.sql.databaseFetchdict(
-                'SELECT serverid, clickupkey, updateschannelid FROM serverconfig WHERE clickupkey IS NOT NULL AND clickupkey != \'0\';')
+                'SELECT serverid, clickupkey, managerchannelid FROM serverconfig WHERE clickupkey IS NOT NULL AND clickupkey != \'0\';')
             for config in all_configs:
                 # Get guild object for member access
                 guild = self.bot.get_guild(config['serverid'])
@@ -94,10 +95,13 @@ class clickupFunctions(commands.Cog):
                                      ctx_in: commands.Context = None):
         """Generates and sends the ClickUp report for a single server."""
         try:
+            # Fetch config including updateschannelid for destination
             config = await self.bot.sql.databaseFetchrowDynamic(
-                'SELECT clickupkey, updateschannelid FROM serverconfig WHERE serverid = $1;', [server_id])
+                'SELECT clickupkey, managerchannelid, updateschannelid FROM serverconfig WHERE serverid = $1;',
+                [server_id])
             api_key = config.get('clickupkey')
-            manager_channel_id = config.get('updateschannelid')
+            manager_channel_id = config.get('managerchannelid')
+            updates_channel_id = config.get('updateschannelid')
 
             if not api_key or api_key == '0':
                 return  # No key set
@@ -105,20 +109,23 @@ class clickupFunctions(commands.Cog):
             if not guild:
                 return  # Bot is no longer in this guild
 
-            # Determine the destination channel
+            # Determine the destination channel (Announcements Channel is first priority)
             if is_manual and manual_channel:
                 dest_channel = manual_channel
+            elif updates_channel_id:
+                dest_channel = guild.get_channel(updates_channel_id)
+                if not dest_channel:
+                    dest_channel = guild.get_channel(manager_channel_id) or guild.system_channel or guild.text_channels[
+                        0]
             elif manager_channel_id:
                 dest_channel = guild.get_channel(manager_channel_id)
-                if not dest_channel:
-                    dest_channel = guild.system_channel or guild.text_channels[0]
             else:
                 dest_channel = guild.system_channel or guild.text_channels[0]
 
             if not dest_channel:
                 return  # Cannot find a channel to send to
 
-            # 1. Download all tasks for all accessible spaces/teams (ClickUp 'Teams' are 'Workspaces')
+            # 1. Download all tasks
             tasks_data = await self._fetch_all_tasks(api_key)
 
             if not tasks_data:
@@ -134,9 +141,11 @@ class clickupFunctions(commands.Cog):
                     "ClickUp Report: No pressing tasks (due today, overdue, or due this week) found.")
                 return
 
-            # 3. Use AI to summarize
-            # Pass the guild to the formatter for Discord name list
-            ai_prompt = self._format_tasks_for_ai(pressing_tasks, guild)
+            # --- CRITICAL FIX: AI-MATCH ASSIGNEES (Step 1) ---
+            matched_tasks = await self._match_assignees_with_ai(pressing_tasks, guild)
+
+            # 3. Format prompt and summarize (Step 2)
+            ai_prompt = await self._format_tasks_for_ai(matched_tasks)
 
             # Using the bot's configured AI wrapper (GeminiAITools from main.py)
             summary = await self.bot.AI.get_response(
@@ -152,16 +161,12 @@ class clickupFunctions(commands.Cog):
                 color=discord.Color.blue()
             )
 
-            # --- MODIFIED LINE 152 LOGIC ---
+            # --- FOOTER LOGIC ---
             if ctx_in:
                 # If a Context object is provided (manual command), use it for the error footer
                 footer_text = await self.bot.error.retrieveError(ctx_in)
             else:
-                # If no Context object is available (scheduled task), use a fallback or try
-                # calling the error retriever with minimal context, defaulting to a string.
                 try:
-                    # Attempt to call retrieveError with None, which some implementations
-                    # use as a signal to return a generic error message string.
                     footer_text = await self.bot.error.retrieveError(ctx=None)
                 except:
                     footer_text = "Summary generated by AI based on overdue, due-today, and due-this-week tasks."
@@ -170,10 +175,11 @@ class clickupFunctions(commands.Cog):
             await dest_channel.send(embed=embed)
 
         except Exception as e:
+            # Catch and report the error
             print(f"Error processing ClickUp report for server {server_id}: {e}")
             if is_manual and manual_channel:
-                await manual_channel.send(f"Critical error during report generation: ```{e}```")
-            # Log to the owner/log channel in case of a critical failure
+                await manual_channel.send(f"An error occurred while generating the report: ```{e}```")
+
             log_channel = self.bot.get_channel(1152377925916688484)
             if log_channel:
                 await log_channel.send(f"Critical ClickUp report failure for server {server_id}: {e}")
@@ -205,16 +211,15 @@ class clickupFunctions(commands.Cog):
             print(f"Error fetching ClickUp teams: {e}")
             return []
 
-        # 2. For each Team, fetch all filtered tasks (simplest way to get all tasks)
-        # We filter for open tasks with a due date.
+        # 2. For each Team, fetch all filtered tasks
         for team_id in team_ids:
             tasks_url = f"{base_url}/team/{team_id}/task"
             params = {
                 'include_closed': 'false',  # Only open tasks
                 'due_date_gt': 0,  # Tasks with a due date
                 'date_updated_gt': 0,
-                'subtasks': 'true',  # Include subtasks
-                'include_markdown_description': 'true',  # Get rich description for AI context
+                'subtasks': 'true',
+                'include_markdown_description': 'true',  # Get rich description
             }
             try:
                 tasks_response = requests.get(tasks_url, headers=headers, params=params)
@@ -223,7 +228,7 @@ class clickupFunctions(commands.Cog):
                 all_tasks.extend(tasks_data.get('tasks', []))
             except Exception as e:
                 print(f"Error fetching tasks for team {team_id}: {e}")
-                continue  # Move to the next team
+                continue
 
         return all_tasks
 
@@ -235,27 +240,20 @@ class clickupFunctions(commands.Cog):
         now = datetime.datetime.now().date()
         one_week_from_now = now + datetime.timedelta(days=7)
 
-        # Mapping for sorting: Overdue (0) > Due Today (1) > Due This Week (2) > Later (3)
         urgency_map = {'Overdue': 0, 'Due Today': 1, 'Due This Week': 2}
 
         for task in tasks:
-            # Due date is in milliseconds since epoch
             due_date_ms = task.get('due_date')
             if not due_date_ms:
                 continue
 
-            # Convert to seconds, then to a datetime.date object
             due_date = datetime.datetime.fromtimestamp(int(due_date_ms) / 1000).date()
-
             task_urgency = None
 
-            # 1. Check if Overdue (before today)
             if due_date < now:
                 task_urgency = 'Overdue'
-            # 2. Check if Due Today
             elif due_date == now:
                 task_urgency = 'Due Today'
-            # 3. Check if Due This Week (tomorrow up to 7 days from now)
             elif now < due_date <= one_week_from_now:
                 task_urgency = 'Due This Week'
 
@@ -264,13 +262,27 @@ class clickupFunctions(commands.Cog):
                 task['sort_key'] = urgency_map[task_urgency]
                 pressing.append(task)
 
-        # Sort by: Urgency (Overdue first) -> Due Date (Oldest first)
         pressing.sort(key=lambda t: (
             t['sort_key'],
             datetime.datetime.fromtimestamp(int(t.get('due_date', 0)) / 1000).date()
         ))
 
         return pressing
+
+    # --- JOKE RETRIEVAL ---
+    async def _get_dad_joke(self) -> str:
+        """Generates a dad joke using the AI tool."""
+        joke_prompt = "Generate a single, short, funny dad joke. Do not include a conversational introduction."
+        try:
+            return await self.bot.AI.get_response(
+                prompt=joke_prompt,
+                temperature=0.9,  # Higher temperature for creativity
+                instructions="You are a stand-up comedian. Respond with only a single, short dad joke."
+            )
+        except Exception:
+            return "Why don't scientists trust atoms? Because they make up everything."
+
+    # --- END JOKE RETRIEVAL ---
 
     def _get_assignee_info(self, task: dict) -> str:
         """
@@ -287,7 +299,6 @@ class clickupFunctions(commands.Cog):
         """
         member_list = []
         for member in guild.members:
-            # Skip bots to reduce noise
             if member.bot:
                 continue
 
@@ -302,13 +313,73 @@ class clickupFunctions(commands.Cog):
 
         return json.dumps(member_list, indent=2)
 
-    def _format_tasks_for_ai(self, tasks: list, guild: discord.Guild) -> str:
-        """Formats the list of pressing tasks into a string for the AI prompt, including descriptions and Discord pings."""
-
-        # 1. Get the list of server members for the AI to use for matching
+    async def _match_assignees_with_ai(self, tasks: list, guild: discord.Guild) -> list:
+        """
+        Uses a dedicated AI call to match ClickUp assignees to Discord pings.
+        This restores the essential functionality for accurate pings.
+        """
+        # 1. Get Discord Member List
         member_json = self._get_server_members_for_ai(guild)
 
-        # 2. Format the ClickUp tasks
+        # 2. Extract only the necessary ClickUp info for matching
+        clickup_assignees = []
+        for task in tasks:
+            clickup_name = self._get_assignee_info(task)
+            if not any(a.get('clickup_name') == clickup_name for a in clickup_assignees):
+                clickup_assignees.append({"clickup_name": clickup_name})
+
+                # 3. Create a clean list of ClickUp names for the AI to match
+        clickup_names_list = [a['clickup_name'] for a in clickup_assignees]
+
+        # 4. Prompt the AI for matching
+        matching_prompt = (
+            f"You are a name matching expert. Your task is to match ClickUp names to the best available Discord @ping from the provided member list. "
+            f"Return ONLY a single JSON object where the key is the ClickUp Name and the value is the Discord @ping. "
+            f"If NO reliable Discord match is found, the value MUST be the original ClickUp Name itself (e.g., 'Unassigned'). "
+            f"--- DISCORD MEMBERS --- \n{member_json}\n\n"
+            f"--- CLICKUP NAMES TO MATCH --- \n{json.dumps(clickup_names_list)}\n"
+        )
+
+        try:
+            matching_response_text = await self.bot.AI.get_response(
+                prompt=matching_prompt,
+                temperature=0.0,
+                instructions="You are a JSON generating expert. Only output a single, raw JSON object. Do not include any extra characters, formatting, conversational text, or markdown wrappers (like ```json)."
+            )
+
+            # Robust Parsing and Cleaning
+            cleaned_text = matching_response_text.strip()
+            if cleaned_text.startswith("```json"):
+                cleaned_text = cleaned_text[7:]
+            if cleaned_text.endswith("```"):
+                cleaned_text = cleaned_text[:-3]
+
+            match_map = json.loads(cleaned_text.strip())
+
+        except Exception as e:
+            print(f"AI matching failed or returned invalid JSON: {e}")
+            match_map = {}
+            # Fallback: create a map where every name maps to itself
+            for name in clickup_names_list:
+                match_map[name] = name
+
+                # 5. Update the tasks with the matched assignee info
+        updated_tasks = []
+        for task in tasks:
+            clickup_name = self._get_assignee_info(task)
+            final_assignee = match_map.get(clickup_name, clickup_name)
+
+            # Attach the final, desired assignee string to the task object
+            task['final_assignee'] = final_assignee
+            updated_tasks.append(task)
+
+        return updated_tasks
+
+    async def _format_tasks_for_ai(self, tasks: list) -> str:
+        """
+        Formats the list of pressing tasks for the single-pass AI summary.
+        Ensures consistent data input for the AI, including joke substitution and truncation.
+        """
         formatted_tasks = "ClickUp Tasks to Summarize:\n\n"
 
         for task in tasks:
@@ -316,12 +387,25 @@ class clickupFunctions(commands.Cog):
             url = task.get('url', 'N/A')
             urgency = task.get('urgency', 'N/A')
 
-            # Get the ClickUp Assignee Name
-            clickup_name = self._get_assignee_info(task)
+            # Use the pre-matched final assignee name/ping
+            final_assignee = task.get('final_assignee') or self._get_assignee_info(task)
 
-            description = task.get('text_content') or task.get('description') or 'No detailed description available.'
+            raw_description = task.get('text_content') or task.get(
+                'description') or 'No detailed description available.'
 
-            # Safely handle 'None' values for status
+            # --- JOKE SUBSTITUTION LOGIC ---
+            if "dad joke" in raw_description.lower() or "joke" in raw_description.lower():
+                joke = await self._get_dad_joke()
+                joke_placeholder = f"[JOKE REQUEST FULFILLED: {joke}]"
+                # Ensure the original joke request text is replaced with the fulfilled joke
+                description_for_ai = raw_description.replace("dad joke", joke_placeholder).replace("joke",
+                                                                                                   joke_placeholder)
+            else:
+                description_for_ai = raw_description
+
+            # Truncate description to 500 characters
+            description = description_for_ai[:500] + ('...' if len(description_for_ai) > 500 else '')
+
             status_raw = task.get('status', {}).get('status')
             status = str(status_raw).upper() if status_raw is not None else 'N/A'.upper()
 
@@ -329,24 +413,22 @@ class clickupFunctions(commands.Cog):
                 f"--- TASK START ---\n"
                 f"**Task Name**: {name}\n"
                 f"**Urgency**: {urgency}\n"
-                f"**ClickUp Assignee**: {clickup_name}\n"  # <-- AI will use this name to match
+                f"**FINAL ASSIGNEE STRING**: {final_assignee}\n"  # PING OR CLICKUP NAME
                 f"**Status**: {status}\n"
-                f"**Description**: {description}\n"
+                f"**Description**: {description}\n"  # Truncated description (may contain joke)
                 f"**Link**: {url}\n"
                 f"--- TASK END ---\n"
             )
 
-        # 3. Assemble the final prompt
         return (
             f"The current date is {datetime.date.today().strftime('%B %d, %Y')}. "
-            f"Here is a JSON list of all Discord members and their roles for the server: \n\n"
-            f"{member_json}\n\n"
-            f"Now, summarize the following ClickUp tasks. For each task, use the **ClickUp Assignee** name to find the best match in the Discord member list and include their **@ping** in the summary. **The resulting summary must strictly adhere to a concise bulleted or numbered list format, using this structure: Task Title (bolded) followed by a newline, then Assigned to: [BEST DISCORD @PING, OR ClickUp Name], and finally a period followed by the Summary of work required from Description**. Do not use any introductory, transitional, or descriptive phrases (like 'The task involves'). Omit any 'No detailed description available.' if they appear."
-            f"Focus on the 'Overdue', 'Due Today', and 'Due This Week' tasks. "
-            f"The final summary must be under 500 words. \n\n"
+            f"Summarize the following ClickUp tasks. The **Description** field contains key context for what the task requires. "
+            f"The **FINAL ASSIGNEE STRING** field contains the exact ping or name that MUST be used in the summary. "
+            f"STRICTLY adhere to the format: **Task Title (bolded)\nAssigned to: [FINAL ASSIGNEE STRING]**. Summary of work required from Description."
+            f"The final summary must be under 100 words.\n\n"
             f"{formatted_tasks}"
         )
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: commands.Cog) -> None:
     await bot.add_cog(clickupFunctions(bot))
