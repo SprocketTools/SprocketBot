@@ -29,16 +29,15 @@ class clickupFunctions(commands.Cog):
 
     @tasks.loop(time=[
         # UPDATED TIME TO 16:00 UTC
-        datetime.time(hour=14, minute=32, tzinfo=datetime.timezone.utc),  # Monday, Wednesday, Friday at 16:00 PM UTC
-        datetime.time(hour=14, minute=32, tzinfo=datetime.timezone.utc),
-        datetime.time(hour=14, minute=32, tzinfo=datetime.timezone.utc),
-        datetime.time(hour=14, minute=32, tzinfo=datetime.timezone.utc)
+        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc),  # Monday, Wednesday, Friday at 16:00 PM UTC
+        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc),
+        datetime.time(hour=16, minute=0, tzinfo=datetime.timezone.utc)
     ])
     async def daily_report(self):
         """Runs on a schedule to send daily ClickUp reports."""
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         # 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday
-        if now_utc.weekday() in [0, 2, 4, 6]:  # Monday (0), Wednesday (2), Friday (4)
+        if now_utc.weekday() in [0, 2, 4]:  # Monday (0), Wednesday (2), Friday (4)
             await self._send_global_clickup_report()
 
     @commands.command(name="clickupreport", description="Manually generate and send the daily ClickUp report.")
