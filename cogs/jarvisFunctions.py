@@ -14,6 +14,8 @@ from cogs.adminFunctions import adminFunctions  # To fetch server config for Cli
 DEFAULT_TASK_DAYS = 7
 # Placeholder for List ID—must be updated by the user with the correct value
 DEFAULT_CLICKUP_LIST_ID = "901317097085"
+CLICKUP_API_BASE = "https://api.clickup.com/api/v2/list/"
+CLICKUP_ENDPOINT_SUFFIX = "/task"
 
 
 class jarvisFunctions(commands.Cog):
@@ -52,6 +54,13 @@ class jarvisFunctions(commands.Cog):
         default_due_date_ms = int(default_due_date.timestamp() * 1000)
 
         # 3. Determine Task Title and Description using AI
+
+        # Default fallbacks before AI runs
+        task_title = "Task Requested Without Clear Title"
+        task_due_ms = default_due_date_ms
+        task_description = f"Original Request: {message.content}"
+
+        # --- AI PROMPT ---
         ai_task_prompt = (
             f"You are J.A.R.V.I.S., analyzing a user's task request in the context of a conversation.\n"
             f"Conversation History (backwards, includes the request): \n{json.dumps(messages)}\n\n"
@@ -62,9 +71,7 @@ class jarvisFunctions(commands.Cog):
             f'{{"title": "Extracted Task Title", "description": "Remaining details or notes.", "due_date_ms": calculated_timestamp_in_milliseconds}}'
         )
 
-        task_title = "Task Requested Without Clear Title"
-        task_due_ms = default_due_date_ms
-        task_description = f"Original Request: {message.content}"
+        # CRITICAL DEBUGGING: Running AI call and parsing
 
         try:
             ai_response = await self.bot.AI.get_response(
@@ -73,8 +80,16 @@ class jarvisFunctions(commands.Cog):
                 instructions="Return ONLY a single, raw JSON object. Do not include any formatting or conversational text. Your highest priority is excluding the trigger phrase."
             )
 
-            # Robust JSON parsing
-            task_info = json.loads(ai_response.strip())
+            # Aggressive cleanup of AI output to remove markdown/preamble
+            clean_response = ai_response.strip()
+            if clean_response.startswith('```json'):
+                clean_response = clean_response[7:]
+            if clean_response.startswith('```'):
+                clean_response = clean_response[3:]
+            if clean_response.endswith('```'):
+                clean_response = clean_response[:-3]
+
+            task_info = json.loads(clean_response.strip())
 
             # Attempt to use AI-guessed data
             task_title = task_info.get('title', task_title)
@@ -87,9 +102,10 @@ class jarvisFunctions(commands.Cog):
             else:
                 task_due_ms = default_due_date_ms
 
-        except Exception:
-            # Fallback if AI fails to return valid JSON
-            pass
+        except Exception as e:
+            # Report failure, but exit cleanly.
+            await message.channel.send(f"❌ Jarvis failed JSON extraction/processing. Error: ```{e}```")
+            return
 
         # 3. Finalize Task Content and Clean Title (Code Cleanup)
 
@@ -110,17 +126,15 @@ class jarvisFunctions(commands.Cog):
         final_description += f"Task Notes: {task_description}"
 
         # 4. Use Target List ID
-        list_id = DEFAULT_CLICKUP_LIST_ID.strip()  # Ensure no whitespace
+        list_id = DEFAULT_CLICKUP_LIST_ID
 
-        # --- CRITICAL FIX: URL Construction ---
-        # The base URL should NOT end in a slash, as the List ID will be directly appended.
-        # However, since you are using an F-string, we rely on correct construction.
-        # We ensure the List ID is clean of any non-numeric/non-alphanumeric characters.
-        clean_list_id = "".join(filter(str.isalnum, list_id))
+        # --- URL Construction ---
+        # 4a. Sanitize List ID to only include digits/alphanumeric characters
+        clean_list_id = "".join(filter(str.isalnum, list_id.strip()))
 
-        # Construct API Request using clean ID
-        url = f"https://api.clickup.com/api/v2/list/{clean_list_id}/task"
-        # --- END CRITICAL FIX ---
+        # 4b. Use explicit concatenation with the globally defined constants
+        url = CLICKUP_API_BASE + clean_list_id + CLICKUP_ENDPOINT_SUFFIX
+        # --- END URL Construction ---
 
         headers = {
             "Authorization": api_key,
@@ -141,9 +155,10 @@ class jarvisFunctions(commands.Cog):
 
             # 7. Send Confirmation
             due_date_obj = datetime.datetime.fromtimestamp(task_due_ms / 1000).strftime('%Y-%m-%d')
-            await message.channel.send(f"✅ J.A.R.V.I.S. added task **{task_data.get('name')}** to ClickUp.\n"
-                                       f"Due: **{due_date_obj}**\n"
-                                       f"View Task: {task_data.get('url')}")
+            await message.channel.send(
+                f'''Right away, sir. I have added task **"{task_data.get('name')}"** to your ClickUp board as requested.\n'''
+                f"Due: **{due_date_obj}**\n"
+                f"View Task: {task_data.get('url')}")
 
         except requests.exceptions.HTTPError as err:
             # Include the response text for detailed debugging of the 400 error
@@ -159,7 +174,10 @@ class jarvisFunctions(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        """Combined message listener for task creation and conversation."""
+        """
+        Combined message listener for task creation and conversation.
+        FIXED: Checks now accommodate 'Jarvis, ' OR 'Jarvis '.
+        """
         if message.author.bot:
             return
 
@@ -167,21 +185,40 @@ class jarvisFunctions(commands.Cog):
         user_id = message.author.id
         now = datetime.datetime.now()
 
-        task_prefix = "jarvis, add this task"
-        standard_prefix = "jarvis,"
+        # --- FIX: Standardized Prefix Checking ---
 
-        if content_lower.startswith(task_prefix):
+        # Helper function to check for "jarvis" followed by optional comma and space
+        def check_jarvis_prefix(text: str, command: str) -> str:
+            # Looks for: "jarvis, command" or "jarvis command"
+            base = "jarvis"
+            prefix_with_comma = f"{base}, {command}"
+            prefix_no_comma = f"{base} {command}"
+
+            if text.startswith(prefix_with_comma):
+                return text[len(prefix_with_comma):].strip()
+            elif text.startswith(prefix_no_comma):
+                return text[len(prefix_no_comma):].strip()
+            return None
+
+        # Check for TASK command first
+        task_command_phrase = "add this task"
+        task_details = check_jarvis_prefix(content_lower, task_command_phrase)
+
+        if task_details is not None:
             # --- TASK ADDITION MODE ---
-            task_details = message.content
+            # task_details now holds the remainder of the message or an empty string if only the prefix was used.
 
             # Run the task handler in a non-blocking fashion
-            await message.add_reaction('➕')  # Indicate task processing started
-            asyncio.create_task(self._handle_task_addition(message, task_details))
+            await message.add_reaction('✅')  # Indicate task processing started
+            asyncio.create_task(self._handle_task_addition(message, message.content))  # Pass original message.content
 
             # Prevent standard conversation flow from running
             return
 
-        elif content_lower.startswith(standard_prefix):
+        # Check for standard conversation prefix
+        standard_conversation_trigger = check_jarvis_prefix(content_lower, "")  # Check for "jarvis," or "jarvis"
+
+        if standard_conversation_trigger is not None:
             # --- STANDARD CONVERSATION MODE (with cooldown logic) ---
             # Cooldown logic (copied from testingFunctions.py)
             special_users = [220134579736936448, 437324319102730263, 806938248060469280, 198602742317580288,
