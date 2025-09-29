@@ -18,6 +18,7 @@ class testingFunctions(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        return
         print(message.content.lower())
 
         user_id = message.author.id

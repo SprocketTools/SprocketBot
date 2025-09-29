@@ -372,7 +372,7 @@ class adminFunctions(commands.Cog):
                               flagpingid BIGINT,
                               musicroleid BIGINT,
                               banmessage VARCHAR,
-                              clickupkey BIGINT);''')  # Added musicroleid and banmessage
+                              clickupkey VARCHAR);''')  # Added musicroleid and banmessage
         await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!  Now go DM everyone that their config was reset...")
 
