@@ -9,7 +9,7 @@ import main  # To access main.ownerID and other main settings
 from cogs.adminFunctions import adminFunctions  # For getServerConfig
 
 
-# from difflib import SequenceMatcher # This synchronous module is removed to prevent blocking.
+# Removed: from difflib import SequenceMatcher # This synchronous module is removed to prevent blocking.
 
 # ClickUp API Endpoints
 # Note: ClickUp API requires a Personal API Token.
@@ -26,6 +26,74 @@ class clickupFunctions(commands.Cog):
     def cog_unload(self):
         # Cancel the loop when the cog is unloaded
         self.daily_report.cancel()
+
+    @commands.command(name="setupclickup", description="Sets up the required SQL table for ClickUp user mapping.")
+    async def setup_clickup_database(self, ctx: commands.Context):
+        """Creates the clickup_mappings table if it doesn't exist."""
+        if ctx.author.id != main.ownerID:
+            await ctx.send("Permission denied. Only the bot owner can run database setup commands.")
+            return
+
+        prompt = ('''CREATE TABLE IF NOT EXISTS clickup_mappings (
+                        serverid BIGINT,
+                        clickup_name VARCHAR,
+                        discord_id BIGINT,
+                        PRIMARY KEY (serverid, clickup_name)
+                    );''')
+
+        try:
+            await self.bot.sql.databaseExecute(prompt)
+            await ctx.send(
+                "✅ **ClickUp mapping table (`clickup_mappings`) created successfully!** You can now use the `/setclickupuser` command.")
+        except Exception as e:
+            await ctx.send(f"❌ Failed to create table. Error: ```{e}```")
+
+    @commands.command(name="setclickupuser",
+                      description="Map a ClickUp user name to a Discord member for accurate pings.")
+    async def set_clickup_user(self, ctx: commands.Context, clickup_name: str, member: discord.Member):
+        """Maps a ClickUp assignee name to a Discord member's ID using SQL."""
+
+        # Check permissions (assuming Bot Managers can run this)
+        server_config = await adminFunctions.getServerConfig(self, ctx)
+        bot_manager_role_id = server_config.get('botmanagerroleid')
+
+        is_bot_manager = False
+        if bot_manager_role_id and isinstance(ctx.author, discord.Member):
+            for role in ctx.author.roles:
+                if role.id == bot_manager_role_id:
+                    is_bot_manager = True
+                    break
+
+        if not ctx.author.guild_permissions.administrator and ctx.author.id != main.ownerID and not is_bot_manager:
+            await ctx.send("You do not have permission to run this command. Must be an administrator or Bot Manager.")
+            return
+
+        # Clean the ClickUp name to ensure consistency (remove multi-assignee indicator, make lowercase)
+        clean_clickup_name = clickup_name.split(' (+')[0].strip().lower()
+
+        # --- CRITICAL FIX START ---
+        # Change fetch method to one that returns a list (which is iterable and handles the 'None' case safely)
+        check_query = '''SELECT discord_id FROM clickup_mappings WHERE serverid = $1 AND clickup_name = $2;'''
+        existing_mapping = await self.bot.sql.databaseFetchdictDynamic(check_query, [ctx.guild.id, clean_clickup_name])
+
+        try:
+            # Check if the list is NOT empty
+            if existing_mapping:
+                update_query = '''UPDATE clickup_mappings SET discord_id = $3 WHERE serverid = $1 AND clickup_name = $2;'''
+                await self.bot.sql.databaseExecuteDynamic(update_query, [ctx.guild.id, clean_clickup_name, member.id])
+                await ctx.send(
+                    f"✅ Updated ClickUp user '{clickup_name}' (stored as '{clean_clickup_name}') to ping {member.mention}.")
+            else:
+                insert_query = '''INSERT INTO clickup_mappings (serverid, clickup_name, discord_id) VALUES ($1, $2, $3);'''
+                await self.bot.sql.databaseExecuteDynamic(insert_query, [ctx.guild.id, clean_clickup_name, member.id])
+                await ctx.send(
+                    f"✅ Created ClickUp user mapping: '{clickup_name}' (stored as '{clean_clickup_name}') now pings {member.mention}.")
+
+        except Exception as e:
+            # Inform the user that the setup command needs to be run.
+            await ctx.send(
+                f"❌ Failed to set ClickUp mapping. Ensure the `clickup_mappings` table exists. Try running `/setupclickup` if you are the bot owner. Error: ```{e}```")
+        # --- CRITICAL FIX END ---
 
     @tasks.loop(time=[
         # UPDATED TIME TO 16:00 UTC
@@ -140,7 +208,7 @@ class clickupFunctions(commands.Cog):
                     "ClickUp Report: No pressing tasks (due today, overdue, or due this week) found.")
                 return
 
-            # 3. Format prompt (using simple fuzzy match/ping for assignees)
+            # 3. Format prompt (using SQL lookup for PING)
             ai_prompt = await self._format_tasks_for_ai(pressing_tasks, guild)
 
             # Using the bot's configured AI wrapper (GeminiAITools from main.py)
@@ -164,29 +232,25 @@ class clickupFunctions(commands.Cog):
             else:
                 # Create a simple mock context object for the scheduled task
                 class MockContext:
-                    # Provide essential properties for retrieveError (guild, author ID)
                     def __init__(self, bot, guild, channel):
                         self.bot = bot
                         self.guild = guild
-                        # Use bot's owner ID or bot's user object as the "author"
                         self.author = bot.get_user(self.bot.ownerid) or bot.user
-                        self.channel = channel  # Needed if the error log relies on the channel
-                        self.message = MockMessage(self.author, channel)  # Mock message if needed for context
+                        self.channel = channel
+                        self.message = MockMessage(self.author, channel)
 
                 class MockMessage:
                     def __init__(self, author, channel):
                         self.author = author
                         self.channel = channel
-                        self.content = "scheduled_task_report"  # Placeholder content
+                        self.content = "scheduled_task_report"
 
                 try:
-                    # Pass the mock object containing the guild information
                     mock_ctx = MockContext(self.bot, guild, dest_channel)
                     footer_text = await self.bot.error.retrieveError(mock_ctx)
                 except Exception as e:
-                    # Fallback to a plain string if the error handler fails with the mock object
                     print(f"Error calling retrieveError with mock context: {e}")
-                    footer_text = "Task summary complete."  # Simple, safe fallback string
+                    footer_text = "Task summary complete."
 
             embed.set_footer(text=footer_text)
             await dest_channel.send(embed=embed)
@@ -303,99 +367,50 @@ class clickupFunctions(commands.Cog):
 
     def _get_assignee_info(self, task: dict) -> str:
         """
-        Extracts the ClickUp display name of the first assignee.
+        Extracts the name of the first assignee, and indicates if there are more.
         """
         assignees = task.get('assignees')
-        if assignees and len(assignees) > 0:
-            return assignees[0].get('display_name') or assignees[0].get('username') or 'Assigned'
-        return 'Unassigned'
+        if not assignees:
+            return 'Unassigned'
 
-    def _get_server_members_for_ai(self, guild: discord.Guild) -> str:
+        first_assignee_name = assignees[0].get('display_name') or assignees[0].get('username') or 'Assigned'
+
+        # Indicate if there are multiple assignees
+        if len(assignees) > 1:
+            return f"{first_assignee_name} (+{len(assignees) - 1} more)"
+
+        return first_assignee_name
+
+    async def _get_ping_from_sql(self, clickup_name: str, guild: discord.Guild) -> str:
         """
-        Generates a JSON string of all server members, their display name, username, and roles for the AI to use.
+        Retrieves the Discord ID from the SQL database and returns a ping.
         """
-        member_list = []
-        for member in guild.members:
-            if member.bot:
-                continue
-
-            member_roles = [role.name for role in member.roles if role.name != '@everyone']
-
-            member_list.append({
-                "discord_ping": member.mention,
-                "display_name": member.display_name,
-                "username": member.name,
-                "roles": member_roles
-            })
-
-        return json.dumps(member_list, indent=2)
-
-    async def _match_assignees_with_ai(self, tasks: list, guild: discord.Guild) -> list:
-        """
-        Uses a dedicated AI call to match ClickUp assignees to Discord pings.
-        This restores the essential functionality for accurate pings.
-        """
-        # 1. Get Discord Member List
-        member_json = self._get_server_members_for_ai(guild)
-
-        # 2. Extract only the necessary ClickUp info for matching
-        clickup_assignees = []
-        for task in tasks:
-            clickup_name = self._get_assignee_info(task)
-            if not any(a.get('clickup_name') == clickup_name for a in clickup_assignees):
-                clickup_assignees.append({"clickup_name": clickup_name})
-
-                # 3. Create a clean list of ClickUp names for the AI to match
-        clickup_names_list = [a['clickup_name'] for a in clickup_assignees]
-
-        # 4. Prompt the AI for matching
-        matching_prompt = (
-            f"You are a name matching expert. Your task is to match ClickUp names to the best available Discord @ping from the provided member list. "
-            f"Return ONLY a single JSON object where the key is the ClickUp Name and the value is the Discord @ping. "
-            f"If NO reliable Discord match is found, the value MUST be the original ClickUp Name itself (e.g., 'Unassigned'). "
-            f"--- DISCORD MEMBERS --- \n{member_json}\n\n"
-            f"--- CLICKUP NAMES TO MATCH --- \n{json.dumps(clickup_names_list)}\n"
-        )
+        # Clean the name: remove multi-assignee indicator and make lowercase for lookup
+        clean_clickup_name = clickup_name.split(' (+')[0].lower()
 
         try:
-            matching_response_text = await self.bot.AI.get_response(
-                prompt=matching_prompt,
-                temperature=0.0,
-                instructions="You are a JSON generating expert. Only output a single, raw JSON object. Do not include any extra characters, formatting, conversational text, or markdown wrappers (like ```json)."
-            )
+            # Query the database for the mapped Discord ID
+            query = '''SELECT discord_id FROM clickup_mappings WHERE serverid = $1 AND clickup_name = $2;'''
+            mapping = await self.bot.sql.databaseFetchrowDynamic(query, [guild.id, clean_clickup_name])
 
-            # Robust Parsing and Cleaning
-            cleaned_text = matching_response_text.strip()
-            if cleaned_text.startswith("```json"):
-                cleaned_text = cleaned_text[7:]
-            if cleaned_text.endswith("```"):
-                cleaned_text = cleaned_text[:-3]
+            if mapping:
+                # FIX: databaseFetchrowDynamic returns a dict, access value by key
+                discord_id = mapping.get('discord_id')
+                if discord_id:
+                    # Return the Discord mention (ping)
+                    return f"<@{discord_id}>"
 
-            match_map = json.loads(cleaned_text.strip())
+        except Exception:
+            # If the table doesn't exist or query fails, quietly fall back
+            pass
 
-        except Exception as e:
-            print(f"AI matching failed or returned invalid JSON: {e}")
-            match_map = {}
-            # Fallback: create a map where every name maps to itself
-            for name in clickup_names_list:
-                match_map[name] = name
+        # If no mapping or database fails, return the original ClickUp name
+        return clickup_name
 
-                # 5. Update the tasks with the matched assignee info
-        updated_tasks = []
-        for task in tasks:
-            clickup_name = self._get_assignee_info(task)
-            final_assignee = match_map.get(clickup_name, clickup_name)
-
-            # Attach the final, desired assignee string to the task object
-            task['final_assignee'] = final_assignee
-            updated_tasks.append(task)
-
-        return updated_tasks
-
-    async def _format_tasks_for_ai(self, tasks: list) -> str:
+    async def _format_tasks_for_ai(self, tasks: list, guild: discord.Guild) -> str:
         """
         Formats the list of pressing tasks for the single-pass AI summary.
-        Ensures consistent data input for the AI, including joke substitution and truncation.
+        Uses the non-blocking SQL lookup for accurate pinging.
         """
         formatted_tasks = "ClickUp Tasks to Summarize:\n\n"
 
@@ -404,8 +419,10 @@ class clickupFunctions(commands.Cog):
             url = task.get('url', 'N/A')
             urgency = task.get('urgency', 'N/A')
 
-            # Use the pre-matched final assignee name/ping
-            final_assignee = task.get('final_assignee') or self._get_assignee_info(task)
+            clickup_name = self._get_assignee_info(task)
+
+            # --- CRITICAL FIX: Use SQL Lookup for Ping ---
+            assignee_ping_or_name = await self._get_ping_from_sql(clickup_name, guild)
 
             raw_description = task.get('text_content') or task.get(
                 'description') or 'No detailed description available.'
@@ -414,7 +431,6 @@ class clickupFunctions(commands.Cog):
             if "dad joke" in raw_description.lower() or "joke" in raw_description.lower():
                 joke = await self._get_dad_joke()
                 joke_placeholder = f"[JOKE REQUEST FULFILLED: {joke}]"
-                # Ensure the original joke request text is replaced with the fulfilled joke
                 description_for_ai = raw_description.replace("dad joke", joke_placeholder).replace("joke",
                                                                                                    joke_placeholder)
             else:
@@ -426,11 +442,14 @@ class clickupFunctions(commands.Cog):
             status_raw = task.get('status', {}).get('status')
             status = str(status_raw).upper() if status_raw is not None else 'N/A'.upper()
 
+            # Use the most specific name/ping available
+            final_assignee_string = assignee_ping_or_name
+
             formatted_tasks += (
                 f"--- TASK START ---\n"
                 f"**Task Name**: {name}\n"
                 f"**Urgency**: {urgency}\n"
-                f"**FINAL ASSIGNEE STRING**: {final_assignee}\n"  # PING OR CLICKUP NAME
+                f"**FINAL ASSIGNEE STRING**: {final_assignee_string}\n"  # PING OR CLICKUP NAME
                 f"**Status**: {status}\n"
                 f"**Description**: {description}\n"  # Truncated description (may contain joke)
                 f"**Link**: {url}\n"
@@ -442,7 +461,7 @@ class clickupFunctions(commands.Cog):
             f"Summarize the following ClickUp tasks. The **Description** field contains key context for what the task requires. "
             f"The **FINAL ASSIGNEE STRING** field contains the exact ping or name that MUST be used in the summary. "
             f"STRICTLY adhere to the format: **Task Title (bolded)\nAssigned to: [FINAL ASSIGNEE STRING]**. Summary of work required from Description."
-            f"The final summary must be under 100 words.\n\n"
+            f"The final summary must be under 100 words. \n\n"
             f"{formatted_tasks}"
         )
 
