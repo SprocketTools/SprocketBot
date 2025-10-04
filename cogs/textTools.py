@@ -10,7 +10,7 @@ class textTools(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.geminikey = self.bot.geminikey
-
+    @staticmethod
     async def sanitize(inputPhrase: str):
         sanitizeKeywords = ["@", "/", ";", "invalid_tank"]
         outputPhrase = inputPhrase
