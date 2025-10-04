@@ -1,5 +1,5 @@
 import subprocess
-import sys
+import sys, platform
 import os
 import time
 import glob
@@ -45,7 +45,12 @@ def main_process_manager():
     The main process manager loop that launches, monitors, and restarts bot instances.
     """
     # Discover all instances to run from the .ini files
-    config_dir = "/home/mumblepi/bots/"
+
+    if platform.system() == "Windows":
+        config_dir = "C:\\SprocketBot\\bots\\"
+    else:
+        config_dir = "/home/mumblepi/bots/"
+
     config_files = glob.glob(os.path.join(config_dir, "*.ini"))
 
     if not config_files:
