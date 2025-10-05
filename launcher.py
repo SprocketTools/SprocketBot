@@ -1,3 +1,5 @@
+# launcher.py
+
 import subprocess
 import sys
 import os
@@ -9,14 +11,12 @@ import tempfile
 
 
 def is_process_running(pid: int) -> bool:
-    """
-    A cross-platform check to see if a process with a given PID is running.
-    """
+    """A cross-platform check to see if a process with a given PID is running."""
     if platform.system() == "Windows":
         try:
             result = subprocess.run(
                 ["tasklist", "/FI", f"PID eq {pid}"],
-                capture_output=True, text=True, check=True
+                capture_output=True, text=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW
             )
             return str(pid) in result.stdout
         except (subprocess.CalledProcessError, FileNotFoundError):
@@ -31,10 +31,7 @@ def is_process_running(pid: int) -> bool:
 
 
 def launch_celestial_navigator():
-    """
-    Checks for and launches the independent music player process if not already running.
-    This process is NOT monitored by the main loop and will persist through bot restarts.
-    """
+    """Checks for and launches the independent music player process if not already running."""
     pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
     python_executable = sys.executable
     command = [python_executable, 'celestial_navigator.py']
@@ -43,7 +40,6 @@ def launch_celestial_navigator():
         try:
             with open(pidfile, 'r') as f:
                 pid = int(f.read())
-
             if is_process_running(pid):
                 print(f"--- Celestial Navigator is already running (PID: {pid}). ---")
                 return
@@ -63,52 +59,27 @@ def launch_celestial_navigator():
 
 
 def run_update_and_pull():
-    """
-    Stashes local changes, pulls from GitHub, and returns True if successful.
-    Disabled on Windows to simplify development.
-    """
+    """Stashes local changes, pulls from GitHub, and returns True if successful."""
     if platform.system() != "Windows":
         print("--- Checking for updates from GitHub... ---")
         try:
             print("Stashing local changes (if any)...")
-            stash_result = subprocess.run(
-                ["git", "stash"], capture_output=True, text=True
-            )
-            if "No local changes to save" not in stash_result.stdout:
-                print("Local changes were found and have been stashed.")
-
+            subprocess.run(["git", "stash"], capture_output=True, text=True)
             print("Pulling latest code...")
-            subprocess.run(
-                ["git", "pull"], check=True, capture_output=True, text=True
-            )
-
+            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
             print("--- Code is up to date. ---")
             return True
-        except FileNotFoundError:
-            print("ERROR: Git not found. Please install Git to use the auto-update feature.")
-            return False
-        except subprocess.CalledProcessError as e:
-            print("--- ERROR: A Git command failed. Please check the logs below. ---")
-            print(e.stdout)
-            print(e.stderr)
-            print(
-                "Your local changes may have been stashed. Use 'git stash list' and 'git stash pop' to recover them.")
+        except (FileNotFoundError, subprocess.CalledProcessError) as e:
+            print(f"--- ERROR: Git command failed. --- {e}")
             return False
     else:
-        # On Windows, skip the git pull process.
         print("--- Skipping Git update check on Windows. ---")
         return True
 
 
 def main_process_manager():
-    """
-    The main process manager loop that launches, monitors, and restarts bot instances.
-    """
-    if platform.system() == "Windows":
-        config_dir = "C:\\SprocketBot\\bots\\"
-    else:
-        config_dir = "/home/mumblepi/bots/"
-
+    """The main process manager loop that launches, monitors, and restarts bot instances."""
+    config_dir = "C:\\SprocketBot\\bots\\" if platform.system() == "Windows" else os.path.expanduser("~") + "/bots/"
     config_files = glob.glob(os.path.join(config_dir, "*.ini"))
 
     if not config_files:
@@ -122,7 +93,11 @@ def main_process_manager():
         config_name = os.path.basename(config_file).replace('.ini', '')
         command = [python_executable, 'main.py', config_name]
         print(f"Starting instance '{config_name}'...")
-        processes[config_name] = subprocess.Popen(command)
+        # MODIFIED: Ensure new process group is created on Windows for graceful shutdown
+        creation_flags = 0
+        if platform.system() == "Windows":
+            creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP
+        processes[config_name] = subprocess.Popen(command, creationflags=creation_flags)
         time.sleep(3)
 
     print(f"--- Launched {len(processes)} bot instances. Monitoring... ---")
@@ -140,7 +115,11 @@ def main_process_manager():
             for other_name, other_proc in processes.items():
                 if other_proc.poll() is None:
                     print(f"Stopping instance '{other_name}' (PID: {other_proc.pid})...")
-                    other_proc.terminate()
+                    # MODIFIED: Use a graceful shutdown method for Windows
+                    if platform.system() == "Windows":
+                        os.kill(other_proc.pid, signal.CTRL_C_EVENT)
+                    else:
+                        other_proc.terminate()  # Sends SIGTERM on Linux
 
             for proc in processes.values():
                 proc.wait()
@@ -149,9 +128,7 @@ def main_process_manager():
 
 
 if __name__ == "__main__":
-    # Launch the independent music player before starting the bot monitor.
     launch_celestial_navigator()
-
     try:
         while True:
             if not run_update_and_pull():
@@ -160,7 +137,6 @@ if __name__ == "__main__":
             main_process_manager()
             print("--- Restarting all bot services in 5 seconds... ---")
             time.sleep(5)
-
     except KeyboardInterrupt:
         print("\nLauncher received KeyboardInterrupt. Exiting.")
         pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
@@ -168,10 +144,11 @@ if __name__ == "__main__":
             try:
                 with open(pidfile, 'r') as f:
                     pid = int(f.read())
-                print(f"--- Sending shutdown signal to Celestial Navigator (PID: {pid}). ---")
-                if platform.system() == "Windows":
-                    os.kill(pid, signal.CTRL_C_EVENT)
-                else:
-                    os.kill(pid, signal.SIGTERM)
+                if is_process_running(pid):
+                    print(f"--- Sending shutdown signal to Celestial Navigator (PID: {pid}). ---")
+                    if platform.system() == "Windows":
+                        os.kill(pid, signal.CTRL_C_EVENT)
+                    else:
+                        os.kill(pid, signal.SIGTERM)
             except (OSError, ValueError):
                 pass
