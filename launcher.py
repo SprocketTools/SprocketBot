@@ -79,7 +79,7 @@ def run_update_and_pull():
 
 def main_process_manager():
     """The main process manager loop that launches, monitors, and restarts bot instances."""
-    config_dir = "C:\\SprocketBot\\bots\\" if platform.system() == "Windows" else os.path.expanduser("~") + "/bots/"
+    config_dir = "C:\\SprocketBot\\bots\\" if platform.system() == "Windows" else os.path.join(os.path.expanduser("~"), "bots")
     config_files = glob.glob(os.path.join(config_dir, "*.ini"))
 
     if not config_files:
@@ -89,14 +89,12 @@ def main_process_manager():
     processes = {}
     python_executable = sys.executable
 
+    # Launch all defined bot instances
     for config_file in config_files:
         config_name = os.path.basename(config_file).replace('.ini', '')
         command = [python_executable, 'main.py', config_name]
         print(f"Starting instance '{config_name}'...")
-        # MODIFIED: Ensure new process group is created on Windows for graceful shutdown
-        creation_flags = 0
-        if platform.system() == "Windows":
-            creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP
+        creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
         processes[config_name] = subprocess.Popen(command, creationflags=creation_flags)
         time.sleep(3)
 
@@ -115,11 +113,10 @@ def main_process_manager():
             for other_name, other_proc in processes.items():
                 if other_proc.poll() is None:
                     print(f"Stopping instance '{other_name}' (PID: {other_proc.pid})...")
-                    # MODIFIED: Use a graceful shutdown method for Windows
                     if platform.system() == "Windows":
                         os.kill(other_proc.pid, signal.CTRL_C_EVENT)
                     else:
-                        other_proc.terminate()  # Sends SIGTERM on Linux
+                        other_proc.terminate()
 
             for proc in processes.values():
                 proc.wait()

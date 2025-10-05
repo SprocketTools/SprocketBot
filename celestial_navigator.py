@@ -9,7 +9,14 @@ import datetime
 import configparser
 import signal
 import tempfile
-import json  # ADDED
+import json
+import uuid
+
+# ADDED: Imports for downloader functionality
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+import yt_dlp
+import aiohttp
 
 try:
     import pygame
@@ -18,29 +25,35 @@ except ImportError:
     exit(1)
 
 # --- Configuration Section ---
-# ... (This section is unchanged)
-# celestial_navigator.py (Replacement for lines 26-34)
-
 baseConfig = configparser.ConfigParser()
+SQLsettings = None
+WEBHOOK_URL = None
+sp = None
+
 try:
-    if os.name == 'nt':  # This is Windows
+    if os.name == 'nt':
         config_path = "C:\\SprocketBot\\configuration.ini"
-    else:  # This is for Linux/Raspberry Pi
+    else:
         config_path = os.path.join(os.path.expanduser("~"), "configuration.ini")
 
     baseConfig.read(config_path)
 
-    # Get database settings from their respective sections in the ONE config file
     SQLsettings = baseConfig["SECURITY"]
-    SQLsettings["database"] = baseConfig["SECURITY"]["database"]
+    WEBHOOK_URL = baseConfig['settings']['downloader_webhook_url']
+
+    client_id = baseConfig['settings']['spotify_client_id']
+    client_secret = baseConfig['settings']['spotify_client_secret']
+    auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
 except Exception as e:
-    print(f"Could not read configuration files. Ensure paths are correct. Error: {e}")
+    print(f"[Navigator] Could not read configuration. Exiting. Error: {e}")
     exit(1)
+
+CONSTELLATION_PATH = "./celestial_audio/"
 
 
 class CelestialNavigator:
     def __init__(self, pool):
-        # ... (This section is mostly unchanged)
         self.pool = pool
         self.ephemeris = []
         self.trajectory = []
@@ -50,26 +63,17 @@ class CelestialNavigator:
         self.nova_interval = random.randint(8, 12)
         self.running = True
         self.interrupt_flag = False
-
-        # ADDED: Define the path for the queue snapshot
         self.snapshot_path = os.path.join(tempfile.gettempdir(), "celestial_trajectory.json")
 
         pygame.init()
         pygame.mixer.init()
-        print("Audio systems initialized.")
+        print("[Player] Audio systems initialized.")
 
-    # ADDED: New function to write the queue state to a file
     def _update_trajectory_snapshot(self):
-        """Saves the next 10 items of the queue to a JSON file for the bot to read."""
+        # ... (This function is unchanged)
         try:
-            snapshot_data = []
-            # Take a slice of the next 10 items without modifying the actual queue
-            for item in self.trajectory[:10]:
-                snapshot_data.append({
-                    "designation": item.get("designation", "Unknown"),
-                    "classification": item.get("classification", "Unknown")
-                })
-
+            snapshot_data = [{"designation": i.get("designation", "U"), "classification": i.get("classification", "U")}
+                             for i in self.trajectory[:10]]
             with open(self.snapshot_path, 'w') as f:
                 json.dump(snapshot_data, f)
         except Exception as e:
@@ -77,26 +81,23 @@ class CelestialNavigator:
 
     async def fetch_ephemeris(self):
         # ... (This function is unchanged)
-        print("Fetching new ephemeris data from the observatory log...")
+        print("[Player] Fetching new ephemeris data...")
         today_column = f"{datetime.datetime.now().strftime('%a').lower()}_arc"
         async with self.pool.acquire() as connection:
-            query = f"SELECT * FROM astral_bodies WHERE {today_column} = TRUE;"
-            self.ephemeris = [dict(row) for row in await connection.fetch(query)]
-        print(f"Found {len(self.ephemeris)} valid celestial bodies for today.")
+            self.ephemeris = [dict(row) for row in
+                              await connection.fetch(f"SELECT * FROM astral_bodies WHERE {today_column} = TRUE;")]
+        print(f"[Player] Found {len(self.ephemeris)} valid bodies for today.")
         self.construct_trajectory()
 
     def construct_trajectory(self):
-        # ... (This function is mostly unchanged)
-        print("Calculating new broadcast trajectory...")
+        # ... (This function is unchanged)
+        print("[Player] Calculating new broadcast trajectory...")
         self.trajectory.clear()
-        bodies = {
-            "STAR_CLUSTER": [b for b in self.ephemeris if b['classification'] == 'STAR_CLUSTER'],
-            "NOVA_EVENT": [b for b in self.ephemeris if b['classification'] == 'NOVA_EVENT'],
-            "PULSAR_BURST": [b for b in self.ephemeris if b['classification'] == 'PULSAR_BURST']
-        }
+        bodies = {k: [b for b in self.ephemeris if b['classification'] == k] for k in
+                  ["STAR_CLUSTER", "NOVA_EVENT", "PULSAR_BURST"]}
         if not bodies["STAR_CLUSTER"]:
-            print("Warning: No Star Clusters (songs) available for broadcast.")
-            self._update_trajectory_snapshot()  # ADDED: Update snapshot even if empty
+            print("[Player] Warning: No Star Clusters available.")
+            self._update_trajectory_snapshot()
             return
         random.shuffle(bodies["STAR_CLUSTER"])
         for cluster in bodies["STAR_CLUSTER"]:
@@ -111,65 +112,59 @@ class CelestialNavigator:
                 self.trajectory.append(random.choice(bodies["NOVA_EVENT"]))
                 self.nova_event_counter = 0
                 self.nova_interval = random.randint(8, 12)
-        print(f"Trajectory calculated with {len(self.trajectory)} total events.")
-        self._update_trajectory_snapshot()  # ADDED: Update snapshot after building
+        print(f"[Player] Trajectory calculated with {len(self.trajectory)} events.")
+        self._update_trajectory_snapshot()
 
     async def plot_priority_trajectory(self, unique_id: str):
-        # ... (This function is mostly unchanged)
-        print(f"Plotting priority trajectory for body ID: {unique_id}")
-        priority_body = next((body for body in self.ephemeris if body['unique_id'] == unique_id), None)
+        # ... (This function is unchanged)
+        priority_body = next((b for b in self.ephemeris if b['unique_id'] == unique_id), None)
         if priority_body:
             self.trajectory.insert(0, priority_body)
-            print(f"'{priority_body['designation']}' has been moved to the front of the trajectory.")
-            self._update_trajectory_snapshot()  # ADDED: Update snapshot after modifying
+            print(f"[Player] '{priority_body['designation']}' moved to front of trajectory.")
+            self._update_trajectory_snapshot()
         else:
-            print(f"Warning: Could not find priority body with ID {unique_id} in current ephemeris cache.")
+            print(f"[Player] Warning: Could not find priority body {unique_id}.")
 
     async def process_directives(self):
         # ... (This function is unchanged)
         while self.running:
             try:
-                async with self.pool.acquire() as connection:
-                    directives = await connection.fetch('''
-                        SELECT * FROM celestial_directives WHERE processed = FALSE ORDER BY timestamp ASC;
-                    ''')
+                async with self.pool.acquire() as c:
+                    directives = await c.fetch(
+                        "SELECT * FROM celestial_directives WHERE processed = FALSE ORDER BY timestamp ASC;")
                     for d in directives:
-                        print(f"Processing directive: {d['directive']}")
+                        print(f"[Player] Processing directive: {d['directive']}")
                         if d['directive'] == 'INTERRUPT':
                             self.interrupt_flag = True
                         elif d['directive'] == 'REALIGN':
-                            self.running = False
-                            self.interrupt_flag = True
+                            self.running = False; self.interrupt_flag = True
                         elif d['directive'] == 'REFRESH_EPHEMERIS':
                             await self.fetch_ephemeris()
                         elif d['directive'] == 'PRIORITY_TRAJECTORY':
                             await self.plot_priority_trajectory(d['payload'])
-                        await connection.execute('UPDATE celestial_directives SET processed = TRUE WHERE id = $1;',
-                                                 d['id'])
+                        await c.execute('UPDATE celestial_directives SET processed = TRUE WHERE id = $1;', d['id'])
             except Exception as e:
                 print(f"Error processing directives: {e}")
             await asyncio.sleep(5)
 
     async def transmit(self):
-        print("Transmission commencing.")
+        # ... (This function is unchanged)
+        print("[Player] Transmission commencing.")
         while self.running:
             if not self.trajectory:
-                print("Trajectory complete or empty. Recalculating...")
+                print("[Player] Trajectory empty. Recalculating...")
                 self.construct_trajectory()
                 if not self.trajectory:
-                    print("No valid trajectory. Standing by for 30 seconds.")
+                    print("[Player] No valid trajectory. Standing by.")
                     await asyncio.sleep(30)
                     continue
-
-            # MODIFIED: Update snapshot before popping the next item
             self._update_trajectory_snapshot()
             current_body = self.trajectory.pop(0)
-
             filepath = current_body['filepath']
             if not os.path.exists(filepath):
-                print(f"Warning: File not found for {current_body['designation']}. Skipping.")
+                print(f"[Player] Warning: File not found for {current_body['designation']}. Skipping.")
                 continue
-            print(f"Now transmitting: [{current_body['classification']}] {current_body['designation']}")
+            print(f"[Player] Transmitting: [{current_body['classification']}] {current_body['designation']}")
             try:
                 pygame.mixer.music.load(filepath)
                 pygame.mixer.music.play()
@@ -177,36 +172,97 @@ class CelestialNavigator:
                     if self.interrupt_flag:
                         pygame.mixer.music.stop()
                         self.interrupt_flag = False
-                        print("Transmission interrupted by directive.")
+                        print("[Player] Transmission interrupted.")
                         pulsars = [b for b in self.ephemeris if b['classification'] == 'PULSAR_BURST']
-                        if pulsars:
-                            self.trajectory.insert(0, random.choice(pulsars))
-                        self._update_trajectory_snapshot()  # ADDED: Update snapshot after interrupt
+                        if pulsars: self.trajectory.insert(0, random.choice(pulsars))
+                        self._update_trajectory_snapshot()
                         break
                     await asyncio.sleep(0.5)
             except pygame.error as e:
-                print(f"Pygame error during playback of {filepath}: {e}")
+                print(f"[Player] Pygame error: {e}")
         pygame.mixer.quit()
         pygame.quit()
-        print("Celestial Navigator has ceased transmission.")
+        print("[Player] Transmission ceased.")
+
+    # --- DOWNLOADER FUNCTIONALITY ---
+    async def post_to_webhook(self, message):
+        if not WEBHOOK_URL: print(f"[Downloader] {message}"); return
+        async with aiohttp.ClientSession() as s: await s.post(WEBHOOK_URL, json={'content': message})
+
+    async def process_download_job(self, job):
+        playlist_url = job['playlist_url']
+        day_bools = json.loads(job['day_bools_json'])
+        requester_id = job['requester_id']
+        await self.post_to_webhook(f"🚀 Starting bulk sync job for <{playlist_url}>")
+        try:
+            async with self.pool.acquire() as c:
+                existing_designations = {r['designation'] for r in
+                                         await c.fetch("SELECT LOWER(designation) as designation FROM astral_bodies")}
+            results = sp.playlist_items(playlist_url)
+            tracks = results['items']
+            total = len(tracks)
+            s_count, sk_count = 0, 0
+            for i, item in enumerate(tracks):
+                track = item['track']
+                designation = f"{track['artists'][0]['name']} - {track['name']}"
+                if designation.lower() in existing_designations:
+                    sk_count += 1
+                    continue
+                await self.post_to_webhook(f"🛰️ ({i + 1}/{total}) Searching: `{designation}`")
+                try:
+                    unique_id = str(uuid.uuid4())
+                    search_query = f"{designation} lyrics"
+                    ydl_opts = {'format': 'bestaudio/best', 'postprocessors': [
+                        {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
+                                'outtmpl': os.path.join(CONSTELLATION_PATH, f'{unique_id}.%(ext)s'),
+                                'default_search': 'ytsearch1', 'quiet': True, 'noprogress': True}
+                    loop = asyncio.get_running_loop()
+                    await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([search_query]))
+                    filepath = os.path.join(CONSTELLATION_PATH, f'{unique_id}.mp3')
+                    async with self.pool.acquire() as c:
+                        await c.execute(
+                            '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
+                            unique_id, designation, requester_id, "STAR_CLUSTER", day_bools['mon_arc'],
+                            day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'],
+                            day_bools['sat_arc'], day_bools['sun_arc'], filepath)
+                    existing_designations.add(designation.lower())
+                    s_count += 1
+                except Exception as e:
+                    await self.post_to_webhook(f"❌ ({i + 1}/{total}) Failed `{designation}`: `{type(e).__name__}`")
+                await asyncio.sleep(1)
+            await self.post_to_webhook(f"✨ Sync Complete! Cataloged {s_count}/{total}, skipped {sk_count} duplicates.")
+            await self.fetch_ephemeris()
+        except Exception as e:
+            await self.post_to_webhook(f"A critical error occurred during bulk sync: `{e}`")
+
+    async def poll_download_queue(self):
+        print("[Downloader] Waiting for new synchronization jobs...")
+        while self.running:
+            try:
+                async with self.pool.acquire() as c:
+                    job = await c.fetchrow(
+                        "SELECT * FROM download_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1")
+                    if job:
+                        print(f"[Downloader] Found job {job['id']}. Processing.")
+                        await c.execute("UPDATE download_queue SET status = 'processing' WHERE id = $1", job['id'])
+                        await self.process_download_job(job)
+                        await c.execute("UPDATE download_queue SET status = 'completed' WHERE id = $1", job['id'])
+                        print(f"[Downloader] Finished job {job['id']}. Polling...")
+            except Exception as e:
+                print(f"[Downloader] Error in main loop: {e}")
+            await asyncio.sleep(30)
 
 
-# ... (main function is unchanged)
 async def main():
     pid = str(os.getpid())
     pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
-    if os.path.isfile(pidfile):
-        print(f"{pidfile} already exists. Is another navigator running?")
-        return
+    if os.path.isfile(pidfile): print(f"{pidfile} exists. Is navigator running?"); return
     with open(pidfile, 'w') as f:
         f.write(pid)
     navigator_instance = None
 
     def shutdown_handler(signum, frame):
-        print("Shutdown signal received. Cleaning up...")
-        if navigator_instance:
-            navigator_instance.running = False
-            navigator_instance.interrupt_flag = True
+        if navigator_instance: navigator_instance.running = False; navigator_instance.interrupt_flag = True
 
     signal.signal(signal.SIGTERM, shutdown_handler)
     signal.signal(signal.SIGINT, shutdown_handler)
@@ -214,15 +270,19 @@ async def main():
         pool = await asyncpg.create_pool(**SQLsettings)
         navigator_instance = CelestialNavigator(pool)
         await navigator_instance.fetch_ephemeris()
+
+        # Create and run tasks concurrently
         directive_task = asyncio.create_task(navigator_instance.process_directives())
-        await navigator_instance.transmit()
-        directive_task.cancel()
-        await pool.close()
+        downloader_task = asyncio.create_task(navigator_instance.poll_download_queue())
+        player_task = asyncio.create_task(navigator_instance.transmit())
+
+        await asyncio.gather(player_task, directive_task, downloader_task)
+
     finally:
-        if os.path.exists(pidfile):
-            os.unlink(pidfile)
-        print("PID file removed. Navigator offline.")
+        if os.path.exists(pidfile): os.unlink(pidfile)
+        print("Navigator offline.")
 
 
 if __name__ == "__main__":
+    os.makedirs(CONSTELLATION_PATH, exist_ok=True)
     asyncio.run(main())
