@@ -7,6 +7,7 @@ import uuid
 import difflib
 import json
 import tempfile
+import asyncio  # ADDED
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
@@ -52,23 +53,14 @@ class observatoryFunctions(commands.Cog):
 
     @commands.command(name="catalog_celestial_body", description="Upload multiple audio files to the station.")
     async def catalog_celestial_body(self, ctx: commands.Context):
-        if not ctx.message.attachments:
-            return await ctx.send("Error: You must attach at least one audio file to use this command.")
-
+        # ... (This function is unchanged) ...
+        if not ctx.message.attachments: return await ctx.send(
+            "Error: You must attach at least one audio file to use this command.")
         class_prompt = "Classify this batch of celestial bodies:"
-        # MODIFIED: Button labels are updated here
         classification = await self.bot.ui.getButtonChoice(ctx, ["Static Noise", "Major Event", "Solar Cycle"])
-        if not classification:
-            return await ctx.send("Batch cataloging cancelled.")
-
-        # MODIFIED: Map the new labels to the old internal database names
-        class_map = {
-            "Static Noise": "STAR_CLUSTER",
-            "Major Event": "NOVA_EVENT",
-            "Solar Cycle": "PULSAR_BURST"
-        }
+        if not classification: return await ctx.send("Batch cataloging cancelled.")
+        class_map = {"Static Noise": "STAR_CLUSTER", "Major Event": "NOVA_EVENT", "Solar Cycle": "PULSAR_BURST"}
         internal_class = class_map.get(classification)
-
         days_message = await ctx.send("Select the days for this entire batch:")
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         selected_days = []
@@ -79,20 +71,16 @@ class observatoryFunctions(commands.Cog):
             if choice == "Done": break
             if choice == "All Remaining": selected_days.extend(remaining_days); break
             selected_days.append(choice)
-
         if not selected_days:
             await days_message.delete()
             return await ctx.send("No days selected. Batch cataloging cancelled.")
-
         day_bools = {f"{day[:3].lower()}_arc": (day in selected_days) for day in days}
         await days_message.edit(content="Settings confirmed. Starting batch processing...", view=None)
-
-        success_count = 0
+        success_count = 0;
         skipped_count = 0
         for attachment in ctx.message.attachments:
             name = os.path.splitext(attachment.filename)[0].replace('_', ' ').replace('-', ' ')
             sanitized_name = await self.bot.get_cog("textTools").sanitize(name)
-
             async with self.bot.pool.acquire() as connection:
                 result = await connection.fetchrow("SELECT 1 FROM astral_bodies WHERE LOWER(designation) = LOWER($1);",
                                                    sanitized_name)
@@ -100,26 +88,21 @@ class observatoryFunctions(commands.Cog):
                     skipped_count += 1
                     await ctx.send(f"⏭️ Skipping duplicate: **{sanitized_name}**")
                     continue
-
             unique_filename = f"{uuid.uuid4()}{os.path.splitext(attachment.filename)[1]}"
             file_path = os.path.join(self.constellation_path, unique_filename)
-
             await attachment.save(file_path)
-
             await self.bot.sql.databaseExecuteDynamic(
                 '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
                 [unique_filename, sanitized_name, ctx.author.id, internal_class, day_bools['mon_arc'],
                  day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'],
-                 day_bools['sat_arc'], day_bools['sun_arc'], file_path]
-            )
+                 day_bools['sat_arc'], day_bools['sun_arc'], file_path])
             await ctx.send(f"✅ Cataloged: **{sanitized_name}**")
             success_count += 1
-
         await self.send_command_to_navigator("REFRESH_EPHEMERIS")
         await ctx.send(
             f"\n✨ **Batch complete!**\n- Cataloged: **{success_count}** new bodies.\n- Skipped: **{skipped_count}** duplicates.")
 
-    # ... (The rest of the file is unchanged) ...
+    # ... (plot_priority_trajectory, bulk_synchronize_trajectory, and view_trajectory are unchanged) ...
     @commands.command(name="plot_priority_trajectory", description="Sets the next song to play.")
     async def plot_priority_trajectory(self, ctx: commands.Context, *, search_query: str):
         all_bodies = await self.bot.sql.databaseFetchdict(
@@ -176,14 +159,73 @@ class observatoryFunctions(commands.Cog):
         embed.description = description
         await ctx.send(embed=embed)
 
+    # ADDED: New command to purge the entire song catalog
+    @commands.command(name="purge_observatory_log", description="[Owner] Deletes all songs and audio files.")
+    @commands.is_owner()
+    async def purge_observatory_log(self, ctx: commands.Context):
+        """Permanently deletes all records from astral_bodies and their corresponding audio files."""
+        # Get a count of songs for the confirmation message
+        count_record = await self.bot.sql.databaseFetchrow("SELECT COUNT(*) FROM astral_bodies;")
+        song_count = count_record['count']
+
+        if song_count == 0:
+            return await ctx.send("The observatory log is already empty.")
+
+        # Confirmation step
+        confirm_msg = await ctx.send(
+            f"⚠️ **WARNING** ⚠️\n\n"
+            f"You are about to permanently delete **{song_count}** cataloged audio files and their database records. "
+            f"This action cannot be undone.\n\nType `CONFIRM` to proceed."
+        )
+
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
+        try:
+            msg = await self.bot.wait_for('message', check=check, timeout=30.0)
+            if msg.content != "CONFIRM":
+                await confirm_msg.delete()
+                await msg.delete()
+                return await ctx.send("Purge cancelled.")
+        except asyncio.TimeoutError:
+            await confirm_msg.delete()
+            return await ctx.send("Purge cancelled due to timeout.")
+
+        await ctx.send(f"Confirmation received. Purging all **{song_count}** celestial bodies...")
+
+        # 1. Get all file paths before deleting records
+        records = await self.bot.sql.databaseFetch("SELECT filepath FROM astral_bodies;")
+        filepaths = [record['filepath'] for record in records]
+
+        # 2. Delete all records from the database
+        await self.bot.sql.databaseExecute("TRUNCATE TABLE astral_bodies RESTART IDENTITY;")
+
+        # 3. Delete all physical files
+        deleted_files = 0
+        for path in filepaths:
+            try:
+                if os.path.exists(path):
+                    os.remove(path)
+                    deleted_files += 1
+            except Exception as e:
+                print(f"Could not delete file {path}: {e}")
+
+        # 4. Tell the player to refresh its now-empty catalog
+        await self.send_command_to_navigator("REFRESH_EPHEMERIS")
+
+        await ctx.send(
+            f"✅ Purge complete. Deleted **{deleted_files}** audio files and all associated database records.")
+
     @commands.command(name="interrupt_transmission", description="Skips the current track.")
     async def interrupt_transmission(self, ctx: commands.Context):
+        # ... (unchanged)
         await self.send_command_to_navigator("INTERRUPT")
         await ctx.send("Directive sent to interrupt the current transmission.")
 
     @commands.command(name="realign_navigator", description="Restarts the music player process.")
     @commands.is_owner()
     async def realign_navigator(self, ctx: commands.Context):
+        # ... (unchanged)
         await self.send_command_to_navigator("REALIGN")
         await ctx.send("Shutdown directive sent to the Celestial Navigator.")
 
