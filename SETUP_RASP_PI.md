@@ -126,4 +126,48 @@ catch missing dependencies:
 
 Now test the bot:
 
-`python
+`python launcher.py`
+
+
+## Setup databases
+
+There's alot, sorry.
+
+`-resetServerConfig`
+
+`-setupmoderationdatabase`
+
+`-setupCampaignDatabase`
+
+`-setupTransactionDatabase`
+
+`-resetContests`
+
+`-resetContestCategories`
+
+`-resetContestEntries`
+
+`-setup_observatory_log`
+
+`-setupStarboardDatabase`
+
+`-resetErrorConfig`
+
+`-setupclickup`
+
+`-resetImageCatalog`
+
+`-resetRoleColorDatabase`
+
+`-setupTimedMessageDatabase`
+
+`-resetHelpConfig`
+
+`-resetCodeConfigs`
+
+Extra commands:
+- run `-setup` in your own server
+- run several `-addError` commands to insert jokes into the database.  These are required for alot of stuff to work.
+
+## Automate starting the bot
+
