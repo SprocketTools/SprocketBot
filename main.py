@@ -1,6 +1,6 @@
 # main.py
 
-import asyncpg, datetime, sys
+import asyncpg, datetime, sys, os
 import asyncio, signal
 import platform
 # ... (rest of your imports are unchanged)
@@ -31,11 +31,13 @@ print(f"[{configName}] Did the update work??????!!!!????!!!!!!!!!!!?????????????
 
 # Find the config file
 if platform.system() == "Windows":
-    configurationFilepath = "C:\\SprocketBot\\configuration.ini"
-    instanceFilepath = "C:\\SprocketBot\\bots\\" + configName + ".ini"
+    config_base_path = "C:\\SprocketBot\\"
 else:
-    configurationFilepath = "/home/mumblepi/configuration.ini"
-    instanceFilepath = "/home/mumblepi/bots/" + configName + ".ini"
+    # Use the user's home directory dynamically
+    config_base_path = os.path.join(os.path.expanduser("~"), "")
+
+configurationFilepath = os.path.join(config_base_path, "configuration.ini")
+instanceFilepath = os.path.join(config_base_path, "bots", f"{configName}.ini")
 
 # load the config files
 baseConfig = configparser.ConfigParser()

@@ -110,6 +110,8 @@ Now try connecting to your server via pgAdmin 4 using the information above.  If
 
 `pip install -r requirements.txt`
 
+`pip install pygame asyncpg google-genai discord.py nest_asyncio`
+
 Now test the bot:
 
 `python
