@@ -38,6 +38,7 @@ geminiapis = GEMINI_API_1,GEMINI_API_2,GEMINI_API_3...
 githubpat = GITHUB_PERSONAL_TOKEN
 spotify_client_id = SPOTIFY_CLIENT_ID
 spotify_client_secret = SPOTIFY_CLIENT_SECRET
+bot_status_webhook = PLACE_A_WEBHOOK_URL_HERE
 ```
 Switch out the uppercase items with your appropriate values.  
 - The `geminiapis` list can be as long as you want it - the bot splits the tokens into a list during bootup and switches between them to extend free tier ratelimits.  Make sure the tokens come from different Google accounts.
