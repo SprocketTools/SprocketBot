@@ -10,53 +10,40 @@ import platform
 import tempfile
 
 managed_processes = {}
-# ADDED: Define the signal file path
-SHUTDOWN_SIGNAL_FILE = "shutdown.signal"
+# MODIFIED: Use a full path in the temp directory for the signal file
+SHUTDOWN_SIGNAL_FILE = os.path.join(tempfile.gettempdir(), "shutdown.signal")
 
-
-def is_process_running(pid: int) -> bool:
-    # ... (This function is unchanged) ...
+def is_process_running(pid: int) -> bool: # ... (unchanged)
     if platform.system() == "Windows":
         try:
-            result = subprocess.run(["tasklist", "/FI", f"PID eq {pid}"], capture_output=True, text=True, check=True,
-                                    creationflags=subprocess.CREATE_NO_WINDOW)
+            result = subprocess.run(["tasklist", "/FI", f"PID eq {pid}"], capture_output=True, text=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
             return str(pid) in result.stdout
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return False
+        except (subprocess.CalledProcessError, FileNotFoundError): return False
     else:
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            return False
-        else:
-            return True
+        try: os.kill(pid, 0)
+        except OSError: return False
+        else: return True
 
-
-def launch_celestial_navigator():
-    # ... (This function is unchanged) ...
+def launch_celestial_navigator(): # ... (unchanged)
     pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
     python_executable = sys.executable
     command = [python_executable, 'celestial_navigator.py']
     if os.path.isfile(pidfile):
         try:
-            with open(pidfile, 'r') as f:
-                pid = int(f.read())
+            with open(pidfile, 'r') as f: pid = int(f.read())
             if is_process_running(pid):
                 print(f"--- Celestial Navigator is already running (PID: {pid}). ---")
                 return
             else:
                 print("--- Found stale PID file. Removing and starting navigator. ---")
                 os.remove(pidfile)
-        except (ValueError, FileNotFoundError):
-            pass
+        except (ValueError, FileNotFoundError): pass
     print("--- Launching Celestial Navigator process... ---")
     creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
     subprocess.Popen(command, creationflags=creation_flags)
     time.sleep(2)
 
-
-def run_update_and_pull():
-    # ... (This function is unchanged) ...
+def run_update_and_pull(): # ... (unchanged)
     if platform.system() != "Windows":
         print("--- Checking for updates from GitHub... ---")
         try:
@@ -73,11 +60,8 @@ def run_update_and_pull():
         print("--- Skipping Git update check on Windows. ---")
         return True
 
-
-def main_process_manager():
-    # ... (This function is unchanged) ...
-    config_dir = "C:\\SprocketBot\\bots\\" if platform.system() == "Windows" else os.path.join(os.path.expanduser("~"),
-                                                                                               "bots")
+def main_process_manager(): # ... (unchanged)
+    config_dir = "C:\\SprocketBot\\bots\\" if platform.system() == "Windows" else os.path.join(os.path.expanduser("~"), "bots")
     config_files = glob.glob(os.path.join(config_dir, "*.ini"))
     if not config_files:
         print(f"No configuration files found in '{config_dir}'. Exiting.")
@@ -106,12 +90,9 @@ def main_process_manager():
             return
         time.sleep(10)
 
-
 if __name__ == "__main__":
-    # Remove the signal file on startup, just in case it's left over.
     if os.path.exists(SHUTDOWN_SIGNAL_FILE):
         os.remove(SHUTDOWN_SIGNAL_FILE)
-
     try:
         launch_celestial_navigator()
         while True:
@@ -121,37 +102,22 @@ if __name__ == "__main__":
             main_process_manager()
             print("--- Restarting all bot services in 5 seconds... ---")
             time.sleep(5)
-    finally:
+    finally: # ... (unchanged)
         print("\nLauncher shutting down. Creating signal file and stopping processes...")
-
-        # Create the signal file to ask bots to shut down gracefully
-        with open(SHUTDOWN_SIGNAL_FILE, "w") as f:
-            f.write("shutdown")
-
-        # Give them a moment to shut down on their own
+        with open(SHUTDOWN_SIGNAL_FILE, "w") as f: f.write("shutdown")
         time.sleep(8)
-
-        # Forcefully terminate any bot processes still running
         for name, proc in managed_processes.items():
             if proc.poll() is None:
                 print(f"Instance '{name}' did not shut down gracefully. Forcing termination...")
                 proc.terminate()
-
-        # Stop the independent music player
         pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
         if os.path.isfile(pidfile):
             try:
-                with open(pidfile, 'r') as f:
-                    pid = int(f.read())
+                with open(pidfile, 'r') as f: pid = int(f.read())
                 if is_process_running(pid):
                     print(f"--- Sending shutdown signal to Celestial Navigator (PID: {pid}). ---")
-                    if platform.system() == "Windows":
-                        os.kill(pid, signal.CTRL_C_EVENT)
-                    else:
-                        os.kill(pid, signal.SIGTERM)
-            except (OSError, ValueError):
-                pass
-
-        # Clean up the signal file
+                    if platform.system() == "Windows": os.kill(pid, signal.CTRL_C_EVENT)
+                    else: os.kill(pid, signal.SIGTERM)
+            except (OSError, ValueError): pass
         if os.path.exists(SHUTDOWN_SIGNAL_FILE):
             os.remove(SHUTDOWN_SIGNAL_FILE)
