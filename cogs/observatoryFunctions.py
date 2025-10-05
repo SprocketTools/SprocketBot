@@ -7,7 +7,8 @@ import uuid
 import difflib
 import json
 import tempfile
-import asyncio  # ADDED
+import asyncio
+import datetime  # ADDED
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
@@ -56,7 +57,6 @@ class observatoryFunctions(commands.Cog):
         # ... (This function is unchanged) ...
         if not ctx.message.attachments: return await ctx.send(
             "Error: You must attach at least one audio file to use this command.")
-        class_prompt = "Classify this batch of celestial bodies:"
         classification = await self.bot.ui.getButtonChoice(ctx, ["Static Noise", "Major Event", "Solar Cycle"])
         if not classification: return await ctx.send("Batch cataloging cancelled.")
         class_map = {"Static Noise": "STAR_CLUSTER", "Major Event": "NOVA_EVENT", "Solar Cycle": "PULSAR_BURST"}
@@ -102,9 +102,45 @@ class observatoryFunctions(commands.Cog):
         await ctx.send(
             f"\n✨ **Batch complete!**\n- Cataloged: **{success_count}** new bodies.\n- Skipped: **{skipped_count}** duplicates.")
 
-    # ... (plot_priority_trajectory, bulk_synchronize_trajectory, and view_trajectory are unchanged) ...
+    # ADDED: New command to list available songs for the day
+    @commands.command(name="scan_sky", description="Lists all songs available for the current day.")
+    async def scan_sky(self, ctx: commands.Context):
+        """Queries and displays an alphabetized, paginated list of songs for the current day."""
+        today = datetime.datetime.now()
+        day_name = today.strftime('%A')
+        day_column = f"{today.strftime('%a').lower()}_arc"
+
+        query = f"SELECT designation FROM astral_bodies WHERE classification = 'STAR_CLUSTER' AND {day_column} = TRUE ORDER BY designation ASC;"
+
+        try:
+            records = await self.bot.sql.databaseFetch(query)
+            if not records:
+                return await ctx.send(f"There are no songs scheduled for today ({day_name}).")
+
+            song_list = [rec['designation'] for rec in records]
+
+            # Paginate the results to avoid hitting Discord's message limit
+            page_size = 20
+            pages = [song_list[i:i + page_size] for i in range(0, len(song_list), page_size)]
+
+            await ctx.send(f"Found **{len(song_list)}** songs scheduled for {day_name}:")
+
+            for i, page in enumerate(pages):
+                embed = discord.Embed(
+                    title=f"Available Songs for {day_name} (Page {i + 1}/{len(pages)})",
+                    color=discord.Color.dark_purple()
+                )
+                description = "\n".join(page)
+                embed.description = f"```\n{description}\n```"
+                await ctx.send(embed=embed)
+                await asyncio.sleep(1)  # Sleep to avoid rate limits
+
+        except Exception as e:
+            await ctx.send(f"An error occurred while scanning the sky: `{e}`")
+
     @commands.command(name="plot_priority_trajectory", description="Sets the next song to play.")
     async def plot_priority_trajectory(self, ctx: commands.Context, *, search_query: str):
+        # ... (unchanged)
         all_bodies = await self.bot.sql.databaseFetchdict(
             "SELECT designation, unique_id FROM astral_bodies WHERE classification = 'STAR_CLUSTER';")
         if not all_bodies: return await ctx.send("No Star Clusters to choose from.")
@@ -123,6 +159,7 @@ class observatoryFunctions(commands.Cog):
                       description="Download a Spotify playlist and add it to the catalog.")
     @commands.is_owner()
     async def bulk_synchronize_trajectory(self, ctx: commands.Context, playlist_url: str):
+        # ... (unchanged)
         if not self.sp: return await ctx.send("Error: Spotify API credentials are not configured.")
         await ctx.send("Select the broadcast days for all songs in this playlist:")
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -145,6 +182,7 @@ class observatoryFunctions(commands.Cog):
 
     @commands.command(name="view_trajectory", description="Views the upcoming broadcast queue.")
     async def view_trajectory(self, ctx: commands.Context):
+        # ... (unchanged)
         snapshot_path = os.path.join(tempfile.gettempdir(), "celestial_trajectory.json")
         if not os.path.exists(snapshot_path): return await ctx.send("Trajectory snapshot not available.")
         with open(snapshot_path, 'r') as f:
@@ -159,24 +197,15 @@ class observatoryFunctions(commands.Cog):
         embed.description = description
         await ctx.send(embed=embed)
 
-    # ADDED: New command to purge the entire song catalog
     @commands.command(name="purge_observatory_log", description="[Owner] Deletes all songs and audio files.")
     @commands.is_owner()
     async def purge_observatory_log(self, ctx: commands.Context):
-        """Permanently deletes all records from astral_bodies and their corresponding audio files."""
-        # Get a count of songs for the confirmation message
+        # ... (unchanged)
         count_record = await self.bot.sql.databaseFetchrow("SELECT COUNT(*) FROM astral_bodies;")
         song_count = count_record['count']
-
-        if song_count == 0:
-            return await ctx.send("The observatory log is already empty.")
-
-        # Confirmation step
+        if song_count == 0: return await ctx.send("The observatory log is already empty.")
         confirm_msg = await ctx.send(
-            f"⚠️ **WARNING** ⚠️\n\n"
-            f"You are about to permanently delete **{song_count}** cataloged audio files and their database records. "
-            f"This action cannot be undone.\n\nType `CONFIRM` to proceed."
-        )
+            f"⚠️ **WARNING** ⚠️\n\nYou are about to permanently delete **{song_count}** cataloged audio files and their database records. This action cannot be undone.\n\nType `CONFIRM` to proceed.")
 
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -184,35 +213,23 @@ class observatoryFunctions(commands.Cog):
         try:
             msg = await self.bot.wait_for('message', check=check, timeout=30.0)
             if msg.content != "CONFIRM":
-                await confirm_msg.delete()
+                await confirm_msg.delete();
                 await msg.delete()
                 return await ctx.send("Purge cancelled.")
         except asyncio.TimeoutError:
             await confirm_msg.delete()
             return await ctx.send("Purge cancelled due to timeout.")
-
         await ctx.send(f"Confirmation received. Purging all **{song_count}** celestial bodies...")
-
-        # 1. Get all file paths before deleting records
         records = await self.bot.sql.databaseFetch("SELECT filepath FROM astral_bodies;")
         filepaths = [record['filepath'] for record in records]
-
-        # 2. Delete all records from the database
         await self.bot.sql.databaseExecute("TRUNCATE TABLE astral_bodies RESTART IDENTITY;")
-
-        # 3. Delete all physical files
         deleted_files = 0
         for path in filepaths:
             try:
-                if os.path.exists(path):
-                    os.remove(path)
-                    deleted_files += 1
+                if os.path.exists(path): os.remove(path); deleted_files += 1
             except Exception as e:
                 print(f"Could not delete file {path}: {e}")
-
-        # 4. Tell the player to refresh its now-empty catalog
         await self.send_command_to_navigator("REFRESH_EPHEMERIS")
-
         await ctx.send(
             f"✅ Purge complete. Deleted **{deleted_files}** audio files and all associated database records.")
 
