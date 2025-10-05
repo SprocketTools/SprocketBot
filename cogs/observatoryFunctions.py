@@ -50,42 +50,26 @@ class observatoryFunctions(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ Log initialization failed: `{e}`")
 
-    @commands.command(name="catalog_celestial_body", description="Upload a new audio file to the station.")
-    async def catalog_celestial_body(self, ctx: commands.Context, *, name: str = None):
+    @commands.command(name="catalog_celestial_body", description="Upload multiple audio files to the station.")
+    async def catalog_celestial_body(self, ctx: commands.Context):
         if not ctx.message.attachments:
-            return await ctx.send("Error: You must attach an audio file to use this command.")
+            return await ctx.send("Error: You must attach at least one audio file to use this command.")
 
-        attachment = ctx.message.attachments[0]
-
-        if name is None:
-            name = os.path.splitext(attachment.filename)[0].replace('_', ' ').replace('-', ' ')
-
-        sanitized_name = await self.bot.get_cog("textTools").sanitize(name)
-
-        async with self.bot.pool.acquire() as connection:
-            result = await connection.fetchrow("SELECT 1 FROM astral_bodies WHERE LOWER(designation) = LOWER($1);",
-                                               sanitized_name)
-            if result:
-                return await ctx.send(
-                    f"❌ A body with the designation **'{sanitized_name}'** already exists. Upload cancelled.")
-
-        unique_filename = f"{uuid.uuid4()}{os.path.splitext(attachment.filename)[1]}"
-        file_path = os.path.join(self.constellation_path, unique_filename)
-
-        # FINAL FIX: Use the simple, correct await call for discord.py v2+
-        await attachment.save(file_path)
-
-        class_prompt = "Classify this celestial body:"
-        classification = await self.bot.ui.getButtonChoice(ctx, ["Star Cluster", "Nova Event", "Pulsar Burst"])
-
+        class_prompt = "Classify this batch of celestial bodies:"
+        # MODIFIED: Button labels are updated here
+        classification = await self.bot.ui.getButtonChoice(ctx, ["Static Noise", "Major Event", "Solar Cycle"])
         if not classification:
-            if os.path.exists(file_path): os.remove(file_path)
-            return await ctx.send("Cataloging cancelled.")
+            return await ctx.send("Batch cataloging cancelled.")
 
-        class_map = {"Star Cluster": "STAR_CLUSTER", "Nova Event": "NOVA_EVENT", "Pulsar Burst": "PULSAR_BURST"}
+        # MODIFIED: Map the new labels to the old internal database names
+        class_map = {
+            "Static Noise": "STAR_CLUSTER",
+            "Major Event": "NOVA_EVENT",
+            "Solar Cycle": "PULSAR_BURST"
+        }
         internal_class = class_map.get(classification)
 
-        await ctx.send("Select the days for broadcast:")
+        days_message = await ctx.send("Select the days for this entire batch:")
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         selected_days = []
         while True:
@@ -96,17 +80,44 @@ class observatoryFunctions(commands.Cog):
             if choice == "All Remaining": selected_days.extend(remaining_days); break
             selected_days.append(choice)
 
-        day_bools = {f"{day[:3].lower()}_arc": (day in selected_days) for day in days}
+        if not selected_days:
+            await days_message.delete()
+            return await ctx.send("No days selected. Batch cataloging cancelled.")
 
-        await self.bot.sql.databaseExecuteDynamic(
-            '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
-            [unique_filename, sanitized_name, ctx.author.id, internal_class, day_bools['mon_arc'], day_bools['tue_arc'],
-             day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'], day_bools['sat_arc'],
-             day_bools['sun_arc'], file_path]
-        )
+        day_bools = {f"{day[:3].lower()}_arc": (day in selected_days) for day in days}
+        await days_message.edit(content="Settings confirmed. Starting batch processing...", view=None)
+
+        success_count = 0
+        skipped_count = 0
+        for attachment in ctx.message.attachments:
+            name = os.path.splitext(attachment.filename)[0].replace('_', ' ').replace('-', ' ')
+            sanitized_name = await self.bot.get_cog("textTools").sanitize(name)
+
+            async with self.bot.pool.acquire() as connection:
+                result = await connection.fetchrow("SELECT 1 FROM astral_bodies WHERE LOWER(designation) = LOWER($1);",
+                                                   sanitized_name)
+                if result:
+                    skipped_count += 1
+                    await ctx.send(f"⏭️ Skipping duplicate: **{sanitized_name}**")
+                    continue
+
+            unique_filename = f"{uuid.uuid4()}{os.path.splitext(attachment.filename)[1]}"
+            file_path = os.path.join(self.constellation_path, unique_filename)
+
+            await attachment.save(file_path)
+
+            await self.bot.sql.databaseExecuteDynamic(
+                '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
+                [unique_filename, sanitized_name, ctx.author.id, internal_class, day_bools['mon_arc'],
+                 day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'],
+                 day_bools['sat_arc'], day_bools['sun_arc'], file_path]
+            )
+            await ctx.send(f"✅ Cataloged: **{sanitized_name}**")
+            success_count += 1
 
         await self.send_command_to_navigator("REFRESH_EPHEMERIS")
-        await ctx.send(f"✅ **{sanitized_name}** cataloged as a **{classification}**.")
+        await ctx.send(
+            f"\n✨ **Batch complete!**\n- Cataloged: **{success_count}** new bodies.\n- Skipped: **{skipped_count}** duplicates.")
 
     # ... (The rest of the file is unchanged) ...
     @commands.command(name="plot_priority_trajectory", description="Sets the next song to play.")
