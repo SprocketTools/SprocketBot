@@ -24,22 +24,19 @@ except ImportError:
     exit(1)
 
 # --- Configuration Section ---
+# ... (This section is unchanged) ...
 baseConfig = configparser.ConfigParser()
 SQLsettings = None
 WEBHOOK_URL = None
 sp = None
-
 try:
     if os.name == 'nt':
         config_path = "C:\\SprocketBot\\configuration.ini"
     else:
         config_path = os.path.join(os.path.expanduser("~"), "configuration.ini")
-
     baseConfig.read(config_path)
-
     SQLsettings = baseConfig["SECURITY"]
-    WEBHOOK_URL = baseConfig['settings']['bot_status_webhook']  # <-- CHANGED HERE
-
+    WEBHOOK_URL = baseConfig['settings']['bot_status_webhook']
     client_id = baseConfig['settings']['spotify_client_id']
     client_secret = baseConfig['settings']['spotify_client_secret']
     auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
@@ -47,12 +44,11 @@ try:
 except Exception as e:
     print(f"[Navigator] Could not read configuration. Exiting. Error: {e}")
     exit(1)
-
 CONSTELLATION_PATH = "./celestial_audio/"
 
 
 class CelestialNavigator:
-    # ... (The rest of the file is unchanged)
+    # ... (init, _update_trajectory_snapshot, fetch_ephemeris, construct_trajectory, plot_priority_trajectory, process_directives, and transmit are all unchanged) ...
     def __init__(self, pool):
         self.pool = pool
         self.ephemeris = []
@@ -181,6 +177,7 @@ class CelestialNavigator:
         if not WEBHOOK_URL: print(f"[Downloader] {message}"); return
         async with aiohttp.ClientSession() as s: await s.post(WEBHOOK_URL, json={'content': message})
 
+    # --- DOWNLOADER FUNCTIONALITY ---
     async def process_download_job(self, job):
         playlist_url = job['playlist_url']
         day_bools = json.loads(job['day_bools_json'])
@@ -190,17 +187,31 @@ class CelestialNavigator:
             async with self.pool.acquire() as c:
                 existing_designations = {r['designation'] for r in
                                          await c.fetch("SELECT LOWER(designation) as designation FROM astral_bodies")}
+
+            # MODIFIED: Implement a loop to handle Spotify API pagination
+            tracks = []
             results = sp.playlist_items(playlist_url)
-            tracks = results['items']
+            while results:
+                tracks.extend(results['items'])
+                results = sp.next(results) if results['next'] else None
+
             total = len(tracks)
+            await self.post_to_webhook(f"Found **{total}** total tracks in the playlist.")
             s_count, sk_count = 0, 0
+
             for i, item in enumerate(tracks):
+                if not item or not item['track']:  # Defensive check for empty items
+                    continue
                 track = item['track']
                 designation = f"{track['artists'][0]['name']} - {track['name']}"
                 if designation.lower() in existing_designations:
                     sk_count += 1
                     continue
-                await self.post_to_webhook(f"🛰️ ({i + 1}/{total}) Searching: `{designation}`")
+
+                # Only post an update every 5 songs to reduce spam
+                if (i + 1) % 5 == 0:
+                    await self.post_to_webhook(f"🛰️ Processing... ({i + 1}/{total})")
+
                 try:
                     unique_id = str(uuid.uuid4())
                     search_query = f"{designation} lyrics"
@@ -221,13 +232,16 @@ class CelestialNavigator:
                     s_count += 1
                 except Exception as e:
                     await self.post_to_webhook(f"❌ ({i + 1}/{total}) Failed `{designation}`: `{type(e).__name__}`")
-                await asyncio.sleep(1)
-            await self.post_to_webhook(f"✨ Sync Complete! Cataloged {s_count}/{total}, skipped {sk_count} duplicates.")
+                await asyncio.sleep(1)  # Small delay to be polite to APIs
+
+            await self.post_to_webhook(
+                f"✨ **Sync Complete!** Cataloged **{s_count}** new bodies. Skipped **{sk_count}** duplicates.")
             await self.fetch_ephemeris()
         except Exception as e:
             await self.post_to_webhook(f"A critical error occurred during bulk sync: `{e}`")
 
     async def poll_download_queue(self):
+        # ... (This function is unchanged) ...
         print("[Downloader] Waiting for new synchronization jobs...")
         while self.running:
             try:
@@ -246,36 +260,27 @@ class CelestialNavigator:
 
 
 async def main():
-    pid = str(os.getpid())
+    # ... (main function is unchanged) ...
+    pid = str(os.getpid());
     pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
     if os.path.isfile(pidfile): print(f"{pidfile} exists. Is navigator running?"); return
     with open(pidfile, 'w') as f:
         f.write(pid)
-
     navigator_instance = None
 
     def shutdown_handler(signum, frame):
         if navigator_instance: navigator_instance.running = False; navigator_instance.interrupt_flag = True
 
-    signal.signal(signal.SIGTERM, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler);
     signal.signal(signal.SIGINT, shutdown_handler)
-
     try:
-        # MODIFIED: Added max_inactive_connection_lifetime for resilience
-        pool = await asyncpg.create_pool(
-            **SQLsettings,
-            max_inactive_connection_lifetime=60  # Close/reopen connections idle for >60s
-        )
-
+        pool = await asyncpg.create_pool(**SQLsettings, max_inactive_connection_lifetime=60)
         navigator_instance = CelestialNavigator(pool)
         await navigator_instance.fetch_ephemeris()
-
         directive_task = asyncio.create_task(navigator_instance.process_directives())
         downloader_task = asyncio.create_task(navigator_instance.poll_download_queue())
         player_task = asyncio.create_task(navigator_instance.transmit())
-
         await asyncio.gather(player_task, directive_task, downloader_task)
-
     finally:
         if os.path.exists(pidfile): os.unlink(pidfile)
         print("Navigator offline.")
