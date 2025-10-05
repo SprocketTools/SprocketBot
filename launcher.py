@@ -9,6 +9,8 @@ import signal
 import platform
 import tempfile
 
+# This dictionary will be shared between the main loop and the shutdown handler
+managed_processes = {}
 
 def is_process_running(pid: int) -> bool:
     """A cross-platform check to see if a process with a given PID is running."""
@@ -29,37 +31,28 @@ def is_process_running(pid: int) -> bool:
         else:
             return True
 
-
 def launch_celestial_navigator():
-    """Checks for and launches the independent music player process if not already running."""
+    # ... (This function is unchanged)
     pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
     python_executable = sys.executable
     command = [python_executable, 'celestial_navigator.py']
-
     if os.path.isfile(pidfile):
         try:
-            with open(pidfile, 'r') as f:
-                pid = int(f.read())
+            with open(pidfile, 'r') as f: pid = int(f.read())
             if is_process_running(pid):
                 print(f"--- Celestial Navigator is already running (PID: {pid}). ---")
                 return
             else:
                 print("--- Found stale PID file. Removing and starting navigator. ---")
                 os.remove(pidfile)
-        except (ValueError, FileNotFoundError):
-            pass
-
+        except (ValueError, FileNotFoundError): pass
     print("--- Launching Celestial Navigator process... ---")
-    creation_flags = 0
-    if platform.system() == "Windows":
-        creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP
-
+    creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
     subprocess.Popen(command, creationflags=creation_flags)
     time.sleep(2)
 
-
 def run_update_and_pull():
-    """Stashes local changes, pulls from GitHub, and returns True if successful."""
+    # ... (This function is unchanged)
     if platform.system() != "Windows":
         print("--- Checking for updates from GitHub... ---")
         try:
@@ -76,9 +69,8 @@ def run_update_and_pull():
         print("--- Skipping Git update check on Windows. ---")
         return True
 
-
 def main_process_manager():
-    """The main process manager loop that launches, monitors, and restarts bot instances."""
+    """The main process manager loop that populates the managed_processes dict and monitors them."""
     config_dir = "C:\\SprocketBot\\bots\\" if platform.system() == "Windows" else os.path.join(os.path.expanduser("~"), "bots")
     config_files = glob.glob(os.path.join(config_dir, "*.ini"))
 
@@ -86,23 +78,21 @@ def main_process_manager():
         print(f"No configuration files found in '{config_dir}'. Exiting.")
         return
 
-    processes = {}
     python_executable = sys.executable
 
-    # Launch all defined bot instances
     for config_file in config_files:
         config_name = os.path.basename(config_file).replace('.ini', '')
         command = [python_executable, 'main.py', config_name]
         print(f"Starting instance '{config_name}'...")
         creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
-        processes[config_name] = subprocess.Popen(command, creationflags=creation_flags)
+        managed_processes[config_name] = subprocess.Popen(command, creationflags=creation_flags)
         time.sleep(3)
 
-    print(f"--- Launched {len(processes)} bot instances. Monitoring... ---")
+    print(f"--- Launched {len(managed_processes)} bot instances. Monitoring... ---")
 
     while True:
         restart_needed = False
-        for instance_name, process in processes.items():
+        for instance_name, process in managed_processes.items():
             if process.poll() is not None:
                 print(f"\n--- Instance '{instance_name}' has stopped (Exit Code: {process.poll()}). ---")
                 print("--- Triggering a full system update and restart. ---")
@@ -110,23 +100,24 @@ def main_process_manager():
                 break
 
         if restart_needed:
-            for other_name, other_proc in processes.items():
+            # This loop now just stops processes before a restart cycle
+            for other_name, other_proc in managed_processes.items():
                 if other_proc.poll() is None:
                     print(f"Stopping instance '{other_name}' (PID: {other_proc.pid})...")
                     if platform.system() == "Windows":
                         os.kill(other_proc.pid, signal.CTRL_C_EVENT)
                     else:
                         other_proc.terminate()
-
-            for proc in processes.values():
+            for proc in managed_processes.values():
                 proc.wait()
+            # Clear the dictionary for the new cycle
+            managed_processes.clear()
             return
         time.sleep(10)
 
-
 if __name__ == "__main__":
-    launch_celestial_navigator()
     try:
+        launch_celestial_navigator()
         while True:
             if not run_update_and_pull():
                 print("--- Halting due to update failure. Please fix manually. ---")
@@ -134,8 +125,20 @@ if __name__ == "__main__":
             main_process_manager()
             print("--- Restarting all bot services in 5 seconds... ---")
             time.sleep(5)
-    except KeyboardInterrupt:
-        print("\nLauncher received KeyboardInterrupt. Exiting.")
+    finally:
+        # This 'finally' block will run on Ctrl+C or any other exit.
+        print("\nLauncher shutting down. Stopping all managed processes...")
+
+        # Stop the main bot processes
+        for name, proc in managed_processes.items():
+            if proc.poll() is None:
+                print(f"Stopping instance '{name}' (PID: {proc.pid})...")
+                if platform.system() == "Windows":
+                    os.kill(proc.pid, signal.CTRL_C_EVENT)
+                else:
+                    proc.terminate()
+
+        # Stop the independent music player
         pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
         if os.path.isfile(pidfile):
             try:

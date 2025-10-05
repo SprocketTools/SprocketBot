@@ -7,13 +7,13 @@ import uuid
 import difflib
 import json
 import tempfile
-
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
 
 class observatoryFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
+        # ... (init function is unchanged) ...
         self.bot = bot
         self.constellation_path = "./celestial_audio/"
         os.makedirs(self.constellation_path, exist_ok=True)
@@ -27,6 +27,7 @@ class observatoryFunctions(commands.Cog):
             print("Warning: Spotify API credentials not found. Bulk synchronize will be disabled.")
 
     async def send_command_to_navigator(self, command: str, payload: str = None):
+        # ... (This function is unchanged) ...
         command_id = str(uuid.uuid4())
         await self.bot.sql.databaseExecuteDynamic(
             '''INSERT INTO celestial_directives (id, directive, payload, processed) VALUES ($1, $2, $3, FALSE);''',
@@ -36,29 +37,15 @@ class observatoryFunctions(commands.Cog):
     @commands.command(name="setup_observatory_log", description="[Owner] Prepares the celestial database tables.")
     @commands.is_owner()
     async def setup_observatory_log(self, ctx: commands.Context):
+        # ... (This function is unchanged) ...
         await ctx.send("Initializing Observatory Logs...")
         try:
-            await self.bot.sql.databaseExecute('''
-                CREATE TABLE IF NOT EXISTS astral_bodies (
-                    id SERIAL PRIMARY KEY, unique_id VARCHAR(255) UNIQUE NOT NULL, designation VARCHAR(255),
-                    cataloger_id BIGINT, classification VARCHAR(50), mon_arc BOOLEAN, tue_arc BOOLEAN,
-                    wed_arc BOOLEAN, thu_arc BOOLEAN, fri_arc BOOLEAN, sat_arc BOOLEAN, sun_arc BOOLEAN,
-                    filepath VARCHAR(1024)
-                );
-            ''')
-            await self.bot.sql.databaseExecute('''
-                CREATE TABLE IF NOT EXISTS celestial_directives (
-                    id VARCHAR(255) PRIMARY KEY, directive VARCHAR(50), payload TEXT,
-                    processed BOOLEAN DEFAULT FALSE, timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                );
-            ''')
-            await self.bot.sql.databaseExecute('''
-                CREATE TABLE IF NOT EXISTS download_queue (
-                    id SERIAL PRIMARY KEY, playlist_url TEXT NOT NULL, requester_id BIGINT NOT NULL,
-                    day_bools_json TEXT NOT NULL, status VARCHAR(20) DEFAULT 'pending',
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                );
-            ''')
+            await self.bot.sql.databaseExecute(
+                '''CREATE TABLE IF NOT EXISTS astral_bodies ( id SERIAL PRIMARY KEY, unique_id VARCHAR(255) UNIQUE NOT NULL, designation VARCHAR(255), cataloger_id BIGINT, classification VARCHAR(50), mon_arc BOOLEAN, tue_arc BOOLEAN, wed_arc BOOLEAN, thu_arc BOOLEAN, fri_arc BOOLEAN, sat_arc BOOLEAN, sun_arc BOOLEAN, filepath VARCHAR(1024) );''')
+            await self.bot.sql.databaseExecute(
+                '''CREATE TABLE IF NOT EXISTS celestial_directives ( id VARCHAR(255) PRIMARY KEY, directive VARCHAR(50), payload TEXT, processed BOOLEAN DEFAULT FALSE, timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP );''')
+            await self.bot.sql.databaseExecute(
+                '''CREATE TABLE IF NOT EXISTS download_queue ( id SERIAL PRIMARY KEY, playlist_url TEXT NOT NULL, requester_id BIGINT NOT NULL, day_bools_json TEXT NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP );''')
             await ctx.send("✅ All Observatory logs initialized successfully.")
         except Exception as e:
             await ctx.send(f"❌ Log initialization failed: `{e}`")
@@ -75,15 +62,29 @@ class observatoryFunctions(commands.Cog):
 
         sanitized_name = await self.bot.get_cog("textTools").sanitize(name)
 
-        if await self.bot.sql.databaseFetchrowDynamic(
-                "SELECT 1 FROM astral_bodies WHERE LOWER(designation) = LOWER($1);", [sanitized_name]):
+        # --- MODIFIED BLOCK ---
+        # Instead of using the SQLtools wrapper, we use a direct connection from the pool.
+        # This is more robust against potential deadlocks or stale connection issues.
+        is_duplicate = False
+        try:
+            await ctx.send(f"`[DEBUG]` Checking for duplicates of '{sanitized_name}'...")
+            async with self.bot.pool.acquire() as connection:
+                result = await connection.fetchrow("SELECT 1 FROM astral_bodies WHERE LOWER(designation) = LOWER($1);",
+                                                   sanitized_name)
+                if result:
+                    is_duplicate = True
+            await ctx.send("`[DEBUG]` Duplicate check complete.")
+        except Exception as e:
+            return await ctx.send(f"A database error occurred during duplicate check: `{e}`")
+
+        if is_duplicate:
             return await ctx.send(
                 f"❌ A body with the designation **'{sanitized_name}'** already exists. Upload cancelled.")
+        # --- END MODIFIED BLOCK ---
 
         unique_filename = f"{uuid.uuid4()}{os.path.splitext(attachment.filename)[1]}"
         file_path = os.path.join(self.constellation_path, unique_filename)
 
-        # FIXED: Run the blocking save operation in an executor to prevent freezing the bot.
         await self.bot.loop.run_in_executor(None, attachment.save, file_path)
 
         class_prompt = "Classify this celestial body:"
@@ -119,7 +120,7 @@ class observatoryFunctions(commands.Cog):
         await self.send_command_to_navigator("REFRESH_EPHEMERIS")
         await ctx.send(f"✅ **{sanitized_name}** cataloged as a **{classification}**.")
 
-    # ... The rest of the file is unchanged ...
+    # ... (The rest of the file is unchanged) ...
     @commands.command(name="plot_priority_trajectory", description="Sets the next song to play.")
     async def plot_priority_trajectory(self, ctx: commands.Context, *, search_query: str):
         all_bodies = await self.bot.sql.databaseFetchdict(
@@ -140,8 +141,7 @@ class observatoryFunctions(commands.Cog):
                       description="Download a Spotify playlist and add it to the catalog.")
     @commands.is_owner()
     async def bulk_synchronize_trajectory(self, ctx: commands.Context, playlist_url: str):
-        if not self.sp:
-            return await ctx.send("Error: Spotify API credentials are not configured.")
+        if not self.sp: return await ctx.send("Error: Spotify API credentials are not configured.")
         await ctx.send("Select the broadcast days for all songs in this playlist:")
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         selected_days = []
@@ -152,14 +152,12 @@ class observatoryFunctions(commands.Cog):
             if choice == "Done": break
             if choice == "All Remaining": selected_days.extend(remaining_days); break
             selected_days.append(choice)
-        if not selected_days:
-            return await ctx.send("No days selected. Synchronization cancelled.")
+        if not selected_days: return await ctx.send("No days selected. Synchronization cancelled.")
         day_bools = {f"{day[:3].lower()}_arc": (day in selected_days) for day in days}
         day_bools_json = json.dumps(day_bools)
         await self.bot.sql.databaseExecuteDynamic(
             "INSERT INTO download_queue (playlist_url, requester_id, day_bools_json) VALUES ($1, $2, $3)",
-            [playlist_url, ctx.author.id, day_bools_json]
-        )
+            [playlist_url, ctx.author.id, day_bools_json])
         await ctx.send(
             "✅ Playlist has been added to the download queue. The Celestial Downloader will begin processing it shortly. Watch the configured webhook channel for progress.")
 
