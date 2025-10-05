@@ -12,7 +12,6 @@ import tempfile
 import json
 import uuid
 
-# ADDED: Imports for downloader functionality
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import yt_dlp
@@ -39,7 +38,7 @@ try:
     baseConfig.read(config_path)
 
     SQLsettings = baseConfig["SECURITY"]
-    WEBHOOK_URL = baseConfig['settings']['downloader_webhook_url']
+    WEBHOOK_URL = baseConfig['settings']['bot_status_webhook']  # <-- CHANGED HERE
 
     client_id = baseConfig['settings']['spotify_client_id']
     client_secret = baseConfig['settings']['spotify_client_secret']
@@ -53,6 +52,7 @@ CONSTELLATION_PATH = "./celestial_audio/"
 
 
 class CelestialNavigator:
+    # ... (The rest of the file is unchanged)
     def __init__(self, pool):
         self.pool = pool
         self.ephemeris = []
@@ -64,13 +64,11 @@ class CelestialNavigator:
         self.running = True
         self.interrupt_flag = False
         self.snapshot_path = os.path.join(tempfile.gettempdir(), "celestial_trajectory.json")
-
         pygame.init()
         pygame.mixer.init()
         print("[Player] Audio systems initialized.")
 
     def _update_trajectory_snapshot(self):
-        # ... (This function is unchanged)
         try:
             snapshot_data = [{"designation": i.get("designation", "U"), "classification": i.get("classification", "U")}
                              for i in self.trajectory[:10]]
@@ -80,7 +78,6 @@ class CelestialNavigator:
             print(f"Error writing trajectory snapshot: {e}")
 
     async def fetch_ephemeris(self):
-        # ... (This function is unchanged)
         print("[Player] Fetching new ephemeris data...")
         today_column = f"{datetime.datetime.now().strftime('%a').lower()}_arc"
         async with self.pool.acquire() as connection:
@@ -90,7 +87,6 @@ class CelestialNavigator:
         self.construct_trajectory()
 
     def construct_trajectory(self):
-        # ... (This function is unchanged)
         print("[Player] Calculating new broadcast trajectory...")
         self.trajectory.clear()
         bodies = {k: [b for b in self.ephemeris if b['classification'] == k] for k in
@@ -116,7 +112,6 @@ class CelestialNavigator:
         self._update_trajectory_snapshot()
 
     async def plot_priority_trajectory(self, unique_id: str):
-        # ... (This function is unchanged)
         priority_body = next((b for b in self.ephemeris if b['unique_id'] == unique_id), None)
         if priority_body:
             self.trajectory.insert(0, priority_body)
@@ -126,7 +121,6 @@ class CelestialNavigator:
             print(f"[Player] Warning: Could not find priority body {unique_id}.")
 
     async def process_directives(self):
-        # ... (This function is unchanged)
         while self.running:
             try:
                 async with self.pool.acquire() as c:
@@ -148,7 +142,6 @@ class CelestialNavigator:
             await asyncio.sleep(5)
 
     async def transmit(self):
-        # ... (This function is unchanged)
         print("[Player] Transmission commencing.")
         while self.running:
             if not self.trajectory:
@@ -184,7 +177,6 @@ class CelestialNavigator:
         pygame.quit()
         print("[Player] Transmission ceased.")
 
-    # --- DOWNLOADER FUNCTIONALITY ---
     async def post_to_webhook(self, message):
         if not WEBHOOK_URL: print(f"[Downloader] {message}"); return
         async with aiohttp.ClientSession() as s: await s.post(WEBHOOK_URL, json={'content': message})
@@ -270,14 +262,10 @@ async def main():
         pool = await asyncpg.create_pool(**SQLsettings)
         navigator_instance = CelestialNavigator(pool)
         await navigator_instance.fetch_ephemeris()
-
-        # Create and run tasks concurrently
         directive_task = asyncio.create_task(navigator_instance.process_directives())
         downloader_task = asyncio.create_task(navigator_instance.poll_download_queue())
         player_task = asyncio.create_task(navigator_instance.transmit())
-
         await asyncio.gather(player_task, directive_task, downloader_task)
-
     finally:
         if os.path.exists(pidfile): os.unlink(pidfile)
         print("Navigator offline.")
