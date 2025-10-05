@@ -1,9 +1,8 @@
 # main.py
 
 import asyncpg, datetime, sys, os
-import asyncio, signal
+import asyncio, signal  # Signal is no longer used for shutdown but other libs might need it
 import platform
-# ... (rest of your imports are unchanged)
 from tools.AITools import AITools, GeminiAITools
 from tools.SQLtools import SQLtools
 from tools.UItools import UItools
@@ -12,7 +11,6 @@ from tools.campaignTools import campaignTools
 import discord, configparser, nest_asyncio
 from discord.ext import commands
 
-# ... (all code down to the Bot class is unchanged) ...
 nest_asyncio.apply()
 intents = discord.Intents.default()
 intents.message_content = True
@@ -21,42 +19,28 @@ intents.presences = False
 intents.voice_states = True
 utc = datetime.timezone.utc
 
-## configuration
+# ... (config loading is unchanged) ...
 if len(sys.argv) > 1:
     configName = sys.argv[1]
 else:
     configName = "development" if platform.system() == "Windows" else "official"
-
-print(f"[{configName}] Did the update work??????!!!!????!!!!!!!!!!!?????????????")
-
-# Find the config file
 if platform.system() == "Windows":
     config_base_path = "C:\\SprocketBot\\"
 else:
-    # Use the user's home directory dynamically
     config_base_path = os.path.join(os.path.expanduser("~"), "")
-
 configurationFilepath = os.path.join(config_base_path, "configuration.ini")
 instanceFilepath = os.path.join(config_base_path, "bots", f"{configName}.ini")
-
-# load the config files
-baseConfig = configparser.ConfigParser()
+baseConfig = configparser.ConfigParser();
 baseConfig.read(configurationFilepath)
-instanceConfig = configparser.ConfigParser()
+instanceConfig = configparser.ConfigParser();
 instanceConfig.read(instanceFilepath)
-
 botMode = instanceConfig.getboolean(f"botinfo", "master", fallback=False)
-if botMode:
-    print(f"[{configName}] Launching master instance")
-
 discordToken = instanceConfig[f"botinfo"]["Token"]
 prefix = instanceConfig[f"botinfo"]["prefix"]
 SQLsettings = baseConfig["SECURITY"]
 SQLsettings["database"] = instanceConfig[f"botinfo"]["sqldatabase"]
 ownerID = int(baseConfig["settings"]["ownerID"])
 updateGithub = instanceConfig.getboolean("botinfo", "updateGithub", fallback=False)
-if updateGithub:
-    print(f"[{configName}] Launching master instance with GitHub tools.")
 
 cogsList = ["cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions",
             "cogs.blueprintFunctions", "cogs.errorFunctions", "cogs.adminFunctions", "cogs.imageFunctions",
@@ -69,41 +53,55 @@ cogsList = ["cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFu
 
 class Bot(commands.Bot):
     def __init__(self, ai_wrapper: AITools):
+        # ... (__init__ is unchanged) ...
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents,
                          case_insensitive=True)
-        self.cogslist = cogsList
-        self.baseConfig = baseConfig
+        self.cogslist = cogsList;
+        self.baseConfig = baseConfig;
         self.ownerid = ownerID
-        self.botMode = botMode
+        self.botMode = botMode;
         self.geminikey = baseConfig['settings']['geminiapis'].split(",")
-        self.AI = ai_wrapper
-        self.sql: SQLtools = None
+        self.AI = ai_wrapper;
+        self.sql: SQLtools = None;
         self.ui: UItools = None
-        self.pool: asyncpg.Pool = None
-        self.campaignTools: campaignTools = None
+        self.pool: asyncpg.Pool = None;
+        self.campaignTools: campaignTools = None;
         self.error: errorTools = None
 
     async def setup_hook(self):
-        self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=20)
-        self.sql = SQLtools(self.pool)
-        self.ui = UItools(self)
-        self.campaignTools = campaignTools(self)
+        # ... (setup_hook is unchanged) ...
+        self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=20, max_inactive_connection_lifetime=60)
+        self.sql = SQLtools(self.pool);
+        self.ui = UItools(self);
+        self.campaignTools = campaignTools(self);
         self.error = errorTools(self)
-        if updateGithub:
-            cogsList.append("cogs.githubTools")
-        for ext in self.cogslist:
-            await self.load_extension(ext)
+        if updateGithub: cogsList.append("cogs.githubTools")
+        for ext in self.cogslist: await self.load_extension(ext)
+
+    # ADDED: New background task to watch for the shutdown file
+    async def monitor_shutdown_signal(self):
+        signal_file = "shutdown.signal"
+        await self.wait_until_ready()
+        while not self.is_closed():
+            if os.path.exists(signal_file):
+                print(f"[{configName}] Shutdown signal file detected. Shutting down gracefully.")
+                await self.close()
+                break
+            await asyncio.sleep(5)  # Check every 5 seconds
 
     async def on_ready(self):
         await self.wait_until_ready()
-        channel_id = 1152377925916688484
-        channel = self.get_channel(channel_id)
+        # ADDED: Start the new background task
+        self.loop.create_task(self.monitor_shutdown_signal())
+
+        channel = self.get_channel(1152377925916688484)
         if channel:
             await channel.send(f"I am now online! Instance: `{configName}`")
         print(f'Logged in as {self.user} (ID: {self.user.id}) on instance: {configName}')
         print('------')
 
     async def close(self):
+        # ... (close is unchanged) ...
         print(f"[{configName}] Closing database connection pool.")
         if self.pool:
             await self.pool.close()
@@ -117,29 +115,13 @@ bot = Bot(gemini_ai_wrapper)
 bot.ishost = botMode
 
 
+# MODIFIED: Removed all the old signal handling logic
 async def main():
-    loop = asyncio.get_running_loop()
-
-    async def shutdown(sig):
-        print(f"[{configName}] Received exit signal {sig.name}, shutting down gracefully.")
-        await bot.close()
-
-    # MODIFIED: Add SIGINT handler for Windows compatibility
-    signals = (signal.SIGTERM, signal.SIGINT)
-    for s in signals:
-        # On Windows, only SIGINT is really catchable this way.
-        try:
-            loop.add_signal_handler(s, lambda s=s: asyncio.create_task(shutdown(s)))
-        except NotImplementedError:
-            # This can happen on Windows for signals other than SIGINT
-            print(f"Could not add handler for {s.name}, may not be supported on this OS.")
-
-    async with bot:
+    try:
         await bot.start(discordToken)
+    except KeyboardInterrupt:
+        await bot.close()
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print(f"[{configName}] Bot instance shut down by KeyboardInterrupt.")
+    asyncio.run(main())

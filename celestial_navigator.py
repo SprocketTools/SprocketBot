@@ -251,6 +251,7 @@ async def main():
     if os.path.isfile(pidfile): print(f"{pidfile} exists. Is navigator running?"); return
     with open(pidfile, 'w') as f:
         f.write(pid)
+
     navigator_instance = None
 
     def shutdown_handler(signum, frame):
@@ -258,14 +259,23 @@ async def main():
 
     signal.signal(signal.SIGTERM, shutdown_handler)
     signal.signal(signal.SIGINT, shutdown_handler)
+
     try:
-        pool = await asyncpg.create_pool(**SQLsettings)
+        # MODIFIED: Added max_inactive_connection_lifetime for resilience
+        pool = await asyncpg.create_pool(
+            **SQLsettings,
+            max_inactive_connection_lifetime=60  # Close/reopen connections idle for >60s
+        )
+
         navigator_instance = CelestialNavigator(pool)
         await navigator_instance.fetch_ephemeris()
+
         directive_task = asyncio.create_task(navigator_instance.process_directives())
         downloader_task = asyncio.create_task(navigator_instance.poll_download_queue())
         player_task = asyncio.create_task(navigator_instance.transmit())
+
         await asyncio.gather(player_task, directive_task, downloader_task)
+
     finally:
         if os.path.exists(pidfile): os.unlink(pidfile)
         print("Navigator offline.")

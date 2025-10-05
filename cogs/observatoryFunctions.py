@@ -62,30 +62,18 @@ class observatoryFunctions(commands.Cog):
 
         sanitized_name = await self.bot.get_cog("textTools").sanitize(name)
 
-        # --- MODIFIED BLOCK ---
-        # Instead of using the SQLtools wrapper, we use a direct connection from the pool.
-        # This is more robust against potential deadlocks or stale connection issues.
-        is_duplicate = False
-        try:
-            await ctx.send(f"`[DEBUG]` Checking for duplicates of '{sanitized_name}'...")
-            async with self.bot.pool.acquire() as connection:
-                result = await connection.fetchrow("SELECT 1 FROM astral_bodies WHERE LOWER(designation) = LOWER($1);",
-                                                   sanitized_name)
-                if result:
-                    is_duplicate = True
-            await ctx.send("`[DEBUG]` Duplicate check complete.")
-        except Exception as e:
-            return await ctx.send(f"A database error occurred during duplicate check: `{e}`")
-
-        if is_duplicate:
-            return await ctx.send(
-                f"❌ A body with the designation **'{sanitized_name}'** already exists. Upload cancelled.")
-        # --- END MODIFIED BLOCK ---
+        async with self.bot.pool.acquire() as connection:
+            result = await connection.fetchrow("SELECT 1 FROM astral_bodies WHERE LOWER(designation) = LOWER($1);",
+                                               sanitized_name)
+            if result:
+                return await ctx.send(
+                    f"❌ A body with the designation **'{sanitized_name}'** already exists. Upload cancelled.")
 
         unique_filename = f"{uuid.uuid4()}{os.path.splitext(attachment.filename)[1]}"
         file_path = os.path.join(self.constellation_path, unique_filename)
 
-        await self.bot.loop.run_in_executor(None, attachment.save, file_path)
+        # FINAL FIX: Use the simple, correct await call for discord.py v2+
+        await attachment.save(file_path)
 
         class_prompt = "Classify this celestial body:"
         classification = await self.bot.ui.getButtonChoice(ctx, ["Star Cluster", "Nova Event", "Pulsar Burst"])
