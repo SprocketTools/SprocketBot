@@ -80,7 +80,11 @@ Uncomment `listen_addresses = 'localhost'`  and change it to `listen_addresses =
 `sudo nano /etc/postgresql/<version>/main/pg_hba.conf`
 
 Under "IPv4 local connections", add this line:
-`host    all             all             192.168.0.0/24        md5`, then save.
+`host    all             all             192.168.0.0/24        md5`
+
+Under "# "local" is for Unix domain socket connections only" change "peer" to "md5"
+
+then save.
 
 `sudo systemctl restart postgresql`
 
@@ -108,9 +112,17 @@ Now try connecting to your server via pgAdmin 4 using the information above.  If
 
 `source env/bin/activate`
 
+`pip install pipreqs`
+
+`pipreqs --force ./`
+
 `pip install -r requirements.txt`
 
-`pip install pygame asyncpg google-genai discord.py nest_asyncio`
+catch missing dependencies:
+
+`pip install opencv-python-headless discord-ext-music pygame `
+
+
 
 Now test the bot:
 

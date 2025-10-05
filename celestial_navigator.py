@@ -19,15 +19,21 @@ except ImportError:
 
 # --- Configuration Section ---
 # ... (This section is unchanged)
+# celestial_navigator.py (Replacement for lines 26-34)
+
 baseConfig = configparser.ConfigParser()
 instanceConfig = configparser.ConfigParser()
 try:
-    if os.name == 'nt':
-        baseConfig.read("C:\\SprocketBot\\configuration.ini")
-        instanceConfig.read("C:\\SprocketBot\\bots\\development.ini")
-    else:
-        baseConfig.read("/home/mumblepi/configuration.ini")
-        instanceConfig.read("/home/mumblepi/bots/official.ini")
+    if os.name == 'nt':  # This is Windows
+        config_base_path = "C:\\SprocketBot\\"
+        instance_name = "development.ini"
+    else:  # This is for Linux/Raspberry Pi
+        config_base_path = os.path.join(os.path.expanduser("~"), "")
+        instance_name = "official.ini"
+
+    baseConfig.read(os.path.join(config_base_path, "configuration.ini"))
+    instanceConfig.read(os.path.join(config_base_path, "bots", instance_name))
+
     SQLsettings = baseConfig["SECURITY"]
     SQLsettings["database"] = instanceConfig["botinfo"]["sqldatabase"]
 except Exception as e:
