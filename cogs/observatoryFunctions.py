@@ -12,10 +12,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
 
-# yt-dlp is no longer needed in this file
-
 class observatoryFunctions(commands.Cog):
-    # ... (init, send_command_to_navigator, and setup_observatory_log are unchanged) ...
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.constellation_path = "./celestial_audio/"
@@ -66,7 +63,6 @@ class observatoryFunctions(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ Log initialization failed: `{e}`")
 
-    # MODIFIED: The 'name' parameter is now optional.
     @commands.command(name="catalog_celestial_body", description="Upload a new audio file to the station.")
     async def catalog_celestial_body(self, ctx: commands.Context, *, name: str = None):
         if not ctx.message.attachments:
@@ -74,7 +70,6 @@ class observatoryFunctions(commands.Cog):
 
         attachment = ctx.message.attachments[0]
 
-        # MODIFIED: If a name isn't provided, use the attachment's filename.
         if name is None:
             name = os.path.splitext(attachment.filename)[0].replace('_', ' ').replace('-', ' ')
 
@@ -87,7 +82,9 @@ class observatoryFunctions(commands.Cog):
 
         unique_filename = f"{uuid.uuid4()}{os.path.splitext(attachment.filename)[1]}"
         file_path = os.path.join(self.constellation_path, unique_filename)
-        await attachment.save(file_path)
+
+        # FIXED: Run the blocking save operation in an executor to prevent freezing the bot.
+        await self.bot.loop.run_in_executor(None, attachment.save, file_path)
 
         class_prompt = "Classify this celestial body:"
         classification = await self.bot.ui.getButtonChoice(ctx, ["Star Cluster", "Nova Event", "Pulsar Burst"])
@@ -122,7 +119,7 @@ class observatoryFunctions(commands.Cog):
         await self.send_command_to_navigator("REFRESH_EPHEMERIS")
         await ctx.send(f"✅ **{sanitized_name}** cataloged as a **{classification}**.")
 
-    # ... (The rest of the file is unchanged) ...
+    # ... The rest of the file is unchanged ...
     @commands.command(name="plot_priority_trajectory", description="Sets the next song to play.")
     async def plot_priority_trajectory(self, ctx: commands.Context, *, search_query: str):
         all_bodies = await self.bot.sql.databaseFetchdict(
