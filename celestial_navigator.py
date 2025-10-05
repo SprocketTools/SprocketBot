@@ -59,8 +59,8 @@ class CelestialNavigator:
         self.trajectory = []
         self.star_cluster_counter = 0
         self.nova_event_counter = 0
-        self.pulsar_interval = random.randint(3, 5)
-        self.nova_interval = random.randint(8, 12)
+        self.pulsar_interval = random.randint(5, 8)
+        self.nova_interval = random.randint(10, 13)
         self.running = True
         self.interrupt_flag = False
         self.snapshot_path = os.path.join(tempfile.gettempdir(), "celestial_trajectory.json")
