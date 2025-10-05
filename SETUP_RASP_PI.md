@@ -171,3 +171,29 @@ Extra commands:
 
 ## Automate starting the bot
 
+`sudo nano /etc/systemd/system/sprocketbot.service`
+
+Add this:
+
+```
+[Unit]
+Description=Sprocket Bot Launcher Service
+After=network-online.target
+
+[Service]
+Type=simple
+User=[username]
+WorkingDirectory=/home/[username]/Github/SprocketBot
+ExecStart=/home/[username]/Github/SprocketBot/env/bin/python /home/[username]/Github/SprocketBot/launcher.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+`sudo systemctl daemon-reload`
+
+`sudo systemctl enable sprocketbot.service`
+
+`sudo systemctl start sprocketbot.service`
