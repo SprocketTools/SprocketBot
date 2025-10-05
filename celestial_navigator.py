@@ -22,20 +22,17 @@ except ImportError:
 # celestial_navigator.py (Replacement for lines 26-34)
 
 baseConfig = configparser.ConfigParser()
-instanceConfig = configparser.ConfigParser()
 try:
     if os.name == 'nt':  # This is Windows
-        config_base_path = "C:\\SprocketBot\\"
-        instance_name = "development.ini"
+        config_path = "C:\\SprocketBot\\configuration.ini"
     else:  # This is for Linux/Raspberry Pi
-        config_base_path = os.path.join(os.path.expanduser("~"), "")
-        instance_name = "official.ini"
+        config_path = os.path.join(os.path.expanduser("~"), "configuration.ini")
 
-    baseConfig.read(os.path.join(config_base_path, "configuration.ini"))
-    instanceConfig.read(os.path.join(config_base_path, "bots", instance_name))
+    baseConfig.read(config_path)
 
+    # Get database settings from their respective sections in the ONE config file
     SQLsettings = baseConfig["SECURITY"]
-    SQLsettings["database"] = instanceConfig["botinfo"]["sqldatabase"]
+    SQLsettings["database"] = baseConfig["SECURITY"]["database"]
 except Exception as e:
     print(f"Could not read configuration files. Ensure paths are correct. Error: {e}")
     exit(1)
