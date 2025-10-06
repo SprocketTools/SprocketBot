@@ -36,6 +36,7 @@ prefix = instanceConfig[f"botinfo"]["prefix"]
 SQLsettings = baseConfig["SECURITY"]
 SQLsettings["database"] = instanceConfig[f"botinfo"]["sqldatabase"]
 ownerID = int(baseConfig["settings"]["ownerID"])
+githubPAT = baseConfig["settings"]["githubpat"]
 updateGithub = instanceConfig.getboolean("botinfo", "updateGithub", fallback=False)
 cogsList = ["cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions", "cogs.blueprintFunctions", "cogs.errorFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.VCfunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.clickupFunctions", "cogs.starboardFunctions", "cogs.roleColorTools", "cogs.observatoryFunctions"]
 
