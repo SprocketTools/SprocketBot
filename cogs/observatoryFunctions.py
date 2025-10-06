@@ -8,7 +8,7 @@ import difflib
 import json
 import tempfile
 import asyncio
-import datetime  # ADDED
+import datetime
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
@@ -54,13 +54,21 @@ class observatoryFunctions(commands.Cog):
 
     @commands.command(name="catalog_celestial_body", description="Upload multiple audio files to the station.")
     async def catalog_celestial_body(self, ctx: commands.Context):
-        # ... (This function is unchanged) ...
-        if not ctx.message.attachments: return await ctx.send(
-            "Error: You must attach at least one audio file to use this command.")
+        if not ctx.message.attachments:
+            return await ctx.send("Error: You must attach at least one audio file to use this command.")
+
+        class_prompt = "Classify this batch of celestial bodies:"
         classification = await self.bot.ui.getButtonChoice(ctx, ["Static Noise", "Major Event", "Solar Cycle"])
-        if not classification: return await ctx.send("Batch cataloging cancelled.")
-        class_map = {"Static Noise": "STAR_CLUSTER", "Major Event": "NOVA_EVENT", "Solar Cycle": "PULSAR_BURST"}
+        if not classification:
+            return await ctx.send("Batch cataloging cancelled.")
+
+        class_map = {
+            "Static Noise": "STAR_CLUSTER",
+            "Major Event": "NOVA_EVENT",
+            "Solar Cycle": "PULSAR_BURST"
+        }
         internal_class = class_map.get(classification)
+
         days_message = await ctx.send("Select the days for this entire batch:")
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         selected_days = []
@@ -71,16 +79,21 @@ class observatoryFunctions(commands.Cog):
             if choice == "Done": break
             if choice == "All Remaining": selected_days.extend(remaining_days); break
             selected_days.append(choice)
-        if not selected_days:
-            await days_message.delete()
-            return await ctx.send("No days selected. Batch cataloging cancelled.")
+
+        # MODIFIED: The check for an empty selected_days list has been removed.
+        # if not selected_days:
+        #     await days_message.delete()
+        #     return await ctx.send("No days selected. Batch cataloging cancelled.")
+
         day_bools = {f"{day[:3].lower()}_arc": (day in selected_days) for day in days}
         await days_message.edit(content="Settings confirmed. Starting batch processing...", view=None)
-        success_count = 0;
+
+        success_count = 0
         skipped_count = 0
         for attachment in ctx.message.attachments:
             name = os.path.splitext(attachment.filename)[0].replace('_', ' ').replace('-', ' ')
             sanitized_name = await self.bot.get_cog("textTools").sanitize(name)
+
             async with self.bot.pool.acquire() as connection:
                 result = await connection.fetchrow("SELECT 1 FROM astral_bodies WHERE LOWER(designation) = LOWER($1);",
                                                    sanitized_name)
@@ -88,59 +101,53 @@ class observatoryFunctions(commands.Cog):
                     skipped_count += 1
                     await ctx.send(f"⏭️ Skipping duplicate: **{sanitized_name}**")
                     continue
+
             unique_filename = f"{uuid.uuid4()}{os.path.splitext(attachment.filename)[1]}"
             file_path = os.path.join(self.constellation_path, unique_filename)
+
             await attachment.save(file_path)
+
             await self.bot.sql.databaseExecuteDynamic(
                 '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
                 [unique_filename, sanitized_name, ctx.author.id, internal_class, day_bools['mon_arc'],
                  day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'],
-                 day_bools['sat_arc'], day_bools['sun_arc'], file_path])
+                 day_bools['sat_arc'], day_bools['sun_arc'], file_path]
+            )
             await ctx.send(f"✅ Cataloged: **{sanitized_name}**")
             success_count += 1
+
         await self.send_command_to_navigator("REFRESH_EPHEMERIS")
         await ctx.send(
             f"\n✨ **Batch complete!**\n- Cataloged: **{success_count}** new bodies.\n- Skipped: **{skipped_count}** duplicates.")
 
-    # ADDED: New command to list available songs for the day
     @commands.command(name="scan_sky", description="Lists all songs available for the current day.")
     async def scan_sky(self, ctx: commands.Context):
-        """Queries and displays an alphabetized, paginated list of songs for the current day."""
+        # ... (This function is unchanged) ...
         today = datetime.datetime.now()
         day_name = today.strftime('%A')
         day_column = f"{today.strftime('%a').lower()}_arc"
-
         query = f"SELECT designation FROM astral_bodies WHERE classification = 'STAR_CLUSTER' AND {day_column} = TRUE ORDER BY designation ASC;"
-
         try:
             records = await self.bot.sql.databaseFetch(query)
             if not records:
                 return await ctx.send(f"There are no songs scheduled for today ({day_name}).")
-
             song_list = [rec['designation'] for rec in records]
-
-            # Paginate the results to avoid hitting Discord's message limit
             page_size = 20
             pages = [song_list[i:i + page_size] for i in range(0, len(song_list), page_size)]
-
             await ctx.send(f"Found **{len(song_list)}** songs scheduled for {day_name}:")
-
             for i, page in enumerate(pages):
-                embed = discord.Embed(
-                    title=f"Available Songs for {day_name} (Page {i + 1}/{len(pages)})",
-                    color=discord.Color.dark_purple()
-                )
+                embed = discord.Embed(title=f"Available Songs for {day_name} (Page {i + 1}/{len(pages)})",
+                                      color=discord.Color.dark_purple())
                 description = "\n".join(page)
                 embed.description = f"```\n{description}\n```"
                 await ctx.send(embed=embed)
-                await asyncio.sleep(1)  # Sleep to avoid rate limits
-
+                await asyncio.sleep(1)
         except Exception as e:
             await ctx.send(f"An error occurred while scanning the sky: `{e}`")
 
+    # ... (The rest of the file is unchanged) ...
     @commands.command(name="plot_priority_trajectory", description="Sets the next song to play.")
     async def plot_priority_trajectory(self, ctx: commands.Context, *, search_query: str):
-        # ... (unchanged)
         all_bodies = await self.bot.sql.databaseFetchdict(
             "SELECT designation, unique_id FROM astral_bodies WHERE classification = 'STAR_CLUSTER';")
         if not all_bodies: return await ctx.send("No Star Clusters to choose from.")
@@ -159,7 +166,6 @@ class observatoryFunctions(commands.Cog):
                       description="Download a Spotify playlist and add it to the catalog.")
     @commands.is_owner()
     async def bulk_synchronize_trajectory(self, ctx: commands.Context, playlist_url: str):
-        # ... (unchanged)
         if not self.sp: return await ctx.send("Error: Spotify API credentials are not configured.")
         await ctx.send("Select the broadcast days for all songs in this playlist:")
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -171,7 +177,6 @@ class observatoryFunctions(commands.Cog):
             if choice == "Done": break
             if choice == "All Remaining": selected_days.extend(remaining_days); break
             selected_days.append(choice)
-        if not selected_days: return await ctx.send("No days selected. Synchronization cancelled.")
         day_bools = {f"{day[:3].lower()}_arc": (day in selected_days) for day in days}
         day_bools_json = json.dumps(day_bools)
         await self.bot.sql.databaseExecuteDynamic(
@@ -182,7 +187,6 @@ class observatoryFunctions(commands.Cog):
 
     @commands.command(name="view_trajectory", description="Views the upcoming broadcast queue.")
     async def view_trajectory(self, ctx: commands.Context):
-        # ... (unchanged)
         snapshot_path = os.path.join(tempfile.gettempdir(), "celestial_trajectory.json")
         if not os.path.exists(snapshot_path): return await ctx.send("Trajectory snapshot not available.")
         with open(snapshot_path, 'r') as f:
@@ -200,7 +204,6 @@ class observatoryFunctions(commands.Cog):
     @commands.command(name="purge_observatory_log", description="[Owner] Deletes all songs and audio files.")
     @commands.is_owner()
     async def purge_observatory_log(self, ctx: commands.Context):
-        # ... (unchanged)
         count_record = await self.bot.sql.databaseFetchrow("SELECT COUNT(*) FROM astral_bodies;")
         song_count = count_record['count']
         if song_count == 0: return await ctx.send("The observatory log is already empty.")
@@ -235,14 +238,12 @@ class observatoryFunctions(commands.Cog):
 
     @commands.command(name="interrupt_transmission", description="Skips the current track.")
     async def interrupt_transmission(self, ctx: commands.Context):
-        # ... (unchanged)
         await self.send_command_to_navigator("INTERRUPT")
         await ctx.send("Directive sent to interrupt the current transmission.")
 
     @commands.command(name="realign_navigator", description="Restarts the music player process.")
     @commands.is_owner()
     async def realign_navigator(self, ctx: commands.Context):
-        # ... (unchanged)
         await self.send_command_to_navigator("REALIGN")
         await ctx.send("Shutdown directive sent to the Celestial Navigator.")
 
