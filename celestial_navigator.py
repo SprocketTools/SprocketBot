@@ -23,8 +23,7 @@ except ImportError:
     print("Pygame is not installed. Please install it with 'pip install pygame'")
     exit(1)
 
-# --- Configuration Section ---
-# ... (This section is unchanged) ...
+# --- Configuration Section is unchanged ---
 baseConfig = configparser.ConfigParser()
 SQLsettings = None
 WEBHOOK_URL = None
@@ -48,8 +47,8 @@ CONSTELLATION_PATH = "./celestial_audio/"
 
 
 class CelestialNavigator:
-    # ... (init, _update_trajectory_snapshot, fetch_ephemeris, construct_trajectory, plot_priority_trajectory, process_directives, and transmit are all unchanged) ...
     def __init__(self, pool):
+        # ... (init is unchanged) ...
         self.pool = pool
         self.ephemeris = []
         self.trajectory = []
@@ -64,7 +63,15 @@ class CelestialNavigator:
         pygame.mixer.init()
         print("[Player] Audio systems initialized.")
 
+    # ADDED: Centralized webhook posting for the player
+    async def post_status(self, message):
+        """Posts a status message to the webhook."""
+        if not WEBHOOK_URL: print(f"[Player] {message}"); return
+        async with aiohttp.ClientSession() as s: await s.post(WEBHOOK_URL,
+                                                              json={'content': f"```[Player] {message}```"})
+
     def _update_trajectory_snapshot(self):
+        # ... (This function is unchanged) ...
         try:
             snapshot_data = [{"designation": i.get("designation", "U"), "classification": i.get("classification", "U")}
                              for i in self.trajectory[:10]]
@@ -74,6 +81,7 @@ class CelestialNavigator:
             print(f"Error writing trajectory snapshot: {e}")
 
     async def fetch_ephemeris(self):
+        # ... (This function is unchanged) ...
         print("[Player] Fetching new ephemeris data...")
         today_column = f"{datetime.datetime.now().strftime('%a').lower()}_arc"
         async with self.pool.acquire() as connection:
@@ -83,6 +91,7 @@ class CelestialNavigator:
         self.construct_trajectory()
 
     def construct_trajectory(self):
+        # ... (This function is unchanged) ...
         print("[Player] Calculating new broadcast trajectory...")
         self.trajectory.clear()
         bodies = {k: [b for b in self.ephemeris if b['classification'] == k] for k in
@@ -107,16 +116,37 @@ class CelestialNavigator:
         print(f"[Player] Trajectory calculated with {len(self.trajectory)} events.")
         self._update_trajectory_snapshot()
 
+    # MODIFIED: This function is now much smarter
     async def plot_priority_trajectory(self, unique_id: str):
-        priority_body = next((b for b in self.ephemeris if b['unique_id'] == unique_id), None)
+        """Finds a body by ID and inserts it at the front of the queue."""
+        await self.post_status(f"Received priority request for body ID: {unique_id[:8]}...")
+
+        # First, check the fast cache of daily songs
+        priority_body = next((body for body in self.ephemeris if body['unique_id'] == unique_id), None)
+
+        # If not in the cache, perform a direct database lookup (a "deep scan")
+        if not priority_body:
+            await self.post_status(f"Cache miss. Performing deep scan for unscheduled body...")
+            try:
+                async with self.pool.acquire() as connection:
+                    record = await connection.fetchrow("SELECT * FROM astral_bodies WHERE unique_id = $1 LIMIT 1;",
+                                                       unique_id)
+                    if record:
+                        priority_body = dict(record)
+            except Exception as e:
+                await self.post_status(f"ERROR: Database query failed during deep scan: {e}")
+                return
+
         if priority_body:
             self.trajectory.insert(0, priority_body)
-            print(f"[Player] '{priority_body['designation']}' moved to front of trajectory.")
+            await self.post_status(f"Success! '{priority_body['designation']}' is now next in the queue.")
             self._update_trajectory_snapshot()
         else:
-            print(f"[Player] Warning: Could not find priority body {unique_id}.")
+            await self.post_status(
+                f"Warning: Could not find priority body with ID {unique_id[:8]} in the entire catalog.")
 
     async def process_directives(self):
+        # ... (This function is unchanged) ...
         while self.running:
             try:
                 async with self.pool.acquire() as c:
@@ -137,21 +167,22 @@ class CelestialNavigator:
                 print(f"Error processing directives: {e}")
             await asyncio.sleep(5)
 
+    # ... (transmit, downloader functions, main, etc. are all unchanged from the last full version) ...
     async def transmit(self):
         print("[Player] Transmission commencing.")
         while self.running:
             if not self.trajectory:
-                print("[Player] Trajectory empty. Recalculating...")
+                print("[Player] Trajectory empty. Recalculating...");
                 self.construct_trajectory()
                 if not self.trajectory:
-                    print("[Player] No valid trajectory. Standing by.")
-                    await asyncio.sleep(30)
+                    print("[Player] No valid trajectory. Standing by.");
+                    await asyncio.sleep(30);
                     continue
             self._update_trajectory_snapshot()
             current_body = self.trajectory.pop(0)
             filepath = current_body['filepath']
             if not os.path.exists(filepath):
-                print(f"[Player] Warning: File not found for {current_body['designation']}. Skipping.")
+                print(f"[Player] Warning: File not found for {current_body['designation']}. Skipping.");
                 continue
             print(f"[Player] Transmitting: [{current_body['classification']}] {current_body['designation']}")
             try:
@@ -159,61 +190,45 @@ class CelestialNavigator:
                 pygame.mixer.music.play()
                 while pygame.mixer.music.get_busy() and self.running:
                     if self.interrupt_flag:
-                        pygame.mixer.music.stop()
+                        pygame.mixer.music.stop();
                         self.interrupt_flag = False
                         print("[Player] Transmission interrupted.")
                         pulsars = [b for b in self.ephemeris if b['classification'] == 'PULSAR_BURST']
                         if pulsars: self.trajectory.insert(0, random.choice(pulsars))
-                        self._update_trajectory_snapshot()
+                        self._update_trajectory_snapshot();
                         break
                     await asyncio.sleep(0.5)
             except pygame.error as e:
                 print(f"[Player] Pygame error: {e}")
-        pygame.mixer.quit()
+        pygame.mixer.quit();
         pygame.quit()
         print("[Player] Transmission ceased.")
 
-    async def post_to_webhook(self, message):
-        if not WEBHOOK_URL: print(f"[Downloader] {message}"); return
-        async with aiohttp.ClientSession() as s: await s.post(WEBHOOK_URL, json={'content': message})
-
-    # --- DOWNLOADER FUNCTIONALITY ---
     async def process_download_job(self, job):
-        playlist_url = job['playlist_url']
-        day_bools = json.loads(job['day_bools_json'])
+        playlist_url = job['playlist_url'];
+        day_bools = json.loads(job['day_bools_json']);
         requester_id = job['requester_id']
         await self.post_to_webhook(f"🚀 Starting bulk sync job for <{playlist_url}>")
         try:
             async with self.pool.acquire() as c:
                 existing_designations = {r['designation'] for r in
                                          await c.fetch("SELECT LOWER(designation) as designation FROM astral_bodies")}
-
-            # MODIFIED: Implement a loop to handle Spotify API pagination
-            tracks = []
+            tracks = [];
             results = sp.playlist_items(playlist_url)
             while results:
-                tracks.extend(results['items'])
+                tracks.extend(results['items']);
                 results = sp.next(results) if results['next'] else None
-
             total = len(tracks)
             await self.post_to_webhook(f"Found **{total}** total tracks in the playlist.")
             s_count, sk_count = 0, 0
-
             for i, item in enumerate(tracks):
-                if not item or not item['track']:  # Defensive check for empty items
-                    continue
-                track = item['track']
+                if not item or not item['track']: continue
+                track = item['track'];
                 designation = f"{track['artists'][0]['name']} - {track['name']}"
-                if designation.lower() in existing_designations:
-                    sk_count += 1
-                    continue
-
-                # Only post an update every 5 songs to reduce spam
-                if (i + 1) % 5 == 0:
-                    await self.post_to_webhook(f"🛰️ Processing... ({i + 1}/{total})")
-
+                if designation.lower() in existing_designations: sk_count += 1; continue
+                if (i + 1) % 5 == 0: await self.post_to_webhook(f"🛰️ Processing... ({i + 1}/{total})")
                 try:
-                    unique_id = str(uuid.uuid4())
+                    unique_id = str(uuid.uuid4());
                     search_query = f"{designation} lyrics"
                     ydl_opts = {'format': 'bestaudio/best', 'postprocessors': [
                         {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
@@ -228,12 +243,11 @@ class CelestialNavigator:
                             unique_id, designation, requester_id, "STAR_CLUSTER", day_bools['mon_arc'],
                             day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'],
                             day_bools['sat_arc'], day_bools['sun_arc'], filepath)
-                    existing_designations.add(designation.lower())
+                    existing_designations.add(designation.lower());
                     s_count += 1
                 except Exception as e:
                     await self.post_to_webhook(f"❌ ({i + 1}/{total}) Failed `{designation}`: `{type(e).__name__}`")
-                await asyncio.sleep(1)  # Small delay to be polite to APIs
-
+                await asyncio.sleep(1)
             await self.post_to_webhook(
                 f"✨ **Sync Complete!** Cataloged **{s_count}** new bodies. Skipped **{sk_count}** duplicates.")
             await self.fetch_ephemeris()
@@ -241,7 +255,6 @@ class CelestialNavigator:
             await self.post_to_webhook(f"A critical error occurred during bulk sync: `{e}`")
 
     async def poll_download_queue(self):
-        # ... (This function is unchanged) ...
         print("[Downloader] Waiting for new synchronization jobs...")
         while self.running:
             try:
@@ -260,7 +273,6 @@ class CelestialNavigator:
 
 
 async def main():
-    # ... (main function is unchanged) ...
     pid = str(os.getpid());
     pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
     if os.path.isfile(pidfile): print(f"{pidfile} exists. Is navigator running?"); return
