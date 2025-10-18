@@ -25,13 +25,10 @@ except git.exc.GitCommandError as e:
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
 
-
-
-
-
-
-imageCategoryList = ["Featured", "Chalk", "Fictional Insignia", "Historical Insignia", "Inscriptions", "Labels", "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures", "Weathering", "Welding"]
-#GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
+imageCategoryList = ["Featured", "Chalk", "Fictional Insignia", "Historical Insignia", "Inscriptions", "Labels",
+                     "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures",
+                     "Weathering", "Welding", "RGB Maker"]
+# GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
 username = 'SprocketTools'
 password = main.githubPAT
 encoded_password = urllib.parse.quote(password)
@@ -59,6 +56,7 @@ except git.exc.InvalidGitRepositoryError as e:
 except Exception as e:
     print(f"An unexpected error occured: {e}")
 
+
 class githubTools(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -84,7 +82,6 @@ class githubTools(commands.Cog):
         origin.fetch()
         origin.pull(origin.refs[0].remote_head)
         await ctx.reply("# Done!")
-
 
     @commands.command(name="resetImageCatalog", description="Reset the image catalog")
     async def resetImageCatalog(self, ctx: commands.Context):
@@ -120,8 +117,10 @@ class githubTools(commands.Cog):
         newAuthorID = await textTools.getIntResponse(ctx, f"What is the new author's ID?")
         author = self.bot.get_user(newAuthorID)
         authorName = await textTools.mild_sanitize(author.name)
-        await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownerid = $1 WHERE name = $2''', [newAuthorID, name])
-        await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownername = $1 WHERE name = $2''',[authorName, name])
+        await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownerid = $1 WHERE name = $2''',
+                                                  [newAuthorID, name])
+        await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET ownername = $1 WHERE name = $2''',
+                                                  [authorName, name])
         await ctx.send(f"### The image has been updated.")
 
     @commands.command(name="submitDecal", description="Submit a decal to the SprocketTools website")
@@ -130,20 +129,26 @@ class githubTools(commands.Cog):
         if ctx.author.id != 712509599135301673:
             imageCategoryListTemp.remove("Featured")
         if len(ctx.message.attachments) != 0:
-            await ctx.send("Note: this command no longer looks for images attached to the command initiation itself.  You will need to upload the images again.")
-        allAttachments = await textTools.getManyFilesResponse(ctx, "Process started.\nUpload up to 10 images that you wish to add to the SprocketTools decal catalog.")
+            await ctx.send(
+                "Note: this command no longer looks for images attached to the command initiation itself.  You will need to upload the images again.")
+        allAttachments = await textTools.getManyFilesResponse(ctx,
+                                                              "Process started.\nUpload up to 10 images that you wish to add to the SprocketTools decal catalog.")
         if len(allAttachments) == 0:
             await self.bot.error.sendError(ctx)
             return
         userPrompt = "What category should the image(s) go into?"
         category = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
-        tags = await textTools.getCappedResponse(ctx, "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`", 32)
+        tags = await textTools.getCappedResponse(ctx,
+                                                 "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`",
+                                                 32)
         await ctx.send(f"Alright, let's get the names down for your images.")
         print(category)
         for attachment in allAttachments:
             if "image" in attachment.content_type:
                 type = ".png"
-                name = await textTools.getCappedResponse(ctx, f"What is the title of {attachment.filename}?  Limit the name to no more than 32 characters.", 32)
+                name = await textTools.getCappedResponse(ctx,
+                                                         f"What is the title of {attachment.filename}?  Limit the name to no more than 32 characters.",
+                                                         32)
                 name = name.lower()
                 strippedname = name.replace(" ", "_")
                 strippedname = f"{strippedname}{type}"
@@ -151,7 +156,8 @@ class githubTools(commands.Cog):
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{strippedname}"
                 if os.path.isfile(imageCatalogFilepath):
                     response = await self.bot.error.retrieveError(ctx)
-                    await ctx.send(f"{response}\n\n{strippedname} already exists!  Submit this again, but with a different name.")
+                    await ctx.send(
+                        f"{response}\n\n{strippedname} already exists!  Submit this again, but with a different name.")
                 else:
                     # Optimized image https://www.askpython.com/python-modules/compress-png-image-using-pillow
                     maxwidth = 400
@@ -174,11 +180,15 @@ class githubTools(commands.Cog):
                     # file = discord.File(byte_io, filename=f'edited_image.png')
                     # await ctx.send(file=file)
 
-                    values = [name, tags, strippedname, 'Pending', str(self.bot.get_user(ctx.author.id)), ctx.author.id, category]
-                    await self.bot.sql.databaseExecuteDynamic(f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''', values)
+                    values = [name, tags, strippedname, 'Pending', str(self.bot.get_user(ctx.author.id)), ctx.author.id,
+                              category]
+                    await self.bot.sql.databaseExecuteDynamic(
+                        f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''',
+                        values)
                     await ctx.send(f"### The image {strippedname} has been sent off for approval!")
                     channel = self.bot.get_channel(1152377925916688484)
-                    await channel.send(f"<@{main.ownerID}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
+                    await channel.send(
+                        f"<@{main.ownerID}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
 
     @commands.command(name="removeDecal", description="Remove a decal from the SprocketTools website")
     async def removeDecal(self, ctx):
@@ -186,8 +196,10 @@ class githubTools(commands.Cog):
             await ctx.send(await self.bot.error.retrieveError(ctx))
             return
         await ctx.send(f"Reply with the stripped name of the decal you wish to remove.  Ex: `6_side_circle.png`")
+
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
         try:
             msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
             delete = await textTools.sanitize(msg.content.lower())
@@ -214,16 +226,20 @@ class githubTools(commands.Cog):
             return
         try:
             while True:
-                decalInfo = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
+                decalInfo = [dict(row) for row in await self.bot.sql.databaseFetch(
+                    f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{decalInfo['strippedname']}"
                 imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{decalInfo['strippedname']}"
                 await ctx.send(file=discord.File(imageCatalogFilepath))
                 userPrompt = f"Do you want to approve this decal? \nName: {decalInfo['name']}\nFilename: {decalInfo['strippedname']}\nOwner: {decalInfo['ownername']} (<@{decalInfo['ownerid']}>)\nCategory: {decalInfo['category']}"
-                responseList = ["Too inappropriate", "Invalid category", "Inadequate image quality", "Image descriptions are not consistent", "Rejection was requested by submitter", "Other", "No", "Override Name", "Override Category", "Yes"]
+                responseList = ["Too inappropriate", "Invalid category", "Inadequate image quality",
+                                "Image descriptions are not consistent", "Rejection was requested by submitter",
+                                "Other", "No", "Override Name", "Override Category", "Yes"]
                 answer = await ctx.bot.ui.getChoiceFromList(ctx, responseList, userPrompt)
                 if answer == "Yes":
                     values = [decalInfo['strippedname']]
-                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
+                    await self.bot.sql.databaseExecuteDynamic(
+                        f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!')
                     await ctx.send("## Approved!")
@@ -233,58 +249,157 @@ class githubTools(commands.Cog):
                     userPrompt = f"Alright then, pick a new category to use with this decal."
                     values = [decalInfo['strippedname']]
                     newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
-                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
+                    await self.bot.sql.databaseExecuteDynamic(
+                        f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
                     values = [newCategory, decalInfo['strippedname']]
-                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
+                    await self.bot.sql.databaseExecuteDynamic(
+                        f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
-                    await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the category was changed to "{newCategory}."')
+                    await recipient.send(
+                        f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the category was changed to "{newCategory}."')
                     await ctx.send("## Approved! \n(with a category change)")
                     operatingRepo.index.add(imageCatalogFilepath)
                     operatingRepo.index.add(imageDisplayFilepath)
                 elif answer == "Override Name":
                     await ctx.send(f"Alright then, pick a new name to use with this decal.")
                     values = [decalInfo['strippedname']]
+
                     def check(m: discord.Message):
                         return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
                     try:
                         msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
                         newName = await textTools.sanitize(msg.content.lower())
                     except asyncio.TimeoutError:
                         await ctx.send("Operation cancelled.")
                         return
-                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
+                    await self.bot.sql.databaseExecuteDynamic(
+                        f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
                     values = [newName, decalInfo['strippedname']]
-                    await self.bot.sql.databaseExecuteDynamic(f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
+                    await self.bot.sql.databaseExecuteDynamic(
+                        f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
-                    await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the image name was changed to "{newName}."')
+                    await recipient.send(
+                        f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the image name was changed to "{newName}."')
                     await ctx.send("## Approved! \n(with a name change)")
                     operatingRepo.index.add(imageCatalogFilepath)
                     operatingRepo.index.add(imageDisplayFilepath)
                 else:
                     values = [decalInfo['strippedname']]
-                    await self.bot.sql.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''', values)
+                    await self.bot.sql.databaseExecuteDynamic(f'''DELETE FROM imagecatalog WHERE strippedname = $1''',
+                                                              values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     os.remove(imageCatalogFilepath)
                     os.remove(imageDisplayFilepath)
-                    await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was not approved.  Reason: {answer}')
+                    await recipient.send(
+                        f'Your decal "{decalInfo["strippedname"]}" was not approved.  Reason: {answer}')
                     await ctx.send(f"## Done!\nRejection letter was sent to <@{decalInfo['ownerid']}>")
         except Exception:
             await ctx.send("Looks like there are no more decals to approve!")
             result = await githubTools.updateHTML(self, ctx)
+
     async def updateHTML(self, ctx):
+        # This is the unique body content from your DecalsRGBmaker.html file.
+        rgb_maker_content = '''
+            <div class="container">
+            <center>
+                <h1 class="text-center">Color Decal Generator</h1>
+                <div class="wrap box boxauto">
+                    <h3>Drag the sliders to find your color of choice, and click the box below to copy the decal's URL. </br><br> To use the decal, place down a decal on your tank, and paste the link into the decal's URL field in the top right of the UI.</h3>   
+                </div>
+                <br>
+                <h4 id="redval">Red: 120</h4>
+                <div class="slidecontainer">
+                    <input type="range" min="0" max="17" oninput="setColor()" value="8" class="red_slider" id="red" >
+                </div>
+                <h6><h6>
+                <h4 id="greenval">Green: 135</h4>
+                <div class="slidecontainer">
+                    <input type="range" min="0" max="17" oninput="setColor()" value="9" class="green_slider" id="green">
+                </div>
+                <h6><h6>
+                <h4 id="blueval">Blue: 150</h4>
+                <div class="slidecontainer">
+                <input type="range" min="0" oninput="setColor()" max="17" value="10" class="blue_slider" id="blue"></h4>
+
+
+                <h6><h6>
+                <h6><h6>
+                <div class="background_box">
+                    <br>
+                    <div id="color_box" onclick="copyText()" class="color_box">
+                        <h3>Click here to copy the URL<h3>
+                    </div>
+                </div>
+                <h4 id="output" style="color: var(--blue4)"></h4>
+            </div>
+
+            </center> 
+        '''
+
+        # The closing script and body tags for all pages
         HTMLending = '''	</ul></center></body><script>
-		function copyText(inputText) {
-			// Copy the text inside the text field
-			navigator.clipboard.writeText(inputText);
-		}	
-        </script>
-        </html>'''
+                function copyText(inputText) {
+                    // Copy the text inside the text field
+                    navigator.clipboard.writeText(inputText);
+                }	
+                </script>
+                </html>'''
+
+        # The specific script for the RGB Maker page
+        RGB_script = '''<script>
+                var output = document.getElementById("output");
+                output.innerHTML = "Move the sliders to pick a color, and the URL to the decal will appear here.";
+
+                function setColor() {
+                    var redSlider = document.getElementById("red").value;
+                    var greenSlider = document.getElementById("green").value;
+                    var blueSlider = document.getElementById("blue").value;
+                    let red = 15*(redSlider);
+                    let green = 15*(greenSlider);
+                    let blue = 15*(blueSlider);
+
+                    let color = 'rgb(' + red + ',' + green + ',' + blue + ')';
+                    let output_text = 'https://sprockettools.github.io/colors/R' + red + 'G' + green + 'B' + blue + '.png';
+                    output.innerHTML = output_text;
+                    document.getElementById("redval").innerHTML = "Red: " + red;
+                    document.getElementById("greenval").innerHTML = "Green: " + green;
+                    document.getElementById("blueval").innerHTML = "Blue: " + blue;
+                    var boxy=document.getElementById("color_box");
+                    boxy.style.backgroundColor=color;
+                }
+
+                function copyText() {
+                    var redSlider = document.getElementById("red").value;
+                    var greenSlider = document.getElementById("green").value;
+                    var blueSlider = document.getElementById("blue").value;
+                    let red = 15*(redSlider);
+                    let green = 15*(greenSlider);
+                    let blue = 15*(blueSlider);
+
+                    let color = 'rgb(' + red + ',' + green + ',' + blue + ')';
+                    let output_text = 'https://sprockettools.github.io/colors/R' + red + 'G' + green + 'B' + blue + '.png';
+                    output.innerHTML = "Copied!";
+                    var boxy=document.getElementById("color_box");
+                    document.getElementById("redval").innerHTML = "Red: " + red;
+                    document.getElementById("greenval").innerHTML = "Green: " + green;
+                    document.getElementById("blueval").innerHTML = "Blue: " + blue;
+
+                    navigator.clipboard.writeText(output_text);
+                    boxy.style.backgroundColor=color;
+                }
+        </script></html>'''
 
         # Update all the main pages first
         for category in imageCategoryList:
             inText = category
+            # Handle page titles
             if category == "Featured":
                 inText = "SprocketTools Decal Catalog"
+            elif category == "RGB Maker":
+                inText = "RGB Color Picker"
+
+            # --- Build the common header and top navigation for every page ---
             HTMLdoc = f'''<html>
                 <head>
                     <title>{inText}</title>
@@ -294,7 +409,7 @@ class githubTools(commands.Cog):
                 </head>
             <body>
             <div class="navbar">
-            	<img src="SprocketToolsLogo.png"/>
+                <img src="SprocketToolsLogo.png"/>
                 <a href="index.html">Home</a>
                 <a href="TopGearCalculator.html">Gear Calculator</a>
                 <a href="resources.html">Sprocket Guides</a>
@@ -309,50 +424,66 @@ class githubTools(commands.Cog):
             <div>
                 <ul class="navbar">'''
             for subcategory in imageCategoryList:
+                # Use .replace() to create valid filenames/URLs
+                safe_name = subcategory.replace(" ", "")
                 if subcategory == category:
-                    appendation = f'''<li class="active" onclick="document.location='Decals{subcategory}.html'">{subcategory}</li>'''
+                    appendation = f'''<li class="active" onclick="document.location='Decals{safe_name}.html'">{subcategory}</li>'''
                 else:
-                    appendation = f'''<li onclick="document.location='Decals{subcategory}.html'">{subcategory}</li>'''
+                    appendation = f'''<li onclick="document.location='Decals{safe_name}.html'">{subcategory}</li>'''
                 HTMLdoc = f'{HTMLdoc}{appendation}'
-            if category == "Featured":
-                HTMLdocmid = f'''<li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
-                    </div>
-                </div>
-                <div class="wrap">
-                    <div class="box">
-                        <h2>Welcome to the biggest community collection of URL-embeddable decals!</h2> 
-                        <h4>Click on a picture to copy its embeddable URL.</h4>
-                        <h4>Then, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h4>
-                        <h4>Your decals will now automatically download and apply wherever you share your tank!</h4>
-                    </div>
-                </div>
-                <ul class="catalog">'''
+
+            # --- End of common header/nav generation ---
+
+            # --- SPECIAL CASE for RGB Maker ---
+            if category == "RGB Maker":
+                HTMLdoc = f'{HTMLdoc}<li onclick="document.location=\'DecalsContribute.html\'">Contribute your own!</li></ul></div>'
+                HTMLdoc = f'{HTMLdoc}{rgb_maker_content}'
+                HTMLdoc = f'{HTMLdoc}</center></body>{RGB_script}'  # Add the unique script and close tags
+            # --- REGULAR decal page generation ---
             else:
-                HTMLdocmid = f'''
-                            <li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
+                if category == "Featured":
+                    HTMLdocmid = f'''<li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
                         </div>
                     </div>
-                </div>
-                <div class="wrap">
-                    <div class="box">
-                        <h4>Click on a picture to copy its embeddable URL.</h4>
-                        <h4>Then, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h4>
-                        <h4>Your decals will now automatically download and apply wherever you share your tank!</h4>
+                    <div class="wrap">
+                        <div class="box">
+                            <h2>Welcome to the biggest community collection of URL-embeddable decals!</h2> 
+                            <h4>Click on a picture to copy its embeddable URL.</h4>
+                            <h4>Then, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h4>
+                            <h4>Your decals will now automatically download and apply wherever you share your tank!</h4>
+                        </div>
                     </div>
-                </div>
-                <ul class="catalog">'''
-            HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
-            decalList = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' ORDER BY name;''')]
-            for decalInfo in decalList:
-                print("Hi!")
-                decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
-                <h3>{decalInfo['name']}</h3>
-                <h5>Uploaded by: {decalInfo['ownername']}</h5>'''
-                HTMLdoc = f'{HTMLdoc}{decalLI}'
-            HTMLdoc = HTMLdoc + HTMLending
-            saveDirectory = f'{GithubDirectory}{OSslashLine}Decals{category}.html'
+                    <ul class="catalog">'''
+                else:
+                    HTMLdocmid = f'''
+                                <li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wrap">
+                        <div class="box">
+                            <h4>Click on a picture to copy its embeddable URL.</h4>
+                            <h4>Then, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h4>
+                            <h4>Your decals will now automatically download and apply wherever you share your tank!</h4>
+                        </div>
+                    </div>
+                    <ul class="catalog">'''
+                HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
+                decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
+                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' ORDER BY name;''')]
+                for decalInfo in decalList:
+                    print("Hi!")
+                    decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
+                    <h3>{decalInfo['name']}</h3>
+                    <h5>Uploaded by: {decalInfo['ownername']}</h5>'''
+                    HTMLdoc = f'{HTMLdoc}{decalLI}'
+                HTMLdoc = HTMLdoc + HTMLending
+
+            # Save the generated file with the URL-safe name
+            safe_category_name = category.replace(" ", "")
+            saveDirectory = f'{GithubDirectory}{OSslashLine}Decals{safe_category_name}.html'
             print(saveDirectory)
-            with open(saveDirectory, "w") as outfile:
+            with open(saveDirectory, "w", encoding="utf-8") as outfile:
                 outfile.write(HTMLdoc)
             operatingRepo.index.add(saveDirectory)
 
@@ -419,8 +550,10 @@ class githubTools(commands.Cog):
             await ctx.send(await self.bot.error.retrieveError(ctx))
             return
         await ctx.send(f"Reply with the stripped name of the decal you wish to change.  Ex: `6_side_circle.png`")
+
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
         try:
             msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
             decalName = await textTools.sanitize(msg.content.lower())
@@ -440,8 +573,10 @@ class githubTools(commands.Cog):
             await ctx.send(await self.bot.error.retrieveError(ctx))
             return
         await ctx.send(f"Reply with the stripped name of the decal you wish to change.  Ex: `6_side_circle.png`")
+
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
         try:
             msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
             decalName = await textTools.sanitize(msg.content.lower())
@@ -449,8 +584,10 @@ class githubTools(commands.Cog):
             await ctx.send("Operation cancelled.")
             return
         await ctx.send(f"Alright then, pick a new name to use with this decal.")
+
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+
         try:
             msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
             newName = await textTools.sanitize(msg.content.lower())
@@ -461,9 +598,11 @@ class githubTools(commands.Cog):
         await self.bot.sql.databaseExecuteDynamic(
             f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
         await ctx.send("## Config updated!")
+
     async def updateActiveContests(self):
         currentTime = int(time.time())
-        contests = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM contests WHERE starttimestamp < '{currentTime}' AND endtimestamp > '{currentTime}' AND crossServer = 'True';''')]
+        contests = [dict(row) for row in await self.bot.sql.databaseFetch(
+            f'''SELECT * FROM contests WHERE starttimestamp < '{currentTime}' AND endtimestamp > '{currentTime}' AND crossServer = 'True';''')]
         startHTML = '''
         <html>
         <head>
@@ -496,7 +635,7 @@ class githubTools(commands.Cog):
                 </ul>
             </div>
             </center>
-            
+
             <br />
             <h1 class="text-center">
                 Community Contests
@@ -532,6 +671,5 @@ class githubTools(commands.Cog):
         operatingRepo.index.add(saveDirectory)
 
 
-
-async def setup(bot:commands.Bot) -> None:
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(githubTools(bot))
