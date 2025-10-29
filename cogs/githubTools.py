@@ -190,6 +190,100 @@ class githubTools(commands.Cog):
                     await channel.send(
                         f"<@{main.ownerID}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
 
+    @commands.command(name="fixInvalidDecalFilenames",
+                      description="Automatically finds and fixes decal filenames with invalid characters (e.g., colons).")
+    async def fixInvalidDecalFilenames(self, ctx):
+        if ctx.author.id != 712509599135301673:
+            await ctx.send(await self.bot.error.retrieveError(ctx))
+            return
+
+        await ctx.send("Starting bulk-fix process... Searching for decals with invalid filenames (':')...")
+
+        try:
+            # Find all decals with a colon in the strippedname
+            invalid_decals = [dict(row) for row in await self.bot.sql.databaseFetch(
+                f'''SELECT strippedname FROM imagecatalog WHERE strippedname LIKE '%:%';'''
+            )]
+        except Exception as e:
+            await ctx.send(f"An error occurred while querying the database: ```{e}```")
+            return
+
+        if not invalid_decals:
+            await ctx.send("No decals with invalid names were found. All good!")
+            return
+
+        await ctx.send(f"Found {len(invalid_decals)} decals to fix. Beginning operations...")
+
+        fixed_count = 0
+        skipped_count = 0
+        error_count = 0
+        errors = []
+
+        for decal in invalid_decals:
+            old_stripped_name = decal['strippedname']
+            new_stripped_name = old_stripped_name.replace(":", "_")
+
+            # Define all file paths
+            old_catalog_path = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{old_stripped_name}"
+            old_display_path = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{old_stripped_name}"
+            new_catalog_path = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{new_stripped_name}"
+            new_display_path = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{new_stripped_name}"
+
+            try:
+                # --- Pre-Checks ---
+                if not os.path.isfile(old_catalog_path) or not os.path.isfile(old_display_path):
+                    errors.append(f"File missing: `{old_stripped_name}` (DB entry exists but file not found on disk).")
+                    error_count += 1
+                    continue
+
+                if os.path.isfile(new_catalog_path) or os.path.isfile(new_display_path):
+                    errors.append(f"Skipped (Conflict): `{new_stripped_name}` already exists. Manual check required.")
+                    skipped_count += 1
+                    continue
+
+                # --- Execute ---
+                # 1. Rename files on disk
+                os.rename(old_catalog_path, new_catalog_path)
+                os.rename(old_display_path, new_display_path)
+
+                # 2. Update the SQL database
+                await self.bot.sql.databaseExecuteDynamic(
+                    f'''UPDATE imagecatalog SET strippedname = $1 WHERE strippedname = $2''',
+                    [new_stripped_name, old_stripped_name]
+                )
+
+                # 3. Stage the new files in Git (old files will be staged as "deleted" by updateHTML)
+                operatingRepo.index.add([new_catalog_path, new_display_path])
+
+                fixed_count += 1
+
+            except Exception as e:
+                errors.append(f"Error on `{old_stripped_name}`: {e}")
+                error_count += 1
+
+        await ctx.send(f"File operations complete. Processed {len(invalid_decals)} records.\n"
+                       f"✅ **Fixed:** {fixed_count}\n"
+                       f"⚠️ **Skipped (Conflict):** {skipped_count}\n"
+                       f"❌ **Errors:** {error_count}")
+
+        if errors:
+            # Send errors in a follow-up message if there are any
+            error_message = "Errors and Skipped Logs:\n- " + "\n- ".join(errors)
+            if len(error_message) > 2000:
+                await ctx.send(error_message[:1990] + "\n... (truncated)")
+            else:
+                await ctx.send(error_message)
+
+        if fixed_count > 0:
+            await ctx.send("Changes were made. Running HTML update and pushing all changes to GitHub...")
+            try:
+                await githubTools.updateHTML(self, ctx)
+                await ctx.send("Bulk fix complete. All changes have been pushed to GitHub.")
+            except Exception as e:
+                await ctx.send(f"An error occurred during the final `updateHTML` and push: ```{e}```")
+        else:
+            await ctx.send("No changes were made to the files, so no GitHub push was required.")
+
     @commands.command(name="removeDecal", description="Remove a decal from the SprocketTools website")
     async def removeDecal(self, ctx):
         if ctx.author.id != 712509599135301673:
