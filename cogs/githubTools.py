@@ -143,6 +143,10 @@ class githubTools(commands.Cog):
                                                  32)
         await ctx.send(f"Alright, let's get the names down for your images.")
         print(category)
+        operatingRepo = Repo(GithubDirectory)
+        origin = operatingRepo.remote('origin')
+        origin.fetch()
+        origin.pull(origin.refs[0].remote_head)
         for attachment in allAttachments:
             if "image" in attachment.content_type:
                 type = ".png"
@@ -502,7 +506,7 @@ class githubTools(commands.Cog):
                     <link rel="stylesheet" href="stylesV3.css">
                 </head>
             <body>
-            <div class="navbar">
+            <div class="navbar titlenavbar">
                 <img src="SprocketToolsLogo.png"/>
                 <a href="index.html">Home</a>
                 <a href="TopGearCalculator.html">Gear Calculator</a>
@@ -590,7 +594,7 @@ class githubTools(commands.Cog):
                             <link rel="stylesheet" href="stylesV3.css">
                         </head>
                     <body>
-                    <div class="navbar">
+                    <div class="navbar titlenavbar">
                         <a href="index.html">Home</a>
                         <a href="TopGearCalculator.html">Gear Calculator</a>
                         <a href="resources.html">Sprocket Guides</a>
@@ -708,7 +712,7 @@ class githubTools(commands.Cog):
             </style> 
         </head>
         <body>
-            <div class="navbar">
+            <div class="navbar titlenavbar">
             <a href="index.html">Home</a>
             <a href="TopGearCalculator.html">Gear Calculator</a>
             <a  class="active" href="ContestsList.html">Contests</a>

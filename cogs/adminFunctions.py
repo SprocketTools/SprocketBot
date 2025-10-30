@@ -229,6 +229,7 @@ class adminFunctions(commands.Cog):
             embed.add_field(name="A.K.A.", value=f"{message.author.display_name}", inline=False)
             embed.add_field(name="User ID", value=f"{message.author.id}", inline=False)
             embed.add_field(name="User ping", value=f"<@{message.author.id}>", inline=False)
+            embed.add_field(name="Server", value=f"<@{message.guild.name}>", inline=False)
             await logChannel.send(embed=embed)
             await logChannel.send(f'Message content:\n`{message.content}`')
             if userStrikes[message.author.id] == int(serverConfig[message.guild.id]['flagthreshold']) - 1:
