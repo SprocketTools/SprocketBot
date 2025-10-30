@@ -789,11 +789,11 @@ class githubTools(commands.Cog):
             outfile.write(HTMLdoccontribute)
         operatingRepo.index.add(saveDirectory)
 
-        await githubTools.updateActiveContests(self)
+        # await githubTools.updateActiveContests(self)
         await ctx.send("Done!")
         try:
             operatingRepo.git.add(update=True)
-            operatingRepo.index.commit("Automated decal updating sequence")
+            operatingRepo.index.commit("Automated decal/paint updating sequence")
             origin = operatingRepo.remote(name='origin')
             origin.push().raise_if_error()
             await ctx.send("Decals are now pushed to GitHub!")
