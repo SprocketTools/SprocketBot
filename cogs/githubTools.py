@@ -525,6 +525,7 @@ class githubTools(commands.Cog):
                 <a href="credits.html">Credits</a>
                 <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
                 <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
+                <a href="PaintsFeatured.html">Paint Catalog</a>
                 <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
             </div>
             <div class="container">
