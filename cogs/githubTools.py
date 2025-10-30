@@ -134,10 +134,11 @@ class githubTools(commands.Cog):
             await ctx.send(
                 "Note: this command no longer looks for images attached to the command initiation itself.  You will need to upload the images again.")
         allAttachments = await textTools.getManyFilesResponse(ctx,
-                                                              "Process started.\nUpload up to 10 images that you wish to add to the SprocketTools decal catalog.")
+                                                              "## Process started!\nUpload up to 10 images that you wish to add to the SprocketTools decal or paint catalog.")
         if len(allAttachments) == 0:
             await self.bot.error.sendError(ctx)
             return
+        await ctx.send("Are you submitting decal(s) or paint(s)?")
         itemType = await ctx.bot.ui.getButtonChoice(ctx, ["decal", "paint"])
         if itemType == "paint":
             imageCategoryListIn = paintCategoryList
@@ -149,7 +150,8 @@ class githubTools(commands.Cog):
         tags = await textTools.getCappedResponse(ctx,
                                                  "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`",
                                                  32)
-        await ctx.send(f"Alright, let's get the names down for your images.")
+        await ctx.send(f"Got it!\n\n Next, let's get the names down for your images.  These are the titles that users will see when browsing the catalog.")
+
         print(category)
         operatingRepo = Repo(GithubDirectory)
         origin = operatingRepo.remote('origin')
@@ -687,7 +689,9 @@ class githubTools(commands.Cog):
                 outfile.write(HTMLdoc)
             operatingRepo.index.add(saveDirectory)
 
-        # specialized entry for the contribution directory
+
+
+        # specialized entry for the contribution directory (paints)
         HTMLdoccontribute = f'''<html>
                         <head>
                             <title>Contribute Paints</title>
@@ -702,24 +706,24 @@ class githubTools(commands.Cog):
                         <a href="resources.html">Sprocket Guides</a>
                         <a href="credits.html">Credits</a>
                         <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
-                        <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
-                        <a href="PaintsFeatured.html">Paint Catalog</a>
+                        <a href="DecalsFeatured.html">Decal Catalog</a>
+                        <a class="active" href="PaintsFeatured.html">Paint Catalog</a>
                         <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
                     </div>
 
                     <div>
                         <ul class="navbar">'''
-        for subcategory in imageCategoryList:
+        for subcategory in paintCategoryList:
             appendation = f'''<li onclick="document.location='Paints{subcategory}.html'">{subcategory}</li>'''
             HTMLdoccontribute = f'{HTMLdoccontribute}{appendation}'
 
-        HTMLdoccontributemid = '''<li class="active" onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
+        HTMLdoccontributemid = '''<li class="active" onclick="document.location='PaintsContribute.html'">Contribute your own!</li>
                             </div>
                         </div>
                         <div class="wrap">
-                            <h1 class="text-center">Contributing Decals</h1>
+                            <h1 class="text-center">Contributing Paints</h1>
                             <div class="box">
-                                <h4>To contribute your own decals to the catalog, use the -submitDecal command in any discord server with Sprocket Bot.</h4> 
+                                <h4>To contribute your own paint to the catalog, use the -submitDecal command in any discord server with Sprocket Bot.</h4> 
                                 <h4>This includes the <a href="https://discord.gg/sprocket">Sprocket Official Discord</a>.</h4>
                                 <h3>Decals need to meet the following criteria:</h3>   
                                 <h5>- Files must be a .png</h5>
@@ -729,11 +733,62 @@ class githubTools(commands.Cog):
                         </div>
                         </center></body></html>'''
         HTMLdoccontribute = f'{HTMLdoccontribute}{HTMLdoccontributemid}'
+        saveDirectory = f'{GithubDirectory}{OSslashLine}PaintsContribute.html'
+        print(saveDirectory)
+        with open(saveDirectory, "w") as outfile:
+            outfile.write(HTMLdoccontribute)
+        operatingRepo.index.add(saveDirectory)
+
+
+
+        # specialized entry for the contribution directory (decals)
+        HTMLdoccontribute = f'''<html>
+                                <head>
+                                    <title>Contribute Decals</title>
+                                    <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
+                                    <link rel="icon" type="image/x-icon" href="SprocketToolsLogo.png">
+                                    <link rel="stylesheet" href="stylesV3.css">
+                                </head>
+                            <body>
+                            <div class="navbar titlenavbar">
+                                <a href="index.html">Home</a>
+                                <a href="TopGearCalculator.html">Gear Calculator</a>
+                                <a href="resources.html">Sprocket Guides</a>
+                                <a href="credits.html">Credits</a>
+                                <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
+                                <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
+                                <a href="PaintsFeatured.html">Paint Catalog</a>
+                                <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
+                            </div>
+
+                            <div>
+                                <ul class="navbar">'''
+        for subcategory in imageCategoryList:
+            appendation = f'''<li onclick="document.location='Decals{subcategory}.html'">{subcategory}</li>'''
+            HTMLdoccontribute = f'{HTMLdoccontribute}{appendation}'
+
+        HTMLdoccontributemid = '''<li class="active" onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
+                                    </div>
+                                </div>
+                                <div class="wrap">
+                                    <h1 class="text-center">Contributing Decals</h1>
+                                    <div class="box">
+                                        <h4>To contribute your own decals to the catalog, use the -submitDecal command in any discord server with Sprocket Bot.</h4> 
+                                        <h4>This includes the <a href="https://discord.gg/sprocket">Sprocket Official Discord</a>.</h4>
+                                        <h3>Decals need to meet the following criteria:</h3>   
+                                        <h5>- Files must be a .png</h5>
+                                        <h5>- Files should not exceed 1MB in size</h5>
+                                        <h5>- Decals need to be compliant with Discord TOS (no hateful symbols, NSFW, etc.)</h5>
+                                    </div>
+                                </div>
+                                </center></body></html>'''
+        HTMLdoccontribute = f'{HTMLdoccontribute}{HTMLdoccontributemid}'
         saveDirectory = f'{GithubDirectory}{OSslashLine}DecalsContribute.html'
         print(saveDirectory)
         with open(saveDirectory, "w") as outfile:
             outfile.write(HTMLdoccontribute)
         operatingRepo.index.add(saveDirectory)
+
         await githubTools.updateActiveContests(self)
         await ctx.send("Done!")
         try:
