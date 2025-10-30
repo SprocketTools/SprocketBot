@@ -28,6 +28,7 @@ except Exception as e:
 imageCategoryList = ["Featured", "Chalk", "Fictional Insignia", "Historical Insignia", "Inscriptions", "Labels",
                      "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures",
                      "Weathering", "Welding", "RGB Maker"]
+paintCategoryList = ["Featured", "WWI", "WWII", "Cold War", "Modern", ""]
 # GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
 username = 'SprocketTools'
 password = main.githubPAT
@@ -97,7 +98,8 @@ class githubTools(commands.Cog):
                                       approved VARCHAR,
                                       ownername VARCHAR,
                                       ownerid BIGINT,
-                                      category VARCHAR);''')
+                                      category VARCHAR,
+                                      type VARCHAR);''')
         await self.bot.sql.databaseExecute(prompt)
         imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}"
         imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}"
@@ -136,8 +138,14 @@ class githubTools(commands.Cog):
         if len(allAttachments) == 0:
             await self.bot.error.sendError(ctx)
             return
+        itemType = await ctx.bot.ui.getButtonChoice(ctx, ["decal", "paint"])
+        if itemType == "paint":
+            imageCategoryListIn = paintCategoryList
+        else:
+            imageCategoryListIn = imageCategoryList
+
         userPrompt = "What category should the image(s) go into?"
-        category = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+        category = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryListIn, userPrompt)
         tags = await textTools.getCappedResponse(ctx,
                                                  "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`",
                                                  32)
@@ -185,9 +193,9 @@ class githubTools(commands.Cog):
                     # await ctx.send(file=file)
 
                     values = [name, tags, strippedname, 'Pending', str(self.bot.get_user(ctx.author.id)), ctx.author.id,
-                              category]
+                              category, itemType]
                     await self.bot.sql.databaseExecuteDynamic(
-                        f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category) VALUES ($1, $2, $3, $4, $5, $6, $7);''',
+                        f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);''',
                         values)
                     await ctx.send(f"### The image {strippedname} has been sent off for approval!")
                     channel = self.bot.get_channel(1152377925916688484)
@@ -329,7 +337,7 @@ class githubTools(commands.Cog):
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{decalInfo['strippedname']}"
                 imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{decalInfo['strippedname']}"
                 await ctx.send(file=discord.File(imageCatalogFilepath))
-                userPrompt = f"Do you want to approve this decal? \nName: {decalInfo['name']}\nFilename: {decalInfo['strippedname']}\nOwner: {decalInfo['ownername']} (<@{decalInfo['ownerid']}>)\nCategory: {decalInfo['category']}"
+                userPrompt = f"Do you want to approve this {decalInfo['type']}? \nName: {decalInfo['name']}\nFilename: {decalInfo['strippedname']}\nOwner: {decalInfo['ownername']} (<@{decalInfo['ownerid']}>)\nCategory: {decalInfo['category']}"
                 responseList = ["Too inappropriate", "Invalid category", "Inadequate image quality",
                                 "Image descriptions are not consistent", "Rejection was requested by submitter",
                                 "Other", "No", "Override Name", "Override Category", "Yes"]
@@ -344,9 +352,12 @@ class githubTools(commands.Cog):
                     operatingRepo.index.add(imageCatalogFilepath)
                     operatingRepo.index.add(imageDisplayFilepath)
                 elif answer == "Override Category":
-                    userPrompt = f"Alright then, pick a new category to use with this decal."
+                    userPrompt = f"Alright then, pick a new category to use with this {decalInfo['type']}."
                     values = [decalInfo['strippedname']]
-                    newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+                    if decalInfo["type"] == "paint":
+                        newCategory = await ctx.bot.ui.getChoiceFromList(ctx, paintCategoryList, userPrompt)
+                    else:
+                        newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
                     await self.bot.sql.databaseExecuteDynamic(
                         f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
                     values = [newCategory, decalInfo['strippedname']]
@@ -354,7 +365,7 @@ class githubTools(commands.Cog):
                         f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     await recipient.send(
-                        f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the category was changed to "{newCategory}."')
+                        f'Your {decalInfo["type"]} "{decalInfo["strippedname"]}" was approved!  \nNote: the category was changed to "{newCategory}."')
                     await ctx.send("## Approved! \n(with a category change)")
                     operatingRepo.index.add(imageCatalogFilepath)
                     operatingRepo.index.add(imageDisplayFilepath)
@@ -390,7 +401,7 @@ class githubTools(commands.Cog):
                     os.remove(imageCatalogFilepath)
                     os.remove(imageDisplayFilepath)
                     await recipient.send(
-                        f'Your decal "{decalInfo["strippedname"]}" was not approved.  Reason: {answer}')
+                        f'Your {decalInfo["type"]} "{decalInfo["strippedname"]}" was not approved.  Reason: {answer}')
                     await ctx.send(f"## Done!\nRejection letter was sent to <@{decalInfo['ownerid']}>")
         except Exception:
             await ctx.send("Looks like there are no more decals to approve!")
@@ -488,7 +499,7 @@ class githubTools(commands.Cog):
                 }
         </script></html>'''
 
-        # Update all the main pages first
+        # Update all the main decal pages first
         for category in imageCategoryList:
             inText = category
             # Handle page titles
@@ -568,7 +579,7 @@ class githubTools(commands.Cog):
                     <ul class="catalog">'''
                 HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
                 decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
-                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' ORDER BY name;''')]
+                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND type != 'paint' ORDER BY name;''')]
                 for decalInfo in decalList:
                     print("Hi!")
                     decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
@@ -585,10 +596,100 @@ class githubTools(commands.Cog):
                 outfile.write(HTMLdoc)
             operatingRepo.index.add(saveDirectory)
 
+
+        # Update the paint pages next
+        for category in paintCategoryList:
+            inText = category
+            # Handle page titles
+            if category == "Featured":
+                inText = "SprocketTools Paint Catalog"
+
+            # --- Build the common header and top navigation for every page ---
+            HTMLdoc = f'''<html>
+                <head>
+                    <title>{inText}</title>
+                    <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
+                    <link rel="icon" type="image/x-icon" href="SprocketToolsLogo.png">
+                    <link rel="stylesheet" href="stylesV3.css">
+                </head>
+            <body>
+            <div class="navbar titlenavbar">
+                <img src="SprocketToolsLogo.png"/>
+                <a href="index.html">Home</a>
+                <a href="TopGearCalculator.html">Gear Calculator</a>
+                <a href="resources.html">Sprocket Guides</a>
+                <a href="credits.html">Credits</a>
+                <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
+                <a href="DecalsFeatured.html">Decal Catalog</a>
+                <a class="active" href="PaintsFeatured.html">Paint Catalog</a>
+                <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
+            </div>
+            <div class="container">
+                <h1 class="text-center">{inText}</h1>
+            </div>
+            <div>
+                <ul class="navbar">'''
+            for subcategory in paintCategoryList:
+                # Use .replace() to create valid filenames/URLs
+                safe_name = subcategory.replace(" ", "")
+                if subcategory == category:
+                    appendation = f'''<li class="active" onclick="document.location='Paints{safe_name}.html'">{subcategory}</li>'''
+                else:
+                    appendation = f'''<li onclick="document.location='Paints{safe_name}.html'">{subcategory}</li>'''
+                HTMLdoc = f'{HTMLdoc}{appendation}'
+
+            # --- End of common header/nav generation ---
+
+            if category == "Featured":
+                HTMLdocmid = f'''<li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
+                    </div>
+                </div>
+                <div class="wrap">
+                    <div class="box">
+                        <h2>Welcome to the biggest community collection of URL-embeddable paint jobs!</h2> 
+                        <h3>Click on a picture to copy its embeddable URL.</h3>
+                        <h4>Then, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h4>
+                        <h4>Your decals will now automatically download and apply wherever you share your tank!</h4>
+                    </div>
+                </div>
+                <ul class="catalog">'''
+            else:
+                HTMLdocmid = f'''
+                            <li onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
+                        </div>
+                    </div>
+                </div>
+                <div class="wrap">
+                    <div class="box">
+                        <h3>Click on a picture to copy its embeddable URL.</h3>
+                        <h4>Then, select a decal in Sprocket Tank Design, and then paste the link into the URL field.</h4>
+                        <h4>Your decals will now automatically download and apply wherever you share your tank!</h4>
+                    </div>
+                </div>
+                <ul class="catalog">'''
+            HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
+            decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
+                f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND type = 'paint' ORDER BY name;''')]
+            for decalInfo in decalList:
+                print("Hi!")
+                decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
+                <h3>{decalInfo['name']}</h3>
+                <h5>Uploaded by: {decalInfo['ownername']}</h5>'''
+                HTMLdoc = f'{HTMLdoc}{decalLI}'
+            HTMLdoc = HTMLdoc + HTMLending
+
+            # Save the generated file with the URL-safe name
+            safe_category_name = category.replace(" ", "")
+            saveDirectory = f'{GithubDirectory}{OSslashLine}Paints{safe_category_name}.html'
+            print(saveDirectory)
+            with open(saveDirectory, "w", encoding="utf-8") as outfile:
+                outfile.write(HTMLdoc)
+            operatingRepo.index.add(saveDirectory)
+
         # specialized entry for the contribution directory
         HTMLdoccontribute = f'''<html>
                         <head>
-                            <title>Contribute Decals</title>
+                            <title>Contribute Paints</title>
                             <link rel="stylesheet" href="https://use.typekit.net/oov2wcw.css">
                             <link rel="icon" type="image/x-icon" href="SprocketToolsLogo.png">
                             <link rel="stylesheet" href="stylesV3.css">
@@ -601,13 +702,14 @@ class githubTools(commands.Cog):
                         <a href="credits.html">Credits</a>
                         <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
                         <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
+                        <a href="PaintsFeatured.html">Paint Catalog</a>
                         <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
                     </div>
 
                     <div>
                         <ul class="navbar">'''
         for subcategory in imageCategoryList:
-            appendation = f'''<li onclick="document.location='Decals{subcategory}.html'">{subcategory}</li>'''
+            appendation = f'''<li onclick="document.location='Paints{subcategory}.html'">{subcategory}</li>'''
             HTMLdoccontribute = f'{HTMLdoccontribute}{appendation}'
 
         HTMLdoccontributemid = '''<li class="active" onclick="document.location='DecalsContribute.html'">Contribute your own!</li>
@@ -639,8 +741,8 @@ class githubTools(commands.Cog):
             origin = operatingRepo.remote(name='origin')
             origin.push().raise_if_error()
             await ctx.send("Decals are now pushed to GitHub!")
-        except:
-            await ctx.send("Some error occurred pushing the decals to GitHub.")
+        except Exception as e:
+            await ctx.send(f"Some error occurred pushing the decals to GitHub: {e}.")
 
     @commands.command(name="changeDecalCategory", description="change a decal category from the SprocketTools website")
     async def changeDecalCategory(self, ctx):
