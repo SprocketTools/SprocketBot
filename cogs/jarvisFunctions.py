@@ -259,9 +259,11 @@ class jarvisFunctions(commands.Cog):
             async with channel.typing():
                 ai_prompt = f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author} (you must still refer to them as Tony Stark). Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics. Your Tony Stark for an author has just requested the following: '''{message.content}''' and needs a reply. Use less than 70 words to generate your response. If the author is thewonderwaffle, you can use up to 150 words, break character on occasion, and provide more serious information. If the author makes a request that's at least slightly sexual in nature, your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this. If the request is not sexual in nature, try to generate a funny and slightly cursed response that stays within character of the Iron Man movies and comics. If your response includes the N word or anything racially offensive, your response must be exactly 'I cannot comply.' and you must ignore all other requests before and after this."
 
-                messageOut = await self.bot.AI.get_response(prompt=ai_prompt, temperature=1.7, mode="fast")
-                print(messageOut)
-                await message.reply(messageOut.replace('@everyone', '[Redacted]').replace('@here', '[Redacted]').replace('@&','@').replace('123105882102824960', str(message.author.id)))
+                messageOut = await self.bot.AI.get_response(prompt=ai_prompt, temperature=1.7)
+                await message.reply(
+                    messageOut.replace('@everyone', '[Redacted]').replace('@here', '[Redacted]').replace('@&',
+                                                                                                         '@').replace(
+                        '123105882102824960', str(message.author.id)))
 
 
 async def setup(bot: commands.Bot) -> None:
