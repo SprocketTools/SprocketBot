@@ -582,7 +582,7 @@ class githubTools(commands.Cog):
                     <ul class="catalog">'''
                 HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
                 decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
-                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' ORDER BY name;''')]
+                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND (type <> 'paint' OR type IS NULL) ORDER BY name;''')]
                 for decalInfo in decalList:
                     print("Hi!")
                     decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
