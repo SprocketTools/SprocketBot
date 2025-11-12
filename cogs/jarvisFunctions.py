@@ -243,13 +243,13 @@ class jarvisFunctions(commands.Cog):
                 last_triggered = self.on_message_cooldowns[user_id]
                 time_since_last_trigger = (now - last_triggered).total_seconds()
                 if time_since_last_trigger < active_cooldown:
-                    if self.on_message_cooldowns_notify.get(user_id) == False:
-                        if self.on_message_cooldowns_burst[user_id] > 1: # burst length
+                    if self.on_message_cooldowns_burst[user_id] > 1: # burst length
+                        if self.on_message_cooldowns_notify.get(user_id) == False:
                             remaining_time = active_cooldown - time_since_last_trigger
                             await message.author.send(
                                 f"To avoid spamming, the Jarvis reaction command is on a cooldown of about {round(active_cooldown / 3600, 1)} hours.")
                             self.on_message_cooldowns_notify[user_id] = True
-                    return
+                        return
                 else:
                     self.on_message_cooldowns_burst[user_id] = 0
             self.on_message_cooldowns[user_id] = now
