@@ -224,8 +224,8 @@ class jarvisFunctions(commands.Cog):
             # Cooldown logic (copied from testingFunctions.py)
             special_users = [220134579736936448, 437324319102730263, 806938248060469280, 198602742317580288,
                              870337116381515816, 298548176778952704, 874912257128136734]
-            exec_users = [199887270323552256, 299330776162631680, 502814400562987008,
-                          686640777505669141] #712509599135301673,
+            exec_users = [712509599135301673, 199887270323552256, 299330776162631680, 502814400562987008,
+                          686640777505669141]
 
             active_cooldown = self.cooldown
             if message.author.id in special_users or message.author.guild_permissions.ban_members:
@@ -243,7 +243,7 @@ class jarvisFunctions(commands.Cog):
                 last_triggered = self.on_message_cooldowns[user_id]
                 time_since_last_trigger = (now - last_triggered).total_seconds()
                 if time_since_last_trigger < active_cooldown:
-                    if self.on_message_cooldowns_burst[user_id] > 1: # burst length
+                    if self.on_message_cooldowns_burst[user_id] > 2: # burst length
                         if self.on_message_cooldowns_notify.get(user_id) == False:
                             remaining_time = active_cooldown - time_since_last_trigger
                             await message.author.send(
