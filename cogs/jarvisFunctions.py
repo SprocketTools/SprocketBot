@@ -22,6 +22,7 @@ class jarvisFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.on_message_cooldowns = {}
+        self.on_message_cooldowns_burst = {}
         self.on_message_cooldowns_notify = {}
         self.cooldown = 11880  # Retained original cooldown value
         self.geminikey = self.bot.geminikey
@@ -223,8 +224,8 @@ class jarvisFunctions(commands.Cog):
             # Cooldown logic (copied from testingFunctions.py)
             special_users = [220134579736936448, 437324319102730263, 806938248060469280, 198602742317580288,
                              870337116381515816, 298548176778952704, 874912257128136734]
-            exec_users = [712509599135301673, 199887270323552256, 299330776162631680, 502814400562987008,
-                          686640777505669141]
+            exec_users = [199887270323552256, 299330776162631680, 502814400562987008,
+                          686640777505669141] #712509599135301673,
 
             active_cooldown = self.cooldown
             if message.author.id in special_users or message.author.guild_permissions.ban_members:
@@ -235,18 +236,26 @@ class jarvisFunctions(commands.Cog):
                 active_cooldown = round(active_cooldown / 24)
 
             # Check cooldown
-            if user_id in self.on_message_cooldowns:
+            if user_id not in self.on_message_cooldowns:
+                self.on_message_cooldowns_burst[user_id] = 0
+            else:
+                self.on_message_cooldowns_burst[user_id] = self.on_message_cooldowns_burst[user_id] + 1
                 last_triggered = self.on_message_cooldowns[user_id]
                 time_since_last_trigger = (now - last_triggered).total_seconds()
                 if time_since_last_trigger < active_cooldown:
                     if self.on_message_cooldowns_notify.get(user_id) == False:
-                        remaining_time = active_cooldown - time_since_last_trigger
-                        await message.author.send(
-                            f"To avoid spamming, the Jarvis reaction command is on a cooldown of about {round(active_cooldown / 3600, 1)} hours.")
-                        self.on_message_cooldowns_notify[user_id] = True
+                        if self.on_message_cooldowns_burst[user_id] > 1: # burst length
+                            remaining_time = active_cooldown - time_since_last_trigger
+                            await message.author.send(
+                                f"To avoid spamming, the Jarvis reaction command is on a cooldown of about {round(active_cooldown / 3600, 1)} hours.")
+                            self.on_message_cooldowns_notify[user_id] = True
                     return
+                else:
+                    self.on_message_cooldowns_burst[user_id] = 0
             self.on_message_cooldowns[user_id] = now
             self.on_message_cooldowns_notify[user_id] = False
+
+            print("got this far")
 
             # --- AI Response Generation ---
             channel = message.channel
