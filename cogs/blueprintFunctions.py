@@ -1070,7 +1070,7 @@ class blueprintFunctions(commands.Cog):
 
                 # --- 2. Setup for Rendering Loop ---
                 images = []
-                iframes = 100  # Increase frames for a smoother GIF
+                iframes = 8  # Increase frames for a smoother GIF
 
                 # Pre-calculate the model's bounds to keep the camera framing consistent
                 x_min, x_max = vertices[:, 0].min(), vertices[:, 0].max()
@@ -1086,7 +1086,7 @@ class blueprintFunctions(commands.Cog):
                 # --- 3. Rendering Loop ---
                 for i in range(iframes):
                     # Create a Matplotlib Figure and a 3D subplot
-                    fig = plt.figure(figsize=(8, 8), dpi=300)  # Control image size and resolution
+                    fig = plt.figure(figsize=(8, 8), dpi=200)  # Control image size and resolution
                     ax = fig.add_subplot(111, projection='3d')
 
                     # Create a list of polygons from the vertex and face data for the mesh
@@ -1135,7 +1135,7 @@ class blueprintFunctions(commands.Cog):
                     format='GIF',
                     save_all=True,
                     append_images=images[1:],
-                    duration=300,  # milliseconds per frame
+                    duration=450,  # milliseconds per frame
                     loop=0
                 )
                 gif_buffer.seek(0)
