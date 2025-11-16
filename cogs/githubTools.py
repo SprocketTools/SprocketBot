@@ -150,7 +150,7 @@ class githubTools(commands.Cog):
         tags = await textTools.getCappedResponse(ctx,
                                                  "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`",
                                                  32)
-        await ctx.send(f"Got it!\n\n Next, let's get the names down for your images.  These are the titles that users will see when browsing the catalog.")
+        await ctx.send(f'''Got it!\n\n Next, let's get the names down for your images.  These are the titles that users will see when browsing the catalog.\n- Stick to a lower case format with spaces "like this" for the names.\n- Avoid using punctuation.''')
 
         print(category)
         operatingRepo = Repo(GithubDirectory)
