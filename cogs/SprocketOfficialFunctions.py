@@ -76,12 +76,12 @@ class SprocketOfficialFunctions(commands.Cog):
             return
         print(channel.name)
         messages = []
-        message_raw = channel.history(limit=1000)
+        message_raw = channel.history(limit=600)
         await ctx.send("Running checks...")
         async for messagee in message_raw:
             messages.append({'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
                              "user_id": messagee.author.id, 'content': messagee.content, 'message_url': messagee.jump_url})
-        ai_response = await ctx.bot.AI.get_response(prompt=f"Here is the question asked by the user: {messageOut}\n----------------\nHere is the recent history in reverse order: {messages}", temperature=0.1, instructions="Analyze the attached message history and see if the developer 'Hamish' has already answered the question.  If he has answered it, reply with a comma-separated list of the 'message_url' URLs that link to answers from Hamish.  If the user's question is only a game suggestion, and not an more general question for the developer, reply with exactly 'no' so that the processing code allows the user to continue.  Otherwise, reply with exactly 'yes'")
+        ai_response = await ctx.bot.AI.get_response(prompt=f"Analyze the attached message history and see if the developer 'Hamish' has directly already answered the user's question (not indirectly).  If he has answered it, reply with a comma-separated list of the 'message_url' URLs that link to answers from Hamish.  If the user's question is a game suggestion, and not an more general question for the developer, reply with exactly 'no' so that the processing code allows the user to continue.  Otherwise, reply with exactly 'yes'", temperature=0.8, instructions=f"Here is the question asked by the user: {messageOut}\n----------------\nHere is the recent history in reverse order: {messages}\n\n")
 
         if "https://" in ai_response:
             await ctx.message.reply(f"It seems like this question has already been answered here: {ai_response}")
