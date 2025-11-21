@@ -85,8 +85,7 @@ class SprocketOfficialFunctions(commands.Cog):
 
         if "https://" in ai_response:
             await ctx.message.reply(f"It seems like this question has already been answered here: {ai_response}")
-            await ctx.send("")
-            if len(ai_response.split("://")) > 4:
+            if len(ai_response.split("://")) < 4:
                 await ctx.send("Does this help answer your question?")
                 if await self.bot.ui.getYesNoChoice(ctx) == False:
                     await ctx.send("Awesome, glad I could help!")
