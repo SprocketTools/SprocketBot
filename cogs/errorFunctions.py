@@ -2,6 +2,9 @@ from datetime import datetime
 import discord, random, asyncio, re
 from discord.ext import commands
 
+from cogs.textTools import textTools
+
+
 class errorFunctions(commands.Cog):
     errorList = []
     def __init__(self, bot: commands.Bot):
@@ -216,7 +219,7 @@ class errorFunctions(commands.Cog):
                     await recipient.send(f"Your error message:\n{error['error']}\nHas been added to the catalog!  Thanks for the submission!")
 
                 elif value == "Modify text":
-                    newMessage = await self.bot.error.getTextResponse(ctx, "What do you want the modified error message to be?")
+                    newMessage = await textTools.getResponse(ctx, "What do you want the modified error message to be?")
                     await self.bot.sql.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [error["error"]])
                     await self.bot.sql.databaseExecuteDynamic('''INSERT INTO errorlist VALUES ($1, $2, $3, $4);''',[newMessage, True, error["userid"], error["errortype"]])
                     await ctx.send("Modified message added!")
