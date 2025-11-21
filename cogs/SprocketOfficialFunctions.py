@@ -85,16 +85,19 @@ class SprocketOfficialFunctions(commands.Cog):
 
         if "https://" in ai_response:
             await ctx.message.reply(f"It seems like this question has already been answered here: {ai_response}")
-            if len(ai_response.split("://")) < 4:
+            if len(ai_response.split("://")) < 3:
                 await ctx.send("Does this help answer your question?")
-                if await self.bot.ui.getYesNoChoice(ctx) == False:
+                if await self.bot.ui.getYesNoChoice(ctx) == True:
                     await ctx.send("Awesome, glad I could help!")
                     return
+                else:
+                    await self.bot.error.sendError(ctx)
+                    await ctx.send("Let's send it then.\n\n")
         elif "no" in ai_response.lower():
             await ctx.message.reply(f"{await self.bot.error.retrieveError(ctx)}\nIt seems like this question is a game suggestion and not a question for the developer.")
             return
 
-        await ctx.send(f"Confirm that you wish to send the following question: \n\n{messageOut}\n\nReply with 'yes' to confirm.")
+        await ctx.send(f"## Confirm that you wish to send the following question: \n\n{messageOut}\n\nReply with 'yes' to confirm.")
 
         def check(m: discord.Message):
             return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
@@ -150,6 +153,7 @@ class SprocketOfficialFunctions(commands.Cog):
             for attachment in msg.attachments:
                 file = await attachment.to_file()
                 await channel.send(file=file, content=" ")
+            await ctx.send("## Sent!")
         except Exception:
             await ctx.reply(await self.bot.error.retrieveError(ctx))
             return
