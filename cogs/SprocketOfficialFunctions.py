@@ -86,7 +86,11 @@ class SprocketOfficialFunctions(commands.Cog):
         if "https://" in ai_response:
             await ctx.message.reply(f"It seems like this question has already been answered here: {ai_response}")
             await ctx.send("")
-            return
+            if len(ai_response.split("://")) > 2:
+                await ctx.send("Does this help answer your question?")
+                if await self.bot.ui.getYesNoChoice(ctx) == False:
+                    await ctx.send("Awesome, glad I could help!")
+                    return
         elif "no" in ai_response.lower():
             await ctx.message.reply(f"{await self.bot.error.retrieveError(ctx)}\nIt seems like this question is a game suggestion and not a question for the developer.")
             return
