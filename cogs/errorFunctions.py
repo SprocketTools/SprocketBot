@@ -41,7 +41,7 @@ class errorFunctions(commands.Cog):
             except Exception as e:
                 print(e)
                 error = await self.bot.error.retrieveError(ctx)
-                await ctx.send(f"{error}\n\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
+                await ctx.send(f"{error}\n\n{e}\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
         if random.random() < 0.001:
             ttsp = True
