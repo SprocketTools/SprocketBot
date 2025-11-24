@@ -21,13 +21,13 @@ class timedMessageTools(commands.Cog):
         data = await self.bot.sql.databaseFetchdict('''SELECT id, ownerid, channelid, content, webhookid, EXTRACT(EPOCH FROM (time - CURRENT_TIMESTAMP)) as extract FROM timedmessages;''') # WHERE time > CURRENT_TIMESTAMP
         if not data:
             print("No timed messages to restore.")
-            return
-        tasks = []
-        for message_data in data:
-            print(f"task: {message_data['id']}")
-            tasks.append(self.sendScheduledMessage(message_data))
-        if tasks:
-            await asyncio.gather(*tasks)
+        else:
+            tasks = []
+            for message_data in data:
+                print(f"task: {message_data['id']}")
+                tasks.append(self.sendScheduledMessage(message_data))
+            if tasks:
+                await asyncio.gather(*tasks)
 
     async def sendScheduledMessage(self, data):
         print(data)
