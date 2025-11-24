@@ -93,6 +93,8 @@ class SprocketOfficialFunctions(commands.Cog):
                 else:
                     await self.bot.error.sendError(ctx)
                     await ctx.send("Let's send it then.\n\n")
+            else:
+                return
         elif "no" in ai_response.lower():
             await ctx.message.reply(f"{await self.bot.error.retrieveError(ctx)}\nIt seems like this question is a game suggestion and not a question for the developer.")
             return
