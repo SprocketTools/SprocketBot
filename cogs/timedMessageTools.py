@@ -18,16 +18,17 @@ class timedMessageTools(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("setup hook")
-        data = await self.bot.sql.databaseFetchdict('''SELECT id, ownerid, channelid, content, EXTRACT(EPOCH FROM (time - CURRENT_TIMESTAMP)) FROM timedmessages WHERE EXTRACT(EPOCH FROM (time)) > 9;''') # WHERE time > CURRENT_TIMESTAMP
+        data = await self.bot.sql.databaseFetchdict('''SELECT id, ownerid, channelid, content, webhookid, EXTRACT(EPOCH FROM (time - CURRENT_TIMESTAMP)) as extract FROM timedmessages;''') # WHERE time > CURRENT_TIMESTAMP
+        if not data:
+            print("No timed messages to restore.")
+            return
         tasks = []
         for message_data in data:
-            print(data)
-            try:
-                channel = await self.bot.fetch_channel((int(data['channelid'])))
-                tasks.append(self.sendScheduledMessage(message_data))
-            except Exception:
-                pass
-        await asyncio.gather(*tasks)
+            print(f"task: {message_data['id']}")
+            tasks.append(self.sendScheduledMessage(message_data))
+        if tasks:
+            await asyncio.gather(*tasks)
+
     async def sendScheduledMessage(self, data):
         print(data)
         delay_secs = max(int(data['extract']), 0)

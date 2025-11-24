@@ -33,13 +33,11 @@ class errorFunctions(commands.Cog):
         else:
             serverID = (ctx.guild.id)
             try:
-                #print(await self.bot.sql.databaseFetchdictDynamic(f'''SELECT commandschannelid FROM serverconfig WHERE serverid = $1''', [serverID]))
                 channel = int((await self.bot.sql.databaseFetchdictDynamic(f'''SELECT commandschannelid FROM serverconfig WHERE serverid = $1''', [serverID]))[0]['commandschannelid'])
                 if ctx.channel.id != channel:
                     await ctx.send(f"This command is restricted to <#{channel}>")
                     return
             except Exception as e:
-                print(e)
                 error = await self.bot.error.retrieveError(ctx)
                 await ctx.send(f"{error}\n\n{e}\nUtility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet!  Ask them to run the `-setup` command in one of their private channels.")
                 return
