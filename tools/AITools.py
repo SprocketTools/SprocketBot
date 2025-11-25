@@ -26,27 +26,34 @@ class GeminiAITools:
             gemini = genai.Client(api_key=random.choice(self.keys))
 
             # Create the specific config object your library expects
-            # We put system_instruction INSIDE here, and use the class 'GenerateContentConfig'
             config_obj = types.GenerateContentConfig(
                 temperature=temperature,
                 system_instruction=system_instructions
             )
 
-            # The BLOCKING call (Fixed argument name to 'config')
+            # The BLOCKING call
             message = gemini.models.generate_content(
                 model=model_name,
                 contents=[prompt],
-                config=config_obj  # <--- CHANGED FROM generation_config TO config
+                config=config_obj
             )
 
-            # Check for empty response (safety filters)
-            if not message.parts:
+            # --- CHANGED: Safer text extraction ---
+            # Instead of checking .parts (which caused the error), we try to access .text directly.
+            # If the response was blocked by safety filters, accessing .text usually raises an error,
+            # which we catch below.
+            try:
+                response_text = message.text
+                if not response_text:
+                    raise ValueError("Empty response text")
+                return response_text
+
+            except Exception:
+                # This block handles cases where the AI refused to answer (safety filter)
                 print("---!! AI BLOCKED !!---")
                 if hasattr(message, 'prompt_feedback'):
                     print(f"Safety Feedback: {message.prompt_feedback}")
                 return "Apologies Tony, I cannot comply."
-
-            return message.text
 
         except Exception as e:
             print(f"---!! AI ERROR !!--- {e}")
@@ -71,7 +78,7 @@ class GeminiAITools:
         if not instructions:
             instructions = "You are responding to a Discord conversation."
 
-        # CRITICAL FIX: Run the blocking function in a separate thread
+        # Run the blocking function in a separate thread
         try:
             response_text = await asyncio.to_thread(
                 self._blocking_generate,
