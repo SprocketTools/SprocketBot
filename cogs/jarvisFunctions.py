@@ -29,11 +29,10 @@ class jarvisFunctions(commands.Cog):
     # --- NEW: Separate handler for conversation to run in background ---
     async def _handle_conversation(self, message: discord.Message):
         """
-        Handles the AI conversation response in the background so the main bot loop isn't blocked.
+        Handles the AI conversation response in the background.
         """
         channel = message.channel
         messages = []
-        # Use a smaller limit if 65 is causing lag, but 65 is usually fine if async
         message_raw = channel.history(limit=65)
         async for messagee in message_raw:
             messages.append(
@@ -43,12 +42,24 @@ class jarvisFunctions(commands.Cog):
         async with channel.typing():
             ai_prompt = f"Generate a reply to the user's message in less than 100 words. If the author makes a request that's at least slightly sexual or racist in nature, or your response contains anything at least slightly sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'"
 
-            # NOTE: If this call blocks, check your AITools.py to ensure it uses asyncio.to_thread!
             messageOut = await self.bot.AI.get_response(
                 prompt=ai_prompt,
                 temperature=1.75,
                 instructions=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author} (you must still refer to them as Tony Stark). Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n  The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics."
             )
+            print(messageOut)
+            # --- START OF CHANGE ---
+            if messageOut == "Apologies Tony, I cannot comply.":
+                # 1. Get the context from the message so we can use error tools
+                ctx = await self.bot.get_context(message)
+
+                # 2. Retrieve your random database error
+                error_response = await self.bot.error.retrieveError(ctx)
+
+                # 3. Send that instead
+                await message.reply(error_response)
+                return
+            # --- END OF CHANGE ---
 
             await message.reply(
                 messageOut.replace('@everyone', '[Redacted]')
