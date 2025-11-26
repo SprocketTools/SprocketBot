@@ -58,6 +58,7 @@ class jarvisFunctions(commands.Cog):
 
                 # 3. Send that instead
                 await message.reply(error_response)
+
                 return
             # --- END OF CHANGE ---
 

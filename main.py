@@ -44,13 +44,13 @@ class Bot(commands.Bot):
     # ... (__init__ and setup_hook are unchanged) ...
     def __init__(self, ai_wrapper: AITools):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True)
-        self.cogslist = cogsList; self.baseConfig = baseConfig; self.ownerid = ownerID
+        self.cogslist = cogsList; self.baseConfig = baseConfig; self.ownerid = ownerID; self.configurationFilepath = configurationFilepath
         self.botMode = botMode; self.geminikey = baseConfig['settings']['geminiapis'].split(",")
         self.AI = ai_wrapper; self.sql: SQLtools = None; self.ui: UItools = None
         self.pool: asyncpg.Pool = None; self.campaignTools: campaignTools = None; self.error: errorTools = None
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=20, max_inactive_connection_lifetime=60)
-        self.sql = SQLtools(self.pool); self.ui = UItools(self); self.campaignTools = campaignTools(self); self.error = errorTools(self)
+        self.sql = SQLtools(self.pool); self.ui = UItools(self); self.campaignTools = campaignTools(self); self.error = errorTools(self); self.baseConfig = baseConfig; self.sql.settings = SQLsettings; self.configurationFilepath = configurationFilepath
         if updateGithub: cogsList.append("cogs.githubTools")
         for ext in self.cogslist: await self.load_extension(ext)
 
