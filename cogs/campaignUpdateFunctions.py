@@ -361,6 +361,23 @@ class campaignUpdateFunctions(commands.Cog):
         customer_key = int(tx['customerkey'])
         seller_key = int(tx['sellerkey'])
 
+        # --- HELPER: Auto-Delete Logic ---
+        async def delete_zombie_transaction(reason):
+            """Deletes the broken transaction to prevent future errors."""
+            await self.bot.sql.databaseExecuteDynamic(
+                '''DELETE
+                   FROM transactions
+                   WHERE customerkey = $1
+                     AND sellerkey = $2
+                     AND description = $3
+                     AND cost = $4
+                     AND campaignkey = $5
+                     AND type = $6;''',
+                [customer_key, seller_key, tx['description'], money_add, tx['campaignkey'], transaction_type]
+            )
+            # Raise error to stop processing this specific transaction
+            raise ValueError(f"Auto-Cancellation: {reason}. Transaction deleted from database.")
+
         # --- 1. RESOLVE FACTIONS ---
         customer_data = None
         seller_data = None
@@ -371,8 +388,7 @@ class campaignUpdateFunctions(commands.Cog):
                 customer_data = await self.bot.campaignTools.getFactionData(customer_key)
                 if not customer_data: raise ValueError()
             except:
-                raise ValueError(
-                    f"Customer faction (ID: {customer_key}) no longer exists. Transaction should be cancelled.")
+                await delete_zombie_transaction(f"Customer faction (ID: {customer_key}) no longer exists")
 
         # Fetch Seller (if exists)
         if seller_key and seller_key != 0:
@@ -380,17 +396,16 @@ class campaignUpdateFunctions(commands.Cog):
                 seller_data = await self.bot.campaignTools.getFactionData(seller_key)
                 if not seller_data: raise ValueError()
             except:
-                raise ValueError(
-                    f"Seller faction (ID: {seller_key}) no longer exists. Transaction should be cancelled.")
+                await delete_zombie_transaction(f"Seller faction (ID: {seller_key}) no longer exists")
 
         # --- 2. EXECUTE TRANSFER & PREPARE LOGGING ---
         customer_name = "Unknown"
         seller_name = "Unknown"
-        primary_faction_for_log = None  # Used for flag/thumbnail
+        primary_faction_for_log = None
 
         if transaction_type == "sales of equipment to civilians":
             if not seller_data:
-                raise ValueError(f"Invalid Civilian Sale: Seller ID {seller_key} missing.")
+                await delete_zombie_transaction(f"Invalid Civilian Sale: Seller ID {seller_key} missing")
 
             # Money IN to Seller
             await self.bot.sql.databaseExecuteDynamic(
@@ -403,7 +418,7 @@ class campaignUpdateFunctions(commands.Cog):
 
         elif transaction_type == "maintenance payments":
             if not seller_data:
-                raise ValueError(f"Invalid Maintenance: Payer ID {seller_key} missing.")
+                await delete_zombie_transaction(f"Invalid Maintenance: Payer ID {seller_key} missing")
 
             # Money OUT from Seller (Payer)
             await self.bot.sql.databaseExecuteDynamic(
@@ -417,7 +432,8 @@ class campaignUpdateFunctions(commands.Cog):
         else:
             # Standard Transfer: Customer -> Seller
             if not customer_data or not seller_data:
-                raise ValueError("One or both parties in this transaction no longer exist.")
+                # This catch-all shouldn't trigger due to checks above, but safe to have
+                await delete_zombie_transaction("One or both parties in this transaction no longer exist")
 
             # Money IN to Seller
             await self.bot.sql.databaseExecuteDynamic(
