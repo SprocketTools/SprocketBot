@@ -494,11 +494,10 @@ class adminFunctions(commands.Cog):
         i = 0
         if ctx.author.id != main.ownerID:
             return
-        protectedServers = ["The Oteran Republic", "SkyFall Aerospace"]
         serverList = "Your server list:"
         for server in self.bot.guilds:
-            serverList = serverList + f"\n{server.name} ({server.member_count} members)"
-            if server.member_count < count and server.name not in protectedServers:
+            serverList = serverList + f"\n{server.name} ({server.member_count})"
+            if server.member_count < count:
                 try:
                     await server.owner.send(f"Note: As a result of my current 100-server limitation, I have left **{server.name}** due to insufficient member count.  ")
                 except Exception:
@@ -506,6 +505,9 @@ class adminFunctions(commands.Cog):
                 await server.leave()
                 serverList = serverList + " - I have now left this server."
             i+= 1
+            if i % 20 == 0:
+                await ctx.send(serverList)
+                serverList = ""
         await ctx.send(serverList)
         await ctx.send(f"original count: {i} servers.")
         e = 0
