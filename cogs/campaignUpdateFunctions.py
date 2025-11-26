@@ -355,55 +355,85 @@ class campaignUpdateFunctions(commands.Cog):
         return "Complete!"
 
     async def _process_single_transaction(self, tx, campaign_data):
+        """Helper to process a single transaction row to clean up the main loop."""
         money_add = tx['cost']
         transaction_type = tx['type']
+        customer_key = int(tx['customerkey'])
+        seller_key = int(tx['sellerkey'])
 
-        try:
+        # --- 1. RESOLVE FACTIONS ---
+        customer_data = None
+        seller_data = None
+
+        # Fetch Customer (if exists)
+        if customer_key and customer_key != 0:
             try:
-                primary_faction = await self.bot.campaignTools.getFactionData(tx['customerkey'])
+                customer_data = await self.bot.campaignTools.getFactionData(customer_key)
+                if not customer_data: raise ValueError()
             except:
-                primary_faction = await self.bot.campaignTools.getFactionData(tx['sellerkey'])
+                raise ValueError(
+                    f"Customer faction (ID: {customer_key}) no longer exists. Transaction should be cancelled.")
 
+        # Fetch Seller (if exists)
+        if seller_key and seller_key != 0:
             try:
-                counterparty_data = await self.bot.campaignTools.getFactionData(tx['sellerkey'])
-                counterparty_name = await self.bot.campaignTools.getFactionName(tx['sellerkey'])
+                seller_data = await self.bot.campaignTools.getFactionData(seller_key)
+                if not seller_data: raise ValueError()
             except:
-                counterparty_data = await self.bot.campaignTools.getFactionData(tx['customerkey'])
-                counterparty_name = "Citizens"
-        except Exception:
-            raise ValueError("Could not resolve faction data for transaction.")
+                raise ValueError(
+                    f"Seller faction (ID: {seller_key}) no longer exists. Transaction should be cancelled.")
 
-        customer_name = ""
-        seller_name = ""
+        # --- 2. EXECUTE TRANSFER & PREPARE LOGGING ---
+        customer_name = "Unknown"
+        seller_name = "Unknown"
+        primary_faction_for_log = None  # Used for flag/thumbnail
 
         if transaction_type == "sales of equipment to civilians":
+            if not seller_data:
+                raise ValueError(f"Invalid Civilian Sale: Seller ID {seller_key} missing.")
+
+            # Money IN to Seller
             await self.bot.sql.databaseExecuteDynamic(
                 "UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;",
-                [money_add, primary_faction["factionkey"]]
+                [money_add, seller_key]
             )
-            customer_name = f"Citizens of {primary_faction['factionname']}"
-            seller_name = primary_faction['factionname']
+            customer_name = f"Citizens of {seller_data['factionname']}"
+            seller_name = seller_data['factionname']
+            primary_faction_for_log = seller_data
 
         elif transaction_type == "maintenance payments":
+            if not seller_data:
+                raise ValueError(f"Invalid Maintenance: Payer ID {seller_key} missing.")
+
+            # Money OUT from Seller (Payer)
             await self.bot.sql.databaseExecuteDynamic(
                 "UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;",
-                [money_add, primary_faction["factionkey"]]
+                [money_add, seller_key]
             )
-            customer_name = f"Citizens of {primary_faction['factionname']}"
-            seller_name = primary_faction['factionname']
+            customer_name = f"Citizens of {seller_data['factionname']}"
+            seller_name = seller_data['factionname']
+            primary_faction_for_log = seller_data
 
         else:
+            # Standard Transfer: Customer -> Seller
+            if not customer_data or not seller_data:
+                raise ValueError("One or both parties in this transaction no longer exist.")
+
+            # Money IN to Seller
             await self.bot.sql.databaseExecuteDynamic(
                 "UPDATE campaignfactions SET money = money + $1 WHERE factionkey = $2;",
-                [money_add, tx['sellerkey']]
+                [money_add, seller_key]
             )
+            # Money OUT from Customer
             await self.bot.sql.databaseExecuteDynamic(
                 "UPDATE campaignfactions SET money = money - $1 WHERE factionkey = $2;",
-                [money_add, primary_faction["factionkey"]]
+                [money_add, customer_key]
             )
-            customer_name = primary_faction['factionname']
-            seller_name = counterparty_name
+            customer_name = customer_data['factionname']
+            seller_name = seller_data['factionname']
+            primary_faction_for_log = customer_data
 
+        # --- 3. LOGGING ---
         time_str = await self.bot.campaignTools.getTime(campaign_data['timedate'])
         embed = discord.Embed(title="Automatic transaction log", color=discord.Color.random())
         embed.add_field(name="Customer:", value=customer_name)
@@ -413,9 +443,10 @@ class campaignUpdateFunctions(commands.Cog):
         embed.add_field(name="Time of purchase", value=time_str, inline=False)
         embed.add_field(name="Details", value=tx['description'], inline=False)
 
-        if primary_faction.get('flagurl'):
-            embed.set_thumbnail(url=primary_faction['flagurl'])
+        if primary_faction_for_log and primary_faction_for_log.get('flagurl'):
+            embed.set_thumbnail(url=primary_faction_for_log['flagurl'])
 
+        # Calculate Completion Date
         ship_date_months = tx['repeat']
         completion_date = campaign_data['timedate'] + timedelta(days=ship_date_months * 30)
         embed.add_field(name="Completion date:", value=completion_date.strftime("%A %B %d, %Y"), inline=False)
@@ -423,13 +454,15 @@ class campaignUpdateFunctions(commands.Cog):
         if tx['repeat'] > 0:
             embed.add_field(name="Repeat frequency:", value=f"{tx['repeat']} months", inline=False)
 
+        # Send Embeds
         private_channel = self.bot.get_channel(int(campaign_data["privatemoneychannelid"]))
         if private_channel:
             await private_channel.send(embed=embed)
 
-        if transaction_type != "sales of equipment to civilians":
-            if counterparty_data and 'logchannel' in counterparty_data:
-                log_channel = self.bot.get_channel(int(counterparty_data["logchannel"]))
+        # Also log to the counterparty's channel if it's a P2P trade
+        if transaction_type != "sales of equipment to civilians" and transaction_type != "maintenance payments":
+            if seller_data and 'logchannel' in seller_data:
+                log_channel = self.bot.get_channel(int(seller_data["logchannel"]))
                 if log_channel:
                     await log_channel.send(embed=embed)
 
