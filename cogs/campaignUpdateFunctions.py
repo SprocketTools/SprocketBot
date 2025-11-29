@@ -7,7 +7,7 @@ from discord.ext import tasks, commands
 import main
 
 # --- Configuration Constants ---
-UPDATE_FREQUENCY = 600  # seconds
+UPDATE_FREQUENCY = 600  # seconds (Matches your latest upload)
 SECONDS_IN_YEAR = 31536000 + 21600
 STATUS_LOG_CHANNEL_ID = 1152377925916688484
 BACKUP_CHANNEL_ID = 1156854471767367680
@@ -46,7 +46,6 @@ class campaignUpdateFunctions(commands.Cog):
 
         try:
             current_time = int(datetime.now().timestamp())
-            # FIX: Changed main.config to main.baseConfig
             last_time = int(main.baseConfig["settings"].get('lastupdated', 0))
 
             # Catch up loop: If the bot was offline, run multiple updates to catch up
@@ -86,7 +85,6 @@ class campaignUpdateFunctions(commands.Cog):
 
                 # Update Config (Iterative)
                 last_time += UPDATE_FREQUENCY
-                # FIX: Changed main.config to main.baseConfig
                 main.baseConfig["settings"]['lastupdated'] = str(last_time)
 
                 if status_channel:
@@ -96,7 +94,6 @@ class campaignUpdateFunctions(commands.Cog):
             # Save final state to file
             main.baseConfig["settings"]['lastupdated'] = str(current_time)
             with open(main.configurationFilepath, "w") as configfile:
-                # FIX: Write using the config object, not the filepath string
                 main.baseConfig.write(configfile)
 
         except Exception as e:
@@ -145,11 +142,12 @@ class campaignUpdateFunctions(commands.Cog):
         )
 
     async def updatePopulation(self):
+        # FIX: Added GREATEST(..., 1.0) to LN inputs to prevent LN(<=0) crash
         pop_growth_query = f'''
             UPDATE campaignfactions 
             SET population = GREATEST(population + ROUND((
                 (CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT)) * population * (
-                    (0.5 * ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(population) + LN(gdp))) + 
+                    (0.5 * ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(GREATEST(population, 1.0)) + LN(GREATEST(gdp, 1.0)))) + 
                     (1 - 0.3*educationindex) + 
                     (4 - lifeexpectancy/20) + 
                     (0.5 * POWER(povertyrate, 0.5) - 0.2)
@@ -167,7 +165,7 @@ class campaignUpdateFunctions(commands.Cog):
                      UPDATE campaignfactions
                      SET popgrowth = 0.005 * ((population * (
                          (0.5 * ATAN(500000 / landsize) + 0.3 * (1 - latitude / 90) + \
-                          0.2 * (LN(population) + LN(gdp))) +
+                          0.2 * (LN(GREATEST(population, 1.0)) + LN(GREATEST(gdp, 1.0)))) +
                          (1 - 0.3 * educationindex) +
                          (4 - lifeexpectancy / 20) +
                          (0.5 * POWER(povertyrate, 0.5) - 0.2)
@@ -178,10 +176,11 @@ class campaignUpdateFunctions(commands.Cog):
         await self.bot.sql.databaseExecute(rate_query)
 
     async def updatePoverty(self):
+        # FIX: Added GREATEST(0.01, ...) to denominator to prevent Division by Zero or Negative Tax Reward
         query = '''
                 UPDATE campaignfactions
                 SET povertyrate = (2 * (ATAN(POWER((campaigns.energycost * campaigns.steelcost / 7 * popworkerratio) / \
-                                                   (averagesalary * (1.0 - ((taxpoor / 1.112) + (taxrich / 10)))), 2)) / \
+                                                   (averagesalary * GREATEST(0.01, (1.0 - ((taxpoor / 1.112) + (taxrich / 10))))), 2)) / \
                                         PI())) FROM campaigns
                 WHERE campaigns.campaignkey = campaignfactions.campaignkey
                   AND campaignfactions.iscountry = true
@@ -203,8 +202,9 @@ class campaignUpdateFunctions(commands.Cog):
         await self.bot.sql.databaseExecuteDynamic(query, [UPDATE_FREQUENCY, SECONDS_IN_YEAR])
 
     async def updateGDP(self):
+        # FIX: Clamped result to GREATEST(1.0, ...) to prevent Ratio from becoming 0 or negative
         await self.bot.sql.databaseExecute(
-            "UPDATE campaignfactions SET popworkerratio = 4.0 - (5.02 * CAST(povertyrate AS numeric))/2.01;"
+            "UPDATE campaignfactions SET popworkerratio = GREATEST(1.0, 4.0 - (5.02 * CAST(povertyrate AS numeric))/2.01);"
         )
 
         gdp_growth_query = '''
@@ -258,12 +258,13 @@ class campaignUpdateFunctions(commands.Cog):
         )
 
     async def updateEducation(self):
+        # FIX: Protected LN inputs with GREATEST(..., 1.0)
         queries = [
             '''
             UPDATE campaignfactions
             SET lifeexpectancy = GREATEST((
                                               (65 + 30 * (0.2 * happiness -
-                                                          1 * LN(povertyrate + taxpoor + 1.5 - socialspend) +
+                                                          1 * LN(GREATEST(povertyrate + taxpoor + 1.5 - socialspend, 1.0)) +
                                                           0.4 * infrastructureindex)) - lifeexpectancy
                                               ) * 0.902 + lifeexpectancy, 0)
             WHERE iscountry = true
@@ -284,8 +285,8 @@ class campaignUpdateFunctions(commands.Cog):
             UPDATE campaignfactions
             SET educationindex = LEAST(GREATEST((
                                                     (0.5 *
-                                                     LN(socialspend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75))) /
-                                                        population + 0.1) +
+                                                     LN(GREATEST(socialspend * (gdp * ((taxrich * 0.25) + (taxpoor * 0.75))) /
+                                                        population + 0.1, 1.0)) +
                                                      0.3 / (1 + EXP(-0.1 * (population / landsize))) +
                                                      0.2 * governance) - educationindex
                                                     ) * 0.902 + educationindex, 0.005), 1)
@@ -303,6 +304,7 @@ class campaignUpdateFunctions(commands.Cog):
             await self.bot.sql.databaseExecute(q)
 
     async def updateHappiness(self):
+        # FIX: Protected LN inputs
         query = '''
                 UPDATE campaignfactions
                 SET happiness = LEAST(1, GREATEST(
@@ -310,7 +312,7 @@ class campaignUpdateFunctions(commands.Cog):
                             (1 - povertyrate) * \
                             (ATAN(socialspend * (1 - (0.75 * taxpoor + 0.75 * taxrich)) + (5 / 9)) / 2) +
                             0.3 * (lifeexpectancy / 80) +
-                            0.2 * (LN((gdp / population) + 0.25) / ln(1.25)) +
+                            0.2 * (LN(GREATEST((gdp / population) + 0.25, 1.0)) / ln(1.25)) +
                             0.1 * ((governance + 1)^2) + 
                     0.1 * (taxpoor * 5 * (4 - governance))
                 )), 0
@@ -577,6 +579,7 @@ class campaignUpdateFunctions(commands.Cog):
         await ctx.send("## Done!")
 
     async def softUpdate(self):
+        """Runs a partial update (GDP and Happiness) for small edits."""
         await self.updateGDP()
         await self.updateHappiness()
 

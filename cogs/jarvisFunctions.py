@@ -40,12 +40,12 @@ class jarvisFunctions(commands.Cog):
                  "user_id": messagee.author.id, 'content': messagee.content})
 
         async with channel.typing():
-            ai_prompt = f"Generate a reply to the user's message in less than 100 words. If the author makes a request that's at least slightly sexual or racist in nature, or your response contains anything at least slightly sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'"
+            ai_prompt = f"Generate a reply to the user's message in less than 100 words. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'"
 
             messageOut = await self.bot.AI.get_response(
                 prompt=ai_prompt,
-                temperature=1.75,
-                instructions=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author} (you must still refer to them as Tony Stark). Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n  The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics."
+                temperature=1.9,
+                instructions=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author} (you must still refer to them as Tony Stark). Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n  The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  you are acting as {self.bot.user.display_name} in this chat, so factor in your prior responses when generating a reply."
             )
             print(messageOut)
             # --- START OF CHANGE ---
