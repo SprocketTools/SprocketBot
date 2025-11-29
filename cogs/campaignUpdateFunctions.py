@@ -7,8 +7,9 @@ from discord.ext import tasks, commands
 import main
 
 # --- Configuration Constants ---
-UPDATE_FREQUENCY = 600  # seconds (Matches your latest upload)
-SECONDS_IN_YEAR = 31536000 + 21600
+STANDARD_UPDATE_FREQUENCY = 3600 # 1 HOUR FOR NORMAL PROMPTS
+SECONDS_IN_YEAR = 31536000 + 21600 # 365 DAYS + 1/4 OF A DAY
+STANDARD_TICK = STANDARD_UPDATE_FREQUENCY/SECONDS_IN_YEAR
 STATUS_LOG_CHANNEL_ID = 1152377925916688484
 BACKUP_CHANNEL_ID = 1156854471767367680
 
@@ -24,7 +25,7 @@ class campaignUpdateFunctions(commands.Cog):
         if self.bot.ishost:
             now = datetime.now()
             # Calculate seconds until the next aligned interval
-            seconds_count = int(3600 - (now.minute * 60 + now.second)) % UPDATE_FREQUENCY
+            seconds_count = int(3600 - (now.minute * 60 + now.second)) % STANDARD_UPDATE_FREQUENCY
 
             minutes_wait = int(seconds_count / 60)
             seconds_wait = int(seconds_count % 60)
@@ -40,7 +41,7 @@ class campaignUpdateFunctions(commands.Cog):
             if status_channel:
                 await status_channel.send("Not initiating campaign updates (Instance is not Host).")
 
-    @tasks.loop(seconds=UPDATE_FREQUENCY)
+    @tasks.loop(seconds=STANDARD_UPDATE_FREQUENCY)
     async def loopUpdate(self):
         status_channel = self.bot.get_channel(STATUS_LOG_CHANNEL_ID)
 
@@ -49,7 +50,7 @@ class campaignUpdateFunctions(commands.Cog):
             last_time = int(main.baseConfig["settings"].get('lastupdated', 0))
 
             # Catch up loop: If the bot was offline, run multiple updates to catch up
-            while last_time + (UPDATE_FREQUENCY / 2) < current_time:
+            while last_time + (STANDARD_UPDATE_FREQUENCY / 2) < current_time:
                 if status_channel:
                     await status_channel.send(f"Update starting for cycle: <t:{last_time}:T>")
 
@@ -84,12 +85,12 @@ class campaignUpdateFunctions(commands.Cog):
                     print(f"[{datetime.now()}] Campaign update triggered")
 
                 # Update Config (Iterative)
-                last_time += UPDATE_FREQUENCY
+                last_time += STANDARD_UPDATE_FREQUENCY
                 main.baseConfig["settings"]['lastupdated'] = str(last_time)
 
                 if status_channel:
                     await status_channel.send(
-                        f"Campaigns have updated from <t:{last_time - UPDATE_FREQUENCY}:f> to <t:{last_time}:f>")
+                        f"Campaigns have updated from <t:{last_time - STANDARD_UPDATE_FREQUENCY}:f> to <t:{last_time}:f>")
 
             # Save final state to file
             main.baseConfig["settings"]['lastupdated'] = str(current_time)
@@ -138,53 +139,42 @@ class campaignUpdateFunctions(commands.Cog):
             '''UPDATE campaigns
                SET timedate = timedate + (interval '1 second' * timescale * $1)
                WHERE active = true;''',
-            [UPDATE_FREQUENCY]
+            [STANDARD_UPDATE_FREQUENCY]
         )
 
-    async def updatePopulation(self):
-        # FIX: Added GREATEST(..., 1.0) to LN inputs to prevent LN(<=0) crash
-        pop_growth_query = f'''
-            UPDATE campaignfactions 
-            SET population = GREATEST(population + ROUND((
-                (CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT)) * population * (
-                    (0.5 * ATAN(500000/landsize) + 0.3*(1-latitude/90) + 0.2*(LN(GREATEST(population, 1.0)) + LN(GREATEST(gdp, 1.0)))) + 
-                    (1 - 0.3*educationindex) + 
-                    (4 - lifeexpectancy/20) + 
-                    (0.5 * POWER(povertyrate, 0.5) - 0.2)
-                )
-            ))::BIGINT, 0)
-            FROM campaigns 
-            WHERE campaignfactions.campaignkey = campaigns.campaignkey
-              AND campaignfactions.iscountry = true 
-              AND campaignfactions.hostactive = true;
-        '''
-        await self.bot.sql.databaseExecuteDynamic(pop_growth_query, [UPDATE_FREQUENCY, SECONDS_IN_YEAR])
 
-        # Recalculate Population Growth Rate (for display stats)
+
+    async def updatePopulation(self):
         rate_query = '''
                      UPDATE campaignfactions
-                     SET popgrowth = 0.005 * ((population * (
-                         (0.5 * ATAN(500000 / landsize) + 0.3 * (1 - latitude / 90) + \
-                          0.2 * (LN(GREATEST(population, 1.0)) + LN(GREATEST(gdp, 1.0)))) +
-                         (1 - 0.3 * educationindex) +
-                         (4 - lifeexpectancy / 20) +
-                         (0.5 * POWER(povertyrate, 0.5) - 0.2)
-                         )) / population) - 0.02
+                     SET popgrowth = 0.01 * (SQRT(povertyrate) + 0.5*happiness - ATAN((population / landsize)+1/200))
                      WHERE iscountry = true \
                        AND hostactive = true; \
                      '''
         await self.bot.sql.databaseExecute(rate_query)
 
+        pop_growth_query = f'''
+            UPDATE campaignfactions 
+            SET population = GREATEST(population + ROUND((((CAST ($1 AS FLOAT)) * population) * popgrowth)::BIGINT, 1))
+            FROM campaigns 
+            WHERE campaignfactions.campaignkey = campaigns.campaignkey
+              AND campaignfactions.iscountry = true 
+              AND campaignfactions.hostactive = true;
+        '''
+        await self.bot.sql.databaseExecuteDynamic(pop_growth_query, [STANDARD_TICK])
+
+
+
     async def updatePoverty(self):
         # FIX: Added GREATEST(0.01, ...) to denominator to prevent Division by Zero or Negative Tax Reward
         query = '''
                 UPDATE campaignfactions
-                SET povertyrate = (2 * (ATAN(POWER((campaigns.energycost * campaigns.steelcost / 7 * popworkerratio) / \
-                                                   (averagesalary * GREATEST(0.01, (1.0 - ((taxpoor / 1.112) + (taxrich / 10))))), 2)) / \
+                SET povertyrate = (2 * (ATAN(POWER(((campaigns.energycost * campaigns.steelcost / 7 * popworkerratio) /
+                                                   (averagesalary * GREATEST(0.01, (1.0 - ((taxpoor / 1.112) + (taxrich / 10)))))), 2)) /
                                         PI())) FROM campaigns
                 WHERE campaigns.campaignkey = campaignfactions.campaignkey
                   AND campaignfactions.iscountry = true
-                  AND campaignfactions.hostactive = true; \
+                  AND campaignfactions.hostactive = true; 
                 '''
         await self.bot.sql.databaseExecute(query)
 
@@ -192,14 +182,14 @@ class campaignUpdateFunctions(commands.Cog):
         query = f'''
             UPDATE campaignfactions 
             SET money = money + ROUND(
-                gdp * ((taxrich * 0.25) + (taxpoor * 0.75)) * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * campaigns.timescale * defensespend
+                gdp * ((taxrich * 0.25) + (taxpoor * 0.75)) * ( CAST ($1 AS FLOAT) ) * campaigns.timescale * defensespend
             )::BIGINT 
             FROM campaigns
             WHERE campaignfactions.campaignkey = campaigns.campaignkey 
               AND campaignfactions.iscountry = true 
               AND campaignfactions.hostactive = true;
         '''
-        await self.bot.sql.databaseExecuteDynamic(query, [UPDATE_FREQUENCY, SECONDS_IN_YEAR])
+        await self.bot.sql.databaseExecuteDynamic(query, [STANDARD_TICK])
 
     async def updateGDP(self):
         # FIX: Clamped result to GREATEST(1.0, ...) to prevent Ratio from becoming 0 or negative
@@ -209,32 +199,35 @@ class campaignUpdateFunctions(commands.Cog):
 
         gdp_growth_query = '''
                            UPDATE campaignfactions
-                           SET gdpgrowth = campaigns.defaultgdpgrowth + (0.25 * (
-                               0.4 * 2 * ATAN(2 * (infrastructureindex - 0.5)) +
-                               0.6 * 2 * ATAN(4 * (0.5 - taxpoor)) +
-                               0.4 * 2 * ATAN(4 * (0.5 - taxrich)) -
-                               0.25 * 2 * ATAN(2 * (povertyrate - 0.5)) +
-                               0.4 * 2 * ATAN(2 * (educationindex - 0.5)) - 2
-                               )) / (2.71 * PI()) FROM campaigns
-                           WHERE campaignfactions.campaignkey = campaigns.campaignkey
-                             AND iscountry = true
-                             AND hostactive = true; \
+                           SET gdpgrowth = campaigns.defaultgdpgrowth + (
+                                ATAN((infrastructureindex - 0.5))
+                                + ATAN((0.6 - taxpoor))
+                                + ATAN((0.6 - taxrich))
+                                + ATAN((0.5 - povertyrate))
+                                + ATAN((educationindex - 0.5))
+                                + ATAN((socialspend - 0.32))
+                                + ATAN((governance - 0.75))
+                                - 2
+                                ) 
+                                / 200 
+                            FROM campaigns
+                            WHERE campaignfactions.campaignkey = campaigns.campaignkey
+                            AND iscountry = true
+                            AND hostactive = true;
                            '''
         await self.bot.sql.databaseExecute(gdp_growth_query)
 
-        await self.bot.sql.databaseExecute(
-            "UPDATE campaignfactions SET corespend = (1.0 - (socialspend + infrastructurespend + defensespend)) WHERE iscountry = true AND hostactive = true;"
-        )
+        await self.bot.sql.databaseExecute("UPDATE campaignfactions SET corespend = (1.0 - (socialspend + infrastructurespend + defensespend)) WHERE iscountry = true AND hostactive = true;")
 
         salary_query = f'''
             UPDATE campaignfactions 
-            SET averagesalary = averagesalary + averagesalary * gdpgrowth * ( CAST ($1 AS FLOAT) / CAST ($2 AS FLOAT) ) * campaigns.timescale  
+            SET averagesalary = averagesalary + averagesalary * gdpgrowth * ( CAST ($1 AS FLOAT) ) * campaigns.timescale  
             FROM campaigns 
             WHERE campaignfactions.campaignkey = campaigns.campaignkey
               AND iscountry = true 
               AND hostactive = true;
         '''
-        await self.bot.sql.databaseExecuteDynamic(salary_query, [UPDATE_FREQUENCY, SECONDS_IN_YEAR])
+        await self.bot.sql.databaseExecuteDynamic(salary_query, [STANDARD_TICK])
 
         await self.bot.sql.databaseExecute(
             "UPDATE campaignfactions SET gdp = (population * averagesalary / popworkerratio)::BIGINT WHERE iscountry = true AND hostactive = true;"
@@ -250,7 +243,7 @@ class campaignUpdateFunctions(commands.Cog):
                                                ((gdp * ((taxrich * 0.25) + (taxpoor * 0.75))) * espionagespend) / \
                                                (averagesalary * 10) - espionagestaff
                                                ) * 0.1 + espionagestaff)::INT
-                WHERE iscountry = true AND hostactive = true; \
+                WHERE iscountry = true AND hostactive = true; 
                 '''
         await self.bot.sql.databaseExecute(query)
         await self.bot.sql.databaseExecute(
@@ -540,31 +533,31 @@ class campaignUpdateFunctions(commands.Cog):
         await status_channel.send("Forced Update is starting!")
 
         await self.normalize_data()
-        await status_channel.send("DEBUG: Data normalized.")
+        #await status_channel.send("DEBUG: Data normalized.")
         await self.updatePoverty()
-        await status_channel.send("DEBUG: Poverty updated.")
+        #await status_channel.send("DEBUG: Poverty updated.")
         await self.updateTime()
-        await status_channel.send("DEBUG: Time updated.")
+        #await status_channel.send("DEBUG: Time updated.")
         await self.updatePopulation()
-        await status_channel.send("DEBUG: Populations updated.")
+        #await status_channel.send("DEBUG: Populations updated.")
         await self.updatePoverty()
-        await status_channel.send("DEBUG: Poverty update completed.")
+        #await status_channel.send("DEBUG: Poverty update completed.")
         await self.collectTaxes()
-        await status_channel.send("DEBUG: Taxes collected.")
+        #await status_channel.send("DEBUG: Taxes collected.")
         await self.updateGDP()
-        await status_channel.send("DEBUG: GDP updated.")
+        #await status_channel.send("DEBUG: GDP updated.")
         await self.updateIncome()
-        await status_channel.send("DEBUG: Income updated.")
+        #await status_channel.send("DEBUG: Income updated.")
         await self.updateHappiness()
-        await status_channel.send("DEBUG: Happiness updated.")
+        #await status_channel.send("DEBUG: Happiness updated.")
         await self.updateEducation()
-        await status_channel.send("DEBUG: Education data updated.")
+        #await status_channel.send("DEBUG: Education data updated.")
         await self.sendTimeUpdates()
-        await status_channel.send("DEBUG: Time updates completed.")
+        #await status_channel.send("DEBUG: Time updates completed.")
         await self.updateEspionage()
-        await status_channel.send("DEBUG: Espionage data updated.")
+        #await status_channel.send("DEBUG: Espionage data updated.")
         await self.updateLastUpdated()
-        await status_channel.send("DEBUG: Global time increment updated.")
+        #await status_channel.send("DEBUG: Global time increment updated.")
 
         try:
             # FIX: Corrected logic to use main.baseConfig

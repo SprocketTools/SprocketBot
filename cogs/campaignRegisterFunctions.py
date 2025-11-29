@@ -38,7 +38,7 @@ class campaignRegisterFunctions(commands.Cog):
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS campaigns, campaignservers, campaignfactions, campaignusers, campaignautopurchases;''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaigns (campaignname VARCHAR, campaignrules VARCHAR(50000), hostserverid BIGINT, campaignkey BIGINT, timescale BIGINT, currencyname VARCHAR, currencysymbol VARCHAR, publiclogchannelid BIGINT, privatemoneychannelid BIGINT, companychannelid BIGINT, managerchannelid BIGINT, defaultgdpgrowth REAL, defaultpopgrowth REAL, populationperkm INT, steelcost REAL, energycost REAL, active BOOLEAN, timedate TIMESTAMP, lastupdated TIMESTAMP);''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
-        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, companyowner BIGINT, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, financestability REAL, culturestability REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, lifeexpectancy REAL, educationindex REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL, espionagespend REAL, espionagestaff INT, povertyrate REAL, latitude INT, infrastructureindex REAL, defensespend REAL, corespend REAL, educationspend REAL, popgrowth REAL);''')
+        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, companyowner BIGINT, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, lifeexpectancy REAL, educationindex REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL, espionagespend REAL, espionagestaff INT, povertyrate REAL, latitude INT, infrastructureindex REAL, defensespend REAL, corespend REAL, educationspend REAL, popgrowth REAL);''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignautopurchases (campaignkey BIGINT, factionkey BIGINT, userid BIGINT, name VARCHAR, amount BIGINT, lastupdated TIMESTAMP, monthfrequency INT, status BOOLEAN);''')
         await ctx.send("## Done!")
@@ -189,14 +189,15 @@ class campaignRegisterFunctions(commands.Cog):
             factionRoleID = await textTools.getRoleResponse(ctx, "What Discord role is going to be required for players to be able to join your faction?\n-# Reply with a ping of that role, or its role id.")
             flagURL = await textTools.getFileURLResponse(ctx,"What is your country's flag?\n-# Upload a picture of your flag.")
             population = await textTools.getFlooredIntResponse(ctx,"What is the population of your country?\n-# For numerical replies like this one, do not include any commas.", 1000)
-            salary = await textTools.getFlooredIntResponse(ctx, "What is your country's average monthly salary?  Do not include unemployed people in your average.", 1)
+
             latitude = await textTools.getFloatResponse(ctx,"What is the average latitude of your country on the globe?  Reply with a number in degrees.\nNote that this value does not need to be precise and can be estimated.")
             land = await textTools.getFlooredFloatResponse(ctx, "How many square kilometers of land does your country control?", 1)
             governanceScale = await ctx.bot.campaignTools.getGovernmentType(ctx)
             companyOwner = 0
             landlordid = 0
             taxpoor = round((0.15*governanceScale + 0.2), 3)
-            popworkerratio = 3 - math.atan(salary/((campaignData['energycost'] + campaignData['steelcost'] + taxpoor*10)/10))
+            salary = campaignData['energycost'] * campaignData['steelcost'] / 7 * (3 - governanceScale)
+            popworkerratio = 3 - math.atan(salary / ((campaignData['energycost'] + campaignData['steelcost'] + taxpoor*10)/10))
             gdp = round(salary*population/popworkerratio)
             discretionaryFunds = gdp/20
         else: #company

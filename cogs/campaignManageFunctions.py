@@ -37,7 +37,7 @@ class campaignManageFunctions(commands.Cog):
                 timestamp_adj = await textTools.getIntResponse(ctx, "How many days do you want to move forward?")
                 await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET timedate = timedate + make_interval(days => CAST ($1 AS INT)) WHERE campaignkey = $2;''',[timestamp_adj, key])
             elif answer == "start/stop campaign":
-                await campaignManageFunctions.toggleCampaignProgress(ctx)
+                await campaignManageFunctions.toggleCampaignProgress(self, ctx)
             elif answer == "time scale":
                 timescale_adj = await textTools.getFlooredFloatResponse(ctx, "What is the new timescale you wish to use?", 1)
                 await self.bot.sql.databaseExecuteDynamic(f'''UPDATE campaigns SET timescale = $1 WHERE campaignkey = $2;''',[timescale_adj, key])
@@ -366,12 +366,15 @@ class campaignManageFunctions(commands.Cog):
         await ctx.send(file=image)
 
     async def toggleCampaignProgress(self, ctx: commands.Context):
-        if await ctx.bot.campaignTools.isCampaignHost(ctx) == False:
+        print("a")
+        if await self.bot.campaignTools.isCampaignHost(ctx) == False:
+            print("c")
             await self.bot.error.sendCategorizedError(ctx, "campaign")
             serverConfig = await adminFunctions.getServerConfig(ctx)
             await ctx.send(f"You don't have the permissions needed to run this command.  Ensure you have the **{ctx.guild.get_role(serverConfig['campaignmanagerroleid'])}** role and try again.")
             return
-        campaignData = await ctx.bot.campaignTools.getUserCampaignData(ctx)
+        print("b")
+        campaignData = await self.bot.campaignTools.getUserCampaignData(ctx)
         if campaignData["hostserverid"] != ctx.guild.id:
             await self.bot.error.sendCategorizedError(ctx, "campaign")
             return
@@ -379,6 +382,7 @@ class campaignManageFunctions(commands.Cog):
 
         result = await self.bot.sql.databaseFetchlistDynamic('''SELECT campaignname, active, campaignkey FROM campaigns WHERE hostserverid = $1;''',[ctx.guild.id])
         await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignfactions SET hostactive = $1 WHERE campaignkey = $2;''', [result[1], result[2]])
+
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignManageFunctions(bot))
 
