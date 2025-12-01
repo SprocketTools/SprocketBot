@@ -15,6 +15,8 @@ import pandas as pd  # ADDED
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
+from cogs.textTools import textTools
+
 
 class observatoryFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -127,7 +129,7 @@ class observatoryFunctions(commands.Cog):
             "To update the catalog, edit this file and reply with the modified .csv.\n**Note:** Do not change the `unique_id` or `filepath` columns.\nType `cancel` to stop.")
 
         try:
-            attachment = await self.bot.get_cog("textTools").getFileResponse(ctx, "Waiting for file upload...")
+            attachment = await textTools.getFileResponse(ctx, "Waiting for file upload...")
         except ValueError:
             return await ctx.send("Operation cancelled.")
 
