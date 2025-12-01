@@ -11,6 +11,7 @@ import signal
 import tempfile
 import json
 import uuid
+import re  # ADDED: For cleaning search strings
 
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -126,23 +127,18 @@ class CelestialNavigator:
         self._update_trajectory_snapshot()
 
     async def plot_priority_trajectory(self, unique_id: str):
-        """Finds a body by ID and inserts it at the front of the queue."""
         print(f"[Player] Received priority request for body ID: {unique_id[:8]}...")
-
         priority_body = next((body for body in self.ephemeris if body['unique_id'] == unique_id), None)
-
         if not priority_body:
             print(f"[Player] Cache miss for {unique_id[:8]}. Performing deep scan for unscheduled body...")
             try:
                 async with self.pool.acquire() as connection:
                     record = await connection.fetchrow("SELECT * FROM astral_bodies WHERE unique_id = $1 LIMIT 1;",
                                                        unique_id)
-                    if record:
-                        priority_body = dict(record)
+                    if record: priority_body = dict(record)
             except Exception as e:
                 await self.post_status(f"ERROR: Database query failed during deep scan: {e}")
                 return
-
         if priority_body:
             self.trajectory.insert(0, priority_body)
             await self.post_status(f"Success! '{priority_body['designation']}' is now next in the queue.")
@@ -233,7 +229,7 @@ class CelestialNavigator:
                 track = item['track'];
                 designation = f"{track['artists'][0]['name']} - {track['name']}"
 
-                # MODIFIED: If duplicate found, update the days instead of skipping
+                # Update existing duplicates
                 if designation.lower() in existing_designations:
                     try:
                         async with self.pool.acquire() as c:
@@ -251,33 +247,57 @@ class CelestialNavigator:
                                             day_bools['thu_arc'], day_bools['fri_arc'], day_bools['sat_arc'],
                                             day_bools['sun_arc'], designation.lower())
                         up_count += 1
-                        # ADDED: Feedback for updates
-                        if up_count % 5 == 0:
-                            await self.post_to_webhook(f"♻️ Updated schedule for **{up_count}** duplicates so far...")
+                        # MODIFIED: Log EVERY update so you know it's working
+                        await self.post_to_webhook(f"♻️ Updated: `{designation}`")
                     except Exception as e:
-                        # ADDED: Send error to webhook
                         await self.post_to_webhook(f"⚠️ Failed to update `{designation}`: {e}")
                     continue
 
                 if (i + 1) % 5 == 0:
                     await self.post_to_webhook(f"🛰️ Processing... ({i + 1}/{total})")
 
-                try:
-                    unique_id = str(uuid.uuid4());
-                    search_query = f"{designation} lyrics"
-                    ydl_opts = {'format': 'bestaudio/best', 'postprocessors': [
+                # DOWNLOAD LOGIC WITH RETRY
+                unique_id = str(uuid.uuid4())
+
+                # Attempt 1: Standard Search
+                search_query = f"{designation} lyrics"
+
+                ydl_opts = {
+                    'format': 'bestaudio/best',
+                    'postprocessors': [
                         {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
-                                'outtmpl': os.path.join(CONSTELLATION_PATH, f'{unique_id}.%(ext)s'),
-                                'default_search': 'ytsearch1', 'quiet': True, 'noprogress': True}
+                    'outtmpl': os.path.join(CONSTELLATION_PATH, f'{unique_id}.%(ext)s'),
+                    'default_search': 'ytsearch1',
+                    'quiet': True,
+                    'noprogress': True,
+                    'cookiefile': 'cookies.txt',  # Ensure cookies are used
+                    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+
+                try:
                     loop = asyncio.get_running_loop()
                     await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([search_query]))
-                    filepath = os.path.join(CONSTELLATION_PATH, f'{unique_id}.mp3')
+                except Exception as first_error:
+                    # Attempt 2: Clean Search (remove special chars and 'lyrics')
+                    print(f"[Downloader] Retry triggered for {designation}")
+                    try:
+                        clean_query = re.sub(r'[^a-zA-Z0-9 \-]', '', designation)  # Remove quotes, parens, etc.
+                        await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([clean_query]))
+                    except Exception as second_error:
+                        await self.post_to_webhook(f"❌ ({i + 1}/{total}) Failed `{designation}`. Retry failed.")
+                        continue
+
+                # Save to DB if download succeeded
+                filepath = os.path.join(CONSTELLATION_PATH, f'{unique_id}.mp3')
+                if os.path.exists(filepath):
                     async with self.pool.acquire() as c:
                         await c.execute(
                             '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc,
                                                           tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''', unique_id, designation, requester_id, "STAR_CLUSTER", day_bools['mon_arc'], day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'], day_bools['sat_arc'], day_bools['sun_arc'], filepath)
                     existing_designations.add(designation.lower()); s_count += 1
-                except Exception as e: await self.post_to_webhook(f"❌ ({i + 1}/{total}) Failed `{designation}`: `{type(e).__name__}`")
+                else:
+                    await self.post_to_webhook(f"❌ File missing after download for `{designation}`")
+
                 await asyncio.sleep(1)
 
             await self.post_to_webhook(f"✨ **Sync Complete!**\nCataloged: **{s_count}** new.\nUpdated: **{up_count}** existing.")
