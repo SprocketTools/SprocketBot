@@ -58,8 +58,8 @@ class CelestialNavigator:
         self.trajectory = []
         self.star_cluster_counter = 0
         self.nova_event_counter = 0
-        self.pulsar_interval = random.randint(9, 11)
-        self.nova_interval = random.randint(16, 19)
+        self.pulsar_interval = random.randint(5, 8)
+        self.nova_interval = random.randint(10, 13)
         self.running = True
         self.interrupt_flag = False
         self.snapshot_path = os.path.join(tempfile.gettempdir(), "celestial_trajectory.json")
@@ -68,11 +68,19 @@ class CelestialNavigator:
         print("[Player] Audio systems initialized.")
 
     async def post_status(self, message):
-        """Posts a status message to the webhook."""
-        print(f"[Player] {message}")  # Also print to console
+        """Posts a player status message to the webhook (formatted)."""
+        print(f"[Player] {message}")
         if not WEBHOOK_URL: return
         async with aiohttp.ClientSession() as s: await s.post(WEBHOOK_URL,
                                                               json={'content': f"```[Player] {message}```"})
+
+    async def post_to_webhook(self, message):
+        """Posts a raw message to the webhook (for downloader)."""
+        if not WEBHOOK_URL:
+            print(f"[Downloader] {message}")
+            return
+        async with aiohttp.ClientSession() as s:
+            await s.post(WEBHOOK_URL, json={'content': message})
 
     def _update_trajectory_snapshot(self):
         try:
@@ -117,15 +125,12 @@ class CelestialNavigator:
         print(f"[Player] Trajectory calculated with {len(self.trajectory)} events.")
         self._update_trajectory_snapshot()
 
-    # MODIFIED: This function now performs a database search if the song is not in the daily cache.
     async def plot_priority_trajectory(self, unique_id: str):
         """Finds a body by ID and inserts it at the front of the queue."""
         print(f"[Player] Received priority request for body ID: {unique_id[:8]}...")
 
-        # First, check the fast cache of daily songs
         priority_body = next((body for body in self.ephemeris if body['unique_id'] == unique_id), None)
 
-        # If not in the cache, perform a direct database lookup (a "deep scan")
         if not priority_body:
             print(f"[Player] Cache miss for {unique_id[:8]}. Performing deep scan for unscheduled body...")
             try:
@@ -167,7 +172,6 @@ class CelestialNavigator:
                 print(f"Error processing directives: {e}")
             await asyncio.sleep(5)
 
-    # ... (transmit, downloader functions, main, etc. are all unchanged from the last full version) ...
     async def transmit(self):
         print("[Player] Transmission commencing.")
         while self.running:
@@ -213,20 +217,26 @@ class CelestialNavigator:
             async with self.pool.acquire() as c:
                 existing_designations = {r['designation'] for r in
                                          await c.fetch("SELECT LOWER(designation) as designation FROM astral_bodies")}
-            tracks = [];
+
+            tracks = []
             results = sp.playlist_items(playlist_url)
             while results:
-                tracks.extend(results['items']);
+                tracks.extend(results['items'])
                 results = sp.next(results) if results['next'] else None
+
             total = len(tracks)
             await self.post_to_webhook(f"Found **{total}** total tracks in the playlist.")
             s_count, sk_count = 0, 0
+
             for i, item in enumerate(tracks):
                 if not item or not item['track']: continue
                 track = item['track'];
                 designation = f"{track['artists'][0]['name']} - {track['name']}"
                 if designation.lower() in existing_designations: sk_count += 1; continue
-                if (i + 1) % 5 == 0: await self.post_to_webhook(f"🛰️ Processing... ({i + 1}/{total})")
+
+                if (i + 1) % 5 == 0:
+                    await self.post_to_webhook(f"🛰️ Processing... ({i + 1}/{total})")
+
                 try:
                     unique_id = str(uuid.uuid4());
                     search_query = f"{designation} lyrics"
@@ -239,52 +249,39 @@ class CelestialNavigator:
                     filepath = os.path.join(CONSTELLATION_PATH, f'{unique_id}.mp3')
                     async with self.pool.acquire() as c:
                         await c.execute(
-                            '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
-                            unique_id, designation, requester_id, "STAR_CLUSTER", day_bools['mon_arc'],
-                            day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'],
-                            day_bools['sat_arc'], day_bools['sun_arc'], filepath)
-                    existing_designations.add(designation.lower());
-                    s_count += 1
-                except Exception as e:
-                    await self.post_status(f"ERROR ({i + 1}/{total}) Failed `{designation}`: `{type(e).__name__}`")
+                            '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc,
+                                                          tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''', unique_id, designation, requester_id, "STAR_CLUSTER", day_bools['mon_arc'], day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'], day_bools['sat_arc'], day_bools['sun_arc'], filepath)
+                    existing_designations.add(designation.lower()); s_count += 1
+                except Exception as e: await self.post_to_webhook(f"❌ ({i + 1}/{total}) Failed `{designation}`: `{type(e).__name__}`")
                 await asyncio.sleep(1)
-            await self.post_to_webhook(
-                f"✨ **Sync Complete!** Cataloged **{s_count}** new bodies. Skipped **{sk_count}** duplicates.")
+
+            await self.post_to_webhook(f"✨ **Sync Complete!** Cataloged **{s_count}** new bodies. Skipped **{sk_count}** duplicates.")
             await self.fetch_ephemeris()
-        except Exception as e:
-            await self.post_to_webhook(f"A critical error occurred during bulk sync: `{e}`")
+        except Exception as e: await self.post_to_webhook(f"A critical error occurred during bulk sync: `{e}`")
 
     async def poll_download_queue(self):
         print("[Downloader] Waiting for new synchronization jobs...")
         while self.running:
             try:
                 async with self.pool.acquire() as c:
-                    job = await c.fetchrow(
-                        "SELECT * FROM download_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1")
+                    job = await c.fetchrow("SELECT * FROM download_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 1")
                     if job:
                         print(f"[Downloader] Found job {job['id']}. Processing.")
                         await c.execute("UPDATE download_queue SET status = 'processing' WHERE id = $1", job['id'])
                         await self.process_download_job(job)
                         await c.execute("UPDATE download_queue SET status = 'completed' WHERE id = $1", job['id'])
                         print(f"[Downloader] Finished job {job['id']}. Polling...")
-            except Exception as e:
-                print(f"[Downloader] Error in main loop: {e}")
+            except Exception as e: print(f"[Downloader] Error in main loop: {e}")
             await asyncio.sleep(30)
 
-
 async def main():
-    pid = str(os.getpid());
-    pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
+    pid = str(os.getpid()); pidfile = os.path.join(tempfile.gettempdir(), "celestial_navigator.pid")
     if os.path.isfile(pidfile): print(f"{pidfile} exists. Is navigator running?"); return
-    with open(pidfile, 'w') as f:
-        f.write(pid)
+    with open(pidfile, 'w') as f: f.write(pid)
     navigator_instance = None
-
     def shutdown_handler(signum, frame):
         if navigator_instance: navigator_instance.running = False; navigator_instance.interrupt_flag = True
-
-    signal.signal(signal.SIGTERM, shutdown_handler);
-    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler); signal.signal(signal.SIGINT, shutdown_handler)
     try:
         pool = await asyncpg.create_pool(**SQLsettings, max_inactive_connection_lifetime=60)
         navigator_instance = CelestialNavigator(pool)
@@ -296,7 +293,6 @@ async def main():
     finally:
         if os.path.exists(pidfile): os.unlink(pidfile)
         print("Navigator offline.")
-
 
 if __name__ == "__main__":
     os.makedirs(CONSTELLATION_PATH, exist_ok=True)
