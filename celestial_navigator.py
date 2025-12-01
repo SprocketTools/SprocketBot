@@ -50,7 +50,6 @@ except Exception as e:
 
 CONSTELLATION_PATH = "./celestial_audio/"
 
-
 class CelestialNavigator:
     def __init__(self, pool):
         self.pool = pool
@@ -68,11 +67,10 @@ class CelestialNavigator:
         print("[Player] Audio systems initialized.")
 
     async def post_status(self, message):
-        """Posts a player status message to the webhook (formatted)."""
+        """Posts a status message to the webhook and prints to console."""
         print(f"[Player] {message}")
         if not WEBHOOK_URL: return
-        async with aiohttp.ClientSession() as s: await s.post(WEBHOOK_URL,
-                                                              json={'content': f"```[Player] {message}```"})
+        async with aiohttp.ClientSession() as s: await s.post(WEBHOOK_URL, json={'content': f"```[Player] {message}```"})
 
     async def post_to_webhook(self, message):
         """Posts a raw message to the webhook (for downloader)."""
@@ -84,27 +82,22 @@ class CelestialNavigator:
 
     def _update_trajectory_snapshot(self):
         try:
-            snapshot_data = [{"designation": i.get("designation", "U"), "classification": i.get("classification", "U")}
-                             for i in self.trajectory[:10]]
-            with open(self.snapshot_path, 'w') as f:
-                json.dump(snapshot_data, f)
-        except Exception as e:
-            print(f"Error writing trajectory snapshot: {e}")
+            snapshot_data = [{"designation": i.get("designation", "U"), "classification": i.get("classification", "U")} for i in self.trajectory[:10]]
+            with open(self.snapshot_path, 'w') as f: json.dump(snapshot_data, f)
+        except Exception as e: print(f"Error writing trajectory snapshot: {e}")
 
     async def fetch_ephemeris(self):
         print("[Player] Fetching new ephemeris data...")
         today_column = f"{datetime.datetime.now().strftime('%a').lower()}_arc"
         async with self.pool.acquire() as connection:
-            self.ephemeris = [dict(row) for row in
-                              await connection.fetch(f"SELECT * FROM astral_bodies WHERE {today_column} = TRUE;")]
+            self.ephemeris = [dict(row) for row in await connection.fetch(f"SELECT * FROM astral_bodies WHERE {today_column} = TRUE;")]
         print(f"[Player] Found {len(self.ephemeris)} valid bodies for today.")
         self.construct_trajectory()
 
     def construct_trajectory(self):
         print("[Player] Calculating new broadcast trajectory...")
         self.trajectory.clear()
-        bodies = {k: [b for b in self.ephemeris if b['classification'] == k] for k in
-                  ["STAR_CLUSTER", "NOVA_EVENT", "PULSAR_BURST"]}
+        bodies = {k: [b for b in self.ephemeris if b['classification'] == k] for k in ["STAR_CLUSTER", "NOVA_EVENT", "PULSAR_BURST"]}
         if not bodies["STAR_CLUSTER"]:
             print("[Player] Warning: No Star Clusters available.")
             self._update_trajectory_snapshot()
@@ -135,8 +128,7 @@ class CelestialNavigator:
             print(f"[Player] Cache miss for {unique_id[:8]}. Performing deep scan for unscheduled body...")
             try:
                 async with self.pool.acquire() as connection:
-                    record = await connection.fetchrow("SELECT * FROM astral_bodies WHERE unique_id = $1 LIMIT 1;",
-                                                       unique_id)
+                    record = await connection.fetchrow("SELECT * FROM astral_bodies WHERE unique_id = $1 LIMIT 1;", unique_id)
                     if record:
                         priority_body = dict(record)
             except Exception as e:
@@ -148,75 +140,57 @@ class CelestialNavigator:
             await self.post_status(f"Success! '{priority_body['designation']}' is now next in the queue.")
             self._update_trajectory_snapshot()
         else:
-            await self.post_status(
-                f"Warning: Could not find priority body with ID {unique_id[:8]} in the entire catalog.")
+            await self.post_status(f"Warning: Could not find priority body with ID {unique_id[:8]} in the entire catalog.")
 
     async def process_directives(self):
         while self.running:
             try:
                 async with self.pool.acquire() as c:
-                    directives = await c.fetch(
-                        "SELECT * FROM celestial_directives WHERE processed = FALSE ORDER BY timestamp ASC;")
+                    directives = await c.fetch("SELECT * FROM celestial_directives WHERE processed = FALSE ORDER BY timestamp ASC;")
                     for d in directives:
                         print(f"[Player] Processing directive: {d['directive']}")
-                        if d['directive'] == 'INTERRUPT':
-                            self.interrupt_flag = True
-                        elif d['directive'] == 'REALIGN':
-                            self.running = False; self.interrupt_flag = True
-                        elif d['directive'] == 'REFRESH_EPHEMERIS':
-                            await self.fetch_ephemeris()
-                        elif d['directive'] == 'PRIORITY_TRAJECTORY':
-                            await self.plot_priority_trajectory(d['payload'])
+                        if d['directive'] == 'INTERRUPT': self.interrupt_flag = True
+                        elif d['directive'] == 'REALIGN': self.running = False; self.interrupt_flag = True
+                        elif d['directive'] == 'REFRESH_EPHEMERIS': await self.fetch_ephemeris()
+                        elif d['directive'] == 'PRIORITY_TRAJECTORY': await self.plot_priority_trajectory(d['payload'])
                         await c.execute('UPDATE celestial_directives SET processed = TRUE WHERE id = $1;', d['id'])
-            except Exception as e:
-                print(f"Error processing directives: {e}")
+            except Exception as e: print(f"Error processing directives: {e}")
             await asyncio.sleep(5)
 
     async def transmit(self):
         print("[Player] Transmission commencing.")
         while self.running:
             if not self.trajectory:
-                print("[Player] Trajectory empty. Recalculating...");
-                self.construct_trajectory()
+                print("[Player] Trajectory empty. Recalculating..."); self.construct_trajectory()
                 if not self.trajectory:
-                    print("[Player] No valid trajectory. Standing by.");
-                    await asyncio.sleep(30);
-                    continue
+                    print("[Player] No valid trajectory. Standing by."); await asyncio.sleep(30); continue
             self._update_trajectory_snapshot()
             current_body = self.trajectory.pop(0)
             filepath = current_body['filepath']
             if not os.path.exists(filepath):
-                print(f"[Player] Warning: File not found for {current_body['designation']}. Skipping.");
-                continue
+                print(f"[Player] Warning: File not found for {current_body['designation']}. Skipping."); continue
             print(f"[Player] Transmitting: [{current_body['classification']}] {current_body['designation']}")
             try:
                 pygame.mixer.music.load(filepath)
                 pygame.mixer.music.play()
                 while pygame.mixer.music.get_busy() and self.running:
                     if self.interrupt_flag:
-                        pygame.mixer.music.stop();
-                        self.interrupt_flag = False
+                        pygame.mixer.music.stop(); self.interrupt_flag = False
                         print("[Player] Transmission interrupted.")
                         pulsars = [b for b in self.ephemeris if b['classification'] == 'PULSAR_BURST']
                         if pulsars: self.trajectory.insert(0, random.choice(pulsars))
-                        self._update_trajectory_snapshot();
-                        break
+                        self._update_trajectory_snapshot(); break
                     await asyncio.sleep(0.5)
-            except pygame.error as e:
-                print(f"[Player] Pygame error: {e}")
-        pygame.mixer.quit();
-        pygame.quit()
+            except pygame.error as e: print(f"[Player] Pygame error: {e}")
+        pygame.mixer.quit(); pygame.quit()
         print("[Player] Transmission ceased.")
 
     async def process_download_job(self, job):
-        playlist_url = job['playlist_url'];
-        day_bools = json.loads(job['day_bools_json']);
-        requester_id = job['requester_id']
+        playlist_url = job['playlist_url']; day_bools = json.loads(job['day_bools_json']); requester_id = job['requester_id']
         await self.post_to_webhook(f"🚀 Starting bulk sync job for <{playlist_url}>")
         try:
             async with self.pool.acquire() as c:
-                existing_designations = {r['designation'] for r in
-                                         await c.fetch("SELECT LOWER(designation) as designation FROM astral_bodies")}
+                existing_designations = {r['designation'] for r in await c.fetch("SELECT LOWER(designation) as designation FROM astral_bodies")}
 
             tracks = []
             results = sp.playlist_items(playlist_url)
@@ -226,36 +200,42 @@ class CelestialNavigator:
 
             total = len(tracks)
             await self.post_to_webhook(f"Found **{total}** total tracks in the playlist.")
-            s_count, sk_count = 0, 0
+            s_count, up_count = 0, 0
 
             for i, item in enumerate(tracks):
                 if not item or not item['track']: continue
-                track = item['track'];
-                designation = f"{track['artists'][0]['name']} - {track['name']}"
-                if designation.lower() in existing_designations: sk_count += 1; continue
+                track = item['track']; designation = f"{track['artists'][0]['name']} - {track['name']}"
 
-                if (i + 1) % 5 == 0:
+                # MODIFIED: If duplicate found, update the days instead of skipping
+                if designation.lower() in existing_designations:
+                    try:
+                        async with self.pool.acquire() as c:
+                            await c.execute('''
+                                            UPDATE astral_bodies
+                                            SET mon_arc = $1, tue_arc = $2, wed_arc = $3, thu_arc = $4, fri_arc = $5, sat_arc = $6, sun_arc = $7
+                                            WHERE LOWER(designation) = $8;
+                                            ''', day_bools['mon_arc'], day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'], day_bools['sat_arc'], day_bools['sun_arc'], designation.lower())
+                        up_count += 1
+                    except Exception as e:
+                        print(f"[Player] Failed to update duplicate {designation}: {e}")
+                    continue
+
+                if (i+1) % 5 == 0:
                     await self.post_to_webhook(f"🛰️ Processing... ({i + 1}/{total})")
 
                 try:
-                    unique_id = str(uuid.uuid4());
-                    search_query = f"{designation} lyrics"
-                    ydl_opts = {'format': 'bestaudio/best', 'postprocessors': [
-                        {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
-                                'outtmpl': os.path.join(CONSTELLATION_PATH, f'{unique_id}.%(ext)s'),
-                                'default_search': 'ytsearch1', 'quiet': True, 'noprogress': True}
+                    unique_id = str(uuid.uuid4()); search_query = f"{designation} lyrics"
+                    ydl_opts = {'format': 'bestaudio/best', 'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}], 'outtmpl': os.path.join(CONSTELLATION_PATH, f'{unique_id}.%(ext)s'), 'default_search': 'ytsearch1', 'quiet': True, 'noprogress': True}
                     loop = asyncio.get_running_loop()
                     await loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(ydl_opts).download([search_query]))
                     filepath = os.path.join(CONSTELLATION_PATH, f'{unique_id}.mp3')
                     async with self.pool.acquire() as c:
-                        await c.execute(
-                            '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc,
-                                                          tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''', unique_id, designation, requester_id, "STAR_CLUSTER", day_bools['mon_arc'], day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'], day_bools['sat_arc'], day_bools['sun_arc'], filepath)
+                        await c.execute('''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''', unique_id, designation, requester_id, "STAR_CLUSTER", day_bools['mon_arc'], day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'], day_bools['sat_arc'], day_bools['sun_arc'], filepath)
                     existing_designations.add(designation.lower()); s_count += 1
                 except Exception as e: await self.post_to_webhook(f"❌ ({i + 1}/{total}) Failed `{designation}`: `{type(e).__name__}`")
                 await asyncio.sleep(1)
 
-            await self.post_to_webhook(f"✨ **Sync Complete!** Cataloged **{s_count}** new bodies. Skipped **{sk_count}** duplicates.")
+            await self.post_to_webhook(f"✨ **Sync Complete!**\nCataloged: **{s_count}** new.\nUpdated: **{up_count}** existing.")
             await self.fetch_ephemeris()
         except Exception as e: await self.post_to_webhook(f"A critical error occurred during bulk sync: `{e}`")
 
