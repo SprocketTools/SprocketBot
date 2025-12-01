@@ -9,13 +9,15 @@ import json
 import tempfile
 import asyncio
 import datetime
+import io  # ADDED
+import pandas as pd  # ADDED
+
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
 
 class observatoryFunctions(commands.Cog):
     def __init__(self, bot: commands.Bot):
-        # ... (init function is unchanged) ...
         self.bot = bot
         self.constellation_path = "./celestial_audio/"
         os.makedirs(self.constellation_path, exist_ok=True)
@@ -29,34 +31,149 @@ class observatoryFunctions(commands.Cog):
             print("Warning: Spotify API credentials not found. Bulk synchronize will be disabled.")
 
     async def send_command_to_navigator(self, command: str, payload: str = None):
-        # ... (This function is unchanged) ...
         command_id = str(uuid.uuid4())
         await self.bot.sql.databaseExecuteDynamic(
-            '''INSERT INTO celestial_directives (id, directive, payload, processed) VALUES ($1, $2, $3, FALSE);''',
+            '''INSERT INTO celestial_directives (id, directive, payload, processed)
+               VALUES ($1, $2, $3, FALSE);''',
             [command_id, command, payload]
         )
 
     @commands.command(name="setup_observatory_log", description="[Owner] Prepares the celestial database tables.")
     @commands.is_owner()
     async def setup_observatory_log(self, ctx: commands.Context):
-        # ... (This function is unchanged) ...
         await ctx.send("Initializing Observatory Logs...")
         try:
-            await self.bot.sql.databaseExecute(
-                '''CREATE TABLE IF NOT EXISTS astral_bodies ( id SERIAL PRIMARY KEY, unique_id VARCHAR(255) UNIQUE NOT NULL, designation VARCHAR(255), cataloger_id BIGINT, classification VARCHAR(50), mon_arc BOOLEAN, tue_arc BOOLEAN, wed_arc BOOLEAN, thu_arc BOOLEAN, fri_arc BOOLEAN, sat_arc BOOLEAN, sun_arc BOOLEAN, filepath VARCHAR(1024) );''')
-            await self.bot.sql.databaseExecute(
-                '''CREATE TABLE IF NOT EXISTS celestial_directives ( id VARCHAR(255) PRIMARY KEY, directive VARCHAR(50), payload TEXT, processed BOOLEAN DEFAULT FALSE, timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP );''')
-            await self.bot.sql.databaseExecute(
-                '''CREATE TABLE IF NOT EXISTS download_queue ( id SERIAL PRIMARY KEY, playlist_url TEXT NOT NULL, requester_id BIGINT NOT NULL, day_bools_json TEXT NOT NULL, status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP );''')
+            await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS astral_bodies
+            (
+                id
+                SERIAL
+                PRIMARY
+                KEY,
+                unique_id
+                VARCHAR
+                                                  (
+                255
+                                                  ) UNIQUE NOT NULL, designation VARCHAR
+                                                  (
+                                                      255
+                                                  ), cataloger_id BIGINT, classification VARCHAR
+                                                  (
+                                                      50
+                                                  ), mon_arc BOOLEAN, tue_arc BOOLEAN, wed_arc BOOLEAN, thu_arc BOOLEAN, fri_arc BOOLEAN, sat_arc BOOLEAN, sun_arc BOOLEAN, filepath VARCHAR
+                                                  (
+                                                      1024
+                                                  ) );''')
+            await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS celestial_directives
+            (
+                id
+                VARCHAR
+                                                  (
+                255
+                                                  ) PRIMARY KEY, directive VARCHAR
+                                                  (
+                                                      50
+                                                  ), payload TEXT, processed BOOLEAN DEFAULT FALSE, timestamp TIMESTAMP
+                WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP );''')
+            await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS download_queue
+            (
+                id
+                SERIAL
+                PRIMARY
+                KEY,
+                playlist_url
+                TEXT
+                NOT
+                NULL,
+                requester_id
+                BIGINT
+                NOT
+                NULL,
+                day_bools_json
+                TEXT
+                NOT
+                NULL,
+                status
+                VARCHAR
+                                                  (
+                20
+                                                  ) DEFAULT 'pending', created_at TIMESTAMP
+                WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP );''')
             await ctx.send("✅ All Observatory logs initialized successfully.")
         except Exception as e:
             await ctx.send(f"❌ Log initialization failed: `{e}`")
+
+    # ADDED: The missing CSV management command
+    @commands.command(name="manage_catalog_data", description="[Owner] Export and mass-edit song data via CSV.")
+    @commands.is_owner()
+    async def manage_catalog_data(self, ctx: commands.Context):
+        """Exports the current catalog to CSV and allows re-importing edits."""
+        # 1. Export Data
+        data = await self.bot.sql.databaseFetchdict("SELECT * FROM astral_bodies ORDER BY id ASC;")
+        if not data:
+            return await ctx.send("The catalog is empty.")
+
+        df = pd.DataFrame(data)
+        # Drop columns that shouldn't be edited manually to prevent errors
+        if 'id' in df.columns: df = df.drop(columns=['id'])
+
+        buffer = io.StringIO()
+        df.to_csv(buffer, index=False)
+        buffer.seek(0)
+
+        await ctx.send("Here is the current catalog data.", file=discord.File(buffer, filename="celestial_catalog.csv"))
+
+        # 2. Prompt for Import
+        await ctx.send(
+            "To update the catalog, edit this file and reply with the modified .csv.\n**Note:** Do not change the `unique_id` or `filepath` columns.\nType `cancel` to stop.")
+
+        try:
+            attachment = await self.bot.get_cog("textTools").getFileResponse(ctx, "Waiting for file upload...")
+        except ValueError:
+            return await ctx.send("Operation cancelled.")
+
+        # 3. Process Import
+        try:
+            content = await attachment.read()
+            df_new = pd.read_csv(io.StringIO(content.decode('utf-8')))
+            records = df_new.to_dict(orient='records')
+
+            updated_count = 0
+            for row in records:
+                # We use unique_id as the key. We update designation, classification, and days.
+                await self.bot.sql.databaseExecuteDynamic('''
+                                                          UPDATE astral_bodies
+                                                          SET designation    = $1,
+                                                              classification = $2,
+                                                              mon_arc        = $3,
+                                                              tue_arc        = $4,
+                                                              wed_arc        = $5,
+                                                              thu_arc        = $6,
+                                                              fri_arc        = $7,
+                                                              sat_arc        = $8,
+                                                              sun_arc        = $9
+                                                          WHERE unique_id = $10;
+                                                          ''', [
+                                                              row['designation'], row['classification'],
+                                                              bool(row['mon_arc']), bool(row['tue_arc']),
+                                                              bool(row['wed_arc']),
+                                                              bool(row['thu_arc']), bool(row['fri_arc']),
+                                                              bool(row['sat_arc']), bool(row['sun_arc']),
+                                                              row['unique_id']
+                                                          ])
+                updated_count += 1
+
+            await self.send_command_to_navigator("REFRESH_EPHEMERIS")
+            await ctx.send(f"✅ successfully updated **{updated_count}** catalog entries.")
+
+        except Exception as e:
+            await ctx.send(f"❌ Error processing CSV: `{e}`")
 
     @commands.command(name="catalog_celestial_body", description="Upload multiple audio files to the station.")
     async def catalog_celestial_body(self, ctx: commands.Context):
         if not ctx.message.attachments:
             return await ctx.send("Error: You must attach at least one audio file to use this command.")
 
+        # Updated labels are preserved here
         class_prompt = "Classify this batch of celestial bodies:"
         classification = await self.bot.ui.getButtonChoice(ctx, ["Static Noise", "Major Event", "Solar Cycle"])
         if not classification:
@@ -79,11 +196,6 @@ class observatoryFunctions(commands.Cog):
             if choice == "Done": break
             if choice == "All Remaining": selected_days.extend(remaining_days); break
             selected_days.append(choice)
-
-        # MODIFIED: The check for an empty selected_days list has been removed.
-        # if not selected_days:
-        #     await days_message.delete()
-        #     return await ctx.send("No days selected. Batch cataloging cancelled.")
 
         day_bools = {f"{day[:3].lower()}_arc": (day in selected_days) for day in days}
         await days_message.edit(content="Settings confirmed. Starting batch processing...", view=None)
@@ -108,7 +220,9 @@ class observatoryFunctions(commands.Cog):
             await attachment.save(file_path)
 
             await self.bot.sql.databaseExecuteDynamic(
-                '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc, wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
+                '''INSERT INTO astral_bodies (unique_id, designation, cataloger_id, classification, mon_arc, tue_arc,
+                                              wed_arc, thu_arc, fri_arc, sat_arc, sun_arc, filepath)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
                 [unique_filename, sanitized_name, ctx.author.id, internal_class, day_bools['mon_arc'],
                  day_bools['tue_arc'], day_bools['wed_arc'], day_bools['thu_arc'], day_bools['fri_arc'],
                  day_bools['sat_arc'], day_bools['sun_arc'], file_path]
@@ -122,7 +236,6 @@ class observatoryFunctions(commands.Cog):
 
     @commands.command(name="scan_sky", description="Lists all songs available for the current day.")
     async def scan_sky(self, ctx: commands.Context):
-        # ... (This function is unchanged) ...
         today = datetime.datetime.now()
         day_name = today.strftime('%A')
         day_column = f"{today.strftime('%a').lower()}_arc"
@@ -145,7 +258,6 @@ class observatoryFunctions(commands.Cog):
         except Exception as e:
             await ctx.send(f"An error occurred while scanning the sky: `{e}`")
 
-    # ... (The rest of the file is unchanged) ...
     @commands.command(name="plot_priority_trajectory", description="Sets the next song to play.")
     async def plot_priority_trajectory(self, ctx: commands.Context, *, search_query: str):
         all_bodies = await self.bot.sql.databaseFetchdict(
