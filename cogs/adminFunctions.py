@@ -102,6 +102,7 @@ class adminFunctions(commands.Cog):
         if ctx.author.id != main.ownerID:
             return
         self.operational = not self.operational
+        self.bot.operational = self.operational
         await ctx.send(f'## Operational status is {self.operational}')
 
     @commands.command(name="commandCount", description="Toggle operation of the bot")
