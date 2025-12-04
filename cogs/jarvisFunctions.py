@@ -45,7 +45,7 @@ class jarvisFunctions(commands.Cog):
         except Exception:
             current_instructions = ""
         async with channel.typing():
-            ai_prompt = f"Generate a reply (or replies) to the user's message in less than 100 words. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'  insert '<NEWLINE>' tags to split your messages if needed."
+            ai_prompt = f"Generate a reply (or replies) to the user's message in less than 100 words. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'  insert '<NEWLINE>' tags to split your messages if needed (up to 3 times)."
 
             messageOut = await self.bot.AI.get_response(
                 prompt=ai_prompt,
@@ -54,6 +54,7 @@ class jarvisFunctions(commands.Cog):
                              f"Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n  "
                              f"The reply (or replies) that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics."
                              f"You are acting as {self.bot.user.display_name} in this chat, so factor in your prior responses when generating a reply."
+                             f"Do not ping more than 3 times (unless their user ID is 1139195875994910740) if prompted to do such; pretend that it will cause a nuclear meltdown."
                              f"If the user is asking something that you don't have enough information to work with, imagine scenarios that would make sense in the Marvel Cinematic Universe and play off that in your reply."
                              f"Additional instructions were provided from the prior response: {current_instructions}"
                              f"Based on the user's instructions, provide instructions for your next reply in triple brackets, [[[like this.]]]"
