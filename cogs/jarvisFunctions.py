@@ -80,14 +80,23 @@ class jarvisFunctions(commands.Cog):
                 self.prior_instructions = messageOut.split("[[[")[1].replace("]]]", "")
                 messageOut = messageOut.split("[[[")[0]
 
-
-            for subMessageOut in messageOut.split("<NEWLINE>"):
-                await message.reply(
-                    subMessageOut.replace('@everyone', '[Redacted]')
-                    .replace('@here', '[Redacted]')
-                    .replace('@&', '@')
-                    .replace('123105882102824960', str(message.author.id))
-                )
+            await message.reply(
+                messageOut.split("<NEWLINE>")[0].replace('@everyone', '[Redacted]')
+                .replace('@here', '[Redacted]')
+                .replace('@&', '@')
+                .replace('123105882102824960', str(message.author.id))
+            )
+            
+            try:
+                for subMessageOut in messageOut.split("<NEWLINE>")[1:]:
+                    await message.channel.send(
+                        subMessageOut.replace('@everyone', '[Redacted]')
+                        .replace('@here', '[Redacted]')
+                        .replace('@&', '@')
+                        .replace('123105882102824960', str(message.author.id))
+                    )
+            except Exception:
+                pass
 
     async def _handle_task_addition(self, message: discord.Message, task_details: str):
         ctx = await self.bot.get_context(message)
