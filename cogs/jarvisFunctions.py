@@ -76,6 +76,7 @@ class jarvisFunctions(commands.Cog):
                 return
             # --- END OF CHANGE ---
             print(messageOut)
+            messageOut.replace("[[", "[[[").replace("]]", "]]]")
             if "[[[" in messageOut:
                 self.prior_instructions = messageOut.split("[[[")[1].replace("]]]", "")
                 messageOut = messageOut.split("[[[")[0]
