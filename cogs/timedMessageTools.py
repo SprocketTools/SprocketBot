@@ -1,6 +1,10 @@
 import asyncio
+import io
 import random
 import time
+
+import discord
+import pandas as pd
 from discord import Webhook
 import aiohttp
 from discord.ext import commands
@@ -142,7 +146,7 @@ class timedMessageTools(commands.Cog):
 
     @commands.command(name="scheduleBatch", description="Edit a faction un bulk")
     async def scheduleBatch(self, ctx: commands.Context):
-        if ctx.author.id not in [686640777505669141, 712509599135301673]:
+        if ctx.author.id not in [712509599135301673]:
             return
         await ctx.send("Continue sending unique messages unitl you have your chain of messages complete.  \n- Send `[continue]` to confirm or `[cancel]` to abort.  \n- Code ticks (`) will be stripped from the front and back of the message.\n- Use code ticks to help ensure pings of format <@userid> or <@&roleid> get included.\n   - Similarly, channel mentions are <#channelid>")
         data = []
@@ -188,6 +192,52 @@ class timedMessageTools(commands.Cog):
         await asyncio.gather(*tasks)
         await ctx.send(f"## Your message batch has been sent.")
 
+    @commands.command(name="scheduleFromCSV", description="Schedule many messages to send")
+    async def scheduleFromCSV(self, ctx: commands.Context):
+        if ctx.author.id not in [712509599135301673]:
+            return
+        await ctx.send("Do you have a .csv data file ready yet?")
+        isReady = await ctx.bot.ui.getYesNoChoice(ctx)
+        if isReady:
+
+            attachment = await textTools.getFileResponse(ctx,
+                                                         "Upload your .csv file containing all your faction's data.")
+            df = pd.read_csv(io.StringIO((await attachment.read()).decode('utf-8')))
+            data = df.to_dict(orient='records')
+            print(data)
+            tasks = []
+            for queue in data:
+                print("h")
+                try:
+                    time_stamp = queue["time"]
+                    id = (time_stamp) + (int(random.random() * 10000))
+
+                    await self.bot.sql.databaseExecuteDynamic('''INSERT INTO timedmessages
+                                                             VALUES ($1, $2, $3, $4, TO_TIMESTAMP($5), $6);''',
+                                                          [str(id), ctx.author.id, queue["channelid"], queue["content"], int(time_stamp),
+                                                           str(queue["webhookid"])])
+                except Exception as e:
+                    print(e)
+                await ctx.send(f"## Message queued!\nYour ID is: {id}")
+                asyncio.create_task(self.sendScheduledMessage(
+                    {'id': id, 'ownerid': ctx.author.id, 'channelid': queue["channelid"], 'content': queue["content"],
+                     'extract': int(time_stamp) - time.time(), 'webhookid': str(queue["webhookid"])}))
+            await ctx.send(f"## Done!\n{len(data)} messages have been added.")
+            await ctx.send(f"## Your message batch has been sent.")
+        else:
+            if await ctx.bot.campaignTools.isCampaignHost(ctx) == False:
+                return
+            await ctx.send(
+                "Download this file and edit it in a spreadsheet editor.  When you're done, save it as a .csv and run the command again.")
+            data = await self.bot.sql.databaseFetchdict('''SELECT channelid, content, time, webhookid FROM timedmessages LIMIT 1;''')
+            # credits: brave AI
+            df = pd.DataFrame(data)
+            buffer = io.StringIO()
+            df.to_csv(buffer, index=False)
+            # Send CSV file
+            buffer.seek(0)
+            await ctx.channel.send(file=discord.File(buffer, "data.csv"))
+            await ctx.send("Make sure to delete the example entry when you're done, so that it doesn't double-send.\nEnter the timestamps as plain unix timestamps, it'll auto-convert.")
 
 
 
