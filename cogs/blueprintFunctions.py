@@ -1044,6 +1044,10 @@ class blueprintFunctions(commands.Cog):
 
     @commands.command(name="drawFrameV2", description="Renders a 3D wireframe GIF of a vehicle blueprint.")
     async def drawFrameV2(self, ctx: commands.Context):
+        await self.bot.error.sendError(ctx)
+        await ctx.send(
+            "This command is temporarily disabled to avoid damaging the Rapid Response Contest.  Check out https://discord.com/channels/788349365466038283/902280305057099826/1445338202180161579 for more details!")
+        return
         await ctx.send("Beginning processing now. This may take a while...")
         for attachment in ctx.message.attachments:
             try:
@@ -1151,6 +1155,9 @@ class blueprintFunctions(commands.Cog):
 
     @commands.command(name="drawFrame", description="merge compartment geometry into itself.")
     async def drawFrame(self, ctx: commands.Context):
+        await self.bot.error.sendError(ctx)
+        await ctx.send("This command is temporarily disabled to avoid damaging the Rapid Response Contest.  Check out https://discord.com/channels/788349365466038283/902280305057099826/1445338202180161579 for more details!")
+        return
         await ctx.send("Beginning processing now.  WARNING: this may take awhile.")
         for attachment in ctx.message.attachments:
             imageXtop = 0
