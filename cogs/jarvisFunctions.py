@@ -32,6 +32,7 @@ class jarvisFunctions(commands.Cog):
         """
         Handles the AI conversation response in the background.
         """
+
         channel = message.channel
         messages = []
         message_raw = channel.history(limit=65)
@@ -224,7 +225,10 @@ class jarvisFunctions(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot:
+        if message.author.bot and message.author.id != self.bot.user.id:
+            return
+
+        if not self.bot.operational and (message.author.id != self.bot.owner_id):
             return
 
         content_lower = message.content.lower().strip()

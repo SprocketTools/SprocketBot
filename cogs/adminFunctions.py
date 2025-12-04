@@ -68,8 +68,9 @@ class adminFunctions(commands.Cog):
             await self.bot.error.sendCategorizedError(ctx, "insult")
             return False
         if ctx.author.id == main.ownerID:
+            print("Overriding shutdown")
             return True
-        if self.operational == True:
+        if self.bot.operational == True:
             return True
         else:
             await self.bot.error.sendCategorizedError(ctx, "catgirl")
