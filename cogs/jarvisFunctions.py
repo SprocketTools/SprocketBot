@@ -25,6 +25,7 @@ class jarvisFunctions(commands.Cog):
         self.on_message_cooldowns_notify = {}
         self.cooldown = 11880
         self.geminikey = self.bot.geminikey
+        self.prior_instructions = []
 
     # --- NEW: Separate handler for conversation to run in background ---
     async def _handle_conversation(self, message: discord.Message):
@@ -39,13 +40,24 @@ class jarvisFunctions(commands.Cog):
                 {'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
                  "user_id": messagee.author.id, 'content': messagee.content})
 
+        try:
+            current_instructions = self.prior_instructions[message.author.id]
+        except Exception:
+            current_instructions = ""
         async with channel.typing():
-            ai_prompt = f"Generate a reply to the user's message in less than 100 words. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'"
+            ai_prompt = f"Generate a reply (or replies) to the user's message in less than 100 words. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'  insert '<NEWLINE>' tags to split your messages if needed."
 
             messageOut = await self.bot.AI.get_response(
                 prompt=ai_prompt,
                 temperature=1.9,
-                instructions=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author} (you must still refer to them as Tony Stark). Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n  The reply that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  you are acting as {self.bot.user.display_name} in this chat, so factor in your prior responses when generating a reply."
+                instructions=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author} (you must still refer to them as Tony Stark). "
+                             f"Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n  "
+                             f"The reply (or replies) that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics."
+                             f"You are acting as {self.bot.user.display_name} in this chat, so factor in your prior responses when generating a reply."
+                             f"If the user is asking something that you don't have enough information to work with, imagine scenarios that would make sense in the Marvel Cinematic Universe and play off that in your reply."
+                             f"Additional instructions were provided from the prior response: {current_instructions}"
+                             f"Based on the user's instructions, provide instructions for your next reply in triple brackets, [[[like this.]]]"
+
             )
             print(messageOut)
             # --- START OF CHANGE ---
@@ -57,17 +69,24 @@ class jarvisFunctions(commands.Cog):
                 error_response = await self.bot.error.retrieveError(ctx)
 
                 # 3. Send that instead
+
                 await message.reply(error_response)
 
                 return
             # --- END OF CHANGE ---
+            print(messageOut)
+            if "[[[" in messageOut:
+                self.prior_instructions = messageOut.split("[[[")[1].replace("]]]", "")
+                messageOut = messageOut.split("[[[")[0]
 
-            await message.reply(
-                messageOut.replace('@everyone', '[Redacted]')
-                .replace('@here', '[Redacted]')
-                .replace('@&', '@')
-                .replace('123105882102824960', str(message.author.id))
-            )
+
+            for subMessageOut in messageOut.split("<NEWLINE>"):
+                await message.reply(
+                    subMessageOut.replace('@everyone', '[Redacted]')
+                    .replace('@here', '[Redacted]')
+                    .replace('@&', '@')
+                    .replace('123105882102824960', str(message.author.id))
+                )
 
     async def _handle_task_addition(self, message: discord.Message, task_details: str):
         ctx = await self.bot.get_context(message)
