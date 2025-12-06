@@ -1,7 +1,5 @@
 # Running your own Sprocket Bot on your PC
 
-Note: this guide is a bit out of date.
-
 Sprocket Bot is a complex project, involving many Python libraries, custom functions, and a SQL server.  This guide will help explain the steps needed to have your own environment up and running.
 
 Currently the "official" Sprocket Bot is hosted on a Raspberry Pi 4B with 8GB of RAM - albeit it seems to only use less than 400MB for the entire bot, SQL server, and operating system.  Any PC that is viewing this webpage should have the specs needed to run the bot.
