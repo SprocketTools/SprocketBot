@@ -197,64 +197,64 @@ class adminFunctions(commands.Cog):
             return
 
         #scam scanner
-        messageParse = message.content.lower()
-        nudeTrigger = 0
-        scamTrigger = 0
-        linkTrigger = 0
-        for flag in nudeFlags:
-            if flag in messageParse:
-                nudeTrigger += 1
-        for flag in scamFlags:
-            if flag in messageParse:
-                scamTrigger += 1
-        for flag in linkFlags:
-            if flag in messageParse:
-                linkTrigger += 1
-
-        if linkTrigger == 0 and (nudeTrigger == 0 or scamTrigger == 0) and len(message.content) > 0 and not any(keyword in message.content for keyword in whitelist):
-            userStrikes[message.author.id] = 0
-        if linkTrigger > 0 and (nudeTrigger > 0 or scamTrigger > 0) and len(message.content) > 0 and not any(keyword in message.content for keyword in whitelist):
-            print(f"{nudeTrigger}{scamTrigger}{linkTrigger}")
-            logChannel = self.bot.get_channel(1152377925916688484)
-            try:
-                userStrikes[message.author.id] = int(userStrikes[message.author.id]) + 1
-            except Exception:
-                userStrikes[message.author.id] = 1
-            action = serverConfig[message.guild.id]['flagaction']
-            pingAction = serverConfig[message.guild.id]['flagping']
-            preppedMessage = f"This message matches the criteria set for a hacked account:\nUser ID: {message.author.id}\nUser ping: <@{message.author.id}>\nMessage content:\n{message.content}"
-            embed = discord.Embed(title=f"A hacked account has been detected!", color=discord.Color.blurple())
-            if userStrikes[message.author.id] >= int(serverConfig[message.guild.id]['flagthreshold']):
-                embed = discord.Embed(title=f"Action taken on a hacked account", color=discord.Color.red())
-                embed.set_footer(text=f"Action taken: {action}")
-            embed.add_field(name="Username", value=f"{message.author.name}", inline=False)
-            embed.add_field(name="A.K.A.", value=f"{message.author.display_name}", inline=False)
-            embed.add_field(name="User ID", value=f"{message.author.id}", inline=False)
-            embed.add_field(name="User ping", value=f"<@{message.author.id}>", inline=False)
-            embed.add_field(name="Server", value=f"<@{message.guild.name}>", inline=False)
-            await logChannel.send(embed=embed)
-            await logChannel.send(f'Message content:\n`{message.content}`')
-            if userStrikes[message.author.id] == int(serverConfig[message.guild.id]['flagthreshold']) - 1:
-                await message.author.send(
-                    f"## Warning: you are triggering Sprocket Bot's anti scam functions and risk a {action} in *{message.guild.name}.*  \nSend a message that does not contain a link or questionable words, such as \"a\". \nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
-            if userStrikes[message.author.id] >= int(serverConfig[message.guild.id]['flagthreshold']):
-                if action == "kick":
-                    await message.author.send(f"You have been kicked from {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \n This is not a permanent ban - rejoin the server once you gain control of your account again and have 2FA enabled.\nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
-                    await message.author.ban(reason="Automated anti-scam functions", delete_message_seconds=600)
-                    await message.author.unban(reason="Automated anti-scam functions")
-                if action == "timeout for 12 hours":
-                    await message.author.send(f"You have been timed out in {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
-                    delta = (datetime.datetime.now().astimezone() + datetime.timedelta(hours=12))
-                    await message.author.timeout(delta, reason="Hacked account")
-                channel = self.bot.get_channel(serverConfig[message.guild.id]['managerchannelid'])
-                await channel.send(embed=embed)
-                await channel.send(f'Message content:\n`{message.content}`')
-                if pingAction == "nobody":
-                    pass
-                elif pingAction == "custom":
-                    await channel.send(f"<@&{serverConfig[message.guild.id]['flagpingid']}>")
-                else:
-                    await channel.send(f"@{serverConfig[message.guild.id]['flagping']}")
+        # messageParse = message.content.lower()
+        # nudeTrigger = 0
+        # scamTrigger = 0
+        # linkTrigger = 0
+        # for flag in nudeFlags:
+        #     if flag in messageParse:
+        #         nudeTrigger += 1
+        # for flag in scamFlags:
+        #     if flag in messageParse:
+        #         scamTrigger += 1
+        # for flag in linkFlags:
+        #     if flag in messageParse:
+        #         linkTrigger += 1
+        #
+        # if linkTrigger == 0 and (nudeTrigger == 0 or scamTrigger == 0) and len(message.content) > 0 and not any(keyword in message.content for keyword in whitelist):
+        #     userStrikes[message.author.id] = 0
+        # if linkTrigger > 0 and (nudeTrigger > 0 or scamTrigger > 0) and len(message.content) > 0 and not any(keyword in message.content for keyword in whitelist):
+        #     print(f"{nudeTrigger}{scamTrigger}{linkTrigger}")
+        #     logChannel = self.bot.get_channel(1152377925916688484)
+        #     try:
+        #         userStrikes[message.author.id] = int(userStrikes[message.author.id]) + 1
+        #     except Exception:
+        #         userStrikes[message.author.id] = 1
+        #     action = serverConfig[message.guild.id]['flagaction']
+        #     pingAction = serverConfig[message.guild.id]['flagping']
+        #     preppedMessage = f"This message matches the criteria set for a hacked account:\nUser ID: {message.author.id}\nUser ping: <@{message.author.id}>\nMessage content:\n{message.content}"
+        #     embed = discord.Embed(title=f"A hacked account has been detected!", color=discord.Color.blurple())
+        #     if userStrikes[message.author.id] >= int(serverConfig[message.guild.id]['flagthreshold']):
+        #         embed = discord.Embed(title=f"Action taken on a hacked account", color=discord.Color.red())
+        #         embed.set_footer(text=f"Action taken: {action}")
+        #     embed.add_field(name="Username", value=f"{message.author.name}", inline=False)
+        #     embed.add_field(name="A.K.A.", value=f"{message.author.display_name}", inline=False)
+        #     embed.add_field(name="User ID", value=f"{message.author.id}", inline=False)
+        #     embed.add_field(name="User ping", value=f"<@{message.author.id}>", inline=False)
+        #     embed.add_field(name="Server", value=f"<@{message.guild.name}>", inline=False)
+        #     await logChannel.send(embed=embed)
+        #     await logChannel.send(f'Message content:\n`{message.content}`')
+        #     if userStrikes[message.author.id] == int(serverConfig[message.guild.id]['flagthreshold']) - 1:
+        #         await message.author.send(
+        #             f"## Warning: you are triggering Sprocket Bot's anti scam functions and risk a {action} in *{message.guild.name}.*  \nSend a message that does not contain a link or questionable words, such as \"a\". \nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
+        #     if userStrikes[message.author.id] >= int(serverConfig[message.guild.id]['flagthreshold']):
+        #         if action == "kick":
+        #             await message.author.send(f"You have been kicked from {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \n This is not a permanent ban - rejoin the server once you gain control of your account again and have 2FA enabled.\nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
+        #             await message.author.ban(reason="Automated anti-scam functions", delete_message_seconds=600)
+        #             await message.author.unban(reason="Automated anti-scam functions")
+        #         if action == "timeout for 12 hours":
+        #             await message.author.send(f"You have been timed out in {message.guild.name} by Sprocket Bot's automated anti-scam functions.  \nIf you believe this was an error, please report this at https://github.com/SprocketTools/SprocketBot/issues")
+        #             delta = (datetime.datetime.now().astimezone() + datetime.timedelta(hours=12))
+        #             await message.author.timeout(delta, reason="Hacked account")
+        #         channel = self.bot.get_channel(serverConfig[message.guild.id]['managerchannelid'])
+        #         await channel.send(embed=embed)
+        #         await channel.send(f'Message content:\n`{message.content}`')
+        #         if pingAction == "nobody":
+        #             pass
+        #         elif pingAction == "custom":
+        #             await channel.send(f"<@&{serverConfig[message.guild.id]['flagpingid']}>")
+        #         else:
+        #             await channel.send(f"@{serverConfig[message.guild.id]['flagping']}")
 
         # fun module
         special_list = {
