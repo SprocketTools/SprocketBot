@@ -1042,12 +1042,8 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send("Place this model into `%userprofile%\Documents\My Games\Sprocket\Factions\Default\Blueprints\Vehicles` and load the new tank.")
             i += 1
 
-    @commands.command(name="drawFrameV2", description="Renders a 3D wireframe GIF of a vehicle blueprint.")
-    async def drawFrameV2(self, ctx: commands.Context):
-        await self.bot.error.sendError(ctx)
-        await ctx.send(
-            "This command is temporarily disabled to avoid damaging the Rapid Response Contest.  Check out https://discord.com/channels/788349365466038283/902280305057099826/1445338202180161579 for more details!")
-        return
+    @commands.command(name="drawFrame", description="Renders a 3D wireframe GIF of a vehicle blueprint.")
+    async def drawFrame(self, ctx: commands.Context):
         await ctx.send("Beginning processing now. This may take a while...")
         for attachment in ctx.message.attachments:
             try:
@@ -1153,11 +1149,8 @@ class blueprintFunctions(commands.Cog):
                 traceback.print_exc()  # For debugging
 
 
-    @commands.command(name="drawFrame", description="merge compartment geometry into itself.")
+    @commands.command(name="drawFrameOld", description="merge compartment geometry into itself.")
     async def drawFrame(self, ctx: commands.Context):
-        await self.bot.error.sendError(ctx)
-        await ctx.send("This command is temporarily disabled to avoid damaging the Rapid Response Contest.  Check out https://discord.com/channels/788349365466038283/902280305057099826/1445338202180161579 for more details!")
-        return
         await ctx.send("Beginning processing now.  WARNING: this may take awhile.")
         for attachment in ctx.message.attachments:
             imageXtop = 0
