@@ -12,7 +12,8 @@ import type_hints
 from cogs.textTools import textTools
 
 userPacket = {}
-userStrikes = {}
+userStrikes = []
+inspected = []
 nudeFlags = ["18+", "3.jpg", "3.png", "3.jpeg", "teen", "girls", "onlyfans", "hot", "nude", "e-womans", "plug", "invite", "free gifts", "gift", "leak", "executor roblox", "roblox executor", "earn", "earning"]
 scamFlags = ["$", "steam", "asdfghjkl", "cdn.discordapp.com/attachments", "@everyone", "3.jpg", "3.png", "3.jpeg",]
 linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "1.jpg", "1.png", "1.jpeg", "2.jpg", "2.png", "2.jpeg", "qptr.ru", "https://temu.com/s/", "canary.discord.com", "https://", "http://", "discord.gg", "discordapp.com", "discord.com/invite", "https://t.me/"]
@@ -30,7 +31,9 @@ class antiScamFunctions(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-
+        if message.author.id in inspected:
+            await asyncio.sleep(0.25)
+        inspected.append(message.author.id)
         # Collect data
         serverConfig = (await self.bot.sql.databaseFetchdictDynamic(f'SELECT * FROM serverconfig WHERE serverid = $1;', [message.guild.id]))[0]
         try:
@@ -65,12 +68,12 @@ class antiScamFunctions(commands.Cog):
         # Compare data
         hashesMatch = oldPacket["hashes"] == hashes
         contentMatch = oldPacket["content"] == message.content
-        timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 10
+        timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 60
         channelidMatch = (message.channel.id == oldPacket["channelid"])
 
         if contentMatch and hashesMatch and timestampMatch and (not channelidMatch):
             print("Match")
-            print(userStrikes[message.author.id])
+            userStrikes.append(message.author.id)
         #
         # if linkTrigger == 0 and (nudeTrigger == 0 or scamTrigger == 0) and len(message.content) > 0 and not any(keyword in message.content for keyword in whitelist):
         #     userStrikes[message.author.id] = 0
