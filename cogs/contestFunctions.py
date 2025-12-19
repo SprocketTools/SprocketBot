@@ -163,26 +163,56 @@ class contestFunctions(commands.Cog):
         weight_lim = await textTools.getFloatResponse(ctx, "Max Weight (tons) (0 for none):")
         cost_lim = await textTools.getIntResponse(ctx, "Max Cost (0 for none):")
 
-        # 3. Channels
+        # 3. Channels (Manual Handling to support Threads)
         submission_channel_id = 0
-        while True:
-            # UPDATED: Use getChannelResponse to support threads properly
-            sub_channel = await textTools.getChannelResponse(ctx, "Mention the **Submission Channel** (or Thread):")
+        await ctx.send("Mention the **Submission Channel** or **Thread** (where users upload files):")
 
-            if not sub_channel:
+        while True:
+            def check(m):
+                return m.author == ctx.author and m.channel == ctx.channel
+
+            try:
+                msg = await self.bot.wait_for('message', check=check, timeout=60.0)
+            except asyncio.TimeoutError:
+                return await ctx.send("❌ Timed out.")
+
+            if msg.content.lower() == "cancel":
                 return await ctx.send("❌ Cancelled.")
 
-            submission_channel_id = sub_channel.id
+            target_obj = None
 
-            # Exclusivity Check
-            overlap = await self.bot.sql.databaseFetchrowDynamic(
-                '''SELECT name FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
-                [submission_channel_id]
-            )
-            if overlap:
-                await ctx.send(f"❌ Channel occupied by active contest **'{overlap['name']}'**. Choose another.")
-                continue
-            break
+            # A. Check Mentions
+            if msg.channel_mentions:
+                target_obj = msg.channel_mentions[0]
+
+            # B. Check ID / Raw Link
+            if not target_obj:
+                # Strip typical discord formatting <#123> or plain 123
+                clean_content = "".join([c for c in msg.content if c.isdigit()])
+                if clean_content:
+                    try:
+                        # Try fetching as channel or thread
+                        target_obj = ctx.guild.get_channel_or_thread(int(clean_content))
+                        if not target_obj:
+                            target_obj = await ctx.guild.fetch_channel(int(clean_content))
+                    except:
+                        target_obj = None
+
+            # Validate
+            if target_obj and isinstance(target_obj, (discord.TextChannel, discord.Thread)):
+                submission_channel_id = target_obj.id
+
+                # Exclusivity Check
+                overlap = await self.bot.sql.databaseFetchrowDynamic(
+                    '''SELECT name FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
+                    [submission_channel_id]
+                )
+                if overlap:
+                    await ctx.send(f"❌ Channel occupied by active contest **'{overlap['name']}'**. Choose another.")
+                    continue
+                break
+            else:
+                await ctx.send("❌ Invalid Channel/Thread. Please mention it properly or paste the ID.")
 
         log_channel_id = 0
         raw_log = await textTools.getResponse(ctx, "Mention the **Log Channel** (or 'here'):")
@@ -298,6 +328,7 @@ class contestFunctions(commands.Cog):
         """Scans history for entries. Supports Threads."""
         if not await self._check_manager(ctx): return
 
+        # If no channel arg provided, assume current channel (works for Threads too)
         target_channel = channel or ctx.channel
 
         # 1. AUTO-DETECT
