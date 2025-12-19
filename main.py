@@ -11,6 +11,7 @@ from tools.SQLtools import SQLtools
 from tools.UItools import UItools
 from tools.errorTools import errorTools
 from tools.campaignTools import campaignTools
+from tools.blueprintAnalysisTools import blueprintAnalysisTools
 import discord, configparser, nest_asyncio
 from discord.ext import commands
 
@@ -38,7 +39,7 @@ SQLsettings["database"] = instanceConfig[f"botinfo"]["sqldatabase"]
 ownerID = int(baseConfig["settings"]["ownerID"])
 githubPAT = baseConfig["settings"]["githubpat"]
 updateGithub = instanceConfig.getboolean("botinfo", "updateGithub", fallback=False)
-cogsList = ["cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions", "cogs.blueprintFunctions", "cogs.blueprintFunctions2", "cogs.errorFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.jarvisFunctions", "cogs.campaignFinanceFunctions", "cogs.antiScamTools", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.VCfunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.clickupFunctions", "cogs.starboardFunctions", "cogs.roleColorTools", "cogs.observatoryFunctions"]
+cogsList = ["cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions", "cogs.blueprintFunctions", "cogs.blueprintFunctions2", "cogs.errorFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.contestFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.jarvisFunctions", "cogs.campaignFinanceFunctions", "cogs.antiScamTools", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.VCfunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.clickupFunctions", "cogs.starboardFunctions", "cogs.roleColorTools", "cogs.observatoryFunctions"]
 
 class Bot(commands.Bot):
     # ... (__init__ and setup_hook are unchanged) ...
@@ -47,10 +48,10 @@ class Bot(commands.Bot):
         self.cogslist = cogsList; self.baseConfig = baseConfig; self.ownerid = ownerID; self.configurationFilepath = configurationFilepath
         self.botMode = botMode; self.geminikey = baseConfig['settings']['geminiapis'].split(",")
         self.AI = ai_wrapper; self.sql: SQLtools = None; self.ui: UItools = None
-        self.pool: asyncpg.Pool = None; self.campaignTools: campaignTools = None; self.error: errorTools = None; self.operational = True
+        self.pool: asyncpg.Pool = None; self.campaignTools: campaignTools = None; self.error: errorTools = None; self.analyzer = None; self.operational = True
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=20, max_inactive_connection_lifetime=60)
-        self.sql = SQLtools(self.pool); self.ui = UItools(self); self.campaignTools = campaignTools(self); self.error = errorTools(self); self.baseConfig = baseConfig; self.sql.settings = SQLsettings; self.configurationFilepath = configurationFilepath; self.operational = True
+        self.sql = SQLtools(self.pool); self.ui = UItools(self); self.campaignTools = campaignTools(self); self.analyzer = blueprintAnalysisTools(self); self.error = errorTools(self); self.baseConfig = baseConfig; self.sql.settings = SQLsettings; self.configurationFilepath = configurationFilepath; self.operational = True
         if updateGithub: cogsList.append("cogs.githubTools")
         for ext in self.cogslist: await self.load_extension(ext)
 

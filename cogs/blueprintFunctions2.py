@@ -533,7 +533,7 @@ class blueprintFunctions2(commands.Cog):
             blueprint_data = json.loads(file_content)
 
             # Extract stats
-            stats = await self._parse_blueprint_stats(ctx, blueprint_data)
+            stats = await self.analyzer._parse_blueprint_stats(ctx, blueprint_data)
 
             # Prepare for SQL INSERT
             columns = ", ".join(stats.keys())
@@ -575,7 +575,7 @@ class blueprintFunctions2(commands.Cog):
             # Also print to console for easier debugging
             import traceback
             traceback.print_exc()
-            await self.bot.error.sendError(ctx)  # Send a funny error
+            await ctx.send(self.bot.error.retrieveError(ctx))  # Send a funny error
 
 
 # This function is required by discord.py to load the cog

@@ -3,6 +3,7 @@ import discord
 from unicodedata import lookup
 from discord.ext import commands
 import os, platform, configparser, ast, json
+import datetime
 
 
 class UItools:
@@ -130,6 +131,13 @@ class UItools:
             if result != "Next page":
                 return result
             page += 1
+
+    async def getDate(self, ctx: commands.Context, prompt: str) -> datetime.datetime:
+        view = DateSelectorView(ctx)
+        msg = await ctx.send(content=prompt, view=view)
+        await view.wait()
+        await msg.delete()
+        return view.selected_date
 
 
 # Note: The view/button classes below this point do not need `self` added to their methods
@@ -340,3 +348,132 @@ class getButtonChoiceReturnID(discord.ui.View):
         for str in self.list:
             self.add_item(buttonListReturnID(ctx, str[0], str[1], i))
             i += 1
+
+class DayInputModal(discord.ui.Modal, title="Click here to enter day"):
+    day_input = discord.ui.TextInput(
+        label="Day of Month",
+        placeholder="e.g. 15",
+        min_length=1,
+        max_length=2,
+        required=True
+    )
+
+    def __init__(self, view):
+        super().__init__()
+        self.view = view
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            val = int(self.day_input.value)
+            if 1 <= val <= 31:
+                self.view.day = val
+                # Update button visual to show selected day
+                self.view.btn_set_day.label = f"Day: {val}"
+                self.view.btn_set_day.style = discord.ButtonStyle.success
+                await interaction.response.edit_message(view=self.view)
+            else:
+                await interaction.response.send_message("Day must be between 1 and 31.", ephemeral=True)
+        except ValueError:
+            await interaction.response.send_message("Please enter a valid number.", ephemeral=True)
+
+class DateSelectorView(discord.ui.View):
+    def __init__(self, ctx):
+        super().__init__(timeout=300)
+        self.ctx = ctx
+        self.selected_date = None
+        self.month = None
+        self.day = None
+        self.year = None
+
+        # --- Row 0: Quick Select Buttons ---
+
+        # --- Row 1: Month Select ---
+        months = ["January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"]
+        self.month_select = discord.ui.Select(
+            placeholder="Select Month",
+            options=[discord.SelectOption(label=m, value=str(i + 1)) for i, m in enumerate(months)],
+            row=1
+        )
+        self.month_select.callback = self.month_callback
+        self.add_item(self.month_select)
+
+        # --- Row 2: Year Select ---
+        current_year = datetime.datetime.now().year
+        self.year_select = discord.ui.Select(
+            placeholder="Select Year",
+            options=[discord.SelectOption(label=str(y), value=str(y)) for y in range(current_year, current_year + 5)],
+            row=2
+        )
+        self.year_select.callback = self.year_callback
+        self.add_item(self.year_select)
+
+    # --- QUICK SET BUTTONS (Row 0) ---
+    @discord.ui.button(label="1 day from now", style=discord.ButtonStyle.blurple, row=0)
+    async def quick_1_day(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.ctx.author: return
+        self.selected_date = datetime.datetime.now() + datetime.timedelta(days=1)
+        await interaction.response.defer()
+        self.stop()
+
+    @discord.ui.button(label="1 week from now", style=discord.ButtonStyle.blurple, row=0)
+    async def quick_1_week(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.ctx.author: return
+        self.selected_date = datetime.datetime.now() + datetime.timedelta(weeks=1)
+        await interaction.response.defer()
+        self.stop()
+
+    @discord.ui.button(label="1 month from now", style=discord.ButtonStyle.blurple, row=0)
+    async def quick_1_month(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.ctx.author: return
+        # Approximate 1 month as 30 days
+        self.selected_date = datetime.datetime.now() + datetime.timedelta(days=30)
+        await interaction.response.defer()
+        self.stop()
+
+    # --- CUSTOM SELECTION HANDLERS ---
+    async def month_callback(self, interaction: discord.Interaction):
+        self.month = int(self.month_select.values[0])
+        await interaction.response.defer()
+
+    async def year_callback(self, interaction: discord.Interaction):
+        self.year = int(self.year_select.values[0])
+        await interaction.response.defer()
+
+    # --- MANUAL ENTRY (Row 3 & 4) ---
+
+    @discord.ui.button(label="Set Day", style=discord.ButtonStyle.secondary, row=3)
+    async def btn_set_day(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.ctx.author: return
+        # Open the modal
+        await interaction.response.send_modal(DayInputModal(self))
+
+    @discord.ui.button(label="Confirm Custom Date", style=discord.ButtonStyle.green, row=4)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.ctx.author: return
+
+        if not self.month or not self.day or not self.year:
+            return await interaction.response.send_message("❌ Please select a Month, Day, and Year.", ephemeral=True)
+
+        try:
+            # Attempt to create date
+            dt = datetime.datetime(self.year, self.month, self.day)
+
+            # Check if in past
+            if dt < datetime.datetime.now():
+                return await interaction.response.send_message("❌ Deadline cannot be in the past!", ephemeral=True)
+
+            self.selected_date = dt
+            await interaction.response.defer()
+            self.stop()
+
+        except ValueError:
+            await interaction.response.send_message("❌ Invalid date (e.g., February 30th). Please correct it.",
+                                                    ephemeral=True)
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.grey, row=4)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.ctx.author: return
+        self.selected_date = None
+        await interaction.response.defer()
+        self.stop()

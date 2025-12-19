@@ -9,60 +9,103 @@ class SQLtools():
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
     async def databaseExecute(self, prompt: str):
-        async with self.pool.acquire() as connection:
-            return await connection.execute(prompt)
+        try:
+            async with self.pool.acquire() as connection:
+                return await connection.execute(prompt)
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
+            raise e
 
     async def databaseExecuteDynamic(self, prompt: str, values: list):
-        async with self.pool.acquire() as connection:
-            return await connection.execute(prompt, *values)
+        try:
+            async with self.pool.acquire() as connection:
+                return await connection.execute(prompt, *values)
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
+            raise e
 
     async def databaseFetch(self, prompt: str):
-        async with self.pool.acquire() as connection:
-            return await connection.fetch(prompt)
+        try:
+            async with self.pool.acquire() as connection:
+                return await connection.fetch(prompt)
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
+            raise e
 
     async def databaseFetchFast(self, prompt: str):
-        async with self.pool.acquire() as connection:
-            return await connection.fetch(prompt)
+        try:
+            async with self.pool.acquire() as connection:
+                return await connection.fetch(prompt)
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
+            raise e
 
     async def databaseMultiFetch(self, prompt: str):
-        async with self.pool.acquire() as connection:
-            await connection.execute(prompt)
-            await connection.execute(prompt)
-            await connection.execute(prompt)
-            await connection.execute(prompt)
-            return await connection.execute(prompt)
+        try:
+            async with self.pool.acquire() as connection:
+                await connection.execute(prompt)
+                await connection.execute(prompt)
+                await connection.execute(prompt)
+                await connection.execute(prompt)
+                return await connection.execute(prompt)
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 
     async def databaseFetchDynamic(self, prompt: str, values: list):
-        async with self.pool.acquire() as connection:
-            return await connection.fetch(prompt, *values)
+        try:
+            async with self.pool.acquire() as connection:
+                return await connection.fetch(prompt, *values)
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 
     async def databaseFetchdict(self, prompt: str):
-        async with self.pool.acquire() as connection:
-            return [dict(row) for row in await connection.fetch(prompt)]
+        try:
+            async with self.pool.acquire() as connection:
+                return [dict(row) for row in await connection.fetch(prompt)]
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 
     async def databaseFetchrow(self, prompt: str):
-        async with self.pool.acquire() as connection:
-            return dict(await connection.fetchrow(prompt))
+        try:
+            async with self.pool.acquire() as connection:
+                return dict(await connection.fetchrow(prompt))
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 
     async def databaseFetchlist(self, prompt: str):
-        async with self.pool.acquire() as connection:
-            return list(await connection.fetchrow(prompt))
+        try:
+            async with self.pool.acquire() as connection:
+                return list(await connection.fetchrow(prompt))
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 
     async def databaseFetchdictDynamic(self, prompt: str, values: list):
-        async with self.pool.acquire() as connection:
-            return [dict(row) for row in await connection.fetch(prompt, *values)]
+        try:
+            async with self.pool.acquire() as connection:
+                return [dict(row) for row in await connection.fetch(prompt, *values)]
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 
     async def databaseFetchrowDynamic(self, prompt: str, values: list):
-        async with self.pool.acquire() as connection:
-            return dict(await connection.fetchrow(prompt, *values))
+        try:
+            async with self.pool.acquire() as connection:
+                return dict(await connection.fetchrow(prompt, *values))
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 
     async def databaseFetchlistDynamic(self, prompt: str, values: list):
-        async with self.pool.acquire() as connection:
-            return list(await connection.fetchrow(prompt, *values))
+        try:
+            async with self.pool.acquire() as connection:
+                return list(await connection.fetchrow(prompt, *values))
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 
     async def databaseFetchlineDynamic(self, prompt: str, values: list):
-        async with self.pool.acquire() as connection:
-            return [dict(row) for row in await connection.fetch(prompt, *values)][0]
+        try:
+            async with self.pool.acquire() as connection:
+                return [dict(row) for row in await connection.fetch(prompt, *values)][0]
+        except Exception as e:
+            print(f"Query: {prompt} failed: \n\n{e}")
 #
 #     @commands.command(name="adminExecute", description="register a contest")
 #     async def adminExecute(self, ctx: commands.Context, *, prompt):
