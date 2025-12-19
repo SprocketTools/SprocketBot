@@ -1,8 +1,3 @@
-import io
-import zipfile
-import io
-import pandas as pd
-import os
 import discord
 from discord.ext import commands
 import json
@@ -11,6 +6,10 @@ import aiohttp
 import asyncio
 import os
 import random
+import zipfile
+import io
+import pandas as pd
+from typing import Union
 from cogs.textTools import textTools
 
 
@@ -27,7 +26,6 @@ class contestFunctions(commands.Cog):
         if ctx.author.id != self.bot.ownerid:
             return await self.bot.error.sendError(ctx)
 
-        await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contests;''')
         # 1. Ensure the shared Blueprint Stats table exists
         await self.bot.sql.databaseExecute('''
             CREATE TABLE IF NOT EXISTS blueprint_stats (
@@ -64,9 +62,8 @@ class contestFunctions(commands.Cog):
             );
         ''')
 
-        # 2. Modify blueprint_stats to cleanup columns
+        # 2. Modify blueprint_stats columns
         try:
-            # We DROP contest_name because we are switching to host_id
             await self.bot.sql.databaseExecute('''ALTER TABLE blueprint_stats DROP COLUMN IF EXISTS contest_name;''')
             await self.bot.sql.databaseExecute(
                 '''ALTER TABLE blueprint_stats ADD COLUMN IF NOT EXISTS file_url VARCHAR;''')
@@ -106,20 +103,17 @@ class contestFunctions(commands.Cog):
         ''')
 
         # --- DATABASE MIGRATION PATCH ---
-        # 1. Add ID column if missing
         try:
             await self.bot.sql.databaseExecute('''ALTER TABLE contests ADD COLUMN IF NOT EXISTS contest_id BIGINT;''')
         except:
             pass
 
-        # 2. Backfill IDs for old contests (Generate a deterministic-ish ID based on time + random if NULL)
         await self.bot.sql.databaseExecute('''
             UPDATE contests 
             SET contest_id = CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) + (RANDOM() * 100000) AS BIGINT) 
             WHERE contest_id IS NULL;
         ''')
 
-        # 3. Add other columns
         columns_to_add = [
             ("status", "BOOLEAN"), ("deadline", "TIMESTAMP"), ("rulesLink", "VARCHAR"),
             ("description", "VARCHAR"), ("costlimit", "BIGINT"), ("weightLimit", "REAL"),
@@ -142,7 +136,7 @@ class contestFunctions(commands.Cog):
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contest_entries;''')
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contestsubmissions;''')
 
-        await ctx.send("## Done!\nContest system migrated. `contest_name` dropped; using `host_id` linkage.")
+        await ctx.send("## Done!\nContest system migrated and ready.")
 
     # ----------------------------------------------------------------------------------
     # MANAGEMENT: Create and Edit Contests
@@ -161,9 +155,7 @@ class contestFunctions(commands.Cog):
         if exists:
             return await ctx.send("❌ A contest with that name already exists in this server.")
 
-        # Generate Unique ID
         contest_id = random.randint(10000000, 99999999)
-
         desc = await textTools.getResponse(ctx, "Provide a brief description.")
         rules = await textTools.getResponse(ctx, "Link to rules (or type 'None').")
 
@@ -174,27 +166,23 @@ class contestFunctions(commands.Cog):
         # 3. Channels
         submission_channel_id = 0
         while True:
-            raw_channel = await textTools.getResponse(ctx,
-                                                      "Mention the **Submission Channel** (where users upload files):")
-            try:
-                sub_id_str = ''.join(filter(str.isdigit, raw_channel))
-                if not sub_id_str: raise ValueError
-                submission_channel_id = int(sub_id_str)
+            # UPDATED: Use getChannelResponse to support threads properly
+            sub_channel = await textTools.getChannelResponse(ctx, "Mention the **Submission Channel** (or Thread):")
 
-                if not ctx.guild.get_channel(submission_channel_id):
-                    await ctx.send("❌ Channel not found.")
-                    continue
+            if not sub_channel:
+                return await ctx.send("❌ Cancelled.")
 
-                overlap = await self.bot.sql.databaseFetchrowDynamic(
-                    '''SELECT name FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
-                    [submission_channel_id]
-                )
-                if overlap:
-                    await ctx.send(f"❌ Channel occupied by **'{overlap['name']}'**. Choose another.")
-                    continue
-                break
-            except ValueError:
-                await ctx.send("❌ Invalid channel.")
+            submission_channel_id = sub_channel.id
+
+            # Exclusivity Check
+            overlap = await self.bot.sql.databaseFetchrowDynamic(
+                '''SELECT name FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
+                [submission_channel_id]
+            )
+            if overlap:
+                await ctx.send(f"❌ Channel occupied by active contest **'{overlap['name']}'**. Choose another.")
+                continue
+            break
 
         log_channel_id = 0
         raw_log = await textTools.getResponse(ctx, "Mention the **Log Channel** (or 'here'):")
@@ -224,7 +212,7 @@ class contestFunctions(commands.Cog):
         await ctx.send(
             f"## Contest Created!\n**ID:** `{contest_id}`\n**Name:** {name}\n**Deadline:** {formatted_date}\n**Submit Here:** <#{submission_channel_id}>")
 
-    @commands.command(name="renameContest", description="Rename a contest without breaking entries")
+    @commands.command(name="renameContest", description="Rename a contest")
     async def renameContest(self, ctx: commands.Context):
         if not await self._check_manager(ctx): return
 
@@ -233,12 +221,10 @@ class contestFunctions(commands.Cog):
 
         new_name = await textTools.getCappedResponse(ctx, "Enter the new name:", 64)
 
-        # Update Database
         await self.bot.sql.databaseExecuteDynamic(
             '''UPDATE contests SET name = $1 WHERE name = $2 AND serverID = $3;''',
             [new_name, contest_name, ctx.guild.id]
         )
-        # Note: We don't need to update blueprint_stats because it links via ID (host_id), not name!
         await ctx.send(f"✅ Renamed **'{contest_name}'** to **'{new_name}'**.")
 
     @commands.command(name="deleteContest", description="Delete a contest")
@@ -251,7 +237,6 @@ class contestFunctions(commands.Cog):
         confirm = await ctx.bot.ui.getYesNoChoice(ctx)
         if not confirm: return await ctx.send("Cancelled.")
 
-        # Get ID before deletion to clean up stats
         contest_data = await self.bot.sql.databaseFetchrowDynamic(
             '''SELECT contest_id FROM contests WHERE name = $1 AND serverID = $2;''',
             [contest_name, ctx.guild.id]
@@ -259,14 +244,9 @@ class contestFunctions(commands.Cog):
 
         if contest_data:
             c_id = contest_data['contest_id']
-            # Delete Definition
-            await self.bot.sql.databaseExecuteDynamic(
-                '''DELETE FROM contests WHERE contest_id = $1;''', [c_id]
-            )
-            # Unlink Entries (Set host_id to 0 or NULL)
-            await self.bot.sql.databaseExecuteDynamic(
-                '''UPDATE blueprint_stats SET host_id = 0 WHERE host_id = $1;''', [c_id]
-            )
+            await self.bot.sql.databaseExecuteDynamic('''DELETE FROM contests WHERE contest_id = $1;''', [c_id])
+            await self.bot.sql.databaseExecuteDynamic('''UPDATE blueprint_stats SET host_id = 0 WHERE host_id = $1;''',
+                                                      [c_id])
             await ctx.send(f"Contest deleted and entries unlinked.")
 
     @commands.command(name="setContestRule", description="Configure advanced contest limits")
@@ -314,7 +294,8 @@ class contestFunctions(commands.Cog):
     # ----------------------------------------------------------------------------------
 
     @commands.command(name="scanChannel", description="Scan channel for blueprint entries")
-    async def scanChannel(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def scanChannel(self, ctx: commands.Context, channel: Union[discord.TextChannel, discord.Thread] = None):
+        """Scans history for entries. Supports Threads."""
         if not await self._check_manager(ctx): return
 
         target_channel = channel or ctx.channel
@@ -389,7 +370,7 @@ class contestFunctions(commands.Cog):
     async def _process_entry(self, ctx, message, attachment, contest_data, silent=False):
         try:
             contest_id = contest_data['contest_id']
-            contest_name = contest_data['name']  # For file path/logging only
+            contest_name = contest_data['name']
 
             # A. Download & Save Locally
             async with aiohttp.ClientSession() as session:
@@ -399,7 +380,6 @@ class contestFunctions(commands.Cog):
                         return False
                     file_bytes = await resp.read()
 
-            # Sanitize name
             safe_name = "".join([c for c in contest_name if c.isalnum() or c in (' ', '-', '_')]).strip()
             save_dir = os.path.join("blueprints", str(ctx.guild.id), safe_name)
             os.makedirs(save_dir, exist_ok=True)
@@ -420,11 +400,10 @@ class contestFunctions(commands.Cog):
                 if not silent: await msg.edit(content=f"❌ **Analysis Failed:** {stats.get('error')}")
                 return False
 
-            # C. Validation & Overrides
             stats['owner_id'] = message.author.id
-            # *** CRITICAL CHANGE: Use host_id for contest link ***
             stats['host_id'] = contest_id
 
+            # C. Rules Check
             warnings = []
             declared_weight = stats.get('tank_weight', 0) / 1000.0
             if contest_data['weightlimit'] and contest_data['weightlimit'] > 0:
@@ -462,8 +441,7 @@ class contestFunctions(commands.Cog):
             elif not silent:
                 await msg.delete()
 
-            # E. Database Insertion (Use host_id)
-            # 1. Clean previous entry for this user in this contest ID
+            # E. Database Insertion
             await self.bot.sql.databaseExecuteDynamic(
                 '''UPDATE blueprint_stats SET host_id = 0 WHERE owner_id = $1 AND host_id = $2;''',
                 [stats['owner_id'], contest_id]
@@ -478,7 +456,7 @@ class contestFunctions(commands.Cog):
                 "fuel_tank_capacity", "ground_pressure", "horsepower", "hpt", "top_speed", "travel_range",
                 "crew_count", "cannon_stats", "armor_mass", "upper_frontal_angle", "lower_frontal_angle",
                 "health", "attack", "defense", "breakthrough", "piercing", "armor", "cohesion",
-                "file_url", "submission_date"  # Removed contest_name
+                "file_url", "submission_date"
             ]
 
             insert_data = {k: v for k, v in stats.items() if k in valid_cols}
@@ -518,7 +496,7 @@ class contestFunctions(commands.Cog):
             return False
 
     # ----------------------------------------------------------------------------------
-    # VIEWING & HELPERS
+    # VIEWING & DOWNLOAD
     # ----------------------------------------------------------------------------------
     @commands.command(name="viewSubmissions", description="List entries for a contest")
     async def viewSubmissions(self, ctx: commands.Context):
@@ -531,7 +509,6 @@ class contestFunctions(commands.Cog):
         )
         c_id = contest_data['contest_id']
 
-        # Select using host_id
         subs = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT owner_id, tank_weight, base_cost, file_url 
                FROM blueprint_stats 
@@ -564,16 +541,69 @@ class contestFunctions(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="downloadSubmissions", description="add a column to a SQL table")
-    async def downloadSubmissions(self, ctx: commands.Context):
-        contest_name = await self._pick_contest(ctx, only_active=False)
-        data = await self.bot.sql.databaseFetchdictDynamic(
-            '''SELECT * FROM blueprint_stats WHERE host_id = $1;''',
-            [contest_name, ctx.guild.id])
-        stringOut = json.dumps(data, indent=4)
-        data = io.BytesIO(stringOut.encode())
-        await ctx.send(file=discord.File(data, f'submissions-{contest_name}.json'))
+    @commands.command(name="adminDownloadContest", description="Download CSV stats and ZIP of blueprints")
+    async def adminDownloadContest(self, ctx: commands.Context):
+        if not await self._check_manager(ctx): return
 
+        contest_name = await self._pick_contest(ctx, only_active=False)
+        if not contest_name: return
+
+        contest_data = await self.bot.sql.databaseFetchrowDynamic(
+            '''SELECT contest_id FROM contests WHERE name = $1 AND serverID = $2;''',
+            [contest_name, ctx.guild.id]
+        )
+        c_id = contest_data['contest_id']
+
+        await ctx.send("📦 Compiling data...")
+
+        # A. CSV
+        try:
+            data = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM blueprint_stats WHERE host_id = $1''',
+                                                               [c_id])
+            if not data:
+                await ctx.send("⚠️ No database entries found.")
+            else:
+                df = pd.DataFrame(data)
+                csv_buffer = io.BytesIO()
+                df.to_csv(csv_buffer, index=False, encoding='utf-8')
+                csv_buffer.seek(0)
+                await ctx.send(file=discord.File(csv_buffer, filename=f"{contest_name}_stats.csv"))
+        except Exception as e:
+            await ctx.send(f"❌ Error generating CSV: `{e}`")
+
+        # B. ZIP
+        try:
+            safe_name = "".join([c for c in contest_name if c.isalnum() or c in (' ', '-', '_')]).strip()
+            folder_path = os.path.join("blueprints", str(ctx.guild.id), safe_name)
+
+            if not os.path.exists(folder_path):
+                return await ctx.send("⚠️ No local blueprint folder found.")
+
+            zip_buffer = io.BytesIO()
+            has_files = False
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                for root, dirs, files in os.walk(folder_path):
+                    for file in files:
+                        if file.endswith(".blueprint"):
+                            file_path = os.path.join(root, file)
+                            zip_file.write(file_path, arcname=file)
+                            has_files = True
+
+            if not has_files:
+                return await ctx.send("⚠️ Folder exists, but is empty.")
+
+            zip_buffer.seek(0)
+            if zip_buffer.getbuffer().nbytes > 8 * 1024 * 1024 and ctx.guild.filesize_limit < zip_buffer.getbuffer().nbytes:
+                await ctx.send(f"❌ ZIP file is too large for Discord.")
+            else:
+                await ctx.send(file=discord.File(zip_buffer, filename=f"{safe_name}_files.zip"))
+
+        except Exception as e:
+            await ctx.send(f"❌ Error generating ZIP: `{e}`")
+
+    # ----------------------------------------------------------------------------------
+    # HELPERS
+    # ----------------------------------------------------------------------------------
     async def _pick_contest(self, ctx: commands.Context, only_active=True):
         query = '''SELECT name FROM contests WHERE serverID = $1'''
         if only_active:
@@ -582,108 +612,18 @@ class contestFunctions(commands.Cog):
         contests = await self.bot.sql.databaseFetchdictDynamic(query, [ctx.guild.id])
 
         if not contests:
-            await ctx.send("No contests found in this server.")
+            await ctx.send("No contests found.")
             return None
 
         contest_names = [c['name'] for c in contests]
-        if len(contest_names) == 1:
-            return contest_names[0]
-
         return await ctx.bot.ui.getChoiceFromList(ctx, contest_names, "Select a contest:")
 
     async def _check_manager(self, ctx: commands.Context):
         if ctx.author.id == ctx.guild.owner_id or ctx.author.guild_permissions.manage_guild or ctx.author.id == self.bot.ownerid:
             return True
-        await ctx.send("❌ You need **Manage Server** permissions to manage contests.")
+        await ctx.send("❌ You need **Manage Server** permissions.")
         return False
 
-    @commands.command(name="downloadContest", description="Download CSV stats and ZIP of blueprints")
-    async def downloadContest(self, ctx: commands.Context):
-        # 1. Permissions Check
-        if not await self._check_manager(ctx): return
-
-        # 2. Select Contest
-        contest_name = await self._pick_contest(ctx, only_active=False)
-        if not contest_name: return
-
-        # 3. Get Contest ID (needed to find database entries)
-        contest_data = await self.bot.sql.databaseFetchrowDynamic(
-            '''SELECT contest_id FROM contests WHERE name = $1 AND serverID = $2;''',
-            [contest_name, ctx.guild.id]
-        )
-        if not contest_data:
-            return await ctx.send("❌ Error: Could not find contest ID.")
-
-        c_id = contest_data['contest_id']
-
-        await ctx.send("📦 Compiling data... please wait.")
-
-        # --- PART A: GENERATE CSV ---
-        try:
-            # Fetch all stats for this contest ID
-            data = await self.bot.sql.databaseFetchdictDynamic(
-                '''SELECT * FROM blueprint_stats WHERE host_id = $1''',
-                [c_id]
-            )
-
-            if not data:
-                await ctx.send("⚠️ No database entries found for this contest.")
-            else:
-                # Use Pandas to create CSV easily
-                df = pd.DataFrame(data)
-
-                # Create in-memory buffer
-                csv_buffer = io.BytesIO()
-                df.to_csv(csv_buffer, index=False, encoding='utf-8')
-                csv_buffer.seek(0)
-
-                await ctx.send(
-                    content=f"📊 **Database Stats for '{contest_name}'**",
-                    file=discord.File(csv_buffer, filename=f"{contest_name}_stats.csv")
-                )
-        except Exception as e:
-            await ctx.send(f"❌ Error generating CSV: `{e}`")
-
-        # --- PART B: GENERATE ZIP ---
-        try:
-            # Reconstruct the folder path used in _process_entry
-            safe_name = "".join([c for c in contest_name if c.isalnum() or c in (' ', '-', '_')]).strip()
-            folder_path = os.path.join("blueprints", str(ctx.guild.id), safe_name)
-
-            if not os.path.exists(folder_path):
-                return await ctx.send("⚠️ No local blueprint folder found for this contest.")
-
-            # Create in-memory ZIP buffer
-            zip_buffer = io.BytesIO()
-
-            has_files = False
-            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-                # Walk through the directory
-                for root, dirs, files in os.walk(folder_path):
-                    for file in files:
-                        if file.endswith(".blueprint"):
-                            file_path = os.path.join(root, file)
-                            # Add file to zip (arcname ensures it doesn't store the full C:/ path)
-                            zip_file.write(file_path, arcname=file)
-                            has_files = True
-
-            if not has_files:
-                return await ctx.send("⚠️ Folder exists, but no .blueprint files were found.")
-
-            zip_buffer.seek(0)
-
-            # Check size (Discord 8MB limit for non-boosted)
-            size_mb = zip_buffer.getbuffer().nbytes / (1024 * 1024)
-            if size_mb > 8 and ctx.guild.filesize_limit < zip_buffer.getbuffer().nbytes:
-                await ctx.send(f"❌ The ZIP file is too large ({size_mb:.2f}MB) for Discord upload.")
-            else:
-                await ctx.send(
-                    content=f"🗂️ **Blueprint Archive for '{contest_name}'**",
-                    file=discord.File(zip_buffer, filename=f"{safe_name}_files.zip")
-                )
-
-        except Exception as e:
-            await ctx.send(f"❌ Error generating ZIP: `{e}`")
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(contestFunctions(bot))
