@@ -987,10 +987,10 @@ class adminFunctions(commands.Cog):
             messages = []
             message_raw = channel.history(limit=1000)
             async for messagee in message_raw:
-                messages.append({'author': messagee.author, 'content': messagee.content})
+                messages.append({'author': messagee.author, 'content': messagee.content, 'author-ID': messagee.author.id, 'url': messagee.jump_url, 'attachments': [attachment.content_type for attachment in messagee.attachments]})
             print(messages)
             await ctx.send("Getting AI response")
-            message_out = await ctx.bot.AI.get_response(prompt=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your reply cannot exceed 250 words in length. {prompt}", temperature=1.5)
+            message_out = await ctx.bot.AI.get_response(prompt=f"You are a Discord bot that needs to respond to a conversation.  Here are the most recent messages from that Discord channel, provided backwards in a json format: \n\n {str(messages)}\n\n Unless otherwise instructed, your reply cannot exceed 250 words in length. {prompt}", temperature=1.5)
             whereSend = await ctx.bot.ui.getButtonChoice(ctx, ["here", "there", "webhook"])
             dest = None
             if whereSend == "here":
