@@ -262,7 +262,12 @@ class contestFunctions(commands.Cog):
             limits = f"**Weight:** {data['weightlimit']}t | **Cost:** {data['costlimit']}\n**Era:** {data['era']}\n**Crew:** {data['crewmin']}-{data['crewmax']}"
             embed.add_field(name="Core Limits", value=limits, inline=False)
 
-            dims = f"**Hull:** H > {data['hullheightmin']}m, W < {data['hullwidthmax']}m\n**Torsion:** > {data['torsionbarlengthmin']}\n**HVSS:** {data['allowhvss']}"
+            dims = (f"**Hull height min:** {(data['hullheightmin'] + "m") if data['hullheightmin'] else "None"}\n"
+                    f"**Hull width max:** < {(data['hullwidthmax'] + "m") if data['hullwidthmax'] else "None"}\n"
+                    f"**Torsion bar length min:** > {(data['torsionbarlengthmin'] + "m") if data['torsionbarlengthmin'] else "None"}\n"
+                    f"**Other suspension allowed:** {("Yes") if data['allowhvss'] else "No"}"
+                    )
+
             embed.add_field(name="Dimensions/Suspension", value=dims, inline=False)
 
             mob = f"**HP/T:** > {data['minhpt']}\n**Gnd Press:** < {data['groundpressuremax']}\n**Belt:** > {data['beltwidthmin']}"
@@ -458,7 +463,8 @@ class contestFunctions(commands.Cog):
                         else:
                             count_errors += 1
                     except Exception as e:
-                        print(f"Scan Error on {message.id}: {e}")
+                        print(f"Scan Error on {message.jump_url}: {e}")
+                        await ctx.send(f"Scan Error on {message.jump_url}: {e}")
                         count_errors += 1
 
         await status_msg.edit(

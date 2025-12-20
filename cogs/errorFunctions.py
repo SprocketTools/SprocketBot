@@ -1,13 +1,12 @@
 from datetime import datetime
 import discord, random, asyncio, re
 from discord.ext import commands
-import type_hints
 from cogs.textTools import textTools
 
 
 class errorFunctions(commands.Cog):
     errorList = []
-    def __init__(self, bot: type_hints.SprocketBot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
     @commands.command(name="resetErrorConfig", description="Reset everyone's server configurations")
     async def resetErrorConfig(self, ctx: commands.Context):

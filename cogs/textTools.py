@@ -4,11 +4,10 @@ from google import genai
 from google.genai import types
 import discord, configparser, random, platform, asyncio, re
 from discord.ext import commands
-import type_hints
 from discord import app_commands
 class textTools(commands.Cog):
     errorList = []
-    def __init__(self, bot: type_hints.SprocketBot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.geminikey = self.bot.geminikey
     @staticmethod

@@ -3,11 +3,11 @@ import datetime
 import random
 from datetime import datetime
 import discord
-import type_hintsfrom discord.ext import commands
+from discord.ext import commands
 from cogs.errorFunctions import errorFunctions
 
 class campaignTools:
-    def __init__(self, bot: type_hints.SprocketBot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     async def updateCampaignServerSettings(self, ctx: commands.Context):

@@ -1,7 +1,7 @@
 import json
 import math
 import discord
-import type_hintsfrom discord.ext import commands
+from discord.ext import commands
 import json
 import random
 import math
@@ -10,7 +10,7 @@ from datetime import datetime
 import numpy as np
 
 class blueprintAnalysisTools:
-    def __init__(self, bot: type_hints.SprocketBot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     def _get_face_normal(self, v1, v2, v3):

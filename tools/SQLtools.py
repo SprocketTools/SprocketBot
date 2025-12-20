@@ -1,5 +1,5 @@
 import discord
-import type_hintsfrom discord.ext import commands
+from discord.ext import commands
 from discord import app_commands
 #from main import SQLsettings
 import asyncpg
