@@ -262,9 +262,9 @@ class contestFunctions(commands.Cog):
             limits = f"**Weight:** {data['weightlimit']}t | **Cost:** {data['costlimit']}\n**Era:** {data['era']}\n**Crew:** {data['crewmin']}-{data['crewmax']}"
             embed.add_field(name="Core Limits", value=limits, inline=False)
 
-            dims = (f"**Hull height min:** {(data['hullheightmin'] + "m") if data['hullheightmin'] else "None"}\n"
-                    f"**Hull width max:** < {(data['hullwidthmax'] + "m") if data['hullwidthmax'] else "None"}\n"
-                    f"**Torsion bar length min:** > {(data['torsionbarlengthmin'] + "m") if data['torsionbarlengthmin'] else "None"}\n"
+            dims = (f"**Hull height min:** {(data['hullheightmin'] + "m") if data['hullheightmin'] else "None"}\n" +
+                    f"**Hull width max:** < {(data['hullwidthmax'] + "m") if data['hullwidthmax'] else "None"}\n" +
+                    f"**Torsion bar length min:** > {(data['torsionbarlengthmin'] + "m") if data['torsionbarlengthmin'] else "None"}\n" + 
                     f"**Other suspension allowed:** {("Yes") if data['allowhvss'] else "No"}"
                     )
 
