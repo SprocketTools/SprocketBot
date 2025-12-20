@@ -262,8 +262,8 @@ class contestFunctions(commands.Cog):
             limits = f"**Weight:** {data['weightlimit']}t | **Cost:** {data['costlimit']}\n**Era:** {data['era']}\n**Crew:** {data['crewmin']}-{data['crewmax']}"
             embed.add_field(name="Core Limits", value=limits, inline=False)
 
-            #dims = (f"**Hull height min:** {(data['hullheightmin'] + 'm') if data['hullheightmin'] else "None"}\n**Hull width max:** < {(data['hullwidthmax'] + 'm') if data['hullwidthmax'] else "None"}\n**Torsion bar length min:** > {(data['torsionbarlengthmin'] + 'm') if data['torsionbarlengthmin'] else "None"}\n**Other suspension allowed:** {'Yes' if data['allowhvss'] else "No"}")
-            dims = "Hi"
+            dims = f"**Hull height min:** {(data['hullheightmin'] + 'm') if data['hullheightmin'] else "None"}\n**Hull width max:** < {(data['hullwidthmax'] + 'm') if data['hullwidthmax'] else "None"}\n**Torsion bar length min:** > {(data['torsionbarlengthmin'] + 'm') if data['torsionbarlengthmin'] else "None"}\n**Other suspension allowed:** {'Yes' if data['allowhvss'] else "No"}"
+            #dims = "Hi"
             embed.add_field(name="Dimensions/Suspension", value=dims, inline=False)
 
             mob = f"**HP/T:** > {data['minhpt']}\n**Gnd Press:** < {data['groundpressuremax']}\n**Belt:** > {data['beltwidthmin']}"
