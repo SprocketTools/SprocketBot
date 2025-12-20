@@ -1,8 +1,9 @@
 from datetime import datetime
 from discord.ext import commands
+import type_hints
 
 class errorTools:
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     async def retrieveError(self, ctx: commands.Context):

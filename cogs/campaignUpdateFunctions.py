@@ -1,6 +1,7 @@
 import asyncio
 import io
 import discord
+import type_hints
 import pandas as pd
 from datetime import datetime, timedelta
 from discord.ext import tasks, commands
@@ -15,7 +16,7 @@ BACKUP_CHANNEL_ID = 1156854471767367680
 
 
 class campaignUpdateFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.Cog.listener()

@@ -4,6 +4,7 @@ import random
 import time
 
 import discord
+import type_hints
 import pandas as pd
 from discord import Webhook
 import aiohttp
@@ -13,7 +14,7 @@ import main
 promptResponses = {}
 from cogs.textTools import textTools
 class timedMessageTools(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
         self.startup = True
         self.updateFrequency = 300

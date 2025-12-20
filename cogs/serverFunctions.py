@@ -4,6 +4,7 @@ import random
 import io
 from discord.ext import tasks
 import discord
+import type_hints
 import pandas as pd
 from discord.ext import commands
 import main
@@ -13,7 +14,7 @@ from discord import app_commands
 from cogs.textTools import textTools
 from cogs.adminFunctions import adminFunctions
 class serverFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.Cog.listener()

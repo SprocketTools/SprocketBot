@@ -1,10 +1,17 @@
 # type_hints.py
 from discord.ext import commands
-from tools.SQLtools import SQLtools         # Import your actual tool classes here
+from tools.AITools import AITools
+from tools.blueprintAnalysisTools import blueprintAnalysisTools
 from tools.campaignTools import campaignTools
+from tools.errorTools import errorTools
+from tools.SQLtools import SQLtools
+from tools.UItools import UItools
 
 class SprocketBot(commands.Bot):
-    # Tell PyCharm these attributes exist and what type they are
+    ai: AITools
+    analyzer: blueprintAnalysisTools
+    campaign: campaignTools
+    error: errorTools
     sql: SQLtools
-    campaignTools: campaignTools
-    # Add any other custom tools you attached to 'bot' here
+    ui: UItools
+

@@ -2,11 +2,12 @@ import asyncio
 import datetime
 import random
 import discord
+import type_hints
 from discord.ext import commands
 import main
 from cogs.textTools import textTools
 class SprocketOfficialFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.command(name="serverSuggestion", description="Make a server suggestion")

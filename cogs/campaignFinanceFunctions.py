@@ -1,8 +1,8 @@
 from discord.ext import commands
 from cogs.textTools import textTools
-
+import type_hints
 class campaignFinanceFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.command(name="addMoney", description="Add money to a faction")

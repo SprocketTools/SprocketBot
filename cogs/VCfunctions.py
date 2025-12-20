@@ -1,11 +1,11 @@
 import asyncio
 import locale, yt_dlp
-
 from cogs.adminFunctions import adminFunctions
 
 locale.setlocale(locale.LC_ALL, '')
 from discord.ext.music import MusicClient, WAVAudio, Track
 import discord
+import type_hints
 from discord.ext import commands
 
 import main
@@ -22,7 +22,7 @@ YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': True}
 
 
 class VCfunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
         self.queue = []
 

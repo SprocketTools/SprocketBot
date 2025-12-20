@@ -1,5 +1,6 @@
 from datetime import datetime
 import discord
+import type_hints
 from discord.ext import commands
 
 promptResponses = {}
@@ -8,7 +9,7 @@ from google import genai
 
 
 class testingFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
         self.on_message_cooldowns = {}
         self.on_message_cooldowns_notify = {}

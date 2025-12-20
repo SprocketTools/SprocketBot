@@ -1,4 +1,5 @@
 import discord
+import type_hints
 from discord.ext import commands
 import json
 import datetime
@@ -14,7 +15,7 @@ from cogs.textTools import textTools
 
 
 class contestFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
         # NOTE: self.bot.analyzer is expected to be loaded in main.py
 
@@ -176,43 +177,32 @@ class contestFunctions(commands.Cog):
             except asyncio.TimeoutError:
                 return await ctx.send("❌ Timed out.")
 
-            if msg.content.lower() == "cancel":
-                return await ctx.send("❌ Cancelled.")
+            if msg.content.lower() == "cancel": return await ctx.send("❌ Cancelled.")
 
             target_obj = None
-
-            # A. Check Mentions
             if msg.channel_mentions:
                 target_obj = msg.channel_mentions[0]
-
-            # B. Check ID / Raw Link
             if not target_obj:
-                # Strip typical discord formatting <#123> or plain 123
                 clean_content = "".join([c for c in msg.content if c.isdigit()])
                 if clean_content:
                     try:
-                        # Try fetching as channel or thread
                         target_obj = ctx.guild.get_channel_or_thread(int(clean_content))
-                        if not target_obj:
-                            target_obj = await ctx.guild.fetch_channel(int(clean_content))
+                        if not target_obj: target_obj = await ctx.guild.fetch_channel(int(clean_content))
                     except:
                         target_obj = None
 
-            # Validate
             if target_obj and isinstance(target_obj, (discord.TextChannel, discord.Thread)):
                 submission_channel_id = target_obj.id
-
-                # Exclusivity Check
                 overlap = await self.bot.sql.databaseFetchrowDynamic(
                     '''SELECT name FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
                     [submission_channel_id]
                 )
                 if overlap:
-                    await ctx.send(f"❌ Channel occupied by active contest **'{overlap['name']}'**. Choose another.")
+                    await ctx.send(f"❌ Channel occupied by **'{overlap['name']}'**. Choose another.")
                     continue
                 break
             else:
-                await ctx.send("❌ Invalid Channel/Thread. Please mention it properly or paste the ID.")
+                await ctx.send("❌ Invalid Channel/Thread. Try again.")
 
         log_channel_id = 0
         raw_log = await textTools.getResponse(ctx, "Mention the **Log Channel** (or 'here'):")
@@ -242,20 +232,164 @@ class contestFunctions(commands.Cog):
         await ctx.send(
             f"## Contest Created!\n**ID:** `{contest_id}`\n**Name:** {name}\n**Deadline:** {formatted_date}\n**Submit Here:** <#{submission_channel_id}>")
 
-    @commands.command(name="renameContest", description="Rename a contest")
-    async def renameContest(self, ctx: commands.Context):
+    @commands.command(name="manageContest", description="Dashboard to edit all contest settings")
+    async def manageContest(self, ctx: commands.Context):
         if not await self._check_manager(ctx): return
 
+        # 1. Select Contest
         contest_name = await self._pick_contest(ctx, only_active=False)
         if not contest_name: return
 
-        new_name = await textTools.getCappedResponse(ctx, "Enter the new name:", 64)
+        # Main Loop
+        while True:
+            data = await self.bot.sql.databaseFetchrowDynamic(
+                '''SELECT * FROM contests WHERE name = $1 AND serverID = $2;''',
+                [contest_name, ctx.guild.id]
+            )
+            if not data:
+                await ctx.send("❌ Contest not found.")
+                break
 
-        await self.bot.sql.databaseExecuteDynamic(
-            '''UPDATE contests SET name = $1 WHERE name = $2 AND serverID = $3;''',
-            [new_name, contest_name, ctx.guild.id]
-        )
-        await ctx.send(f"✅ Renamed **'{contest_name}'** to **'{new_name}'**.")
+            # Build Dashboard Embed
+            status_emoji = "🟢 Open" if data['status'] else "🔴 Closed"
+            dl_str = data['deadline'].strftime("%Y-%m-%d") if data['deadline'] else "None"
+
+            embed = discord.Embed(title=f"⚙️ Managing: {data['name']}", color=discord.Color.blue())
+
+            gen_info = f"**Desc:** {data['description'][:50]}...\n**Rules:** {data['ruleslink']}\n**Status:** {status_emoji}\n**Deadline:** {dl_str}"
+            embed.add_field(name="General Info", value=gen_info, inline=False)
+
+            limits = f"**Weight:** {data['weightlimit']}t | **Cost:** {data['costlimit']}\n**Era:** {data['era']}\n**Crew:** {data['crewmin']}-{data['crewmax']}"
+            embed.add_field(name="Core Limits", value=limits, inline=False)
+
+            dims = f"**Hull:** H > {data['hullheightmin']}m, W < {data['hullwidthmax']}m\n**Torsion:** > {data['torsionbarlengthmin']}\n**HVSS:** {data['allowhvss']}"
+            embed.add_field(name="Dimensions/Suspension", value=dims, inline=False)
+
+            mob = f"**HP/T:** > {data['minhpt']}\n**Gnd Press:** < {data['groundpressuremax']}\n**Belt:** > {data['beltwidthmin']}"
+            embed.add_field(name="Mobility", value=mob, inline=True)
+
+            fire = f"**Caliber:** < {data['caliberlimit']}mm\n**Armor:** < {data['armormax']}mm"
+            embed.add_field(name="Firepower", value=fire, inline=True)
+
+            chans = f"**Submit:** <#{data['submission_channel_id']}>\n**Logs:** <#{data['log_channel_id']}>"
+            embed.add_field(name="Channels", value=chans, inline=False)
+
+            # Buttons
+            options = [
+                "General Info", "Status/Deadline", "Channels",
+                "Weight/Cost", "Era/Crew", "Dimensions",
+                "Mobility", "Firepower", "Exit"
+            ]
+            msgOut = await ctx.send(embed=embed)
+            selection = await ctx.bot.ui.getButtonChoice(ctx, options)
+
+            if selection == "Exit":
+                break
+
+            # --- Logic Handlers ---
+            elif selection == "General Info":
+                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Name", "Description", "Rules Link", "Back"])
+                if sub == "Name":
+                    val = await textTools.getCappedResponse(ctx, "Enter new name:", 64)
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET name=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+                    contest_name = val  # Update local var
+                elif sub == "Description":
+                    val = await textTools.getResponse(ctx, "Enter description:")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET description=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+                elif sub == "Rules Link":
+                    val = await textTools.getResponse(ctx, "Enter rules link:")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET ruleslink=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+
+            elif selection == "Status/Deadline":
+                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Toggle Status", "Set Deadline", "Back"])
+                if sub == "Toggle Status":
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET status=$1 WHERE contest_id=$2",
+                                                              [not data['status'], data['contest_id']])
+                elif sub == "Set Deadline":
+                    val = await ctx.bot.ui.getDate(ctx, "Select new deadline:")
+                    if val: await self.bot.sql.databaseExecuteDynamic(
+                        "UPDATE contests SET deadline=$1 WHERE contest_id=$2", [val, data['contest_id']])
+
+            elif selection == "Channels":
+                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Submission Channel", "Log Channel", "Back"])
+                if sub == "Submission Channel":
+                    chan = await textTools.getChannelResponse(ctx, "Mention new submission channel:")
+                    if chan:
+                        overlap = await self.bot.sql.databaseFetchrowDynamic(
+                            "SELECT name FROM contests WHERE submission_channel_id=$1 AND status=TRUE AND contest_id!=$2",
+                            [chan.id, data['contest_id']])
+                        if overlap:
+                            await ctx.send(f"❌ Occupied by {overlap['name']}")
+                        else:
+                            await self.bot.sql.databaseExecuteDynamic(
+                                "UPDATE contests SET submission_channel_id=$1 WHERE contest_id=$2",
+                                [chan.id, data['contest_id']])
+                elif sub == "Log Channel":
+                    chan = await textTools.getChannelResponse(ctx, "Mention new log channel:")
+                    if chan: await self.bot.sql.databaseExecuteDynamic(
+                        "UPDATE contests SET log_channel_id=$1 WHERE contest_id=$2", [chan.id, data['contest_id']])
+
+            elif selection == "Weight/Cost":
+                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Max Weight", "Max Cost", "Back"])
+                if sub == "Max Weight":
+                    val = await textTools.getFloatResponse(ctx, "Enter Max Weight (0 for none):")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET weightlimit=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+                elif sub == "Max Cost":
+                    val = await textTools.getIntResponse(ctx, "Enter Max Cost (0 for none):")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET costlimit=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+
+            elif selection == "Era/Crew":
+                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Era", "Min Crew", "Max Crew", "Back"])
+                if sub == "Era":
+                    val = await ctx.bot.ui.getChoiceFromList(ctx, ["WWI", "Interwar", "Earlywar", "Midwar", "Latewar",
+                                                                   "None"], "Select Era:")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET era=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+                elif sub == "Min Crew":
+                    val = await textTools.getIntResponse(ctx, "Enter Min Crew:")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET crewmin=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+                elif sub == "Max Crew":
+                    val = await textTools.getIntResponse(ctx, "Enter Max Crew (0 for none):")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET crewmax=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+
+            elif selection == "Dimensions":
+                sub = await ctx.bot.ui.getButtonChoice(ctx,
+                                                       ["Min Height", "Max Width", "Min Torsion", "Allow HVSS", "Back"])
+                cmap = {"Min Height": "hullheightmin", "Max Width": "hullwidthmax",
+                        "Min Torsion": "torsionbarlengthmin"}
+                if sub == "Allow HVSS":
+                    val = await ctx.bot.ui.getYesNoChoice(ctx, "Allow HVSS?")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET allowhvss=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+                elif sub in cmap:
+                    val = await textTools.getFloatResponse(ctx, f"Enter {sub}:")
+                    await self.bot.sql.databaseExecuteDynamic(f"UPDATE contests SET {cmap[sub]}=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+
+            elif selection == "Mobility":
+                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Min HP/T", "Max Gnd Press", "Min Belt Width", "Back"])
+                cmap = {"Min HP/T": "minhpt", "Max Gnd Press": "groundpressuremax", "Min Belt Width": "beltwidthmin"}
+                if sub in cmap:
+                    val = await textTools.getFloatResponse(ctx, f"Enter {sub}:")
+                    await self.bot.sql.databaseExecuteDynamic(f"UPDATE contests SET {cmap[sub]}=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+
+            elif selection == "Firepower":
+                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Max Caliber", "Max Armor", "Back"])
+                cmap = {"Max Caliber": "caliberlimit", "Max Armor": "armormax"}
+                if sub in cmap:
+                    val = await textTools.getFloatResponse(ctx, f"Enter {sub}:")
+                    await self.bot.sql.databaseExecuteDynamic(f"UPDATE contests SET {cmap[sub]}=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+            await msgOut.delete()
+        await ctx.send("✅ Exited Dashboard.")
 
     @commands.command(name="deleteContest", description="Delete a contest")
     async def deleteContest(self, ctx: commands.Context):
@@ -279,46 +413,6 @@ class contestFunctions(commands.Cog):
                                                       [c_id])
             await ctx.send(f"Contest deleted and entries unlinked.")
 
-    @commands.command(name="setContestRule", description="Configure advanced contest limits")
-    async def setContestRule(self, ctx: commands.Context):
-        if not await self._check_manager(ctx): return
-
-        contest_name = await self._pick_contest(ctx)
-        if not contest_name: return
-
-        rules_map = {
-            "Era (WWI/Inter/Early/Mid/Late)": "era",
-            "Min Crew Count": "crewmin",
-            "Max Crew Count": "crewmax",
-            "Min Hull Height (m)": "hullheightmin",
-            "Max Hull Width (m)": "hullwidthmax",
-            "Min Torsion Bar Length": "torsionbarlengthmin",
-            "Max Armor Thickness (mm)": "armormax",
-            "Max Gun Caliber (mm)": "caliberlimit",
-            "Min HP/Ton": "minhpt",
-            "Max Ground Pressure": "groundpressuremax",
-            "Min Belt Width": "beltwidthmin",
-            "Allow HVSS?": "allowhvss"
-        }
-
-        selection = await ctx.bot.ui.getChoiceFromList(ctx, list(rules_map.keys()), "Select rule to modify:")
-        if not selection: return
-        db_column = rules_map[selection]
-
-        if db_column == "allowhvss":
-            val = await ctx.bot.ui.getYesNoChoice(ctx)
-        elif db_column == "era":
-            val = await ctx.bot.ui.getChoiceFromList(ctx, ["WWI", "Interwar", "Earlywar", "Midwar", "Latewar"],
-                                                     "Select Era:")
-        else:
-            val = await textTools.getFloatResponse(ctx, f"Enter value for {selection} (0 to disable/reset):")
-
-        await self.bot.sql.databaseExecuteDynamic(
-            f"UPDATE contests SET {db_column} = $1 WHERE name = $2 AND serverID = $3;",
-            [val, contest_name, ctx.guild.id]
-        )
-        await ctx.send(f"✅ Updated **{selection}** to `{val}`.")
-
     # ----------------------------------------------------------------------------------
     # SCANNING & SUBMISSIONS
     # ----------------------------------------------------------------------------------
@@ -328,7 +422,6 @@ class contestFunctions(commands.Cog):
         """Scans history for entries. Supports Threads."""
         if not await self._check_manager(ctx): return
 
-        # If no channel arg provided, assume current channel (works for Threads too)
         target_channel = channel or ctx.channel
 
         # 1. AUTO-DETECT

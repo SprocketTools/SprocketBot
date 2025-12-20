@@ -3,10 +3,11 @@ from datetime import datetime
 from io import StringIO
 import pandas as pd
 import discord
+import type_hints
 from discord.ext import commands
 
 class campaignInfoFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     # await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, factionname VARCHAR, description VARCHAR(5000), joinrole BIGINT, money BIGINT);''')

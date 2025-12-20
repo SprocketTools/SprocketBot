@@ -2,6 +2,7 @@ import asyncio
 import math
 from discord.ext import tasks
 import discord
+import type_hints
 from discord.ext import commands
 import main
 from datetime import datetime, timedelta
@@ -10,7 +11,7 @@ promptResponses = {}
 from cogs.textTools import textTools
 
 class roleColorTools(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
         self.startup = True
         self.updateFrequency = 300

@@ -3,6 +3,7 @@ import datetime
 import requests
 import json
 import discord
+import type_hints
 from discord.ext import commands, tasks
 from cogs.textTools import textTools
 import main  # To access main.ownerID and other main settings
@@ -16,7 +17,7 @@ from cogs.adminFunctions import adminFunctions  # For getServerConfig
 # The base URL for V2 is 'https://api.clickup.com/api/v2/'
 
 class clickupFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
         # Final, rigid AI instructions for SUMMARY: Word limit kept low for stability.
         self.ai_instructions = "You are a professional project manager tasked with summarizing the most pressing tasks for the day and the upcoming week from a list of ClickUp tasks. Your summary should be clear, concise, and professional. Group tasks by urgency (Overdue, Due Today, Due This Week), using a new section heading for each. **For every task, start a new bullet point.** The **STRICT** format for each bullet must be: **Task Title (bolded)\nAssigned to: [User @PING or ClickUp Name]. Summary of work required from Description**. The summary must be under 100 words. Do not use any introductory phrases."

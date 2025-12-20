@@ -3,12 +3,13 @@ import matplotlib.pyplot as plot
 import pandas as pd
 from discord.ext import commands
 import main
-
+import type_hints
 promptResponses = {}
 from cogs.textTools import textTools
 from cogs.adminFunctions import adminFunctions
+
 class campaignManageFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.command(name="manageCampaign", description="Add money to a faction")

@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import random
 import discord
+import type_hints
 import aiohttp  # CHANGED: Swapped requests for aiohttp (non-blocking)
 import json
 from discord.ext import commands
@@ -18,7 +19,7 @@ CLICKUP_ENDPOINT_SUFFIX = "/task"
 
 
 class jarvisFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
         self.on_message_cooldowns = {}
         self.on_message_cooldowns_burst = {}

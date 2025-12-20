@@ -8,6 +8,7 @@ from discord import Webhook
 import aiohttp
 import main
 from cogs.textTools import textTools
+import type_hints
 
 serverConfig = {}
 userStrikes = {}
@@ -19,7 +20,7 @@ strikethreshold = 3
 piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c", "0.2.19.5", "0.2.30.0", "0.2.32.1"]
 colorint = -1
 class adminFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
         self.cooldown = 0
         ##self.printOut.start()

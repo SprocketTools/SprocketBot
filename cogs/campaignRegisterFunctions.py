@@ -5,6 +5,7 @@ import time
 locale.setlocale(locale.LC_ALL, '')
 import random
 import discord
+import type_hints
 from discord.ext import commands
 from scipy.spatial.transform import Rotation as R
 import main
@@ -12,7 +13,7 @@ from cogs.textTools import textTools
 from cogs.adminFunctions import adminFunctions
 class campaignRegisterFunctions(commands.Cog):
     activeRegistKey = 569801354
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.command(name="generateCampaignKey", description="generate a key that can be used to initiate a campaign")

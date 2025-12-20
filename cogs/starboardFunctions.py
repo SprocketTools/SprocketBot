@@ -1,5 +1,6 @@
 import main
 import discord
+import type_hints
 from discord.ext import commands
 promptResponses = {}
 from cogs.textTools import textTools

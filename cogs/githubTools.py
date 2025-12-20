@@ -2,7 +2,7 @@ import shutil
 import urllib.parse
 import discord, os, platform, time, asyncio, requests, io, datetime
 from pathlib import Path
-
+import type_hints
 from discord.ext import commands
 from git import Repo
 # Github config
@@ -59,7 +59,7 @@ except Exception as e:
 
 
 class githubTools(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.command(name="pullRepository", description="Reload the repository onto the Pi")

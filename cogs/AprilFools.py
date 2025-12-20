@@ -1,5 +1,7 @@
 import discord, asyncio, random
 from discord.ext import commands
+
+import type_hints
 # Github config
 
 from cogs.textTools import textTools
@@ -9,7 +11,7 @@ import difflib
 memePhrase = "The covenanter is the best tank."
 
 class AprilFools(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.command(name="resetCodeConfigs", description="Reset all bot contests.")

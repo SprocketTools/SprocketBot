@@ -1,13 +1,13 @@
 import textwrap
 import discord
-from unicodedata import lookup
+import type_hintsfrom unicodedata import lookup
 from discord.ext import commands
 import os, platform, configparser, ast, json
 import datetime
 
 
 class UItools:
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     async def getContestChoice(self, ctx: commands.Context, contestList: list, userPrompt: str):

@@ -1,10 +1,11 @@
 import json, io
 import discord
+import type_hints
 from discord.ext import commands
 from cogs.textTools import textTools
 
 class flyoutTools(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.command(name="parseFlyout", description="Add a moderation rule or subrule")

@@ -8,10 +8,10 @@ import main
 from cogs.textTools import textTools
 from scipy.spatial.transform import Rotation as R
 from PIL import Image
-
+import type_hints
 
 class blueprintFunctions(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     @commands.command(name="bakeGeometry", description="merge compartment geometry into itself.")

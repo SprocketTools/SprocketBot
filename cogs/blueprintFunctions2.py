@@ -1,4 +1,5 @@
 import discord
+import type_hints
 from discord.ext import commands
 import json
 import random
@@ -9,7 +10,7 @@ import numpy as np
 
 
 class blueprintFunctions2(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
     ## ------------------------------------------------------------------------------------
@@ -533,7 +534,7 @@ class blueprintFunctions2(commands.Cog):
             blueprint_data = json.loads(file_content)
 
             # Extract stats
-            stats = await self.analyzer._parse_blueprint_stats(ctx, blueprint_data)
+            stats = await self.bot.analyzer._parse_blueprint_stats(ctx, blueprint_data)
 
             # Prepare for SQL INSERT
             columns = ", ".join(stats.keys())

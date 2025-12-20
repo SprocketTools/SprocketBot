@@ -3,7 +3,7 @@ import random
 import discord, asyncio, requests, io
 from discord.ext import commands
 import platform
-
+import type_hints
 from PIL import Image, ImageChops
 imageCategoryList = ["chalk inscriptions", "inscriptions", "labels", "letters", "memes", "numbers", "optics", "welding", "textures", "weathering"]
 
@@ -21,7 +21,7 @@ imgCatalogFolder = "img"
 imgCandidateFolder = "imgbin"
 
 class imageTools(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
     @commands.hybrid_command(name="weather", description="Weather a picture.  Must be a .png")
     async def weather(self, ctx: commands.Context):
@@ -32,7 +32,6 @@ class imageTools(commands.Cog):
         attachments = ctx.message.attachments
         baseImages = []
         serverID = (ctx.guild.id)
-
         try:
             channel = int([dict(row) for row in await self.bot.sql.databaseFetch(f'SELECT commandschannelid FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
             if ctx.channel.id != channel:
