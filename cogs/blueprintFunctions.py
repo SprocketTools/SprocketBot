@@ -1177,7 +1177,7 @@ class blueprintFunctions(commands.Cog):
                 traceback.print_exc()  # For debugging
 
     @commands.command(name="drawFrameOld", description="merge compartment geometry into itself.")
-    async def drawFrame(self, ctx: commands.Context):
+    async def drawFrameOld(self, ctx: commands.Context):
         await ctx.send("Beginning processing now.  WARNING: this may take awhile.")
         for attachment in ctx.message.attachments:
             imageXtop = 0
