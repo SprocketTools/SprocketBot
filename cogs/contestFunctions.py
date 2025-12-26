@@ -458,6 +458,7 @@ class contestFunctions(commands.Cog):
                             users_processed.add(message.author.display_name)
                         else:
                             count_errors += 1
+                            await ctx.send(f"Failed to process {message.jump_url}")
                     except Exception as e:
                         print(f"Scan Error on {message.jump_url}: {e}")
                         await ctx.send(f"Scan Error on {message.jump_url}: {e}")
