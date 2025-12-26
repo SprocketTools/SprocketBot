@@ -24,7 +24,7 @@ class contestFunctions(commands.Cog):
     # ----------------------------------------------------------------------------------
     @commands.command(name="setupContestTables", description="[Owner] Create SQL tables for contests.")
     async def setupContestTables(self, ctx: commands.Context):
-        if ctx.author.id != self.bot.ownerid:
+        if ctx.author.id != self.bot.owner_id:
             return await self.bot.error.sendError(ctx)
 
         # 1. Ensure the shared Blueprint Stats table exists
