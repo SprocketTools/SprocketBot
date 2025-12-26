@@ -13,6 +13,91 @@ class blueprintFunctions2(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
+    @commands.command(name="myTanks", aliases=["garage", "listTanks", "diddytouch"],
+                      description="List all tanks you have uploaded to the bot.")
+    async def myTanks(self, ctx, user: discord.Member = None):
+        """
+        Lists all blueprint submissions for a user.
+        Usage: -myTanks [optional: @User]
+        """
+        target_user = user or ctx.author
+
+        # Query blueprint_stats and JOIN with contests to get the contest name if linked
+        # We assume host_id = 0 means 'No Contest'
+        query = '''
+                SELECT b.*, c.name as contest_name 
+                FROM blueprint_stats b 
+                LEFT JOIN contests c ON b.host_id = c.contest_id 
+                WHERE b.owner_id = $1 
+                ORDER BY b.submission_date DESC;
+            '''
+
+        tanks = await self.bot.sql.databaseFetchdictDynamic(query, [target_user.id])
+
+        if not tanks:
+            msg = "You haven't" if target_user == ctx.author else f"{target_user.display_name} hasn't"
+            return await ctx.send(f"❌ {msg} uploaded any tanks yet.")
+
+        # Build the Embed
+        embed = discord.Embed(
+            title=f"🚜 Garage: {target_user.display_name}",
+            color=discord.Color.blue(),
+            timestamp=datetime.datetime.now()
+        )
+
+        description_lines = []
+
+        for i, tank in enumerate(tanks, 1):
+            # 1. Determine Name (from URL or fallback)
+            tank_name = "Unknown Blueprint"
+            if tank.get('file_url'):
+                # Extract filename from URL: ".../MyTank.blueprint" -> "MyTank"
+                filename = tank['file_url'].split('/')[-1]
+                tank_name = filename.replace('.blueprint', '').replace('_', ' ')
+
+            # 2. Format Stats
+            weight_str = f"{tank['tank_weight'] / 1000:.1f}t" if tank.get('tank_weight') else "?t"
+            cost_str = f"${tank['base_cost']:,}" if tank.get('base_cost') else "$?"
+            era_str = tank.get('vehicle_era', 'Unknown Era')
+
+            # 3. Determine Status
+            if tank.get('contest_name'):
+                status = f"🏆 **{tank['contest_name']}**"
+            elif tank.get('host_id') and tank['host_id'] != 0:
+                status = f"⚠️ *Linked to deleted contest ({tank['host_id']})*"
+            else:
+                status = "💤 *In Garage*"
+
+            # 4. Build Entry String
+            # Format: "1. **TankName** (Latewar) - [Download]"
+            #         "   45.5t, $12,000 | Status: In Garage"
+            line = (
+                f"**{i}. {tank_name}** ({era_str}) "
+                f"[📂]({tank.get('file_url', '')})\n"
+                f"└ `{weight_str}` • `{cost_str}` • {status}\n"
+            )
+            description_lines.append(line)
+
+        # Handle Pagination (Simple Split)
+        # Discord Description limit is 4096 chars.
+        # We'll split if it gets too long or send multiple fields.
+
+        current_chunk = ""
+        field_count = 1
+
+        for line in description_lines:
+            if len(current_chunk) + len(line) > 1024:
+                embed.add_field(name=f"Vehicles (Part {field_count})", value=current_chunk, inline=False)
+                current_chunk = ""
+                field_count += 1
+            current_chunk += line
+
+        if current_chunk:
+            embed.add_field(name=f"Vehicles (Part {field_count})", value=current_chunk, inline=False)
+
+        embed.set_footer(text=f"Total Vehicles: {len(tanks)}")
+        await ctx.send(embed=embed)
+
     ## ------------------------------------------------------------------------------------
     ## 1. ADMIN COMMAND: To set up the SQL table
     ## ------------------------------------------------------------------------------------
