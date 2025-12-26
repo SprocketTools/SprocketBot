@@ -28,6 +28,7 @@ class contestFunctions(commands.Cog):
             return await self.bot.error.sendError(ctx)
 
         # 1. Ensure the shared Blueprint Stats table exists
+        await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS blueprint_stats;''')
         await self.bot.sql.databaseExecute('''
             CREATE TABLE IF NOT EXISTS blueprint_stats (
                 vehicle_id BIGINT PRIMARY KEY,
