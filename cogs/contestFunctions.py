@@ -74,6 +74,7 @@ class contestFunctions(commands.Cog):
             print(f"Stats Table alteration warning: {e}")
 
         # 3. Main Contests Table
+        await self.bot.sql.databaseExecute('''DROP TABLE IF NOT EXISTS contests;''')
         await self.bot.sql.databaseExecute('''
             CREATE TABLE IF NOT EXISTS contests (
                 contest_id BIGINT,
