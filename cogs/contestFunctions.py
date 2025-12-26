@@ -31,6 +31,7 @@ class contestFunctions(commands.Cog):
         await self.bot.sql.databaseExecute('''
             CREATE TABLE IF NOT EXISTS blueprint_stats (
                 vehicle_id BIGINT PRIMARY KEY,
+                vehicle_name VARCHAR,
                 vehicle_class VARCHAR(100),
                 vehicle_era VARCHAR(20),
                 host_id BIGINT,
@@ -63,18 +64,19 @@ class contestFunctions(commands.Cog):
             );
         ''')
 
-        # 2. Modify blueprint_stats columns
+        # 2. Modify blueprint_stats columns (Migrations)
         try:
             await self.bot.sql.databaseExecute('''ALTER TABLE blueprint_stats DROP COLUMN IF EXISTS contest_name;''')
             await self.bot.sql.databaseExecute(
                 '''ALTER TABLE blueprint_stats ADD COLUMN IF NOT EXISTS file_url VARCHAR;''')
             await self.bot.sql.databaseExecute(
                 '''ALTER TABLE blueprint_stats ADD COLUMN IF NOT EXISTS submission_date TIMESTAMP;''')
+            await self.bot.sql.databaseExecute(
+                '''ALTER TABLE blueprint_stats ADD COLUMN IF NOT EXISTS vehicle_name VARCHAR;''')
         except Exception as e:
             print(f"Stats Table alteration warning: {e}")
 
         # 3. Main Contests Table
-        await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contests;''')
         await self.bot.sql.databaseExecute('''
             CREATE TABLE IF NOT EXISTS contests (
                 contest_id BIGINT,
@@ -595,6 +597,11 @@ class contestFunctions(commands.Cog):
             stats['owner_id'] = message.author.id
             stats['host_id'] = contest_id
 
+            # --- NAME HANDLING ---
+            # 1. Try to get name from filename
+            raw_name = attachment.filename.replace('.blueprint', '').replace('_', ' ')
+            stats['vehicle_name'] = raw_name
+
             # C. Rules Check
             warnings = []
             declared_weight = stats.get('tank_weight', 0) / 1000.0
@@ -643,7 +650,6 @@ class contestFunctions(commands.Cog):
             # Check if this filename already exists among them (Overwrite)
             overwrite_target_id = None
             new_filename = attachment.filename
-            # Note: file_url usually looks like https://.../filename.blueprint
 
             for entry in user_entries:
                 if entry['file_url'] and entry['file_url'].endswith(f"/{new_filename}"):
@@ -671,7 +677,8 @@ class contestFunctions(commands.Cog):
             stats['submission_date'] = datetime.datetime.now()
 
             valid_cols = [
-                "vehicle_id", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id", "base_cost",
+                "vehicle_id", "vehicle_name", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id",
+                "base_cost",
                 "tank_weight", "tank_length", "tank_width", "tank_height", "tank_total_height",
                 "fuel_tank_capacity", "ground_pressure", "horsepower", "hpt", "top_speed", "travel_range",
                 "crew_count", "cannon_stats", "armor_mass", "upper_frontal_angle", "lower_frontal_angle",
@@ -685,7 +692,7 @@ class contestFunctions(commands.Cog):
             values = list(insert_data.values())
 
             await self.bot.sql.databaseExecuteDynamic(
-                f"INSERT INTO blueprint_stats ({columns}) VALUES ({placeholders}) ON CONFLICT (vehicle_id) DO UPDATE SET host_id = EXCLUDED.host_id;",
+                f"INSERT INTO blueprint_stats ({columns}) VALUES ({placeholders}) ON CONFLICT (vehicle_id) DO UPDATE SET host_id = EXCLUDED.host_id, vehicle_name = EXCLUDED.vehicle_name;",
                 values
             )
 
@@ -702,7 +709,7 @@ class contestFunctions(commands.Cog):
                     embed = discord.Embed(title="📋 New Contest Entry", color=discord.Color.blue())
                     embed.add_field(name="Contest", value=contest_name)
                     embed.add_field(name="Author", value=f"<@{stats['owner_id']}>")
-                    embed.add_field(name="Vehicle", value=attachment.filename)
+                    embed.add_field(name="Vehicle", value=stats['vehicle_name'])
                     embed.add_field(name="Stats",
                                     value=f"{stats.get('tank_weight', 0) / 1000:.1f}t | ${stats.get('base_cost', 0)}")
                     if warnings:
@@ -789,6 +796,18 @@ class contestFunctions(commands.Cog):
                 await ctx.send("⚠️ No database entries found.")
             else:
                 df = pd.DataFrame(data)
+
+                # --- BACKFILL NAMES IF MISSING ---
+                # This ensures old entries without the column still have names in the CSV
+                if 'vehicle_name' not in df.columns:
+                    df['vehicle_name'] = df['file_url'].apply(
+                        lambda x: x.split('/')[-1].replace('.blueprint', '').replace('_', ' ') if x else 'Unknown')
+                else:
+                    # Fill specifically where it might be NaN/None
+                    mask = df['vehicle_name'].isna()
+                    df.loc[mask, 'vehicle_name'] = df.loc[mask, 'file_url'].apply(
+                        lambda x: x.split('/')[-1].replace('.blueprint', '').replace('_', ' ') if x else 'Unknown')
+
                 csv_buffer = io.BytesIO()
                 df.to_csv(csv_buffer, index=False, encoding='utf-8')
                 csv_buffer.seek(0)

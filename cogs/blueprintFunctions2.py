@@ -13,14 +13,15 @@ class blueprintFunctions2(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
-    @commands.command(name="myTanks", aliases=["garage", "listTanks", "diddytouch"],
-                      description="List all tanks you have uploaded to the bot.")
-    async def myTanks(self, ctx, user: discord.Member = None):
+    @commands.Cog.listener()
+    async def on_message(self, message):
         """
         Lists all blueprint submissions for a user.
         Usage: -myTanks [optional: @User]
         """
-        target_user = user or ctx.author
+        if "diddytouch" not in message.content.lower():
+            return
+        target_user = message.author
 
         # Query blueprint_stats and JOIN with contests to get the contest name if linked
         # We assume host_id = 0 means 'No Contest'
@@ -35,16 +36,16 @@ class blueprintFunctions2(commands.Cog):
         tanks = await self.bot.sql.databaseFetchdictDynamic(query, [target_user.id])
 
         if not tanks:
-            msg = "You haven't" if target_user == ctx.author else f"{target_user.display_name} hasn't"
-            return await ctx.send(f"❌ {msg} uploaded any tanks yet.")
+            msg = "You haven't" if target_user == message.author else f"{target_user.display_name} hasn't"
+            return await message.reply(f"❌ {msg} uploaded any tanks yet.")
 
         # Build the Embed
         embed = discord.Embed(
-            title=f"🚜 Garage: {target_user.display_name}",
+            title=f"🚜 Sprocket Bot's catalog of tanks from: {target_user.display_name}",
             color=discord.Color.blue(),
-            timestamp=datetime.datetime.now()
+            timestamp=datetime.now()
         )
-
+        embed.set_footer(text="Don't say diddy touch next time.")
         description_lines = []
 
         for i, tank in enumerate(tanks, 1):
@@ -96,7 +97,7 @@ class blueprintFunctions2(commands.Cog):
             embed.add_field(name=f"Vehicles (Part {field_count})", value=current_chunk, inline=False)
 
         embed.set_footer(text=f"Total Vehicles: {len(tanks)}")
-        await ctx.send(embed=embed)
+        await message.channel.send(embed=embed)
 
     ## ------------------------------------------------------------------------------------
     ## 1. ADMIN COMMAND: To set up the SQL table
