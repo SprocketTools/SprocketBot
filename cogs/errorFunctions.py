@@ -260,5 +260,36 @@ class errorFunctions(commands.Cog):
                     return
         await ctx.send("All good here!")
 
+    @commands.command(name="autoApproveErrors", description="higdffffffffffff")
+    async def autoApproveErrors(self, ctx: commands.Context):
+        if ctx.author.id != ctx.bot.ownerid:
+            await ctx.send(await self.bot.error.retrieveError(ctx))
+            await ctx.send("You aren't authorized to run this command!")
+            return
+        errorDict = await self.bot.sql.databaseFetchdict('''SELECT * FROM errorlist WHERE status = false;''')
+        print(errorDict)
+        for error in errorDict:
+            await ctx.send(content=f"Submitter: <@{error['userid']}>\nCategory: {error['errortype']}\nError message:")
+            str = error['error'][:1000]
+            if len(str) < 2:
+                await self.bot.sql.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''',[error["error"]])
+                await ctx.send("Deleted!")
+                recipient = self.bot.get_user(int(error["userid"]))
+                await recipient.send(
+                    f"Your error message:\n{error['error']}\nwas removed automatically.  Images by themselves can't be processed by the bot.  Try resubmitting as a URL instead.")
+            else:
+                await ctx.send(str)
+                url_pattern = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+                urls = re.findall(url_pattern, str)
+                urls = list(set(urls))
+                for url in urls:
+                    if f"<{url}>" in str:
+                        await ctx.send(url)
+                await self.bot.sql.databaseExecuteDynamic('''UPDATE errorlist SET status = true WHERE error = $1;''', [error["error"]])
+                await ctx.send("Added!")
+                recipient = self.bot.get_user(int(error["userid"]))
+                await recipient.send(f"Your error message:\n{error['error']}\nHas been added to the catalog!  Thanks for the submission!")
+        await ctx.send("All good here!")
+
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(errorFunctions(bot))
