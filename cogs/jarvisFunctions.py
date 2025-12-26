@@ -24,7 +24,7 @@ class jarvisFunctions(commands.Cog):
         self.on_message_cooldowns = {}
         self.on_message_cooldowns_burst = {}
         self.on_message_cooldowns_notify = {}
-        self.cooldown = 11880
+        self.cooldown = 14990
         self.geminikey = self.bot.geminikey
         self.prior_instructions = []
 
