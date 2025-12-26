@@ -99,13 +99,16 @@ class contestFunctions(commands.Cog):
                 caliberLimit REAL,
                 armorMax REAL,
                 submission_channel_id BIGINT,
-                log_channel_id BIGINT
+                log_channel_id BIGINT,
+                entryLimit INT DEFAULT 0
             );
         ''')
 
         # --- DATABASE MIGRATION PATCH ---
         try:
             await self.bot.sql.databaseExecute('''ALTER TABLE contests ADD COLUMN IF NOT EXISTS contest_id BIGINT;''')
+            await self.bot.sql.databaseExecute(
+                '''ALTER TABLE contests ADD COLUMN IF NOT EXISTS entryLimit INT DEFAULT 0;''')
         except:
             pass
 
@@ -122,7 +125,8 @@ class contestFunctions(commands.Cog):
             ("hullHeightMin", "REAL"), ("hullWidthMax", "REAL"), ("torsionBarLengthMin", "REAL"),
             ("allowHVSS", "BOOLEAN"), ("beltWidthMin", "REAL"), ("groundPressureMax", "REAL"),
             ("minHPT", "REAL"), ("caliberLimit", "REAL"), ("armorMax", "REAL"),
-            ("submission_channel_id", "BIGINT"), ("log_channel_id", "BIGINT")
+            ("submission_channel_id", "BIGINT"), ("log_channel_id", "BIGINT"),
+            ("entryLimit", "INT")
         ]
 
         print("--- Running Contest DB Migrations ---")
@@ -221,9 +225,10 @@ class contestFunctions(commands.Cog):
             return await ctx.send("❌ Cancelled.")
 
         # 5. Insert
+        # Default entryLimit to 0 (unlimited)
         await self.bot.sql.databaseExecuteDynamic(
-            '''INSERT INTO contests (contest_id, name, serverID, ownerID, description, rulesLink, status, deadline, weightLimit, costlimit, submission_channel_id, log_channel_id) 
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);''',
+            '''INSERT INTO contests (contest_id, name, serverID, ownerID, description, rulesLink, status, deadline, weightLimit, costlimit, submission_channel_id, log_channel_id, entryLimit) 
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 0);''',
             [contest_id, name, ctx.guild.id, ctx.author.id, desc, rules, True, deadline, weight_lim, cost_lim,
              submission_channel_id, log_channel_id]
         )
@@ -236,15 +241,15 @@ class contestFunctions(commands.Cog):
     async def manageContest(self, ctx: commands.Context):
         if not await self._check_manager(ctx): return
 
-        # 1. Select Contest
-        contest_name = await self._pick_contest(ctx, only_active=False)
-        if not contest_name: return
+        # 1. Select Contest (Get ID)
+        contest_id = await self._pick_contest(ctx, only_active=False)
+        if not contest_id: return
 
         # Main Loop
         while True:
             data = await self.bot.sql.databaseFetchrowDynamic(
-                '''SELECT * FROM contests WHERE name = $1 AND serverID = $2;''',
-                [contest_name, ctx.guild.id]
+                '''SELECT * FROM contests WHERE contest_id = $1 AND serverID = $2;''',
+                [contest_id, ctx.guild.id]
             )
             if not data:
                 await ctx.send("❌ Contest not found.")
@@ -253,17 +258,18 @@ class contestFunctions(commands.Cog):
             # Build Dashboard Embed
             status_emoji = "🟢 Open" if data['status'] else "🔴 Closed"
             dl_str = data['deadline'].strftime("%Y-%m-%d") if data['deadline'] else "None"
+            entry_limit_str = str(data['entrylimit']) if data.get('entrylimit', 0) > 0 else "Unlimited"
 
             embed = discord.Embed(title=f"⚙️ Managing: {data['name']}", color=discord.Color.blue())
 
             gen_info = f"**Desc:** {data['description'][:50]}...\n**Rules:** {data['ruleslink']}\n**Status:** {status_emoji}\n**Deadline:** {dl_str}"
             embed.add_field(name="General Info", value=gen_info, inline=False)
 
-            limits = f"**Weight:** {data['weightlimit']}t | **Cost:** {data['costlimit']}\n**Era:** {data['era']}\n**Crew:** {data['crewmin']}-{data['crewmax']}"
+            limits = f"**Weight:** {data['weightlimit']}t | **Cost:** {data['costlimit']}\n**Era:** {data['era']}\n**Crew:** {data['crewmin']}-{data['crewmax']}\n**Max Entries/User:** {entry_limit_str}"
             embed.add_field(name="Core Limits", value=limits, inline=False)
 
-            dims = f'''**Hull height min:** {(str(data['hullheightmin']) + 'm') if data['hullheightmin'] else 'None'}\n**Hull width max:** {(str(data['hullwidthmax']) + 'm') if data['hullwidthmax'] else 'None'}\n**Torsion bar length min:** > {(str(round(data['torsionbarlengthmin']*1000)) + 'mm') if data['torsionbarlengthmin'] else 'None'}\n**Other suspension allowed:** {'Yes' if data['allowhvss'] else 'No'}'''
-            #dims = "Hi"
+            dims = f'''**Hull height min:** {(str(data['hullheightmin']) + 'm') if data['hullheightmin'] else 'None'}\n**Hull width max:** {(str(data['hullwidthmax']) + 'm') if data['hullwidthmax'] else 'None'}\n**Torsion bar length min:** > {(str(round(data['torsionbarlengthmin'] * 1000)) + 'mm') if data['torsionbarlengthmin'] else 'None'}\n**Other suspension allowed:** {'Yes' if data['allowhvss'] else 'No'}'''
+
             embed.add_field(name="Dimensions/Suspension", value=dims, inline=False)
 
             mob = f"**HP/T:** > {data['minhpt']}\n**Gnd Press:** < {data['groundpressuremax']}\n**Belt:** > {data['beltwidthmin']}"
@@ -278,13 +284,14 @@ class contestFunctions(commands.Cog):
             # Buttons
             options = [
                 "General Info", "Status/Deadline", "Channels",
-                "Weight/Cost", "Era/Crew", "Dimensions",
+                "Weight/Cost/Limit", "Era/Crew", "Dimensions",
                 "Mobility", "Firepower", "Exit"
             ]
             msgOut = await ctx.send(embed=embed)
             selection = await ctx.bot.ui.getButtonChoice(ctx, options)
 
             if selection == "Exit":
+                await msgOut.delete()
                 break
 
             # --- Logic Handlers ---
@@ -294,7 +301,6 @@ class contestFunctions(commands.Cog):
                     val = await textTools.getCappedResponse(ctx, "Enter new name:", 64)
                     await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET name=$1 WHERE contest_id=$2",
                                                               [val, data['contest_id']])
-                    contest_name = val  # Update local var
                 elif sub == "Description":
                     val = await textTools.getResponse(ctx, "Enter description:")
                     await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET description=$1 WHERE contest_id=$2",
@@ -333,8 +339,8 @@ class contestFunctions(commands.Cog):
                     if chan: await self.bot.sql.databaseExecuteDynamic(
                         "UPDATE contests SET log_channel_id=$1 WHERE contest_id=$2", [chan.id, data['contest_id']])
 
-            elif selection == "Weight/Cost":
-                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Max Weight", "Max Cost", "Back"])
+            elif selection == "Weight/Cost/Limit":
+                sub = await ctx.bot.ui.getButtonChoice(ctx, ["Max Weight", "Max Cost", "Entry Limit", "Back"])
                 if sub == "Max Weight":
                     val = await textTools.getFloatResponse(ctx, "Enter Max Weight (0 for none):")
                     await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET weightlimit=$1 WHERE contest_id=$2",
@@ -342,6 +348,10 @@ class contestFunctions(commands.Cog):
                 elif sub == "Max Cost":
                     val = await textTools.getIntResponse(ctx, "Enter Max Cost (0 for none):")
                     await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET costlimit=$1 WHERE contest_id=$2",
+                                                              [val, data['contest_id']])
+                elif sub == "Entry Limit":
+                    val = await textTools.getIntResponse(ctx, "Enter Max Entries per User (0 for Unlimited):")
+                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET entrylimit=$1 WHERE contest_id=$2",
                                                               [val, data['contest_id']])
 
             elif selection == "Era/Crew":
@@ -392,27 +402,81 @@ class contestFunctions(commands.Cog):
             await msgOut.delete()
         await ctx.send("✅ Exited Dashboard.")
 
+    @commands.command(name="renameContest", description="Rename a contest")
+    async def renameContest(self, ctx: commands.Context):
+        if not await self._check_manager(ctx): return
+
+        # Now returns ID
+        contest_id = await self._pick_contest(ctx, only_active=False)
+        if not contest_id: return
+
+        new_name = await textTools.getCappedResponse(ctx, "Enter the new name:", 64)
+
+        await self.bot.sql.databaseExecuteDynamic(
+            '''UPDATE contests SET name = $1 WHERE contest_id = $2;''',
+            [new_name, contest_id]
+        )
+        await ctx.send(f"✅ Renamed contest ID `{contest_id}` to **'{new_name}'**.")
+
     @commands.command(name="deleteContest", description="Delete a contest")
     async def deleteContest(self, ctx: commands.Context):
         if not await self._check_manager(ctx): return
 
-        contest_name = await self._pick_contest(ctx, only_active=False)
-        if not contest_name: return
+        # Now returns ID
+        contest_id = await self._pick_contest(ctx, only_active=False)
+        if not contest_id: return
 
         confirm = await ctx.bot.ui.getYesNoChoice(ctx)
         if not confirm: return await ctx.send("Cancelled.")
 
-        contest_data = await self.bot.sql.databaseFetchrowDynamic(
-            '''SELECT contest_id FROM contests WHERE name = $1 AND serverID = $2;''',
-            [contest_name, ctx.guild.id]
-        )
+        await self.bot.sql.databaseExecuteDynamic('''DELETE FROM contests WHERE contest_id = $1;''', [contest_id])
+        await self.bot.sql.databaseExecuteDynamic('''UPDATE blueprint_stats SET host_id = 0 WHERE host_id = $1;''',
+                                                  [contest_id])
+        await ctx.send(f"Contest deleted and entries unlinked.")
 
-        if contest_data:
-            c_id = contest_data['contest_id']
-            await self.bot.sql.databaseExecuteDynamic('''DELETE FROM contests WHERE contest_id = $1;''', [c_id])
-            await self.bot.sql.databaseExecuteDynamic('''UPDATE blueprint_stats SET host_id = 0 WHERE host_id = $1;''',
-                                                      [c_id])
-            await ctx.send(f"Contest deleted and entries unlinked.")
+    @commands.command(name="setContestRule", description="Configure advanced contest limits")
+    async def setContestRule(self, ctx: commands.Context):
+        if not await self._check_manager(ctx): return
+
+        # Now returns ID
+        contest_id = await self._pick_contest(ctx)
+        if not contest_id: return
+
+        rules_map = {
+            "Era (WWI/Inter/Early/Mid/Late)": "era",
+            "Min Crew Count": "crewmin",
+            "Max Crew Count": "crewmax",
+            "Min Hull Height (m)": "hullheightmin",
+            "Max Hull Width (m)": "hullwidthmax",
+            "Min Torsion Bar Length": "torsionbarlengthmin",
+            "Max Armor Thickness (mm)": "armormax",
+            "Max Gun Caliber (mm)": "caliberlimit",
+            "Min HP/Ton": "minhpt",
+            "Max Ground Pressure": "groundpressuremax",
+            "Min Belt Width": "beltwidthmin",
+            "Allow HVSS?": "allowhvss",
+            "Max Entries Per User": "entrylimit"
+        }
+
+        selection = await ctx.bot.ui.getChoiceFromList(ctx, list(rules_map.keys()), "Select rule to modify:")
+        if not selection: return
+        db_column = rules_map[selection]
+
+        if db_column == "allowhvss":
+            val = await ctx.bot.ui.getYesNoChoice(ctx)
+        elif db_column == "era":
+            val = await ctx.bot.ui.getChoiceFromList(ctx, ["WWI", "Interwar", "Earlywar", "Midwar", "Latewar"],
+                                                     "Select Era:")
+        elif db_column == "entrylimit":
+            val = await textTools.getIntResponse(ctx, "Enter Max Entries per User (0 for Unlimited):")
+        else:
+            val = await textTools.getFloatResponse(ctx, f"Enter value for {selection} (0 to disable/reset):")
+
+        await self.bot.sql.databaseExecuteDynamic(
+            f"UPDATE contests SET {db_column} = $1 WHERE contest_id = $2;",
+            [val, contest_id]
+        )
+        await ctx.send(f"✅ Updated **{selection}** to `{val}`.")
 
     # ----------------------------------------------------------------------------------
     # SCANNING & SUBMISSIONS
@@ -434,11 +498,12 @@ class contestFunctions(commands.Cog):
         if contest_data:
             await ctx.send(f"📂 Channel matches contest **'{contest_data['name']}'**. Auto-selecting.")
         else:
-            contest_name = await self._pick_contest(ctx)
-            if not contest_name: return
+            # Fallback to manual ID selection
+            contest_id = await self._pick_contest(ctx)
+            if not contest_id: return
             contest_data = await self.bot.sql.databaseFetchrowDynamic(
-                '''SELECT * FROM contests WHERE name = $1 AND serverID = $2;''',
-                [contest_name, ctx.guild.id]
+                '''SELECT * FROM contests WHERE contest_id = $1 AND serverID = $2;''',
+                [contest_id, ctx.guild.id]
             )
 
         status_msg = await ctx.send(f"🔎 Scanning **{target_channel.name}** for entries to '{contest_data['name']}'...")
@@ -458,10 +523,8 @@ class contestFunctions(commands.Cog):
                             users_processed.add(message.author.display_name)
                         else:
                             count_errors += 1
-                            await ctx.send(f"Failed to process {message.jump_url}")
                     except Exception as e:
                         print(f"Scan Error on {message.jump_url}: {e}")
-                        await ctx.send(f"Scan Error on {message.jump_url}: {e}")
                         count_errors += 1
 
         await status_msg.edit(
@@ -483,11 +546,11 @@ class contestFunctions(commands.Cog):
         )
 
         if not contest_data:
-            contest_name = await self._pick_contest(ctx)
-            if not contest_name: return
+            contest_id = await self._pick_contest(ctx)
+            if not contest_id: return
             contest_data = await self.bot.sql.databaseFetchrowDynamic(
-                '''SELECT * FROM contests WHERE name = $1 AND serverID = $2;''',
-                [contest_name, ctx.guild.id]
+                '''SELECT * FROM contests WHERE contest_id = $1 AND serverID = $2;''',
+                [contest_id, ctx.guild.id]
             )
 
         # 2. Process
@@ -498,6 +561,7 @@ class contestFunctions(commands.Cog):
         try:
             contest_id = contest_data['contest_id']
             contest_name = contest_data['name']
+            entry_limit = contest_data.get('entrylimit', 0)
 
             # A. Download & Save Locally
             async with aiohttp.ClientSession() as session:
@@ -555,7 +619,7 @@ class contestFunctions(commands.Cog):
                 if stats['base_cost'] > contest_data['costlimit']:
                     warnings.append(f"⚠️ Cost: {stats['base_cost']} > Limit {contest_data['costlimit']}")
 
-            # D. Final Decision
+            # D. Final Decision (Warnings)
             if warnings and not silent:
                 await msg.delete()
                 status_embed = discord.Embed(title=f"⚠️ Rules Issue: {attachment.filename}",
@@ -568,12 +632,40 @@ class contestFunctions(commands.Cog):
             elif not silent:
                 await msg.delete()
 
-            # E. Database Insertion
-            await self.bot.sql.databaseExecuteDynamic(
-                '''UPDATE blueprint_stats SET host_id = 0 WHERE owner_id = $1 AND host_id = $2;''',
+            # E. ENTRY LIMIT & OVERWRITE CHECK
+            # Fetch user's existing active entries for this contest
+            user_entries = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT vehicle_id, file_url FROM blueprint_stats WHERE owner_id = $1 AND host_id = $2;''',
                 [stats['owner_id'], contest_id]
             )
 
+            # Check if this filename already exists among them (Overwrite)
+            overwrite_target_id = None
+            new_filename = attachment.filename
+            # Note: file_url usually looks like https://.../filename.blueprint
+
+            for entry in user_entries:
+                if entry['file_url'] and entry['file_url'].endswith(f"/{new_filename}"):
+                    overwrite_target_id = entry['vehicle_id']
+                    break
+
+            # If overwrite match found
+            if overwrite_target_id:
+                if overwrite_target_id != stats['vehicle_id']:
+                    # New ID but same name -> Unlink old ID
+                    await self.bot.sql.databaseExecuteDynamic(
+                        '''UPDATE blueprint_stats SET host_id = 0 WHERE vehicle_id = $1;''',
+                        [overwrite_target_id]
+                    )
+            # If no overwrite match (New Entry)
+            else:
+                if entry_limit > 0 and len(user_entries) >= entry_limit:
+                    if not silent:
+                        await ctx.send(
+                            f"❌ **Limit Reached:** You already have {len(user_entries)}/{entry_limit} entries.\n*Submit a file with the same name to overwrite an existing entry.*")
+                    return False
+
+            # F. Database Insertion
             stats['file_url'] = attachment.url
             stats['submission_date'] = datetime.datetime.now()
 
@@ -597,9 +689,12 @@ class contestFunctions(commands.Cog):
             )
 
             if not silent:
-                await ctx.send(f"✅ **Submitted!** Entry recorded.")
+                if overwrite_target_id:
+                    await ctx.send(f"✅ **Updated!** Existing entry '{new_filename}' has been overwritten.")
+                else:
+                    await ctx.send(f"✅ **Submitted!** Entry recorded.")
 
-            # F. Log
+            # G. Log
             if contest_data.get('log_channel_id') and contest_data['log_channel_id'] != 0:
                 log_chan = ctx.guild.get_channel(contest_data['log_channel_id'])
                 if log_chan:
@@ -620,7 +715,6 @@ class contestFunctions(commands.Cog):
             if not silent:
                 await ctx.send(f"❌ Error processing file: {e}")
             print(f"Entry Processing Error: {e}")
-            await ctx.send(f"❌ Error processing file: {e} {message.jump_url}")
             return False
 
     # ----------------------------------------------------------------------------------
@@ -628,20 +722,20 @@ class contestFunctions(commands.Cog):
     # ----------------------------------------------------------------------------------
     @commands.command(name="viewSubmissions", description="List entries for a contest")
     async def viewSubmissions(self, ctx: commands.Context):
-        contest_name = await self._pick_contest(ctx, only_active=False)
-        if not contest_name: return
+        # Now returns ID
+        contest_id = await self._pick_contest(ctx, only_active=False)
+        if not contest_id: return
 
         contest_data = await self.bot.sql.databaseFetchrowDynamic(
-            '''SELECT * FROM contests WHERE name = $1 AND serverID = $2;''',
-            [contest_name, ctx.guild.id]
+            '''SELECT * FROM contests WHERE contest_id = $1 AND serverID = $2;''',
+            [contest_id, ctx.guild.id]
         )
-        c_id = contest_data['contest_id']
 
         subs = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT owner_id, tank_weight, base_cost, file_url 
                FROM blueprint_stats 
                WHERE host_id = $1;''',
-            [c_id]
+            [contest_id]
         )
 
         desc = f"{contest_data['description']}\n\n**Rules:**"
@@ -649,7 +743,7 @@ class contestFunctions(commands.Cog):
         if contest_data['costlimit']: desc += f"\nCost < {contest_data['costlimit']}"
         if contest_data['era']: desc += f"\nEra: {contest_data['era']}"
 
-        embed = discord.Embed(title=f"🏆 {contest_name}", description=desc, color=discord.Color.gold())
+        embed = discord.Embed(title=f"🏆 {contest_data['name']}", description=desc, color=discord.Color.gold())
 
         if not subs:
             embed.add_field(name="Entries", value="*No submissions yet.*", inline=False)
@@ -659,8 +753,9 @@ class contestFunctions(commands.Cog):
                 user = ctx.guild.get_member(sub['owner_id'])
                 username = user.display_name if user else "Unknown User"
                 weight_tons = sub['tank_weight'] / 1000.0 if sub['tank_weight'] else 0
+                file_name = sub['file_url'].split('/')[-1] if sub['file_url'] else "File"
                 entry_list.append(
-                    f"• **{username}** ({weight_tons:.1f}t, ${sub['base_cost']}) [Link]({sub['file_url']})")
+                    f"• **{file_name}** by {username} ({weight_tons:.1f}t) [Link]({sub['file_url']})")
 
             chunk_size = 10
             for i in range(0, len(entry_list), chunk_size):
@@ -673,21 +768,22 @@ class contestFunctions(commands.Cog):
     async def adminDownloadContest(self, ctx: commands.Context):
         if not await self._check_manager(ctx): return
 
-        contest_name = await self._pick_contest(ctx, only_active=False)
-        if not contest_name: return
+        # Now returns ID
+        contest_id = await self._pick_contest(ctx, only_active=False)
+        if not contest_id: return
 
         contest_data = await self.bot.sql.databaseFetchrowDynamic(
-            '''SELECT contest_id FROM contests WHERE name = $1 AND serverID = $2;''',
-            [contest_name, ctx.guild.id]
+            '''SELECT name FROM contests WHERE contest_id = $1 AND serverID = $2;''',
+            [contest_id, ctx.guild.id]
         )
-        c_id = contest_data['contest_id']
+        contest_name = contest_data['name']
 
         await ctx.send("📦 Compiling data...")
 
         # A. CSV
         try:
             data = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM blueprint_stats WHERE host_id = $1''',
-                                                               [c_id])
+                                                               [contest_id])
             if not data:
                 await ctx.send("⚠️ No database entries found.")
             else:
@@ -699,7 +795,7 @@ class contestFunctions(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ Error generating CSV: `{e}`")
 
-        # B. ZIP
+        # B. ZIP (UNFILTERED - All files in folder)
         try:
             safe_name = "".join([c for c in contest_name if c.isalnum() or c in (' ', '-', '_')]).strip()
             folder_path = os.path.join("blueprints", str(ctx.guild.id), safe_name)
@@ -709,16 +805,18 @@ class contestFunctions(commands.Cog):
 
             zip_buffer = io.BytesIO()
             has_files = False
+
             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                 for root, dirs, files in os.walk(folder_path):
                     for file in files:
                         if file.endswith(".blueprint"):
                             file_path = os.path.join(root, file)
+                            # Add file to zip (arcname ensures it doesn't store the full C:/ path)
                             zip_file.write(file_path, arcname=file)
                             has_files = True
 
             if not has_files:
-                return await ctx.send("⚠️ Folder exists, but is empty.")
+                return await ctx.send("⚠️ Folder exists, but contains no .blueprint files.")
 
             zip_buffer.seek(0)
             if zip_buffer.getbuffer().nbytes > 8 * 1024 * 1024 and ctx.guild.filesize_limit < zip_buffer.getbuffer().nbytes:
@@ -733,7 +831,7 @@ class contestFunctions(commands.Cog):
     # HELPERS
     # ----------------------------------------------------------------------------------
     async def _pick_contest(self, ctx: commands.Context, only_active=True):
-        query = '''SELECT name FROM contests WHERE serverID = $1'''
+        query = '''SELECT name, contest_id FROM contests WHERE serverID = $1'''
         if only_active:
             query += ''' AND status = true'''
 
@@ -744,7 +842,15 @@ class contestFunctions(commands.Cog):
             return None
 
         contest_names = [c['name'] for c in contests]
-        return await ctx.bot.ui.getChoiceFromList(ctx, contest_names, "Select a contest:")
+        selected_name = await ctx.bot.ui.getChoiceFromList(ctx, contest_names, "Select a contest:")
+
+        if not selected_name: return None
+
+        # Find the ID associated with the selected name
+        for c in contests:
+            if c['name'] == selected_name:
+                return c['contest_id']
+        return None
 
     async def _check_manager(self, ctx: commands.Context):
         if ctx.author.id == ctx.guild.owner_id or ctx.author.guild_permissions.manage_guild or ctx.author.id == self.bot.ownerid:
