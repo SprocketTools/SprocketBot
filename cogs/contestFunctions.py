@@ -619,6 +619,7 @@ class contestFunctions(commands.Cog):
             if not silent:
                 await ctx.send(f"❌ Error processing file: {e}")
             print(f"Entry Processing Error: {e}")
+            await ctx.send(f"❌ Error processing file: {e} {message.jump_url}")
             return False
 
     # ----------------------------------------------------------------------------------
