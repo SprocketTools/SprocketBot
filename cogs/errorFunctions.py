@@ -72,7 +72,7 @@ class errorFunctions(commands.Cog):
 
     @commands.command(name="removeError", description="higdffffffffffff")
     async def removeError(self, ctx: commands.Context):
-        errorMessage = await self.bot.error.getTextResponse(ctx, "What error message do you want to remove?")
+        errorMessage = await textTools.getResponse(ctx, "What error message do you want to remove?")
         if ctx.author.id == 712509599135301673:
             await self.bot.sql.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [errorMessage])
         else:
