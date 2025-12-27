@@ -268,6 +268,10 @@ class jarvisFunctions(commands.Cog):
                           686640777505669141]
 
             active_cooldown = self.cooldown
+
+            userSetList = await self.bot.sql.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM errorlist GROUP BY userid ORDER BY value_occurrence DESC LIMIT 10;''')
+            if str(message.author.id) in str(userSetList):
+                active_cooldown = round(active_cooldown / 8)
             if message.author.id in special_users or message.author.guild_permissions.ban_members:
                 active_cooldown = round(active_cooldown / 2)
             if message.author.id in exec_users:

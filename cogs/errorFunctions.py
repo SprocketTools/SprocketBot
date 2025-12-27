@@ -152,7 +152,7 @@ class errorFunctions(commands.Cog):
     async def errorLeaderboard(self, ctx: commands.Context):
         totalErrors = len(await self.bot.sql.databaseFetchdict(f'SELECT error FROM errorlist;'))
         embed = discord.Embed(title="Error Stats", description=f'''There are {totalErrors} error messages in the bot's collection!''',color=discord.Color.random())
-        userSetList = await self.bot.sql.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM errorlist GROUP BY userid ORDER BY value_occurrence DESC LIMIT 5;''')
+        userSetList = await self.bot.sql.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM errorlist GROUP BY userid ORDER BY value_occurrence DESC LIMIT 10;''')
         for user in userSetList:
             embed.add_field(name=self.bot.get_user(user['userid']), value=user['value_occurrence'], inline=False)
         currentUser = (await self.bot.sql.databaseFetchdictDynamic(f'''SELECT userid, COUNT(userid) AS value_occ FROM errorlist WHERE userid = $1 GROUP BY userid;''', [ctx.author.id]))[0]['value_occ']
