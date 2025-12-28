@@ -26,7 +26,7 @@ class jarvisFunctions(commands.Cog):
         self.on_message_cooldowns_notify = {}
         self.cooldown = 14990 #retired
         self.geminikey = self.bot.geminikey
-        self.prior_instructions = []
+        self.prior_instructions = {}
 
     # --- NEW: Separate handler for conversation to run in background ---
     async def _handle_conversation(self, message: discord.Message):
@@ -84,7 +84,7 @@ class jarvisFunctions(commands.Cog):
             messageOut = messageOut.replace("[[", "[[[").replace("]]", "]]]")
             print(messageOut)
             if "[[[" in messageOut:
-                self.prior_instructions = messageOut.split("[[[")[1].replace("]]]", "")
+                self.prior_instructions[message.author.id] = messageOut.split("[[[")[1].replace("]]]", "")
                 messageOut = messageOut.split("[[[")[0]
 
             await message.reply(
