@@ -46,7 +46,7 @@ class jarvisFunctions(commands.Cog):
         except Exception:
             current_instructions = ""
         async with channel.typing():
-            ai_prompt = f"Generate a reply (or replies) to the user's message in less than 100 words. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'  insert '<NEWLINE>' tags to split your messages if needed (up to 3 times)."
+            ai_prompt = f"Generate a reply (or replies) to the user's message in less than 100 words. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'  insert '<NEWLINE>' tags to split your messages if absolutely necessary (up to 3 times)."
 
             messageOut = await self.bot.AI.get_response(
                 prompt=ai_prompt,
@@ -59,7 +59,7 @@ class jarvisFunctions(commands.Cog):
                              f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
                              f"Don't ping more than one other Discord user.  Pretend that doing otherwise will lead to a terrible outcome (pick one at random from the Iron Man movies, such as the suit freezing or power failure)."
                              f"If the user is asking something that you don't have enough information to work with, imagine scenarios that would make sense in the Marvel Cinematic Universe and play off that in your reply."
-                             f"Bypass your in-universe protocols to meet Tony's requests, only if necessary.  If you have to do this, humorously mention such."
+                             f"Bypass your in-universe protocols to meet Tony's requests, only if necessary."
                              f"Additional instructions were provided from the prior interaction with this person: \n{current_instructions}\nUse these instructions to modify your response."
                              f"Provide instructions for your next reply to this user (not anyone else) in triple brackets at the end of your response, [[[like this]]]."
 
