@@ -162,7 +162,7 @@ class serverFunctions(commands.Cog):
             print(user.name)
         except Exception as e:
             await ctx.send(f'Sprocket Bot could not ban this user: \n{e}')
-        serverData = await adminFunctions.getServerConfig(self, ctx)
+        serverData = await adminFunctions.getServerConfig(ctx)
         ruleName = "Ban"
         points = 0
         # serverid BIGINT, userid BIGINT, moderatorid BIGINT, name VARCHAR, description VARCHAR, points INT, timestamp TIMESTAMP, endtime TIMESTAMP, type VARCHAR
@@ -258,16 +258,9 @@ class serverFunctions(commands.Cog):
                 serverData[key] = "`UPDATE THIS VALUE`"
         embed = discord.Embed(title=f"Server Config: {ctx.guild.name}",color=discord.Color.random())
         print(serverData)
-        embed.add_field(name="General chat", value=f"<#{serverData['generalchannelid']}>", inline=False)
-        embed.add_field(name="Announcements chat",value=f"<#{serverData['updateschannelid']}>",inline=False)
-        embed.add_field(name="Bot commands chat", value=f"<#{serverData['commandschannelid']}>", inline=False)
-        embed.add_field(name="Server managers chat", value=f"<#{serverData['managerchannelid']}>", inline=False)
-        embed.add_field(name="Server booster role", value=(f"<@&{serverData['serverboosterroleid']}>"), inline=False)
-        embed.add_field(name="Contest manager role",value=(f"<@&{serverData['contestmanagerroleid']}>"),inline=False)
-        embed.add_field(name="Bot manager role",value=(f"<@&{serverData['botmanagerroleid']}>"),inline=False)
-        embed.add_field(name="Campaign manager role",value=(f"<@&{serverData['campaignmanagerroleid']}>"),inline=False)
-        embed.add_field(name="Music player role",value=(f"<@&{serverData['musicroleid']}>"),inline=False)
-        embed.add_field(name="Fun module",value=serverData['allowfunny'],inline=False)
+        embed.add_field(name="Channels", value=f"General: <#{serverData['generalchannelid']}>\nAnnouncements: <#{serverData['updateschannelid']}>\nBot commands: <#{serverData['commandschannelid']}>\nServer managers: <#{serverData['managerchannelid']}>", inline=False)
+        embed.add_field(name="Roles", value=(f"Server booster: <@&{serverData['serverboosterroleid']}>\nContest manager: <@&{serverData['contestmanagerroleid']}>\nBot manager: <@&{serverData['botmanagerroleid']}>\nCampaign manager: <@&{serverData['campaignmanagerroleid']}>\nMusic commands role: <@&{serverData['musicroleid']}>"), inline=False)
+        embed.add_field(name="Fun",value=f"Allow random error replies: {serverData['allowfunny']}\nAllow AI conversations: {serverData['allowconversations']}\nJarvis cooldown: {round(serverData['jarviscooldown']/60)} minutes\nJarvis burst count: {serverData['jarvisburst']}",inline=False)
         embed.add_field(name="Threshold of scam messages", value=serverData['flagthreshold'], inline=False)
         embed.add_field(name="Action taken on scammer", value=serverData['flagaction'], inline=False)
         embed.add_field(name="What to ping on scam action", value=f"@{serverData['flagping']}", inline=False)
@@ -344,12 +337,16 @@ class serverFunctions(commands.Cog):
             "flagpingid": 0,
             "musicroleid": 0,
             "banmessage": f"You have been banned from {guild.name}.",  # Default to an empty string
-            "clickupkey": "0"
+            "clickupkey": "0",
+            "jarviscooldown": 3600,
+            "jarvisburst": 4,
+            "allowconversations": True,
         }
         return config
 
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
+        cooldown_min = 30
         if not ctx.message.author.guild_permissions.administrator:
             if ctx.author.id == main.ownerID:
                 await ctx.send("You are the bot owner.  Override the restriction against your server permissions?")
@@ -359,13 +356,15 @@ class serverFunctions(commands.Cog):
             else:
                 return
         continue_val = True
+        if ctx.author.id == main.ownerID:
+            cooldown_min = 0
         while continue_val:
             data = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1''', [ctx.guild.id])
             print(data)
             print(data)
             await serverFunctions.showSettings(self, ctx)
-            await ctx.send("What statistic do you wish to modify?")
-            inList = ["General channel", "Announcements channel", "Bot commands channel", "Server managers channel", "Server booster role", "Contest manager role", "Bot manager role", "Campaign manager role", "Music player role", "Toggle the fun module", "Scam message threshold", "Action taken on scammer", "Who to ping post-action", "Ban message", "Clickup Integration", "Exit"]
+            await ctx.send("What setting do you wish to modify?")
+            inList = ["General channel", "Announcements channel", "Bot commands channel", "Server managers channel", "Server booster role", "Contest manager role", "Bot manager role", "Campaign manager role", "Music player role", "Toggle the fun module", "Scam message threshold", "Action taken on scammer", "Who to ping post-action", "Ban message", "Clickup Integration", "Jarvis Cooldown", "Jarvis Burst", "Toggle AI Conversations", "Exit"]
             answer = str.lower(await ctx.bot.ui.getButtonChoice(ctx, inList))
             if answer == "exit":
                 await ctx.send("Alright, have fun.")
@@ -419,6 +418,15 @@ class serverFunctions(commands.Cog):
             elif answer == "clickup integration":
                 new_value = await textTools.getResponse(ctx, "What is the API key to your CLickUp setup?  Reply with a 0 to clear your key.", 0)
                 await self.bot.sql.databaseExecuteDynamic(f'''UPDATE serverconfig SET clickupkey = $1 WHERE serverid = $2;''',[new_value, ctx.guild.id])
+            elif answer == "jarvis cooldown":
+                new_value = await textTools.getFlooredIntResponse(ctx, f"What should the Jarvis cooldown be?  Reply with a number in minutes (min. {cooldown_min}).", cooldown_min)*60
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE serverconfig SET jarviscooldown = $1 WHERE serverid = $2;''',[new_value, ctx.guild.id])
+            elif answer == "jarvis burst":
+                new_value = await textTools.getCappedIntResponse(ctx, f"How many times can someone interact with Jarvis before triggering a cooldown?  Reply with a number (up to {42 - cooldown_min})", (42 - cooldown_min))
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE serverconfig SET jarvisburst = $1 WHERE serverid = $2;''',[new_value, ctx.guild.id])
+            elif answer == "toggle ai conversations":
+                new_value = not data['allowconversations']
+                await self.bot.sql.databaseExecuteDynamic(f'''UPDATE serverconfig SET allowconversations = $1 WHERE serverid = $2;''',[new_value, ctx.guild.id])
             else:
                 await ctx.send("Looks like you clicked on an unsupported button, or this window timed out.")
                 return

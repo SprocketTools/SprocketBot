@@ -24,7 +24,7 @@ class jarvisFunctions(commands.Cog):
         self.on_message_cooldowns = {}
         self.on_message_cooldowns_burst = {}
         self.on_message_cooldowns_notify = {}
-        self.cooldown = 14990
+        self.cooldown = 14990 #retired
         self.geminikey = self.bot.geminikey
         self.prior_instructions = []
 
@@ -33,7 +33,6 @@ class jarvisFunctions(commands.Cog):
         """
         Handles the AI conversation response in the background.
         """
-
         channel = message.channel
         messages = []
         message_raw = channel.history(limit=65)
@@ -107,7 +106,7 @@ class jarvisFunctions(commands.Cog):
 
     async def _handle_task_addition(self, message: discord.Message, task_details: str):
         ctx = await self.bot.get_context(message)
-        server_config = await adminFunctions.getServerConfig(self, ctx)
+        server_config = await adminFunctions.getServerConfig(ctx)
         api_key = server_config.get('clickupkey')
 
         if not api_key or api_key == '0':
@@ -236,6 +235,8 @@ class jarvisFunctions(commands.Cog):
         if not self.bot.operational and (message.author.id != self.bot.owner_id):
             return
 
+        serverconfig = await adminFunctions.getServerConfig(await self.bot.get_context(message))
+
         content_lower = message.content.lower().strip()
         user_id = message.author.id
         now = datetime.datetime.now()
@@ -266,14 +267,13 @@ class jarvisFunctions(commands.Cog):
         if standard_conversation_trigger is not None:
             # Cooldown Logic
             special_users = [220134579736936448, 437324319102730263, 806938248060469280, 198602742317580288,
-                             870337116381515816, 298548176778952704, 874912257128136734, 1005108173360869507]
-            exec_users = [712509599135301673, 199887270323552256, 299330776162631680, 502814400562987008,
-                          686640777505669141]
+                             870337116381515816, 298548176778952704, 874912257128136734]
+            exec_users = [199887270323552256, 299330776162631680, 502814400562987008, 686640777505669141, 712509599135301673]
 
-            active_cooldown = self.cooldown
+            active_cooldown = serverconfig["jarviscooldown"]
 
             userSetList = await self.bot.sql.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM errorlist GROUP BY userid ORDER BY value_occurrence DESC LIMIT 10;''')
-            if str(message.author.id) in str(userSetList):
+            if str(message.author.id) in str(userSetList) or message.author.id == 1005108173360869507: ## Nitro gifter is this ID
                 active_cooldown = round(active_cooldown / 8)
             if message.author.id in special_users or message.author.guild_permissions.ban_members:
                 active_cooldown = round(active_cooldown / 2)
@@ -281,19 +281,15 @@ class jarvisFunctions(commands.Cog):
                 active_cooldown = 1
             if message.author.premium_since is not None:
                 active_cooldown = round(active_cooldown / 24)
-
             if user_id not in self.on_message_cooldowns:
                 self.on_message_cooldowns_burst[user_id] = 0
             else:
                 self.on_message_cooldowns_burst[user_id] = self.on_message_cooldowns_burst[user_id] + 1
                 last_triggered = self.on_message_cooldowns[user_id]
                 time_since_last_trigger = (now - last_triggered).total_seconds()
-                if time_since_last_trigger < active_cooldown:
-                    if self.on_message_cooldowns_burst[user_id] > 2:
-                        if self.on_message_cooldowns_notify.get(user_id) == False:
-                            await message.author.send(
-                                f"To avoid spamming, the Jarvis reaction command is on a cooldown.")
-                            self.on_message_cooldowns_notify[user_id] = True
+                if time_since_last_trigger <= active_cooldown:
+                    if self.on_message_cooldowns_burst[user_id] > serverconfig["jarvisburst"]:
+                        await message.add_reaction("⏰")
                         return
                 else:
                     self.on_message_cooldowns_burst[user_id] = 0

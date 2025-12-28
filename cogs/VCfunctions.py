@@ -28,7 +28,7 @@ class VCfunctions(commands.Cog):
 
     @commands.command(name="play", description="Play music with the bot")
     async def play(self, ctx: commands.Context, *, searchIn):
-        serverConfig = await adminFunctions.getServerConfig(self, ctx)
+        serverConfig = await adminFunctions.getServerConfig(ctx)
         if str(serverConfig["musicroleid"]) not in str(ctx.author.roles):
             if not ctx.author.guild_permissions.administrator:
                 await ctx.send("You are not authorized to run this command.")

@@ -55,7 +55,7 @@ class clickupFunctions(commands.Cog):
         """Maps a ClickUp assignee name to a Discord member's ID using SQL."""
 
         # Check permissions (assuming Bot Managers can run this)
-        server_config = await adminFunctions.getServerConfig(self, ctx)
+        server_config = await adminFunctions.getServerConfig(ctx)
         bot_manager_role_id = server_config.get('botmanagerroleid')
 
         is_bot_manager = False
@@ -114,7 +114,7 @@ class clickupFunctions(commands.Cog):
         """Allows authorized users to manually trigger a report for their server."""
 
         # Check for admin or owner permission
-        server_config = await adminFunctions.getServerConfig(self, ctx)
+        server_config = await adminFunctions.getServerConfig(ctx)
         bot_manager_role_id = server_config.get('botmanagerroleid')
 
         is_bot_manager = False

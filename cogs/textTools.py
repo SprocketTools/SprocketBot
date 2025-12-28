@@ -122,6 +122,27 @@ class textTools(commands.Cog):
                 await messageSend.delete()
                 await ctx.send("Invalid input.  Don't include commas, periods, and symbols with your message.")
 
+    async def getCappedIntResponse(ctx: commands.Context, prompt: str, max: int):
+        while True:
+            messageSend = await ctx.send(prompt)
+            def check(m: discord.Message):
+                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+            msg = await ctx.bot.wait_for('message', check=check, timeout=900)
+            if msg.content.lower() == "cancel":
+                await ctx.bot.error.sendError(ctx)
+                raise ValueError("User termination")
+            textOut = msg.content.replace(",", "")
+            textSplit = textOut.split(".")
+            try:
+                val = int(textSplit[0])
+                if len(textSplit) > 1:
+                    await ctx.send(f"Interpreting input as {textSplit[0]}")
+                if val > max:
+                    return max
+                return val
+            except Exception:
+                await messageSend.delete()
+                await ctx.send("Invalid input.  Try again, but exclude commas, periods, and symbols.")
 
     async def getFlooredIntResponse(ctx: commands.Context, prompt: str, min: int):
         while True:

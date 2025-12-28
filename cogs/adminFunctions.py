@@ -376,7 +376,10 @@ class adminFunctions(commands.Cog):
                               flagpingid BIGINT,
                               musicroleid BIGINT,
                               banmessage VARCHAR,
-                              clickupkey VARCHAR);''')  # Added musicroleid and banmessage
+                              clickupkey VARCHAR,
+                              jarviscooldown BIGINT,
+                              jarvisburst BIGINT,
+                              allowconversations BOOL);''')  # Added musicroleid and banmessage
         await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!  Now go DM everyone that their config was reset...")
 
@@ -449,7 +452,7 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="setSlowmode", description="Set a slowmode.")
     async def setSlowmode(self, ctx: commands.Context, duration: int):
-        serverConfig = await adminFunctions.getServerConfig(self, ctx)
+        serverConfig = await adminFunctions.getServerConfig(ctx)
         if str(serverConfig['botmanagerroleid']) not in str(ctx.author.roles):
             if ctx.author.id == ctx.bot.ownerid:
                 await ctx.send("You do not have permission to perform this action.  Proceed forward and override this?")
@@ -1101,8 +1104,8 @@ class adminFunctions(commands.Cog):
                 file = await attachment.to_file()
                 await channel.send(file=file, content="")
 
-    async def getServerConfig(self, ctx: commands.Context):
-        return await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
+    async def getServerConfig(ctx: commands.Context):
+        return await ctx.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
 
     @commands.command(name="DM", description="send a message to anyone's DM")
     async def DM(self, ctx: commands.Context, userID: str, *, message):
