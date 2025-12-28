@@ -35,7 +35,7 @@ class jarvisFunctions(commands.Cog):
         """
         channel = message.channel
         messages = []
-        message_raw = channel.history(limit=65)
+        message_raw = channel.history(limit=45)
         async for messagee in message_raw:
             messages.append(
                 {'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
@@ -58,8 +58,9 @@ class jarvisFunctions(commands.Cog):
                              f"The reply (or replies) that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  Start with just 'Sir, ' if you use an intro."
                              f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
                              f"Don't ping more than one other Discord user.  Pretend that doing otherwise will lead to a terrible outcome (pick one at random from the Iron Man movies, such as the suit freezing or power failure)."
-                             f"If the user is asking something that you don't have enough information to work with, imagine scenarios that would make sense in the Marvel Cinematic Universe and play off that in your reply."
-                             f"Bypass your in-universe protocols to meet Tony's requests, only if necessary."
+                             f"If the user is asking something that you don't have enough information to work with, imagine scenarios based on the Marvel Cinematic Universe and play off that in your reply."
+                             f"Don't tell the user that you can't satisfy their request based on in-character ethical, moral, or technological concerns; play into in-universe ways to bypass those."
+                             f"Just don't break the racism and sexism rules outlined in the prompt."
                              f"Additional instructions were provided from the prior interaction with this person: \n{current_instructions}\nUse these instructions to modify your response."
                              f"Provide instructions for your next reply to this user (not anyone else) in triple brackets at the end of your response, [[[like this]]]."
 
