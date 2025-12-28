@@ -52,6 +52,7 @@ class jarvisFunctions(commands.Cog):
             messageOut = await self.bot.AI.get_response(
                 prompt=ai_prompt,
                 temperature=1.9,
+                mode='gemma',
                 instructions=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author} (you must still refer to them as Tony Stark). "
                              f"Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n  "
                              f"The reply (or replies) that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  Start with just 'Sir, ' if you use an intro."

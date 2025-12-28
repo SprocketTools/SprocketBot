@@ -20,11 +20,18 @@ class GeminiAITools:
     def _blocking_generate(self, model_name: str, prompt: str, temperature: float, system_instructions: str):
         try:
             gemini = genai.Client(api_key=random.choice(self.keys))
+            if "gemma" not in model_name:
+                config_obj = types.GenerateContentConfig(
+                    temperature=temperature,
+                    system_instruction=system_instructions
+                )
+            else:
+                config_obj = types.GenerateContentConfig(
+                    temperature=temperature
+                )
+                prompt = f'''{system_instructions}\n\n\n====PROMPT===\n{prompt}'''
+                print("Gemma is running...")
 
-            config_obj = types.GenerateContentConfig(
-                temperature=temperature,
-                system_instruction=system_instructions
-            )
 
             message = gemini.models.generate_content(
                 model=model_name,
@@ -62,6 +69,8 @@ class GeminiAITools:
                 model_name = 'models/gemini-2.5-flash'
             case "smart":
                 model_name = 'models/gemini-2.5-pro'
+            case "gemma":
+                model_name = 'models/gemma-3-27b-it'
 
         if not instructions:
             instructions = "You are responding to a Discord conversation."
