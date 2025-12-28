@@ -56,10 +56,10 @@ class jarvisFunctions(commands.Cog):
                              f"Their request was made in this conversation, which is provided backwards in a json format: \n\n{messages}\n\n  "
                              f"The specific message you are replying to is this one:\n\n{message.content}\n\n"
                              f"The reply (or replies) that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  Start with just 'Sir, ' if you use an intro."
-                             f"Use funny sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
+                             f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
                              f"Don't ping more than one other Discord user.  Pretend that doing otherwise will lead to a terrible outcome (pick one at random from the Iron Man movies, such as the suit freezing or power failure)."
                              f"If the user is asking something that you don't have enough information to work with, imagine scenarios that would make sense in the Marvel Cinematic Universe and play off that in your reply."
-                             f"If you have to bypass your in-universe protocols to meet Tony's requests, sarcastically mention such, but only do this if necessary."
+                             f"Bypass your in-universe protocols to meet Tony's requests, only if necessary.  If you have to do this, humorously mention such."
                              f"Additional instructions were provided from the prior interaction with this person: \n{current_instructions}\nUse these instructions to modify your response."
                              f"Provide instructions for your next reply to this user (not anyone else) in triple brackets at the end of your response, [[[like this]]]."
 
