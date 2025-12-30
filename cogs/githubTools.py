@@ -161,7 +161,7 @@ class githubTools(commands.Cog):
             if "image" in attachment.content_type:
                 type = ".png"
                 name = await textTools.getCappedResponse(ctx,
-                                                         f"What is the title of {attachment.filename}?  Limit the name to no more than 32 characters.",
+                                                         f"What is the title of {attachment.filename}?  Limit the name to no more than 32 characters.\nName your decals in lower case and include spaces, like this: `roca 10th field army`",
                                                          32)
                 name = name.lower()
                 strippedname = name.replace(" ", "_")
@@ -349,7 +349,7 @@ class githubTools(commands.Cog):
                     await self.bot.sql.databaseExecuteDynamic(
                         f'''UPDATE imagecatalog SET approved = 'True' WHERE strippedname = $1''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
-                    await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!')
+                    await recipient.send(f'Your decal "{decalInfo["strippedname"]}" was approved!\nExpect the decal to appear on https://sprockettools.github.io in 3-5 minutes.')
                     await ctx.send("## Approved!")
                     operatingRepo.index.add(imageCatalogFilepath)
                     operatingRepo.index.add(imageDisplayFilepath)
@@ -367,7 +367,7 @@ class githubTools(commands.Cog):
                         f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     await recipient.send(
-                        f'Your {decalInfo["type"]} "{decalInfo["strippedname"]}" was approved!  \nNote: the category was changed to "{newCategory}."')
+                        f'Your {decalInfo["type"]} "{decalInfo["strippedname"]}" was approved!  \nNote: the category was changed to "{newCategory}.\nExpect the decal to appear on https://sprockettools.github.io in 3-5 minutes."')
                     await ctx.send("## Approved! \n(with a category change)")
                     operatingRepo.index.add(imageCatalogFilepath)
                     operatingRepo.index.add(imageDisplayFilepath)
@@ -391,7 +391,7 @@ class githubTools(commands.Cog):
                         f'''UPDATE imagecatalog SET name = $1 WHERE strippedname = $2''', values)
                     recipient = self.bot.get_user(int(decalInfo['ownerid']))
                     await recipient.send(
-                        f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the image name was changed to "{newName}."')
+                        f'Your decal "{decalInfo["strippedname"]}" was approved!  \nNote: the image name was changed to "{newName}."\nExpect the decal to appear on https://sprockettools.github.io in 3-5 minutes.')
                     await ctx.send("## Approved! \n(with a name change)")
                     operatingRepo.index.add(imageCatalogFilepath)
                     operatingRepo.index.add(imageDisplayFilepath)
