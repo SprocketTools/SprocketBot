@@ -579,6 +579,7 @@ class adminFunctions(commands.Cog):
     @commands.command(name="restart", description="setup the server")
     async def restart(self, ctx: commands.Context):
         if ctx.author.id == 712509599135301673:
+            await ctx.reply(await self.bot.error.retrieveError(ctx))
             pass
         else:
             return
