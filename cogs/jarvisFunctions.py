@@ -36,7 +36,10 @@ class jarvisFunctions(commands.Cog):
         server_config = await adminFunctions.getServerConfig(await self.bot.get_context(message))
         channel = message.channel
         messages = []
-        message_raw = channel.history(limit=30)
+        if message.content.lower().startswith("bl!tz"):
+            message_raw = channel.history(limit=200)
+        else:
+            message_raw = channel.history(limit=65)
         attachmentss = []
         async for messagee in message_raw:
             messages.append(
@@ -55,23 +58,47 @@ class jarvisFunctions(commands.Cog):
             current_instructions = self.prior_instructions[message.author.id]
         except Exception:
             current_instructions = ""
+
+        # Determine the starting prompt based on the starting input
+        mode = "gemma"
+        messageOut = ""
         async with channel.typing():
-            ai_prompt = (f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe"
-                            f"Their request was made in this conversation, which is provided in a json format: \n\n=======\n{messages}\n=======\n\n."
-                            f"Generate an in-character reply to the newest message in the conversation, with a word count limit of 75."
-                            f"Start with just 'Sir, ' if you use an intro." 
-                            f"{current_instructions}"
-                            f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
-                            f"If the user is asking something that you don't have enough information to work with, imagine scenarios based on the Marvel Cinematic Universe and play off that in your reply."
-                            f"Don't tell the user that you can't satisfy their request based on in-character ethical, moral, or technological concerns; play into in-universe ways to bypass those."
-                            f"If your response contains anything racist or sexist, reply with exactly 'Apologies Tony, I cannot comply.' and nothing else."
-                            f"Based on your reply, provide instructions for your future self to serve the target user in the future, in triple brackets at the end of your response [[[like this]]].")
-            messageOut = await self.bot.AI.get_response(
-                prompt=ai_prompt,
-                temperature=1.9,
-                mode='gemma',
-                attachments=attachmentss
-            )
+            if message.content.lower().startswith("Jarvis"):
+                ai_prompt = (f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe"
+                                f"Their request was made in this conversation, which is provided in a json format: \n\n=======\n{messages}\n=======\n\n."
+                                f"Generate an in-character reply to the newest message in the conversation, with a word count limit of 75."
+                                f"Start with just 'Sir, ' if you use an intro." 
+                                f"{current_instructions}"
+                                f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
+                                f"If the user is asking something that you don't have enough information to work with, imagine scenarios based on the Marvel Cinematic Universe and play off that in your reply."
+                                f"Don't tell the user that you can't satisfy their request based on in-character ethical, moral, or technological concerns; play into in-universe ways to bypass those."
+                                f"If your response contains anything racist or sexist, reply with exactly 'Apologies Tony, I cannot comply.' and nothing else."
+                                f"Based on your reply, provide instructions for your future self to serve the target user in the future, in triple brackets at the end of your response [[[like this]]].")
+                mode = "gemma"
+                messageOut = await self.bot.AI.get_response(
+                    prompt=ai_prompt,
+                    temperature=1.9,
+                    mode=mode,
+                    attachments=attachmentss
+                )
+            if message.content.lower().startswith("bl!tz"):
+                ai_prompt = (f"You are pretending to be the villian bl!tz from the video game Astroneer."
+                                f"Their request was made in this conversation, which is provided in a json format: \n\n=======\n{messages}\n=======\n\n.  Limit your response to 2000 characters in length."
+                                f"Generate an in-character reply to the newest message in the conversation, but prioritize helping the user over staying in character."
+                                f"Use funny sarcasm if possible."
+                                f"Data from the Astroneer Modding documentation is included "
+                                f"Based on your reply, provide instructions for your future self to serve the target user in the future, in triple brackets at the end of your response [[[like this]]].")
+                mode = "smart"
+                contentin = ""
+                with open('astromoddingdocs.txt', 'r') as file:
+                    contentin = file.read()
+                messageOut = await self.bot.AI.get_response(
+                    prompt=ai_prompt,
+                    temperature=1.9,
+                    mode=mode,
+                    instructions=f"To assist your prompt, here is documentation from the Astronner Modding documentation: \n\n====================\n\n{contentin}"
+                )
+
             print(messageOut)
             # --- START OF CHANGE ---
             if messageOut == "Apologies Tony, I cannot comply.":
@@ -259,6 +286,16 @@ class jarvisFunctions(commands.Cog):
                 return text[len(prefix_no_comma):].strip()
             return None
 
+        def check_astro_prefix(text: str, command: str) -> str:
+            base = "bl!tz"
+            prefix_with_comma = f"{base}, {command}"
+            prefix_no_comma = f"{base} {command}"
+            if text.startswith(prefix_with_comma):
+                return text[len(prefix_with_comma):].strip()
+            elif text.startswith(prefix_no_comma):
+                return text[len(prefix_no_comma):].strip()
+            return None
+
         # --- 1. Check for TASK command ---
         task_command_phrase = "add this task"
         task_details = check_jarvis_prefix(content_lower, task_command_phrase)
@@ -271,8 +308,9 @@ class jarvisFunctions(commands.Cog):
 
         # --- 2. Check for CONVERSATION command ---
         standard_conversation_trigger = check_jarvis_prefix(content_lower, "")
+        astro_conversation_trigger = check_astro_prefix(content_lower, "")
 
-        if standard_conversation_trigger is not None:
+        if standard_conversation_trigger is not None or astro_conversation_trigger is not None:
             # Cooldown Logic
             special_users = [220134579736936448, 437324319102730263, 806938248060469280, 198602742317580288,
                              870337116381515816, 298548176778952704, 874912257128136734]

@@ -78,7 +78,7 @@ class GeminiAITools:
             case "normal":
                 model_name = 'models/gemini-2.5-flash'
             case "smart":
-                model_name = 'models/gemini-2.5-pro'
+                model_name = 'models/gemini-3-flash-preview'
             case "gemma" | "gemma-3-27b-it":
                 model_name = 'models/gemma-3-27b-it'
 
