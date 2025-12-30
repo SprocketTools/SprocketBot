@@ -47,7 +47,7 @@ class jarvisFunctions(commands.Cog):
         except Exception:
             current_instructions = ""
         async with channel.typing():
-            ai_prompt = f"Generate a reply (or replies) to the user's message in less than {120 + 15*int(server_config['jarvisburst'])} words, and try to make the message smaller if possible. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'  Use standard markup formatting."
+            ai_prompt = f"Generate a reply (or replies) to the user's message using up to {100 + 15*int(server_config['jarvisburst'])} words, but it is important to make your reply smaller if you can. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'  Use standard markup formatting."
 
             messageOut = await self.bot.AI.get_response(
                 prompt=ai_prompt,
