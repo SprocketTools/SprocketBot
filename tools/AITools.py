@@ -29,7 +29,7 @@ class GeminiAITools:
                 config_obj = types.GenerateContentConfig(
                     temperature=temperature
                 )
-                prompt = f'''{system_instructions}\n\n\n====PROMPT===\n{prompt}'''
+                prompt = f'''===INSTRUCTIONS TO APPLY TO YOUR PROMPT===\n{system_instructions}\n\n\n\n\n\n\n\n===PROMPT===\n{prompt}'''
                 print("Gemma is running...")
 
 
