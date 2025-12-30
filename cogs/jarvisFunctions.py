@@ -63,7 +63,7 @@ class jarvisFunctions(commands.Cog):
         mode = "gemma"
         messageOut = ""
         async with channel.typing():
-            if message.content.lower().startswith("Jarvis"):
+            if message.content.lower().startswith("jarvis"):
                 ai_prompt = (f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe"
                                 f"Their request was made in this conversation, which is provided in a json format: \n\n=======\n{messages}\n=======\n\n."
                                 f"Generate an in-character reply to the newest message in the conversation, with a word count limit of 75."
