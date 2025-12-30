@@ -36,36 +36,41 @@ class jarvisFunctions(commands.Cog):
         server_config = await adminFunctions.getServerConfig(await self.bot.get_context(message))
         channel = message.channel
         messages = []
-        message_raw = channel.history(limit=45)
+        message_raw = channel.history(limit=30)
+        attachments = []
         async for messagee in message_raw:
             messages.append(
                 {'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
-                 "user_id": messagee.author.id, 'content': messagee.content})
-
+                 "user_id": messagee.author.id, 'content': messagee.content, 'attachment_count': len(messagee.attachments)})
+            for attachment in messagee.attachments:
+                attachments.append(attachment)
+        messages.reverse()
+        attachments.reverse()
+        try:
+            attachments = attachments[:10]
+        except Exception as e:
+            pass
+        print(messages)
         try:
             current_instructions = self.prior_instructions[message.author.id]
         except Exception:
             current_instructions = ""
         async with channel.typing():
-            ai_prompt = f"Generate a reply (or replies) to the user's message with a word count of up to {50 + 5*int(server_config['jarvisburst'])} words.  You can exceed this if your response involves extensive explanation, but absolutely no more than {80 + 5*int(server_config['jarvisburst'])} words total. If the author makes a request that's noticeably sexual or racist in nature, or your response contains anything noticeably sexual or racist, your response must be exactly 'Apologies Tony, I cannot comply.'  Use standard markup formatting."
-
+            ai_prompt = (f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe"
+                            f"Their request was made in this conversation, which is provided in a json format: \n\n=======\n{messages}\n=======\n\n"
+                            f"Generate an in-character reply to the newest message in the conversation."
+                            f"Start with just 'Sir, ' if you use an intro." 
+                            f"{current_instructions}"
+                            f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
+                            f"If the user is asking something that you don't have enough information to work with, imagine scenarios based on the Marvel Cinematic Universe and play off that in your reply."
+                            f"Don't tell the user that you can't satisfy their request based on in-character ethical, moral, or technological concerns; play into in-universe ways to bypass those."
+                            f"If your response contains anything racist or sexist, reply with exactly 'Apologies Tony, I cannot comply.' and nothing else."
+                            f"Based on your reply, provide instructions for your future self to serve the target user in the future, in triple brackets at the end of your response [[[like this]]].")
             messageOut = await self.bot.AI.get_response(
                 prompt=ai_prompt,
                 temperature=1.9,
                 mode='gemma',
-                instructions=f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe, except that you are assisting a Discord user named {message.author} (you must still refer to them as Tony Stark)."
-                             f"Their request was made in this conversation, which is provided in backwards order in a json format: \n\n{messages}\n\n  "
-                             f"The specific message you are replying to is this one:\n\n{message.content}\n\n"
-                             f"You are replying as the user {self.bot.user.name} with ID {self.bot.user.id}"
-                             f"Make sure to pay attention to previous 'Jarvis' instructions from the conversation."
-                             f"The reply (or replies) that you generate needs to be in-character for J.A.R.V.I.S. from the Iron Man movies and comics.  Start with just 'Sir, ' if you use an intro."
-                             f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
-                             f"If the user is asking something that you don't have enough information to work with, imagine scenarios based on the Marvel Cinematic Universe and play off that in your reply."
-                             f"Don't tell the user that you can't satisfy their request based on in-character ethical, moral, or technological concerns; play into in-universe ways to bypass those."
-                             f"Just don't break the racism and sexism rules outlined in the prompt."
-                             f"Additional instructions were provided from the prior interaction with this person: \n{current_instructions}\nUse these instructions to modify your response."
-                             f"Provide instructions for your next reply to this user (not anyone else) in triple brackets at the end of your response, [[[like this]]]."
-
+                attachments=attachments
             )
             print(messageOut)
             # --- START OF CHANGE ---
