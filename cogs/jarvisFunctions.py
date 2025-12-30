@@ -41,13 +41,14 @@ class jarvisFunctions(commands.Cog):
         async for messagee in message_raw:
             messages.append(
                 {'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
-                 "user_id": messagee.author.id, 'content': messagee.content, 'attachment_count': len(messagee.attachments)})
+                 "user_id": messagee.author.id, 'content': messagee.content})
             for attachment in messagee.attachments:
                 attachmentss.append(attachment)
         messages.reverse()
+
         try:
             attachmentss = attachmentss[:10]
-        except Exception as e:
+        except Exception:
             pass
         print(messages)
         try:
@@ -56,8 +57,8 @@ class jarvisFunctions(commands.Cog):
             current_instructions = ""
         async with channel.typing():
             ai_prompt = (f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe"
-                            f"Their request was made in this conversation, which is provided in a json format: \n\n=======\n{messages}\n=======\n\n"
-                            f"Generate an in-character reply to the newest message in the conversation, with a word count limit of 100."
+                            f"Their request was made in this conversation, which is provided in a json format: \n\n=======\n{messages}\n=======\n\n."
+                            f"Generate an in-character reply to the newest message in the conversation, with a word count limit of 75."
                             f"Start with just 'Sir, ' if you use an intro." 
                             f"{current_instructions}"
                             f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
