@@ -37,17 +37,17 @@ class jarvisFunctions(commands.Cog):
         channel = message.channel
         messages = []
         message_raw = channel.history(limit=30)
-        attachments = []
+        attachmentss = []
         async for messagee in message_raw:
             messages.append(
                 {'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
                  "user_id": messagee.author.id, 'content': messagee.content, 'attachment_count': len(messagee.attachments)})
             for attachment in messagee.attachments:
-                attachments.append(attachment)
+                attachmentss.append(attachment)
         messages.reverse()
-        attachments.reverse()
+        attachmentss.reverse()
         try:
-            attachments = attachments[:10]
+            attachmentss = attachmentss[:10]
         except Exception as e:
             pass
         print(messages)
@@ -70,7 +70,7 @@ class jarvisFunctions(commands.Cog):
                 prompt=ai_prompt,
                 temperature=1.9,
                 mode='gemma',
-                attachments=attachments
+                attachments=attachmentss
             )
             print(messageOut)
             # --- START OF CHANGE ---
