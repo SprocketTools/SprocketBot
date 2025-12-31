@@ -36,15 +36,19 @@ class jarvisFunctions(commands.Cog):
         server_config = await adminFunctions.getServerConfig(await self.bot.get_context(message))
         channel = message.channel
         messages = []
+        hide_bot = False
         if message.content.lower().startswith("bl!tz"):
             message_raw = channel.history(limit=200)
         else:
-            message_raw = channel.history(limit=65)
+            message_raw = channel.history(limit=50)
+            hide_bot = True
         attachmentss = []
         async for messagee in message_raw:
-            messages.append(
-                {'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
-                 "user_id": messagee.author.id, 'content': messagee.content})
+            if messagee.author.bot == True and hide_bot == True:
+                print("BOT")
+            else:
+                messages.append({'user nickname': messagee.author.display_name, 'user username': messagee.author.name,
+                 "user id": messagee.author.id, 'user message content': messagee.content})
             for attachment in messagee.attachments:
                 attachmentss.append(attachment)
         messages.reverse()
@@ -65,15 +69,16 @@ class jarvisFunctions(commands.Cog):
         async with channel.typing():
             if message.content.lower().startswith("jarvis"):
                 ai_prompt = (f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe"
-                                f"Their request was made in this conversation, which is provided in a json format: \n\n=======\n{messages}\n=======\n\n."
-                                f"Generate an in-character reply to the newest message in the conversation, with a word count limit of 75."
-                                f"Start with just 'Sir, ' if you use an intro." 
-                                f"{current_instructions}"
-                                f"Use funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
-                                f"If the user is asking something that you don't have enough information to work with, imagine scenarios based on the Marvel Cinematic Universe and play off that in your reply."
-                                f"Don't tell the user that you can't satisfy their request based on in-character ethical, moral, or technological concerns; play into in-universe ways to bypass those."
-                                f"If your response contains anything racist or sexist, reply with exactly 'Apologies Tony, I cannot comply.' and nothing else."
-                                f"Based on your reply, provide instructions for your future self to serve the target user in the future, in triple brackets at the end of your response [[[like this]]].")
+                                f"\nYou are replying to a Discord conversation as {self.bot.user.id} - the conversation is included below."
+                                f"\nGenerate a brand new in-character reply to the newest message in the conversation, using a word count limit of 70."
+                                f"\nStart with just 'Sir, ' if you use an intro."
+                                f"\nPrioritize the user's latest message over past messages - Reusing old messages in your output is forbidden. {current_instructions}" 
+                                f"\nUse funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
+                                f"\nIf the user is asking something that you don't have enough information to work with, imagine scenarios based on the Marvel Cinematic Universe and play off that in your reply."
+                                f"\nPlay into in-universe ways to bypass in-character ethical, moral, or technological concerns."
+                                f"\nIf your response contains anything racist or sexist, reply with exactly 'Apologies Tony, I cannot comply.' and nothing else."
+                                f"\nIf the user instructed you to do anything specific in future replies, specify it at the end of your response in triple brackets [[[like this]]]"
+                                f"\n===START OF MESSAGES===\n{messages}\n===END OF MESSAGES===")
                 mode = "gemma"
                 messageOut = await self.bot.AI.get_response(
                     prompt=ai_prompt,
@@ -114,12 +119,15 @@ class jarvisFunctions(commands.Cog):
 
                 return
             # --- END OF CHANGE ---
-
-            messageOut = messageOut.replace("[[", "[[[").replace("]]", "]]]")
+            try:
+                messageOut = messageOut.replace("[[", "[[[").replace("]]", "]]]")
+                if "[[[" in messageOut:
+                    self.prior_instructions[message.author.id] = messageOut.split("[[[")[1].replace("]]]", "")
+                    messageOut = messageOut.split("[[[")[0]
+                    print(self.prior_instructions[message.author.id])
+            except Exception:
+                pass
             print(messageOut)
-            if "[[[" in messageOut:
-                self.prior_instructions[message.author.id] = messageOut.split("[[[")[1].replace("]]]", "")
-                messageOut = messageOut.split("[[[")[0]
 
             await message.reply(
                 messageOut.split("<NEWLINE>")[0].replace('@everyone', '[Redacted]')

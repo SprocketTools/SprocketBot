@@ -36,7 +36,9 @@ class GeminiAITools:
                 )
             else:
                 config_obj = types.GenerateContentConfig(
-                    temperature=temperature
+                    temperature=temperature,
+                    top_k=100,
+                    top_p=0.95
                 )
                 # Manual system prompt injection for Gemma (it supports images natively now)
                 # We modify the prompt string in the list, keeping images separate
