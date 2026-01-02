@@ -40,7 +40,7 @@ class jarvisFunctions(commands.Cog):
         if message.content.lower().startswith("bl!tz"):
             message_raw = channel.history(limit=200)
         else:
-            message_raw = channel.history(limit=50)
+            message_raw = channel.history(limit=28)
             hide_bot = True
         attachmentss = []
         async for messagee in message_raw:
@@ -70,9 +70,10 @@ class jarvisFunctions(commands.Cog):
             if message.content.lower().startswith("jarvis"):
                 ai_prompt = (f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe"
                                 f"\nYou are replying to a Discord conversation as {self.bot.user.id} - the conversation is included below."
-                                f"\nGenerate a brand new in-character reply to the newest message in the conversation, using a word count limit of 70."
+                                f"\nGenerate a brand new in-character reply to the newest message in the conversation: {message.content}"
+                                f"\nUse a word count limit of 70 in your reply."
                                 f"\nStart with just 'Sir, ' if you use an intro."
-                                f"\nPrioritize the user's latest message over past messages - Reusing old messages in your output is forbidden. "
+                                f"\nPrioritize the user's latest message over past messages - Reusing old messages in your output is forbidden."
                                 f"\nImportant: {current_instructions}" 
                                 f"\nUse funny happy sarcasm wherever possible, akin to this example response: 'As you wish, sir. I've also prepared a safety briefing for you to entirely ignore.'"
                                 f"\nIf the user is asking something that you don't have enough information to work with, imagine scenarios based on the Marvel Cinematic Universe and play off that in your reply."
