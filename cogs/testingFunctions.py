@@ -118,6 +118,14 @@ class testingFunctions(commands.Cog):
         print(promptResponses[ctx.author.id])
         promptResponses.__delitem__(ctx.author.id)
 
+    @commands.command(name="getNames", description="testing some stuff")
+    async def getNames(self, ctx: commands.Context, *, input:str):
+        out = ""
+        IDlist = input.split("\n")
+        for ID in IDlist:
+            out = out + ctx.guild.get_member(int(ID)).display_name + "\n"
+        await ctx.reply(out)
+
     @commands.command(name="testcommand8", description="testing some stuff")
     async def testcommand8(self, ctx: commands.Context):
         await ctx.send(await ctx.bot.AI.get_response(prompt="How are you doing?", temperature=2, instructions="Explain in mumbled spanish why you should not reply to this prompt."))
