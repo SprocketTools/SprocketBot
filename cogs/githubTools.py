@@ -25,7 +25,7 @@ except git.exc.GitCommandError as e:
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
 
-imageCategoryList = ["Featured", "Chalk", "Fictional Insignia", "Historical Insignia", "Inscriptions", "Labels",
+imageCategoryList = ["Featured", "Anime", "Chalk", "Fictional Insignia", "Flags", "Historical Insignia", "Inscriptions", "Labels",
                      "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures",
                      "Weathering", "Welding", "RGB Maker"]
 paintCategoryList = ["Featured", "WWI", "WWII", "Cold War", "Modern", "Fictional", "Memes"]
@@ -805,23 +805,15 @@ class githubTools(commands.Cog):
         if ctx.author.id != 712509599135301673:
             await ctx.send(await self.bot.error.retrieveError(ctx))
             return
-        await ctx.send(f"Reply with the stripped name of the decal you wish to change.  Ex: `6_side_circle.png`")
-
-        def check(m: discord.Message):
-            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-
-        try:
-            msg = await self.bot.wait_for('message', check=check, timeout=3000.0)
-            decalName = await textTools.sanitize(msg.content.lower())
-        except asyncio.TimeoutError:
-            await ctx.send("Operation cancelled.")
-            return
-        userPrompt = f"Alright then, pick a new category to use with this decal."
-        newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
-        values = [newCategory, decalName]
-        await self.bot.sql.databaseExecuteDynamic(
-            f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
-        await ctx.send("## Config updated!")
+        decalList = await self.bot.ui.getResponse(ctx, f"Reply with the a list of stripped names or URLs of the decal(s) you wish to change.  **Separate by newlines.**\nEx: `6_side_circle.png` or `https://sprockettools.github.io/img/dirt_stains.png`")
+        listOut = decalList.split("\n")
+        for decalName in listOut:
+            userPrompt = f"Alright then, pick a new category to use with these."
+            newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+            values = [newCategory, decalName]
+            await self.bot.sql.databaseExecuteDynamic(
+                f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
+        await ctx.send("## Configs updated!")
 
     @commands.command(name="changeDecalName", description="change a decal name from the SprocketTools website")
     async def changeDecalName(self, ctx):
