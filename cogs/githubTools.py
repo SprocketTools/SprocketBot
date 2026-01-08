@@ -810,7 +810,7 @@ class githubTools(commands.Cog):
         for decalName in listOut:
             userPrompt = f"Alright then, pick a new category to use with these."
             newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
-            values = [newCategory, decalName]
+            values = [newCategory, decalName.replace("https://sprockettools.github.io/img/", "")]
             await self.bot.sql.databaseExecuteDynamic(
                 f'''UPDATE imagecatalog SET category = $1 WHERE strippedname = $2''', values)
         await ctx.send("## Configs updated!")
