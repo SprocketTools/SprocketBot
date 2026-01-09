@@ -24,7 +24,7 @@ class errorFunctions(commands.Cog):
     async def error(self, ctx: commands.Context):
         await self.bot.error.sendError(ctx)
 
-    @commands.command(name="getError", description="higdffffffffffff")
+    @commands.command(name="getError", description="higdffffffffffff", extras={'category': 'error'})
     async def getError(self, ctx: commands.Context):
         ttsp = False
         if ctx.author.id == self.bot.ownerid or ctx.author.guild_permissions.administrator == True:
@@ -44,16 +44,17 @@ class errorFunctions(commands.Cog):
             ttsp = True
         await ctx.send(await self.bot.error.retrieveError(ctx), tts=ttsp)
 
-    @commands.command(name="getCError", description="higdffffffffffff")
+    @commands.command(name="getCError", description="higdffffffffffff", extras={'category': 'error'})
     async def getCategorizedError(self, ctx: commands.Context):
         await ctx.send("What would you categorize this error under?")
         categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"],
                       ["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"],
                       ["Campaign", "campaign"], ["Blueprint", "blueprint"],
                       ["Only a catgirl would say that", "catgirl"]]
-        category = await ctx.bot.ui.getButtonChoiceReturnID(ctx, categories)
+        category = await self.bot.ui.getButtonChoiceReturnID(ctx, categories)
+        print(category)
         ttsp = False
-        if ctx.author.id == ctx.bot.ownerID or ctx.author.guild_permissions.administrator == True:
+        if ctx.author.id == ctx.bot.ownerid or ctx.author.guild_permissions.administrator == True:
             await ctx.message.delete()
         else:
             serverID = (ctx.guild.id)
@@ -79,7 +80,7 @@ class errorFunctions(commands.Cog):
             await self.bot.sql.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1 AND userid = $2;''', [errorMessage, ctx.author.id])
         await ctx.send("Deleted any that match.  Reload the cogs.")
 
-    @commands.command(name="addError", description="higdffffffffffff")
+    @commands.command(name="addError", description="higdffffffffffff", extras={'category': 'error'})
     async def addError(self, ctx: commands.Context):
 
         if ctx.author.id == ctx.bot.ownerid and ctx.bot.botMode == "official":
@@ -117,7 +118,7 @@ class errorFunctions(commands.Cog):
         else:
             await ctx.send("What would you categorize this error under?")
             categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"], ["Flyout", "flyout"], ["Joke/other", "joke"], ["Campaign", "campaign"], ["Blueprint", "blueprint"], ["Only a catgirl would say that", "catgirl"]]
-            category = await ctx.bot.ui.getButtonChoiceReturnID(ctx, categories)
+            category = await self.bot.ui.getButtonChoiceReturnID(ctx, categories)
         if category == "mlp":
             status = True
         values = [responseMessage, status, ctx.author.id, category]
@@ -148,7 +149,7 @@ class errorFunctions(commands.Cog):
         await self.bot.sql.databaseExecuteDynamic('''UPDATE errorlist SET errortype = $1 WHERE POSITION($2 in error) > 0''', ["video", "https://youtube.com/"])
         await ctx.send("## Done!")
 
-    @commands.command(name="errorLeaderboard", description="Leaderboard of errors!")
+    @commands.command(name="errorLeaderboard", description="Leaderboard of errors!", extras={'category': 'error'})
     async def errorLeaderboard(self, ctx: commands.Context):
         totalErrors = len(await self.bot.sql.databaseFetchdict(f'SELECT error FROM errorlist;'))
         embed = discord.Embed(title="Error Stats", description=f'''There are {totalErrors} error messages in the bot's collection!''',color=discord.Color.random())
@@ -160,7 +161,7 @@ class errorFunctions(commands.Cog):
         embed.set_footer(text=f"You have {currentUser} errors registered with the bot!")
         await ctx.send(embed=embed)
 
-    @commands.command(name="countErrors", description="higdffffffffffff")
+    @commands.command(name="countErrors", description="higdffffffffffff", extras={'category': 'error'})
     async def countErrors(self, ctx: commands.Context):
         totalErrors = len(await self.bot.sql.databaseFetchdict(f'SELECT error FROM errorlist;'))
         await ctx.send(f"There are {totalErrors} errors registered with the bot!")
@@ -209,7 +210,7 @@ class errorFunctions(commands.Cog):
                     if f"<{url}>" in str:
                         await ctx.send(url)
                 categories = ["Approve", "Deny", "Modify text", "Modify category", "Modify both", "Stop processing errors"]
-                value = await ctx.bot.ui.getButtonChoice(ctx, categories)
+                value = await self.bot.ui.getButtonChoice(ctx, categories)
 
                 if value == "Approve":
                     await self.bot.sql.databaseExecuteDynamic('''UPDATE errorlist SET status = true WHERE error = $1;''', [error["error"]])
@@ -228,7 +229,7 @@ class errorFunctions(commands.Cog):
                 elif value == "Modify category":
                     await ctx.send("What would you categorize this error under?")
                     categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"],["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"],["Campaign", "campaign"], ["Blueprint", "blueprint"],["Only a catgirl would say that", "catgirl"],["[Specialty]", "mlp"]]
-                    category = await ctx.bot.ui.getButtonChoiceReturnID(ctx, categories)
+                    category = await self.bot.ui.getButtonChoiceReturnID(ctx, categories)
                     await self.bot.sql.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [error["error"]])
                     await self.bot.sql.databaseExecuteDynamic('''INSERT INTO errorlist VALUES ($1, $2, $3, $4);''',[error["error"], True, error["userid"], category])
                     await ctx.send("Modified message added!")
@@ -239,7 +240,7 @@ class errorFunctions(commands.Cog):
                     newMessage = await self.bot.error.getTextResponse(ctx, "What do you want the modified error message to be?")
                     await ctx.send("What would you categorize this error under?")
                     categories = [["Compliment", "compliment"], ["Insult", "insult"], ["Sprocket", "sprocket"], ["Flyout", "flyout"], ["Video", "video"], ["GIF", "gif"], ["Joke/other", "joke"], ["Campaign", "campaign"], ["Blueprint", "blueprint"], ["Only a catgirl would say that", "catgirl"],["[Specialty]", "mlp"]]
-                    category = await ctx.bot.ui.getButtonChoiceReturnID(ctx, categories)
+                    category = await self.bot.ui.getButtonChoiceReturnID(ctx, categories)
                     await self.bot.sql.databaseExecuteDynamic('''DELETE FROM errorlist WHERE error = $1;''', [error["error"]])
                     await self.bot.sql.databaseExecuteDynamic('''INSERT INTO errorlist VALUES ($1, $2, $3, $4);''',[newMessage, True, error["userid"], category])
                     await ctx.send("Modified message added!")

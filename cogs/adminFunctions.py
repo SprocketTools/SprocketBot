@@ -17,7 +17,7 @@ scamFlags = ["$", "steam", "asdfghjkl", "cdn.discordapp.com/attachments", "@ever
 linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "1.jpg", "1.png", "1.jpeg", "2.jpg", "2.png", "2.jpeg", "qptr.ru", "https://temu.com/s/", "canary.discord.com", "https://", "http://", "discord.gg", "discordapp.com", "discord.com/invite", "https://t.me/"]
 whitelist = ["https://tenor.com/view/", "https://cdn.discordapp.com/attachments"]
 strikethreshold = 3
-piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c", "0.2.19.5", "0.2.30.0", "0.2.32.1"]
+piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c", "0.2.19.5", "0.2.30.0", "0.2.32.1", "0.2.46.4"]
 colorint = -1
 class adminFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
@@ -55,6 +55,12 @@ class adminFunctions(commands.Cog):
             #     await ctx.send("Sprocket Bot has noticed that you have blocked him.  Unblock the bot and run the command again.")
             #     return False
             pass
+
+        if ctx.command and hasattr(ctx.command, "extras") and 'category' in ctx.command.extras:
+            cat = ctx.command.extras['category']
+            if await self.bot.ui.channel_block_check(ctx.channel.id, cat):
+                await ctx.message.add_reaction("❌")
+                return False  # Block the command
 
         # try:
         #     print("hi")

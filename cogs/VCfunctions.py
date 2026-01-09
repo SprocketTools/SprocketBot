@@ -26,7 +26,7 @@ class VCfunctions(commands.Cog):
         self.bot = bot
         self.queue = []
 
-    @commands.command(name="play", description="Play music with the bot")
+    @commands.command(name="play", description="Play music with the bot", extras={'category': 'utility'})
     async def play(self, ctx: commands.Context, *, searchIn):
         serverConfig = await adminFunctions.getServerConfig(ctx)
         if str(serverConfig["musicroleid"]) not in str(ctx.author.roles):

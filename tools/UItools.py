@@ -26,11 +26,32 @@ class UItools:
             pass  # Message was already deleted
         return view.value
 
+    async def channel_block_check(self, channel_id: int, category: str) -> bool:
+        if not category:
+            return False
+        try:
+            result = await self.bot.sql.databaseFetchrowDynamic(
+                '''SELECT 1 FROM channel_blocks WHERE channel_id = $1 AND category = $2;''',
+                [channel_id, category.lower()]
+            )
+            return bool(result)
+        except Exception as ex:
+            print(ex)
+            print("consider running -setupChannelConfigTables")
+            return False
+
     async def getButtonChoiceReturnID(self, ctx: commands.Context, inList: list):
-        view = getButtonChoiceReturnID(ctx, inList)
-        await ctx.send(view=view)
+        print(inList)
+        try:
+            view = getButtonChoiceReturnID_func(ctx, inList)
+        except Exception as ex:
+            print(ex)
+            return None
+        print(inList)
+        msgOut = await ctx.send(view=view)
         await view.wait()
-        return view.id
+        await msgOut.delete()
+        return view.id_out
 
     async def getYesNoChoice(self, ctx: commands.Context):
         view = YesNoButtons()
@@ -282,7 +303,7 @@ class YesNoModifyStopButtons(discord.ui.View):
 class buttonList(discord.ui.Button):
     def __init__(self, ctx: commands.Context, value: str, row: int):
         self.ctx = ctx
-        style = discord.ButtonStyle.secondary
+        style = discord.ButtonStyle.primary
         if value.lower() in ["exit", "0", "stop", "cancel"]:
             style = discord.ButtonStyle.red
         elif row % 2 == 0:
@@ -311,43 +332,41 @@ class getButtonChoice(discord.ui.View):
 
 
 
-class buttonListReturnID(discord.ui.Button['getButtonChoiceReturnID']):
+class buttonListReturnID(discord.ui.Button):
     # https://github.com/Rapptz/discord.py/blob/master/examples/views/tic_tac_toe.py
-    def __init__(self, ctx: commands.Context, value: str, id: str, pos: int):
-        self.id = id
+    def __init__(self, ctx: commands.Context, value: str, id_in: str, pos: int):
+        self.id_out = id_in
         self.value = value
         self.row = int(pos/5)
         self.ctx = ctx
-        if value.lower() == "exit":
+        if value.lower() in ["exit", "0", "stop", "return", "only a catgirl would say that", "insult", "attack"]:
             super().__init__(style=discord.ButtonStyle.red, label=value, row=self.row)
-        elif pos % 3 == 0:
-            super().__init__(style=discord.ButtonStyle.blurple, label=value, row=self.row)
-        elif pos % 3 == 1:
+        elif value.lower() in ["cancel", "GIF"]:
+            super().__init__(style=discord.ButtonStyle.grey, label=value, row=self.row)
+        elif pos % 2 == 0:
             super().__init__(style=discord.ButtonStyle.green, label=value, row=self.row)
         else:
-            super().__init__(style=discord.ButtonStyle.secondary, label=value, row=self.row)
+            super().__init__(style=discord.ButtonStyle.blurple, label=value, row=self.row)
 
     async def callback(self, interaction: discord.Interaction):
         print(interaction.user)
         print(interaction.message.author)
         if interaction.user == self.ctx.author:
             assert self.view is not None
-            view: getButtonChoiceReturnID = self.view
-            view.id = self.id
+            view: getButtonChoiceReturnID_func = self.view
+            self.view.id_out = self.id_out
             await interaction.response.defer()
             view.stop()
         else:
             await interaction.response.send_message(content="### Ouchie!  \n[Don't touch my buttons, they aren't yours!](<https://www.youtube.com/watch?v=a6pbjksYUHY>)\n", ephemeral=True)
 
-class getButtonChoiceReturnID(discord.ui.View):
+class getButtonChoiceReturnID_func(discord.ui.View):
     value = ""
     def __init__(self, ctx: commands.Context, listIn: list):
         super().__init__(timeout=600)
         self.list = listIn
-        i = 0
-        for str in self.list:
-            self.add_item(buttonListReturnID(ctx, str[0], str[1], i))
-            i += 1
+        for i, item in enumerate(listIn):
+            self.add_item(buttonListReturnID(ctx, item[0], item[1], i))
 
 class DayInputModal(discord.ui.Modal, title="Click here to enter day"):
     day_input = discord.ui.TextInput(

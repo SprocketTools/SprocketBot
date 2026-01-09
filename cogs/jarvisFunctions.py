@@ -280,6 +280,10 @@ class jarvisFunctions(commands.Cog):
         if not self.bot.operational and (message.author.id != self.bot.owner_id):
             return
 
+        if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
+            await message.add_reaction("❌")
+            return
+
         serverconfig = await adminFunctions.getServerConfig(await self.bot.get_context(message))
 
         content_lower = message.content.lower().strip()

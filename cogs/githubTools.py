@@ -125,7 +125,7 @@ class githubTools(commands.Cog):
                                                   [authorName, name])
         await ctx.send(f"### The image has been updated.")
 
-    @commands.command(name="submitDecal", description="Submit a decal to the SprocketTools website")
+    @commands.command(name="submitDecal", description="Submit a decal to the SprocketTools website", extras={'category': 'utility'})
     async def submitDecal(self, ctx):
         imageCategoryListTemp = imageCategoryList.copy()
         if ctx.author.id != 712509599135301673:

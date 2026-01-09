@@ -1070,7 +1070,7 @@ class blueprintFunctions(commands.Cog):
                     "Place this model into `%userprofile%\Documents\My Games\Sprocket\Factions\Default\Blueprints\Vehicles` and load the new tank.")
             i += 1
 
-    @commands.command(name="drawFrame", description="Renders a 3D wireframe GIF of a vehicle blueprint.")
+    @commands.command(name="drawFrame", description="Renders a 3D wireframe GIF of a vehicle blueprint.", extras={'category': 'utility'})
     async def drawFrame(self, ctx: commands.Context):
         await ctx.send("Beginning processing now. This may take a while...")
         for attachment in ctx.message.attachments:
