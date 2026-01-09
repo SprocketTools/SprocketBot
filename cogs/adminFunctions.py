@@ -1112,7 +1112,7 @@ class adminFunctions(commands.Cog):
                 await channel.send(file=file, content="")
 
     async def getServerConfig(ctx: commands.Context):
-        return await ctx.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
+        return await ctx.bot.sql.databaseFetchdictDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])[0]
 
     @commands.command(name="DM", description="send a message to anyone's DM")
     async def DM(self, ctx: commands.Context, userID: str, *, message):
