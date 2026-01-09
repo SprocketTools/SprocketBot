@@ -280,9 +280,7 @@ class jarvisFunctions(commands.Cog):
         if not self.bot.operational and (message.author.id != self.bot.owner_id):
             return
 
-        if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
-            await message.add_reaction("❌")
-            return
+
 
         serverconfig = await adminFunctions.getServerConfig(await self.bot.get_context(message))
 
@@ -309,6 +307,10 @@ class jarvisFunctions(commands.Cog):
             elif text.startswith(prefix_no_comma):
                 return text[len(prefix_no_comma):].strip()
             return None
+        
+        if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
+            await message.add_reaction("❌")
+            return
 
         # --- 1. Check for TASK command ---
         task_command_phrase = "add this task"
