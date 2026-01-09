@@ -30,11 +30,14 @@ class UItools:
         if not category:
             return False
         try:
-            result = await self.bot.sql.databaseFetchrowDynamic(
-                '''SELECT 1 FROM channel_blocks WHERE channel_id = $1 AND category = $2;''',
+            result = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT * FROM channel_blocks WHERE channel_id = $1 AND category = $2;''',
                 [channel_id, category.lower()]
             )
-            return bool(result)
+            if len(result) == 0:
+                return False
+            else:
+                return True
         except Exception as ex:
             print(ex)
             print("consider running -setupChannelConfigTables")
