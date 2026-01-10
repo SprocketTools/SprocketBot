@@ -530,7 +530,8 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="sendGlobalUpdate", description="Send a global update to all servers.")
     async def sendGlobalUpdate(self, ctx: commands.Context):
-        if ctx.author.id != self.bot.owner_id:
+        if ctx.author.id != self.bot.ownerid:
+            await self.bot.error.sendError(ctx)
             return
         view = globalSendDropdownView()
         await ctx.send(content="Where are you sending today's update to?", view=view, ephemeral=True)
