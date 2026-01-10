@@ -156,7 +156,7 @@ class serverFunctions(commands.Cog):
 
     @commands.has_permissions(ban_members=True)
     @commands.hybrid_command(name="ban", type="ban", description="Ban a user")
-    async def ban(self, ctx: commands.Context, user: discord.Member, reason: str, days: int, delete_days: int):
+    async def ban(self, ctx: commands.Context, user: discord.Member, reason: str, days: int = 0, delete_days: int = 1):
         user_to_ban = user
         try:
             print(user.name)
@@ -174,7 +174,7 @@ class serverFunctions(commands.Cog):
             await user_to_ban.send(messageDM)
         except Exception:
             await ctx.send("Failed to notify the user; they likely have Sprocket Bot blocked.")
-        target_username = user_to_ban.name
+        target_username = user_to_ban.display_name
         try:
             await user_to_ban.ban(reason=f"Banned by {ctx.author.name} - {reason}", delete_message_days=delete_days)
             await ctx.send(f'Ban issued to **{target_username}**.')
