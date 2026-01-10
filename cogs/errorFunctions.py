@@ -20,7 +20,7 @@ class errorFunctions(commands.Cog):
         await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!  Now go add some errors in.")
 
-    @commands.hybrid_command(name="error", description="Get an error from the bot's catalog")
+    @commands.hybrid_command(name="error", description="Get an error from the bot's catalog", extras={'category': 'error'})
     async def error(self, ctx: commands.Context):
         await self.bot.error.sendError(ctx)
 

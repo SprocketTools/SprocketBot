@@ -307,7 +307,7 @@ class jarvisFunctions(commands.Cog):
             elif text.startswith(prefix_no_comma):
                 return text[len(prefix_no_comma):].strip()
             return None
-        
+
         if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
             await message.add_reaction("❌")
             return
