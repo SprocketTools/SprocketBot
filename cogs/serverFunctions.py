@@ -98,22 +98,35 @@ class serverFunctions(commands.Cog):
     @app_commands.guild_only()
     @commands.hybrid_command(name="warnings", description="View a member's warnings")
     async def warnings(self, ctx: commands.Context, user: Union[discord.Member, discord.User]):
-        # Supports User ID lookup even if they left the server
         data = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT * FROM modlogs WHERE userid = $1 AND serverid = $2;''', [user.id, ctx.guild.id])
         points_total = 0
+        warns_90 = 0
+        warns_365 = 0
+        now = datetime.datetime.now()
+        cutoff_90 = now - datetime.timedelta(days=90)
+        cutoff_365 = now - datetime.timedelta(days=365)
+
         embed = discord.Embed(title=f"{user.name}'s warnings", color=discord.Color.random())
+
         for rule in data:
             dt = await textTools.getUnixTimestamp(rule['timestamp'])
             embed.add_field(name=rule['name'],
                             value=f"{rule['description']}\nModerator: <@{rule['moderatorid']}>\nTime: <t:{dt}:f>",
                             inline=False)
+
             points_total += int(rule["points"])
+            if rule['timestamp'] > cutoff_90:
+                warns_90 += 1
+            if rule['timestamp'] > cutoff_365:
+                warns_365 += 1
+        embed.add_field(
+            name="Recent Activity",
+            value=f"Warnings (90 days): **{warns_90}**\nWarnings (365 days): **{warns_365}**",
+            inline=False
+        )
         embed.set_footer(text=f"Total points: {points_total}")
-
-        # FIX: display_avatar is safer than avatar.url (handles users with no pfp)
         embed.set_thumbnail(url=user.display_avatar.url)
-
         await ctx.send(embed=embed)
 
         if len(data) > 0:
@@ -122,7 +135,6 @@ class serverFunctions(commands.Cog):
                 warnList = []
                 warnData = {}
                 for rule in data:
-                    # Truncate description for dropdown if too long
                     desc_short = (rule['description'][:95] + '..') if len(rule['description']) > 95 else rule[
                         'description']
                     warnList.append(desc_short)
@@ -150,13 +162,29 @@ class serverFunctions(commands.Cog):
     @app_commands.guild_only()
     @commands.hybrid_command(name="note", description="Leave a mod-visible note about a user")
     async def note(self, ctx: commands.Context, user: Union[discord.Member, discord.User], reason: str, points: int):
-        # Allows noting a user ID even if they aren't in the server
         ruleName = "Staff note"
         logValues = [random.randint(1, 123456789), ctx.guild.id, user.id, ctx.author.id, ruleName, reason, points,
                      datetime.datetime.now(), datetime.datetime.now(), "warning"]
         await self.bot.sql.databaseExecuteDynamic(
             '''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);''', logValues)
-        await ctx.send(f'Note logged for **{user.name}**.')
+
+        # Fetch stats to display
+        data = await self.bot.sql.databaseFetchdictDynamic(
+            '''SELECT * FROM modlogs WHERE userid = $1 AND serverid = $2;''', [user.id, ctx.guild.id])
+        points_total = 0
+        warns_90 = 0
+        warns_365 = 0
+        now = datetime.datetime.now()
+
+        for rule in data:
+            points_total += int(rule["points"])
+            if rule['timestamp'] > now - datetime.timedelta(days=90):
+                warns_90 += 1
+            if rule['timestamp'] > now - datetime.timedelta(days=365):
+                warns_365 += 1
+
+        await ctx.send(
+            f'Note logged for **{user.name}**.\n\nTotal points: {points_total}\nWarnings (90d): {warns_90}\nWarnings (365d): {warns_365}')
 
     @note.error
     async def note_error(self, ctx, error):
@@ -171,7 +199,6 @@ class serverFunctions(commands.Cog):
     @app_commands.guild_only()
     @commands.hybrid_command(name="warn", description="Issue a warning")
     async def warn(self, ctx: commands.Context, user: Union[discord.Member, discord.User], reason: str):
-        # Allows warning a user ID (logs to DB, attempts DM if possible)
         data = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT name, description, points FROM modrules WHERE serverid = $1;''', [ctx.guild.id])
         dataOut = []
@@ -198,23 +225,33 @@ class serverFunctions(commands.Cog):
             messageDM = f"You have been warned in **{ctx.guild.name}**\nReason: {reason}\nRule broken: {ruleName}"
             await user.send(messageDM)
         except Exception:
-            await ctx.send(f"Could not notify user - they're either not in the server or have {self.bot.user.mention} blocked.")
+            await ctx.send("User is not in the server or has DMs blocked. Warning has been logged to database.")
 
-        points_total = 0
+        # Fetch stats to display
         data = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT * FROM modlogs WHERE userid = $1 AND serverid = $2;''', [user.id, ctx.guild.id])
+        points_total = 0
+        warns_90 = 0
+        warns_365 = 0
+        now = datetime.datetime.now()
+
         for rule in data:
             points_total += int(rule["points"])
-        await ctx.send(f"Warning issued to **{user.name}**.\n\nTotal points: {points_total}")
+            if rule['timestamp'] > now - datetime.timedelta(days=90):
+                warns_90 += 1
+            if rule['timestamp'] > now - datetime.timedelta(days=365):
+                warns_365 += 1
+
+        await ctx.send(
+            f"⚠Warning issued to **{user.name}**.\n\nTotal points: {points_total}\nWarnings (90d): {warns_90}\nWarnings (365d): {warns_365}")
 
     @warn.error
     async def warn_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Could not find that user. Try using their User ID.", ephemeral=True)
+            await ctx.send("❌ Could not find that user. Try using their User ID.", ephemeral=True)
         else:
-            await ctx.send(f"Error: {error}", ephemeral=True)
+            await ctx.send(f"❌ Error: {error}", ephemeral=True)
 
-    # --- BAN COMMAND ---
     @commands.has_permissions(ban_members=True)
     @app_commands.default_permissions(ban_members=True)
     @app_commands.guild_only()
@@ -253,28 +290,28 @@ class serverFunctions(commands.Cog):
             messageDM = f"You have been banned from **{ctx.guild.name}**\nReason: {reason}\nDuration: {days} days\n{ban_msg_content}"
             await user_to_ban.send(messageDM)
         except Exception:
-            await ctx.send("Failed to notify the user - they're either not in the server, have DMs closed, or blocked the bot.")
+            await ctx.send("Failed to notify the user (DMs closed or bot blocked).")
 
         # 3. Execute Ban
         target_username = user_to_ban.display_name if hasattr(user_to_ban, "display_name") else user_to_ban.name
         try:
             await ctx.guild.ban(user_to_ban, reason=f"Banned by {ctx.author.name} - {reason}",
                                 delete_message_seconds=delete_days * 86400)
-            await ctx.send(f'**{target_username}** has been banned.')
+            await ctx.send(f'✅ **{target_username}** has been banned.')
         except Exception as e:
-            await ctx.send(f'Failed to ban user: {e}')
+            await ctx.send(f'❌ Failed to ban user on Discord: {e}')
 
     @ban.error
     async def ban_error(self, ctx, error):
         print(f"DEBUG: Ban Error: {error}")
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to ban members.", ephemeral=True)
+            await ctx.send("❌ You do not have permission to ban members.", ephemeral=True)
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send(f"I do not have permission to ban members.  Make sure {self.bot.user.mention} has adequate perms.", ephemeral=True)
+            await ctx.send("❌ I do not have permission to ban members.", ephemeral=True)
         elif isinstance(error, commands.BadArgument):
-            await ctx.send("Could not find that user. Try using their User ID.", ephemeral=True)
+            await ctx.send("❌ Could not find that user. Try using their User ID.", ephemeral=True)
         else:
-            await ctx.send(f"Error: {error}", ephemeral=True)
+            await ctx.send(f"❌ Error: {error}", ephemeral=True)
 
     @app_commands.command(name="roll", description="🎲 roll a dice")
     async def roll(self, interaction):
