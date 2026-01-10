@@ -303,10 +303,10 @@ class githubTools(commands.Cog):
         print("ASE")
         totalErrors = len(await self.bot.sql.databaseFetchdict(f'SELECT strippedname FROM imagecatalog;'))
         embed = discord.Embed(title="Decal & Paint Leaderboard", description=f'''There are {totalErrors} decals and paint jobs in the bot's collection!''',color=discord.Color.random())
-        userSetList = await self.bot.sql.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM imagecatalog GROUP BY userid ORDER BY value_occurrence DESC LIMIT 10;''')
+        userSetList = await self.bot.sql.databaseFetchdict(f'''SELECT ownerid, COUNT(ownerid) AS value_occurrence FROM imagecatalog GROUP BY ownerid ORDER BY value_occurrence DESC LIMIT 10;''')
         for user in userSetList:
-            embed.add_field(name=self.bot.get_user(user['userid']), value=user['value_occurrence'], inline=False)
-        currentUser = (await self.bot.sql.databaseFetchdictDynamic(f'''SELECT userid, COUNT(userid) AS value_occ FROM imagecatalog WHERE userid = $1 GROUP BY userid;''', [ctx.author.id]))[0]['value_occ']
+            embed.add_field(name=self.bot.get_user(user['ownerid']), value=user['value_occurrence'], inline=False)
+        currentUser = (await self.bot.sql.databaseFetchdictDynamic(f'''SELECT ownerid, COUNT(ownerid) AS value_occ FROM imagecatalog WHERE ownerid = $1 GROUP BY ownerid;''', [ctx.author.id]))[0]['value_occ']
         print(currentUser)
         embed.set_footer(text=f"You have {currentUser} images registered with the bot!")
         await ctx.send(embed=embed)
