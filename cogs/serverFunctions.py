@@ -92,7 +92,7 @@ class serverFunctions(commands.Cog):
         embed.set_footer(text="Add rules using the /addrule slash command!")
         await ctx.send(embed=embed)
 
-    # --- WARNINGS COMMAND (UPDATED) ---
+    # --- WARNINGS COMMAND (UPDATED FOR POINTS) ---
     @commands.has_permissions(ban_members=True)
     @app_commands.default_permissions(ban_members=True)
     @app_commands.guild_only()
@@ -100,9 +100,10 @@ class serverFunctions(commands.Cog):
     async def warnings(self, ctx: commands.Context, user: Union[discord.Member, discord.User]):
         data = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT * FROM modlogs WHERE userid = $1 AND serverid = $2;''', [user.id, ctx.guild.id])
+
         points_total = 0
-        warns_90 = 0
-        warns_365 = 0
+        points_90 = 0
+        points_365 = 0
         now = datetime.datetime.now()
         cutoff_90 = now - datetime.timedelta(days=90)
         cutoff_365 = now - datetime.timedelta(days=365)
@@ -115,18 +116,23 @@ class serverFunctions(commands.Cog):
                             value=f"{rule['description']}\nModerator: <@{rule['moderatorid']}>\nTime: <t:{dt}:f>",
                             inline=False)
 
-            points_total += int(rule["points"])
+            p = int(rule["points"])
+            points_total += p
+
+            # Sum points instead of counting entries
             if rule['timestamp'] > cutoff_90:
-                warns_90 += 1
+                points_90 += p
             if rule['timestamp'] > cutoff_365:
-                warns_365 += 1
+                points_365 += p
+
         embed.add_field(
             name="Recent Activity",
-            value=f"Warnings (90 days): **{warns_90}**\nWarnings (365 days): **{warns_365}**",
+            value=f"Points (90 days): **{points_90}**\nPoints (365 days): **{points_365}**",
             inline=False
         )
-        embed.set_footer(text=f"Total points: {points_total}")
+        embed.set_footer(text=f"Total Lifetime Points: {points_total}")
         embed.set_thumbnail(url=user.display_avatar.url)
+
         await ctx.send(embed=embed)
 
         if len(data) > 0:
@@ -152,11 +158,11 @@ class serverFunctions(commands.Cog):
     @warnings.error
     async def warnings_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Could not find that user. Try using their User ID.", ephemeral=True)
+            await ctx.send("❌ Could not find that user. Try using their User ID.", ephemeral=True)
         else:
-            await ctx.send(f"Error: {error}", ephemeral=True)
+            await ctx.send(f"❌ Error: {error}", ephemeral=True)
 
-    # --- NOTE COMMAND (UPDATED) ---
+    # --- NOTE COMMAND (UPDATED FOR POINTS) ---
     @commands.has_permissions(ban_members=True)
     @app_commands.default_permissions(ban_members=True)
     @app_commands.guild_only()
@@ -168,32 +174,35 @@ class serverFunctions(commands.Cog):
         await self.bot.sql.databaseExecuteDynamic(
             '''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);''', logValues)
 
-        # Fetch stats to display
+        # Calculate Stats
         data = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT * FROM modlogs WHERE userid = $1 AND serverid = $2;''', [user.id, ctx.guild.id])
         points_total = 0
-        warns_90 = 0
-        warns_365 = 0
+        points_90 = 0
+        points_365 = 0
         now = datetime.datetime.now()
+        cutoff_90 = now - datetime.timedelta(days=90)
+        cutoff_365 = now - datetime.timedelta(days=365)
 
         for rule in data:
-            points_total += int(rule["points"])
-            if rule['timestamp'] > now - datetime.timedelta(days=90):
-                warns_90 += 1
-            if rule['timestamp'] > now - datetime.timedelta(days=365):
-                warns_365 += 1
+            p = int(rule["points"])
+            points_total += p
+            if rule['timestamp'] > cutoff_90:
+                points_90 += p
+            if rule['timestamp'] > cutoff_365:
+                points_365 += p
 
         await ctx.send(
-            f'Note logged for **{user.name}**.\n\nTotal points: {points_total}\nWarnings (90d): {warns_90}\nWarnings (365d): {warns_365}')
+            f'✅ Note logged for **{user.name}**.\n\nTotal points: {points_total}\nPoints (90d): {points_90}\nPoints (365d): {points_365}')
 
     @note.error
     async def note_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Could not find that user. Try using their User ID.", ephemeral=True)
+            await ctx.send("❌ Could not find that user. Try using their User ID.", ephemeral=True)
         else:
-            await ctx.send(f"Error: {error}", ephemeral=True)
+            await ctx.send(f"❌ Error: {error}", ephemeral=True)
 
-    # --- WARN COMMAND (UPDATED) ---
+    # --- WARN COMMAND (UPDATED FOR POINTS) ---
     @commands.has_permissions(ban_members=True)
     @app_commands.default_permissions(ban_members=True)
     @app_commands.guild_only()
@@ -227,23 +236,26 @@ class serverFunctions(commands.Cog):
         except Exception:
             await ctx.send("User is not in the server or has DMs blocked. Warning has been logged to database.")
 
-        # Fetch stats to display
+        # Calculate Stats
         data = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT * FROM modlogs WHERE userid = $1 AND serverid = $2;''', [user.id, ctx.guild.id])
         points_total = 0
-        warns_90 = 0
-        warns_365 = 0
+        points_90 = 0
+        points_365 = 0
         now = datetime.datetime.now()
+        cutoff_90 = now - datetime.timedelta(days=90)
+        cutoff_365 = now - datetime.timedelta(days=365)
 
         for rule in data:
-            points_total += int(rule["points"])
-            if rule['timestamp'] > now - datetime.timedelta(days=90):
-                warns_90 += 1
-            if rule['timestamp'] > now - datetime.timedelta(days=365):
-                warns_365 += 1
+            p = int(rule["points"])
+            points_total += p
+            if rule['timestamp'] > cutoff_90:
+                points_90 += p
+            if rule['timestamp'] > cutoff_365:
+                points_365 += p
 
         await ctx.send(
-            f"⚠Warning issued to **{user.name}**.\n\nTotal points: {points_total}\nWarnings (90d): {warns_90}\nWarnings (365d): {warns_365}")
+            f"⚠️ Warning issued to **{user.name}**.\n\nTotal points: {points_total}\nPoints (90d): {points_90}\nPoints (365d): {points_365}")
 
     @warn.error
     async def warn_error(self, ctx, error):
