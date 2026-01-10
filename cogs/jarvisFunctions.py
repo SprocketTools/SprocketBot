@@ -308,9 +308,9 @@ class jarvisFunctions(commands.Cog):
                 return text[len(prefix_no_comma):].strip()
             return None
 
-        if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
-            await message.add_reaction("❌")
-            return
+        # if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
+        #     await message.add_reaction("❌")
+        #     return
 
         # --- 1. Check for TASK command ---
         task_command_phrase = "add this task"
