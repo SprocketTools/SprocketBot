@@ -28,7 +28,7 @@ except Exception as e:
 imageCategoryList = ["Featured", "Anime", "Chalk", "Fictional Insignia", "Flags", "Historical Insignia", "Inscriptions", "Labels",
                      "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Symbols", "Textures",
                      "Weathering", "Welding", "RGB Maker"]
-paintCategoryList = ["Featured", "WWI", "WWII", "Cold War", "Modern", "Fictional", "Memes"]
+paintCategoryList = ["Featured", "WWI", "WWII", "Cold War", "Modern", "Fictional", "Memes", "Other"]
 # GithubURL = "git@github.com:SprocketTools/SprocketTools.github.io.git"
 username = 'SprocketTools'
 password = main.githubPAT
