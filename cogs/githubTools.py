@@ -298,6 +298,19 @@ class githubTools(commands.Cog):
         else:
             await ctx.send("No changes were made to the files, so no GitHub push was required.")
 
+    @commands.command(name="decalLeaderboard", description="Leaderboard of decals!", extras={'category': 'utility'})
+    async def decalLeaderboard(self, ctx: commands.Context):
+        print("ASE")
+        totalErrors = len(await self.bot.sql.databaseFetchdict(f'SELECT strippedname FROM imagecatalog;'))
+        embed = discord.Embed(title="Decal Stats", description=f'''There are {totalErrors} decals and paint jobs in the bot's collection!''',color=discord.Color.random())
+        userSetList = await self.bot.sql.databaseFetchdict(f'''SELECT userid, COUNT(userid) AS value_occurrence FROM imagecatalog GROUP BY userid ORDER BY value_occurrence DESC LIMIT 10;''')
+        for user in userSetList:
+            embed.add_field(name=self.bot.get_user(user['userid']), value=user['value_occurrence'], inline=False)
+        currentUser = (await self.bot.sql.databaseFetchdictDynamic(f'''SELECT userid, COUNT(userid) AS value_occ FROM imagecatalog WHERE userid = $1 GROUP BY userid;''', [ctx.author.id]))[0]['value_occ']
+        print(currentUser)
+        embed.set_footer(text=f"You have {currentUser} errors registered with the bot!")
+        await ctx.send(embed=embed)
+
     @commands.command(name="removeDecal", description="Remove a decal from the SprocketTools website")
     async def removeDecal(self, ctx):
         if ctx.author.id != 712509599135301673:
