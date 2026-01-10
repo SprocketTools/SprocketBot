@@ -279,9 +279,7 @@ class jarvisFunctions(commands.Cog):
 
         if not self.bot.operational and (message.author.id != self.bot.owner_id):
             return
-
-
-
+        print("AA")
         serverconfig = await adminFunctions.getServerConfig(await self.bot.get_context(message))
 
         content_lower = message.content.lower().strip()
@@ -311,6 +309,8 @@ class jarvisFunctions(commands.Cog):
         # if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
         #     await message.add_reaction("❌")
         #     return
+
+        print("AA")
 
         # --- 1. Check for TASK command ---
         task_command_phrase = "add this task"
