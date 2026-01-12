@@ -29,7 +29,7 @@ class blueprintAnalysisTools:
         try:
             # 1. Coordinate Transformations
             # Re-apply Horizontal Flip (Invert X) to match game orientation
-            vertices[:, 0] *= -1
+            #vertices[:, 0] *= -1
 
             # Swap axes for Matplotlib (Sprocket Y-up -> Matplotlib Z-up)
             # Old X -> New X (0 -> 0)
