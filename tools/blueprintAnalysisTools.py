@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import json
 import math
 import discord
@@ -61,7 +62,7 @@ class blueprintAnalysisTools:
 
             # 3. Frame Rendering Loop
             for i in range(iframes):
-                fig = plt.figure(figsize=(8, 8), dpi=150)  # Reduced DPI slightly for speed
+                fig = plt.figure(figsize=(8, 8), dpi=150)
                 ax = fig.add_subplot(111, projection='3d')
 
                 mesh_collection = Poly3DCollection(
@@ -593,3 +594,326 @@ class blueprintAnalysisTools:
         except Exception as e:
             print(f"Blueprint Analysis Error: {e}")
             return {'valid': False, 'error': str(e)}
+
+    async def bakeGeometryV2(ctx: commands.Context, attachment):
+        blueprintData = json.loads(await attachment.read())
+        blueprintDataSave = json.loads(await attachment.read())
+        name = blueprintData["header"]["name"]
+        version = blueprintData["header"]["gameVersion"]
+        compartmentList = {}
+        meshesOut = {}
+        # add all compartments to a list that can be called back from later
+        i = 0
+        for component in blueprintData["blueprints"]:
+            if component["type"] == "structure":
+
+                if blueprintData["blueprints"][i]["blueprint"]["name"] is None:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = "Hull"
+                nameOut = blueprintData["blueprints"][i]["blueprint"]["name"]
+                if nameOut in compartmentList:
+                    blueprintData["blueprints"][i]["blueprint"]["name"] = f"{nameOut} (Vuid {i})"
+                positionID = blueprintData["blueprints"][i]["id"]
+
+                meshID = blueprintData["blueprints"][i]["blueprint"]["bodyMeshVuid"]
+                compartmentList[positionID] = {"PositionID": positionID, "meshID": meshID}
+                print(positionID)
+                print("hiiiii")
+                for object in blueprintData["objects"]:
+                    if "structureBlueprintVuid" in object:
+                        object["isbase"] = False
+                        if object["structureBlueprintVuid"] == positionID:
+                            compartmentList[positionID]["transform"] = object["transform"]
+                            compartmentList[positionID]["isbase"] = False
+                            if object["pvuid"] == -1 and "structureBlueprintVuid" in object:
+                                compartmentList[positionID]["isbase"] = True
+                                object["isbase"] = True
+                            compartmentList[positionID]["flags"] = int(object["flags"])
+                            compartmentList[positionID]["pvuid"] = int(object["pvuid"])
+                            compartmentList[positionID]["vuid"] = int(object["vuid"])
+
+                # usage of this is questionable
+                # for object in blueprintData["objects"]:
+                #     if "basketBlueprintVuid" in object:
+                #         if object["compartmentBodyID"]["structureVuid"] == compartmentList[positionID]["vuid"]:
+                #             compartmentList[positionID]["transform"] = numpy.add(object["transform"]["pos"],
+                #                                                                  compartmentList[positionID][
+                #                                                                      "transform"]["pos"]).tolist()
+                #             compartmentList[positionID]["pvuid"] = int(object["pvuid"])
+                #             compartmentList[positionID]["vuid"] = int(object["vuid"])
+
+                # for object in blueprintData["objects"]:
+                #     for compartment in compartmentList:
+                #         if int(object["vuid"]) == int(compartment["pvuid"]):
+                #             print("Hi!")
+                #             positionID = compartment["positionID"]
+                #             compartmentList[positionID]["transform"]["pos"] = numpy.add(object["transform"]["pos"], compartmentList[positionID]["transform"]["pos"])
+                #             compartmentList[positionID]["transform"]["rot"] = numpy.add(object["transform"]["rot"], compartmentList[positionID]["transform"]["rot"])
+                #             compartmentList[positionID]["transform"]["scale"] = numpy.multiply(object["transform"]["scale"], compartmentList[positionID]["transform"]["scale"])
+            i += 1
+        i = 0
+        for object in blueprintData["objects"]:
+            if "ringBlueprintVuid" in object:
+                blueprintData["objects"][i]["isbase"] = True
+            elif object["pvuid"] == -1 and "structureBlueprintVuid" in object:
+                blueprintData["objects"][i]["isbase"] = True
+            else:
+                blueprintData["objects"][i]["isbase"] = True
+            # if object["pvuid"] == -1 and "structureBlueprintVuid" in object:
+            #     compartmentList[i]["isbase"] = True
+            i += 1
+        # i = 0
+        compartmentListOriginal = compartmentList.copy()
+        if len(str(compartmentListOriginal)) > 90000:
+            await ctx.send("This tank is too big to process!")
+            return
+        # # apply structure offsets to have all compartments centered at [0,0,0] and save their meshes to the base vehicle
+        for compartment in compartmentListOriginal:
+            compartmentList = compartmentListOriginal.copy()
+            # print(compartmentList)
+            # print(compartment)
+            relevantObjectID = compartmentList[compartment]["PositionID"]
+
+            for object in blueprintData["objects"]:
+
+                if "structureBlueprintVuid" in object:
+                    if object["structureBlueprintVuid"] == relevantObjectID:
+                        # this is the structure we need to relocate
+                        # start by setting its base position to zero
+
+                        compartmentList[relevantObjectID]["transform"]["pos"] = (
+                        compartmentListOriginal[relevantObjectID]["transform"]["pos"])
+                        compartmentList[relevantObjectID]["transform"]["rot"] = (
+                        compartmentListOriginal[relevantObjectID]["transform"]["rot"])
+                        compartmentList[relevantObjectID]["transform"]["scale"] = (
+                        compartmentListOriginal[relevantObjectID]["transform"]["scale"])
+                        requireMirror = False
+
+                        # parts need to be mirrored from here
+                        # use flags of 7 = mirrored on hull
+                        # 6 = mirrored on another addon
+                        relevantBodyMeshID = compartmentList[relevantObjectID]["meshID"]
+                        i = 0
+                        for meshData in blueprintData["meshes"]:
+                            if meshData["vuid"] == relevantBodyMeshID:
+                                meshesOut[relevantObjectID] = copy.deepcopy(blueprintDataSave["meshes"][i])
+                                meshesOut[relevantObjectID]["mirrored"] = False
+                                newPoints = await runMeshTranslation(ctx,
+                                                                                        meshesOut[relevantObjectID],
+                                                                                        object["transform"])
+                                print(compartmentList[relevantObjectID])
+
+                                meshesOut[relevantObjectID]["meshData"]["mesh"]["vertices"] = newPoints
+
+                                # print(f"initial update for VUID{relevantBodyMeshID}!")
+                                # for eee, iee in meshesOut.items():
+                                #     print(iee)
+                            i += 1
+
+                        # for eee, meshData in meshesOut.items():
+                        #     print(eee)
+                        #     print(meshData["meshData"]["mesh"]["vertices"])
+                        # print("--^--^--")
+
+                        # objects with a pvuid of x are attached to a vuid of x.  Loop until the pvuid = -1
+                        activeVuid = object["vuid"]
+                        activePvuid = object["pvuid"]
+                        # print(activeVuid)
+                        while int(activePvuid) > -1:
+                            for subobject in blueprintData["objects"]:
+                                if subobject["vuid"] == activePvuid:
+                                    # print(f"{activePvuid} is the active PVUID")
+                                    relevantBodyMeshID = compartmentList[relevantObjectID]["meshID"]
+                                    i = 0
+                                    for eee, meshData in meshesOut.items():
+                                        if eee == relevantObjectID:
+                                            newPoints = await runMeshTranslation(ctx, meshesOut[
+                                                relevantObjectID], subobject["transform"])
+                                            print(
+                                                f"{len(newPoints)} +++ {compartmentList[relevantObjectID]['isbase']} +++ {meshesOut[relevantObjectID]['mirrored']}")
+
+                                            # mirror if running into a base --- compartmentList[relevantObjectID]["isbase"] == True and meshesOut[relevantObjectID]["mirrored"] == False
+                                            if compartmentList[relevantObjectID]["flags"] == 6 or \
+                                                    compartmentList[relevantObjectID]["flags"] == 7:
+                                                if subobject["isbase"] == True and meshesOut[relevantObjectID][
+                                                    "mirrored"] == False:
+                                                    print(
+                                                        f'''Starting a mirror!!\n{compartmentList[relevantObjectID]['flags']}\n{eee}''')
+                                                    facesList = copy.deepcopy(
+                                                        meshesOut[relevantObjectID]["meshData"]["mesh"]["faces"])
+                                                    netPartPointsLength = len(newPoints)
+                                                    netPartPointCount = int(netPartPointsLength) / 3
+                                                    print(object["transform"])
+                                                    newPoints = copy.deepcopy(
+                                                        newPoints) + await runMeshMirror(ctx,
+                                                                                                            meshesOut[
+                                                                                                                relevantObjectID],
+                                                                                                            subobject[
+                                                                                                                "transform"])
+                                                    print(newPoints)
+                                                    for facein in meshesOut[relevantObjectID]["meshData"]["mesh"][
+                                                        "faces"]:
+                                                        face = copy.deepcopy(facein)
+                                                        i = 0
+                                                        for facepoint in face["v"]:
+                                                            face["v"][i] = int(
+                                                                int(face["v"][i]) + int(netPartPointCount))
+                                                            # print(face["v"][i])
+                                                            i += 1
+                                                        facesList.append(face)
+                                                    meshesOut[relevantObjectID]["meshData"]["mesh"][
+                                                        "vertices"] = newPoints
+                                                    meshesOut[relevantObjectID]["meshData"]["mesh"]["faces"] = facesList
+                                                    meshesOut[relevantObjectID]["mirrored"] = True
+                                            else:
+                                                meshesOut[relevantObjectID]["meshData"]["mesh"]["vertices"] = newPoints
+                                        i += 1
+                                    activeVuid = subobject["vuid"]
+                                    activePvuid = subobject["pvuid"]
+
+        # print(compartmentList)
+        # copy all the meshes over to the hull
+        verticesList = []
+        facesList = []
+        verticesOffset = 0
+        for component in blueprintData["blueprints"]:
+            if component["type"] == "structure":
+                objectID = component["id"]
+                relevantBodyMeshID = component["blueprint"]["bodyMeshVuid"]
+                sourcePartInfo = compartmentList[objectID]["transform"]
+                # print(meshesOut)
+                for eee, meshData in meshesOut.items():
+                    # print("Got data for #" + str(eee))
+                    if meshData["vuid"] == relevantBodyMeshID:
+                        # print("Using data for #" + str(eee))
+                        # print("Hi!")
+
+                        sourcePartPosX = sourcePartInfo["pos"][0]
+                        sourcePartPosY = sourcePartInfo["pos"][1]
+                        sourcePartPosZ = sourcePartInfo["pos"][2]
+                        sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+                        sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+                        sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+                        sourcePartPoints = meshData["meshData"]["mesh"]["vertices"]
+                        sourcePartPointsLength = len(sourcePartPoints)
+                        netPartPointsLength = len(verticesList)
+                        netPartPointCount = int(netPartPointsLength) / 3
+
+                        # shared point lists (adjusted to not overlap with current faces)
+                        verticesList = verticesList + sourcePartPoints
+                        for facein in meshData["meshData"]["mesh"]["faces"]:
+                            face = copy.deepcopy(facein)
+                            i = 0
+                            for facepoint in face["v"]:
+                                face["v"][i] = int(int(face["v"][i]) + int(netPartPointCount))
+                                # print(face["v"][i])
+                                i += 1
+                            facesList.append(face)
+                        # print(verticesList)
+
+        # print(verticesList)
+        blueprintData["meshes"][0]["meshData"]["mesh"]["vertices"] = verticesList
+        blueprintData["meshes"][0]["meshData"]["mesh"]["faces"] = facesList
+        netPartPointsLength = len(verticesList)
+        netPartPointCount = max(int(netPartPointsLength) / 3 - 1, 0)
+        # print(f"There is {netPartPointsLength} vector elements and {netPartPointCount} points.")
+
+        return blueprintData
+
+async def runMeshTranslation(ctx: commands.Context, meshData, sourcePartInfo):
+    # print("Hi!")
+
+    sourcePartPosX = sourcePartInfo["pos"][0]
+    sourcePartPosY = sourcePartInfo["pos"][1]
+    sourcePartPosZ = sourcePartInfo["pos"][2]
+    sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+    sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+    sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+    sourcePartPoints = meshData["meshData"]["mesh"]["vertices"]
+    sourcePartPointsLength = len(sourcePartPoints)
+
+    # sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+    # sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+    # sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+    # point positions (accounting for position + rotation)
+    pos = 0
+    # vector rotation
+    while pos < sourcePartPointsLength:
+        roundPoint = 6
+        vector = [sourcePartPoints[pos], sourcePartPoints[pos + 1], sourcePartPoints[pos + 2]]
+        # angles = [sourcePartRotZ, sourcePartRotY, -1*sourcePartRotX]
+        angles = [-1 * sourcePartRotX, -1 * sourcePartRotY, -1 * sourcePartRotZ]
+
+        newVector = braveRotateVector(vector, angles)
+
+        # newVector = rotateVector(vector, angles)
+        sourcePartPoints[pos] = round(newVector[0] + sourcePartPosX, roundPoint)
+        sourcePartPoints[pos + 1] = round(newVector[1] + sourcePartPosY, roundPoint)
+        sourcePartPoints[pos + 2] = round(newVector[2] + sourcePartPosZ, roundPoint)
+        pos += 3
+    # shared point lists (adjusted to not overlap with current faces)
+    return sourcePartPoints
+
+def braveRotateVector(vector, rot):
+    import numpy as np
+    rotX = rot[0]
+    rotY = rot[1]
+    rotZ = rot[2]
+    # Define the rotation matrices for each plane
+    matrixX = np.array([[1, 0, 0],
+                        [0, np.cos(rotX), -np.sin(rotX)],
+                        [0, np.sin(rotX), np.cos(rotX)]])
+
+    matrixY = np.array([[np.cos(rotY), 0, np.sin(rotY)],
+                        [0, 1, 0],
+                        [-np.sin(rotY), 0, np.cos(rotY)]])
+
+    matrixZ = np.array([[np.cos(rotZ), -np.sin(rotZ), 0],
+                        [np.sin(rotZ), np.cos(rotZ), 0],
+                        [0, 0, 1]])
+
+    # Define the original vector
+    # vector = np.array([1, 2, 3])
+
+    # Rotate the vector around the XY plane
+    # vector_xy = np.dot(vector, matrixX)
+
+    # Rotate the vector around the YZ plane
+    # vector_yz = np.dot(vector_xy, matrixY)
+
+    # Rotate the vector around the XZ plane
+    # vector_xz = np.dot(vector_yz, matrixZ)
+
+    # Z comes before X
+    # Y is not in the middle
+
+    vector_xz = np.dot(vector, matrixZ)
+
+    vector_xy = np.dot(vector_xz, matrixX)
+    vector_yz = np.dot(vector_xy, matrixY)
+
+    # Print the final rotated vector
+    return vector_yz
+
+async def runMeshMirror(ctx: commands.Context, meshData, sourcePartInfo):
+    # print("Hi!")
+
+    sourcePartPosX = sourcePartInfo["pos"][0]
+    sourcePartPosY = sourcePartInfo["pos"][1]
+    sourcePartPosZ = sourcePartInfo["pos"][2]
+    sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+    sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+    sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+    sourcePartPoints = meshData["meshData"]["mesh"]["vertices"]
+    sourcePartPointsLength = len(sourcePartPoints)
+
+    # sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+    # sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+    # sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+    # point positions (accounting for position + rotation)
+    pos = 0
+    # vector rotation
+    while pos < sourcePartPointsLength:
+        sourcePartPoints[pos] = -1 * (sourcePartPoints[pos])
+        pos += 3
+    # shared point lists (adjusted to not overlap with current faces)
+    return sourcePartPoints

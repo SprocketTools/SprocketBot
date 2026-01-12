@@ -637,8 +637,8 @@ class blueprintFunctions2(commands.Cog):
                 title=f"{blueprint_data['header']['name']} Stats",
                 color=discord.Color.random()
             )
-
-            image_show = await self.bot.analyzer.generate_blueprint_gif(blueprint_data["meshes"][0]["meshData"]["mesh"], blueprint_data['header']['name'])
+            blueprintDataSave = await self.bot.analyzer.bakeGeometryV2(attachment)
+            image_show = await self.bot.analyzer.generate_blueprint_gif(blueprintDataSave["meshes"][0]["meshData"]["mesh"], blueprint_data['header']['name'])
             embed.set_image(url=f"attachment://{image_show.filename}")
             embed.set_footer(text=f"Owner: {ctx.author.display_name} | Vehicle ID: {stats['vehicle_id']}")
             embed.add_field(name="Era", value=f"{stats['vehicle_era']}")
