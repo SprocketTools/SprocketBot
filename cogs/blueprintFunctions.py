@@ -1,3 +1,4 @@
+import asyncio
 import random
 import discord, json, math, numpy, copy, io, requests
 import matplotlib.pyplot as plt
@@ -1070,115 +1071,46 @@ class blueprintFunctions(commands.Cog):
                     "Place this model into `%userprofile%\Documents\My Games\Sprocket\Factions\Default\Blueprints\Vehicles` and load the new tank.")
             i += 1
 
-    @commands.command(name="drawFrame", description="Renders a 3D wireframe GIF of a vehicle blueprint.", extras={'category': 'utility'})
+    # --- COMMAND: DrawFrame ---
+    @commands.command(name="drawFrame", description="Renders a 3D wireframe GIF of a vehicle blueprint.",
+                      extras={'category': 'utility'})
     async def drawFrame(self, ctx: commands.Context):
+        if not ctx.message.attachments:
+            return await ctx.send("Please upload a .blueprint file.")
+
         await ctx.send("Beginning processing now. This may take a while...")
+
         for attachment in ctx.message.attachments:
             try:
                 if attachment.size > 2100000:
                     await self.bot.error.sendCategorizedError(ctx, "blueprint")
-                    await ctx.send("This blueprint is too large!  Stick to blueprints under 2MB.")
-                else:
-                    # --- 1. Data Preparation ---
-                    blueprintData = json.loads(await attachment.read())
-                    name = blueprintData["header"]["name"]
+                    await ctx.send("This blueprint is too large! Stick to blueprints under 2MB.")
+                    continue
 
-                    if "0.2" in blueprintData["header"]["gameVersion"]:
-                        blueprintDataSave = await blueprintFunctions.bakeGeometry210(self, attachment)
-                    else:
-                        await ctx.send("This command only supports v0.2+ blueprints for rendering.")
-                        return
+                # 1. Parse & Bake (Async)
+                blueprintData = json.loads(await attachment.read())
+                name = blueprintData["header"]["name"]
 
-                    meshData = blueprintDataSave["meshes"][0]["meshData"]["mesh"]
-                    verticesList = meshData["vertices"]
-                    faceList = meshData["faces"]
+                if "0.2" not in blueprintData["header"]["gameVersion"]:
+                    await ctx.send("This command only supports v0.2+ blueprints.")
+                    continue
 
-                    # Convert flat vertex list to a NumPy array of [x, y, z] coordinates
-                    if not verticesList:
-                        await ctx.send("Could not find any vertices to render.")
-                        return
-                    vertices = numpy.array(verticesList).reshape(-1, 3)
-                    vertices = vertices[:, [0, 2, 1]]
+                # Assuming bakeGeometry200 is available in this class
+                blueprintDataSave = await self.bakeGeometry200(attachment)
+                meshData = blueprintDataSave["meshes"][0]["meshData"]["mesh"]
 
-                    # --- 2. Setup for Rendering Loop ---
-                    images = []
-                    iframes = 12  # Increase frames for a smoother GIF
+                # 2. Render GIF (Async/Threaded)
+                imageOut = await self.bot.analyzer.generate_blueprint_gif(meshData, name)
 
-                    # Pre-calculate the model's bounds to keep the camera framing consistent
-                    x_min, x_max = vertices[:, 0].min(), vertices[:, 0].max()
-                    y_min, y_max = vertices[:, 1].min(), vertices[:, 1].max()
-                    z_min, z_max = vertices[:, 2].min(), vertices[:, 2].max()
-
-                    # Find the center and the largest dimension to create a cubic plot area
-                    center = numpy.array(
-                        [numpy.mean([x_min, x_max]), numpy.mean([y_min, y_max]), numpy.mean([z_min, z_max])])
-                    max_range = numpy.array(
-                        [x_max - x_min, y_max - y_min, z_max - z_min]).max() / 2.0 * 1.1  # Add 10% padding
-
-                    # --- 3. Rendering Loop ---
-                    for i in range(iframes):
-                        # Create a Matplotlib Figure and a 3D subplot
-                        fig = plt.figure(figsize=(8, 8), dpi=200)  # Control image size and resolution
-                        ax = fig.add_subplot(111, projection='3d')
-
-                        # Create a list of polygons from the vertex and face data for the mesh
-                        polygons = [vertices[face['v']] for face in faceList]
-
-                        # Add the mesh to the plot using Poly3DCollection
-                        mesh_collection = Poly3DCollection(
-                            polygons,
-                            edgecolors=(0.8, 1.0, 1.0),  # Light cyan edges
-                            facecolors=(0.1, 0.2, 0.3, 0.5),  # Semi-transparent dark blue faces
-                            linewidths=0.5
-                        )
-                        ax.add_collection3d(mesh_collection)
-
-                        # Set the camera's viewing angle for this frame
-                        azim = (360 / iframes) * i  # Azimuthal angle (horizontal rotation)
-                        elev = 15  # Elevation angle (vertical tilt)
-                        ax.view_init(elev=elev, azim=azim)
-
-                        # Set the plot limits to be a cube centered on the object
-                        ax.set_xlim(center[0] - max_range, center[0] + max_range)
-                        ax.set_ylim(center[1] - max_range, center[1] + max_range)
-                        ax.set_zlim(center[2] - max_range, center[2] + max_range)
-
-                        # Set a dark background and hide the grid/axes for a clean look
-                        ax.set_facecolor((0.05, 0.05, 0.1))
-                        ax.axis('off')
-
-                        # Render the current frame to an in-memory buffer
-                        buf = io.BytesIO()
-                        plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, facecolor=ax.get_facecolor())
-                        plt.close(fig)  # IMPORTANT: Close the figure to free up memory
-
-                        buf.seek(0)
-                        pil_img = Image.open(buf)
-                        images.append(pil_img)
-
-                    # --- 4. GIF Compilation (your existing code) ---
-                    if not images:
-                        await ctx.send("Failed to generate any frames.")
-                        return
-
-                    gif_buffer = io.BytesIO()
-                    images[0].save(
-                        gif_buffer,
-                        format='GIF',
-                        save_all=True,
-                        append_images=images[1:],
-                        duration=450,  # milliseconds per frame
-                        loop=0
-                    )
-                    gif_buffer.seek(0)
-
-                    imageOut = discord.File(gif_buffer, filename=f'{name}_render.gif')
+                if imageOut:
                     await ctx.send(file=imageOut)
+                else:
+                    await ctx.send("Failed to render geometry.")
 
             except Exception as e:
-                await ctx.send(f"An error occurred during rendering: `{e}`")
+                await ctx.send(f"An error occurred: `{e}`")
                 import traceback
-                traceback.print_exc()  # For debugging
+                traceback.print_exc()
 
     @commands.command(name="drawFrameOld", description="merge compartment geometry into itself.")
     async def drawFrameOld(self, ctx: commands.Context):
@@ -1195,7 +1127,7 @@ class blueprintFunctions(commands.Cog):
                 version = 0.127
                 if "0.2" in blueprintData["header"]["gameVersion"]:
                     # await ctx.send("Detected a 0.2 blueprint.")
-                    blueprintDataSave = await blueprintFunctions.bakeGeometry200(ctx, attachment)
+                    blueprintDataSave = await self.bakeGeometry200(attachment)
                 else:
                     return
                 blueprintData = blueprintDataSave

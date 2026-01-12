@@ -637,6 +637,9 @@ class blueprintFunctions2(commands.Cog):
                 title=f"{blueprint_data['header']['name']} Stats",
                 color=discord.Color.random()
             )
+
+            image_show = await self.bot.analyzer.generate_blueprint_gif(blueprint_data["meshes"][0]["meshData"]["mesh"], blueprint_data['header']['name'])
+            embed.set_image(url=f"attachment://{image_show.filename}")
             embed.set_footer(text=f"Owner: {ctx.author.display_name} | Vehicle ID: {stats['vehicle_id']}")
             embed.add_field(name="Era", value=f"{stats['vehicle_era']}")
             embed.add_field(name="Weight", value=f"{stats['tank_weight'] / 1000.0:.2f} tons")
@@ -653,7 +656,10 @@ class blueprintFunctions2(commands.Cog):
             embed.add_field(name="Upper Frontal Angle", value=f"{stats['upper_frontal_angle']:.1f}°")
             embed.add_field(name="Lower Frontal Angle", value=f"{stats['lower_frontal_angle']:.1f}°")
 
-            await ctx.send(embed=embed)
+            try:
+                await ctx.send(embed=embed, file=image_show)
+            except Exception:
+                    await ctx.send(embed=embed)
 
         except json.JSONDecodeError:
             await ctx.send("❌ **Error:** That file seems to be corrupted or not a valid JSON file.")
@@ -662,7 +668,7 @@ class blueprintFunctions2(commands.Cog):
             # Also print to console for easier debugging
             import traceback
             traceback.print_exc()
-            await ctx.send(self.bot.error.retrieveError(ctx))  # Send a funny error
+            await ctx.send(await self.bot.error.retrieveError(ctx))  # Send a funny error
 
 
 # This function is required by discord.py to load the cog

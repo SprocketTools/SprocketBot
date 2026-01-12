@@ -1,6 +1,9 @@
+import asyncio
 import json
 import math
 import discord
+import numpy
+from PIL import Image
 from discord.ext import commands
 import json
 import random
@@ -8,10 +11,139 @@ import math
 import io
 from datetime import datetime
 import numpy as np
+from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
 
 class blueprintAnalysisTools:
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    @staticmethod
+    def _render_worker(vertices, faces, iframes=12):
+        """
+        Performs the heavy lifting of 3D plotting and GIF generation.
+        This function is designed to run in a separate thread.
+        """
+        try:
+            # 1. Coordinate Transformations
+            # Re-apply Horizontal Flip (Invert X) to match game orientation
+            vertices[:, 0] *= -1
+
+            # Swap axes for Matplotlib (Sprocket Y-up -> Matplotlib Z-up)
+            # Old X -> New X (0 -> 0)
+            # Old Y -> New Z (1 -> 2)
+            # Old Z -> New Y (2 -> 1)
+            vertices = vertices[:, [0, 2, 1]]
+
+            images = []
+
+            # 2. Calculate Scene Bounds (for consistent camera)
+            x_min, x_max = vertices[:, 0].min(), vertices[:, 0].max()
+            y_min, y_max = vertices[:, 1].min(), vertices[:, 1].max()
+            z_min, z_max = vertices[:, 2].min(), vertices[:, 2].max()
+
+            center = numpy.array([
+                numpy.mean([x_min, x_max]),
+                numpy.mean([y_min, y_max]),
+                numpy.mean([z_min, z_max])
+            ])
+
+            # Calculate padding (1.02 = 2% padding)
+            max_range = numpy.array([
+                x_max - x_min,
+                y_max - y_min,
+                z_max - z_min
+            ]).max() / 2.0 * 1.02
+
+            # Pre-compute polygons once
+            polygons = [vertices[face['v']] for face in faces]
+
+            # 3. Frame Rendering Loop
+            for i in range(iframes):
+                fig = plt.figure(figsize=(8, 8), dpi=150)  # Reduced DPI slightly for speed
+                ax = fig.add_subplot(111, projection='3d')
+
+                mesh_collection = Poly3DCollection(
+                    polygons,
+                    edgecolors=(0.8, 1.0, 1.0),
+                    facecolors=(0.1, 0.2, 0.3, 0.5),
+                    linewidths=0.5
+                )
+                ax.add_collection3d(mesh_collection)
+
+                # Camera Rotation
+                azim = (360 / iframes) * i
+                elev = 15
+                ax.view_init(elev=elev, azim=azim)
+                ax.dist = 8.5  # Zoom in
+
+                # Lock Axis Limits (Cubic)
+                ax.set_xlim(center[0] - max_range, center[0] + max_range)
+                ax.set_ylim(center[1] - max_range, center[1] + max_range)
+                ax.set_zlim(center[2] - max_range, center[2] + max_range)
+
+                # Force Equal Aspect Ratio (Prevents Squishing)
+                ax.set_box_aspect([1, 1, 1])
+
+                # Styling
+                ax.set_facecolor((0.05, 0.05, 0.1))
+                ax.axis('off')
+
+                # Save Frame
+                buf = io.BytesIO()
+                plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, facecolor=ax.get_facecolor())
+                plt.close(fig)  # Critical: Release memory
+
+                buf.seek(0)
+                images.append(Image.open(buf))
+
+            if not images:
+                return None
+
+            # 4. Compile GIF
+            gif_buffer = io.BytesIO()
+            images[0].save(
+                gif_buffer,
+                format='GIF',
+                save_all=True,
+                append_images=images[1:],
+                duration=1000,
+                loop=0
+            )
+            gif_buffer.seek(0)
+            return gif_buffer
+
+        except Exception as e:
+            print(f"Render worker failed: {e}")
+            return None
+
+    # --- HELPER: Async Interface ---
+    async def generate_blueprint_gif(self, mesh_data, name, iframes=12):
+        """
+        Async helper to generate a 3D GIF.
+        Call this from other commands (like analyzeBlueprint).
+        """
+        vertices_list = mesh_data["vertices"]
+        face_list = mesh_data["faces"]
+
+        if not vertices_list:
+            return None
+
+        # Convert to numpy array before passing to thread
+        vertices = numpy.array(vertices_list).reshape(-1, 3)
+
+        # Offload the blocking render_worker to a thread
+        gif_buffer = await asyncio.to_thread(
+            self._render_worker,
+            vertices,
+            face_list,
+            iframes
+        )
+
+        if gif_buffer:
+            return discord.File(gif_buffer, filename=f'{name}_render.gif')
+        return None
 
     def _get_face_normal(self, v1, v2, v3):
         """Calculates the normal vector of a face defined by three vertices."""
