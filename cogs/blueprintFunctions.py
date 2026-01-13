@@ -1071,7 +1071,6 @@ class blueprintFunctions(commands.Cog):
                     "Place this model into `%userprofile%\Documents\My Games\Sprocket\Factions\Default\Blueprints\Vehicles` and load the new tank.")
             i += 1
 
-    # --- COMMAND: DrawFrame ---
     @commands.command(name="drawFrame", description="Renders a 3D wireframe GIF of a vehicle blueprint.",
                       extras={'category': 'utility'})
     async def drawFrame(self, ctx: commands.Context):
@@ -1085,28 +1084,20 @@ class blueprintFunctions(commands.Cog):
                 if attachment.size > 2100000:
                     await self.bot.error.sendCategorizedError(ctx, "blueprint")
                     await ctx.send("This blueprint is too large! Stick to blueprints under 2MB.")
-                    continue
-
-                # 1. Parse & Bake (Async)
+                    return
                 blueprintData = json.loads(await attachment.read())
                 name = blueprintData["header"]["name"]
-
                 if "0.2" not in blueprintData["header"]["gameVersion"]:
                     await ctx.send("This command only supports v0.2+ blueprints.")
-                    continue
-
-                # Assuming bakeGeometry200 is available in this class
-                blueprintDataSave = await self.bakeGeometry200(attachment)
+                    return
+                blueprintDataSave = await self.bot.analyzer.bakeGeometryV2(attachment)
                 meshData = blueprintDataSave["meshes"][0]["meshData"]["mesh"]
-
-                # 2. Render GIF (Async/Threaded)
                 imageOut = await self.bot.analyzer.generate_blueprint_gif(meshData, name)
-
                 if imageOut:
                     await ctx.send(file=imageOut)
                 else:
-                    await ctx.send("Failed to render geometry.")
-
+                    await self.bot.error.sendError(ctx)
+                    await ctx.send("Geometry render failed.  Make sure you've converted all generated compartments to freeform and try again.")
             except Exception as e:
                 await ctx.send(f"An error occurred: `{e}`")
                 import traceback
