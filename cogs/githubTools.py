@@ -813,6 +813,103 @@ class githubTools(commands.Cog):
         except Exception as e:
             await ctx.send(f"Some error occurred pushing the decals to GitHub: {e}.")
 
+    @commands.command(name="sanitizeFilenames", description="Scans for and fixes filenames with Windows-invalid characters.")
+    async def sanitizeFilenames(self, ctx):
+        if ctx.author.id != 712509599135301673:
+            await ctx.send(await self.bot.error.retrieveError(ctx))
+            return
+
+        await ctx.send("Scanning image catalog for invalid Windows characters (`< > : \" / \\ | ? *`).")
+
+        # Fetch all names
+        all_entries = [dict(row) for row in await self.bot.sql.databaseFetch('SELECT strippedname FROM imagecatalog')]
+
+        # Windows invalid characters
+        invalid_chars = '<>:"/\\|?*'
+        found_entries = []
+
+        # Find entries that have at least one invalid char
+        for entry in all_entries:
+            name = entry['strippedname']
+            if any(char in name for char in invalid_chars):
+                found_entries.append(name)
+
+        if not found_entries:
+            await ctx.send("No invalid filenames found.")
+            return
+
+        await ctx.send(f"Found {len(found_entries)} invalid filenames. Fixing...")
+
+        fixed_count = 0
+        skipped_count = 0
+        error_count = 0
+        errors = []
+
+        for old_name in found_entries:
+            new_name = old_name
+            for char in invalid_chars:
+                new_name = new_name.replace(char, "_")
+
+            # Define paths
+            old_catalog_path = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{old_name}"
+            old_display_path = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{old_name}"
+            new_catalog_path = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{new_name}"
+            new_display_path = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{new_name}"
+
+            # Check existence of source (at least one file should exist to justify operation)
+            if not os.path.exists(old_catalog_path) and not os.path.exists(old_display_path):
+                # If neither exists, we just have a DB entry pointing to nothing.
+                errors.append(f"Source files missing for `{old_name}`.")
+                error_count += 1
+                continue
+
+            # Check collision: if new name exists and is not the same file
+            if os.path.exists(new_catalog_path) or os.path.exists(new_display_path):
+                if old_name != new_name:
+                    skipped_count += 1
+                    errors.append(f"Collision: `{new_name}` already exists.")
+                    continue
+
+            try:
+                # Rename files
+                if os.path.exists(old_catalog_path):
+                    os.rename(old_catalog_path, new_catalog_path)
+                if os.path.exists(old_display_path):
+                    os.rename(old_display_path, new_display_path)
+
+                # DB Update
+                await self.bot.sql.databaseExecuteDynamic(
+                    "UPDATE imagecatalog SET strippedname = $1 WHERE strippedname = $2",
+                    [new_name, old_name]
+                )
+
+                # Stage files for git
+                paths_to_add = []
+                if os.path.exists(new_catalog_path):
+                    paths_to_add.append(new_catalog_path)
+                if os.path.exists(new_display_path):
+                    paths_to_add.append(new_display_path)
+
+                if paths_to_add:
+                    operatingRepo.index.add(paths_to_add)
+
+                fixed_count += 1
+            except Exception as e:
+                error_count += 1
+                errors.append(f"Error renaming `{old_name}`: {e}")
+
+        await ctx.send(f"Complete.\nFixed: {fixed_count}\nSkipped: {skipped_count}\nErrors: {error_count}")
+
+        if errors:
+            err_str = "\n".join(errors[:15])
+            if len(errors) > 15:
+                err_str += "\n... (and more)"
+            await ctx.send(f"Errors:\n{err_str}")
+
+        if fixed_count > 0:
+            # updateHTML commits and pushes
+            await githubTools.updateHTML(self, ctx)
+
     @commands.command(name="changeDecalCategory", description="change a decal category from the SprocketTools website")
     async def changeDecalCategory(self, ctx):
         if ctx.author.id != 712509599135301673:
