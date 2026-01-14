@@ -1,6 +1,8 @@
 import asyncio
 import random
 import discord, json, math, numpy, copy, io, requests
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from discord.ext import commands
