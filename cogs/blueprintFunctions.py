@@ -1091,6 +1091,7 @@ class blueprintFunctions(commands.Cog):
                     await ctx.send("This command only supports v0.2+ blueprints.")
                     return
                 blueprintDataSave = await self.bot.analyzer.bakeGeometryV2(attachment)
+                await ctx.send("Geometry merged!  Starting image processing...")
                 meshData = blueprintDataSave["meshes"][0]["meshData"]["mesh"]
                 imageOut = await self.bot.analyzer.generate_blueprint_gif(meshData, name)
                 if imageOut:

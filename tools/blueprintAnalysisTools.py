@@ -12,6 +12,8 @@ import math
 import io
 from datetime import datetime
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
@@ -893,27 +895,3 @@ def braveRotateVector(vector, rot):
 
     # Print the final rotated vector
     return vector_yz
-
-async def runMeshMirror(ctx: commands.Context, meshData, sourcePartInfo):
-    # print("Hi!")
-
-    sourcePartPosX = sourcePartInfo["pos"][0]
-    sourcePartPosY = sourcePartInfo["pos"][1]
-    sourcePartPosZ = sourcePartInfo["pos"][2]
-    sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
-    sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
-    sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
-    sourcePartPoints = meshData["meshData"]["mesh"]["vertices"]
-    sourcePartPointsLength = len(sourcePartPoints)
-
-    # sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
-    # sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
-    # sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
-    # point positions (accounting for position + rotation)
-    pos = 0
-    # vector rotation
-    while pos < sourcePartPointsLength:
-        sourcePartPoints[pos] = -1 * (sourcePartPoints[pos])
-        pos += 3
-    # shared point lists (adjusted to not overlap with current faces)
-    return sourcePartPoints
