@@ -14,7 +14,7 @@ class SQLtools():
                 return await connection.execute(prompt)
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
-            raise e
+            return e
 
     async def databaseExecuteDynamic(self, prompt: str, values: list):
         try:
@@ -22,7 +22,7 @@ class SQLtools():
                 return await connection.execute(prompt, *values)
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
-            raise e
+            return e
 
     async def databaseFetch(self, prompt: str):
         try:
@@ -30,7 +30,7 @@ class SQLtools():
                 return await connection.fetch(prompt)
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
-            raise e
+            return e
 
     async def databaseFetchFast(self, prompt: str):
         try:
@@ -38,7 +38,7 @@ class SQLtools():
                 return await connection.fetch(prompt)
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
-            raise e
+            return e
 
     async def databaseMultiFetch(self, prompt: str):
         try:
@@ -50,6 +50,7 @@ class SQLtools():
                 return await connection.execute(prompt)
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 
     async def databaseFetchDynamic(self, prompt: str, values: list):
         try:
@@ -57,6 +58,7 @@ class SQLtools():
                 return await connection.fetch(prompt, *values)
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 
     async def databaseFetchdict(self, prompt: str):
         try:
@@ -64,6 +66,7 @@ class SQLtools():
                 return [dict(row) for row in await connection.fetch(prompt)]
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 
     async def databaseFetchrow(self, prompt: str):
         try:
@@ -71,6 +74,7 @@ class SQLtools():
                 return dict(await connection.fetchrow(prompt))
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 
     async def databaseFetchlist(self, prompt: str):
         try:
@@ -78,6 +82,7 @@ class SQLtools():
                 return list(await connection.fetchrow(prompt))
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 
     async def databaseFetchdictDynamic(self, prompt: str, values: list):
         try:
@@ -85,6 +90,7 @@ class SQLtools():
                 return [dict(row) for row in await connection.fetch(prompt, *values)]
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 
     async def databaseFetchrowDynamic(self, prompt: str, values: list):
         try:
@@ -92,6 +98,7 @@ class SQLtools():
                 return dict(await connection.fetchrow(prompt, *values))
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 
     async def databaseFetchlistDynamic(self, prompt: str, values: list):
         try:
@@ -99,6 +106,7 @@ class SQLtools():
                 return list(await connection.fetchrow(prompt, *values))
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 
     async def databaseFetchlineDynamic(self, prompt: str, values: list):
         try:
@@ -106,6 +114,7 @@ class SQLtools():
                 return [dict(row) for row in await connection.fetch(prompt, *values)][0]
         except Exception as e:
             print(f"Query: {prompt} failed: \n\n{e}")
+            return e
 #
 #     @commands.command(name="adminExecute", description="register a contest")
 #     async def adminExecute(self, ctx: commands.Context, *, prompt):
