@@ -517,6 +517,9 @@ class serverFunctions(commands.Cog):
         while continue_val:
             data = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1''',
                                                               [ctx.guild.id])
+            if data is None:
+                await ctx.send("Error: Could not retrieve server configuration. Please try again.")
+                return
             await serverFunctions.showSettings(self, ctx)
             await ctx.send("What setting do you wish to modify?")
             inList = ["General channel", "Announcements channel", "Bot commands channel", "Server managers channel",
