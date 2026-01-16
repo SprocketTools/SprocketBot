@@ -492,6 +492,7 @@ class serverFunctions(commands.Cog):
         try:
             serverData = await self.bot.sql.databaseFetchrowDynamic(
                 '''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
+            print(serverData[0]["updateschannelid"])
         except Exception as e:
             try:
                 await ctx.send(f"No server configuration detected!  Error produced: {e}\nAdding a default config...")
