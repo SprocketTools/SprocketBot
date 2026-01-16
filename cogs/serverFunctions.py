@@ -489,10 +489,11 @@ class serverFunctions(commands.Cog):
 
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
+        await ctx.send("HI")
         try:
             serverData = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
-            print(serverData[0]["updateschannelid"])
+            await ctx.send(serverData[0]["updateschannelid"])
         except Exception as e:
             try:
                 await ctx.send(f"No server configuration detected!  Error produced: {e}\nAdding a default config...")
