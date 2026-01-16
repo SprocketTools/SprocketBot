@@ -492,13 +492,16 @@ class serverFunctions(commands.Cog):
         try:
             serverData = await self.bot.sql.databaseFetchrowDynamic(
                 '''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
-        except Exception:
-            await ctx.send("No server configuration detected!  Adding a default config...")
-            data = await self._generate_best_guess_config(ctx.guild)
-            await self.bot.sql.databaseExecuteDynamic(
-                '''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);''',
-                list(data.values()))
-            await ctx.send("Done!")
+        except Exception as e:
+            try:
+                await ctx.send(f"No server configuration detected!  Error produced: {e}\nAdding a default config...")
+                data = await self._generate_best_guess_config(ctx.guild)
+                await self.bot.sql.databaseExecuteDynamic(
+                    '''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);''',
+                    list(data.values()))
+                await ctx.send("Done!")
+            except Exception as e:
+                await ctx.send(e)
         cooldown_min = 30
         if not ctx.message.author.guild_permissions.administrator:
             if ctx.author.id == main.ownerID:
