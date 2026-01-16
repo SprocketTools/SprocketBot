@@ -399,7 +399,7 @@ class serverFunctions(commands.Cog):
             await ctx.send("No server configuration detected!  Adding a default config...")
             data = await self._generate_best_guess_config(ctx.guild)
             await self.bot.sql.databaseExecuteDynamic(
-                '''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);''',
+                '''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21);''',
                 list(data.values()))
             await ctx.send("Done!")
         serverData = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''',
@@ -499,7 +499,7 @@ class serverFunctions(commands.Cog):
                 await ctx.send(f"No server configuration detected!  Error produced: {e}\nAdding a default config...")
                 data = await self._generate_best_guess_config(ctx.guild)
                 await self.bot.sql.databaseExecuteDynamic(
-                    '''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);''',
+                    '''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21);''',
                     list(data.values()))
                 await ctx.send("Done!")
             except Exception as e:
