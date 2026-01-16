@@ -389,35 +389,24 @@ class serverFunctions(commands.Cog):
 
     @commands.command(name="viewSettings", description="Edit a faction un bulk")
     async def viewSettings(self, ctx: commands.Context):
-        await self.showSettings(ctx)
+        await serverFunctions.showSettings(self, ctx)
 
     async def showSettings(self, ctx: commands.Context):
-        serverData = None
         try:
             serverData = await self.bot.sql.databaseFetchrowDynamic(
                 '''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
         except Exception:
-            pass
-        
-        if serverData is None:
             await ctx.send("No server configuration detected!  Adding a default config...")
             data = await self._generate_best_guess_config(ctx.guild)
             await self.bot.sql.databaseExecuteDynamic(
                 '''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);''',
                 list(data.values()))
             await ctx.send("Done!")
-            serverData = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''',
-                                                                    [ctx.guild.id])
-        
-        if serverData is None:
-            await ctx.send("Error: Could not retrieve server configuration.")
-            return
-
-        serverData = dict(serverData)
+        serverData = await self.bot.sql.databaseFetchrowDynamic('''SELECT * FROM serverconfig WHERE serverid = $1;''',
+                                                                [ctx.guild.id])
         for key, value in serverData.items():
             if value == None:
                 serverData[key] = "`UPDATE THIS VALUE`"
-        
         embed = discord.Embed(title=f"Server Config: {ctx.guild.name}", color=discord.Color.random())
 
         embed.add_field(name="Channels",
@@ -500,24 +489,20 @@ class serverFunctions(commands.Cog):
 
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
-        serverData = None
         try:
-            serverData = await self.bot.sql.databaseFetchrowDynamic(
+            serverData = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
+            print(serverData[0]["updateschannelid"])
         except Exception as e:
-            pass
-        
-        if serverData is None:
             try:
-                await ctx.send(f"No server configuration detected! Adding a default config...")
+                await ctx.send(f"No server configuration detected!  Error produced: {e}\nAdding a default config...")
                 data = await self._generate_best_guess_config(ctx.guild)
                 await self.bot.sql.databaseExecuteDynamic(
                     '''INSERT INTO serverconfig VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);''',
                     list(data.values()))
                 await ctx.send("Done!")
             except Exception as e:
-                await ctx.send(f"Error creating config: {e}")
-
+                await ctx.send(e)
         cooldown_min = 30
         if not ctx.message.author.guild_permissions.administrator:
             if ctx.author.id == main.ownerID:
@@ -536,7 +521,7 @@ class serverFunctions(commands.Cog):
             if data is None:
                 await ctx.send("Error: Could not retrieve server configuration. Please try again.")
                 return
-            await self.showSettings(ctx)
+            await serverFunctions.showSettings(self, ctx)
             await ctx.send("What setting do you wish to modify?")
             inList = ["General channel", "Announcements channel", "Bot commands channel", "Server managers channel",
                       "Server booster role", "Contest manager role", "Bot manager role", "Campaign manager role",
