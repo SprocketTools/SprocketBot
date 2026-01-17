@@ -30,3 +30,5 @@ tools/__pycache__/SQLtools.cpython-313.pyc
 /tools/__pycache__
 /tools/__pycache__
 *.pyc
+tools/__pycache__/blueprintAnalysisTools.cpython-313.pyc
+tools/__pycache__/SQLtools.cpython-313.pyc
