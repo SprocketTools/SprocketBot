@@ -642,8 +642,8 @@ class blueprintAnalysisTools:
 
                 meshID = blueprintData["blueprints"][i]["blueprint"]["bodyMeshVuid"]
                 compartmentList[positionID] = {"PositionID": positionID, "meshID": meshID}
-                print(positionID)
-                print("hiiiii")
+                #print(positionID)
+                #print("hiiiii")
                 for object in blueprintData["objects"]:
                     if "structureBlueprintVuid" in object:
                         object["isbase"] = False
@@ -726,7 +726,7 @@ class blueprintAnalysisTools:
                                 newPoints = await runMeshTranslation(ctx,
                                                                                         meshesOut[relevantObjectID],
                                                                                         object["transform"])
-                                print(compartmentList[relevantObjectID])
+                                #print(compartmentList[relevantObjectID])
 
                                 meshesOut[relevantObjectID]["meshData"]["mesh"]["vertices"] = newPoints
 
@@ -762,15 +762,14 @@ class blueprintAnalysisTools:
                                                     compartmentList[relevantObjectID]["flags"] == 7:
                                                 if subobject["isbase"] == True and meshesOut[relevantObjectID][
                                                     "mirrored"] == False:
-                                                    print(
-                                                        f'''Starting a mirror!!\n{compartmentList[relevantObjectID]['flags']}\n{eee}''')
+                                                    #print(f'''Starting a mirror!!\n{compartmentList[relevantObjectID]['flags']}\n{eee}''')
                                                     facesList = copy.deepcopy(
                                                         meshesOut[relevantObjectID]["meshData"]["mesh"]["faces"])
                                                     netPartPointsLength = len(newPoints)
                                                     netPartPointCount = int(netPartPointsLength) / 3
-                                                    print(object["transform"])
+                                                    #print(object["transform"])
                                                     newPoints = copy.deepcopy(newPoints) + self.runMeshMirror(meshesOut[relevantObjectID], subobject["transform"])
-                                                    print(newPoints)
+                                                    #print(newPoints)
                                                     for facein in meshesOut[relevantObjectID]["meshData"]["mesh"][
                                                         "faces"]:
                                                         face = copy.deepcopy(facein)

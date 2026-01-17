@@ -609,117 +609,118 @@ class blueprintFunctions2(commands.Cog):
 
     @commands.command(name="analyzeBlueprint", description="Analyze a .blueprint file and save its stats.")
     async def analyze_blueprint(self, ctx: commands.Context):
-        if not ctx.message.attachments:
-            await self.bot.error.sendCategorizedError(ctx, "blueprint")
-            await ctx.send("You need to attach a `.blueprint` file to this command.")
-            return
+        for attachment in ctx.message.attachments:
+            if not ctx.message.attachments:
+                await self.bot.error.sendCategorizedError(ctx, "blueprint")
+                await ctx.send("You need to attach a `.blueprint` file to this command.")
+                return
 
-        blueprint_attachment = None
-        image_attachment = None
+            blueprint_attachment = None
+            image_attachment = None
 
-        for att in ctx.message.attachments:
-            if att.filename.endswith(".blueprint"):
-                blueprint_attachment = att
-            elif att.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
-                image_attachment = att
 
-        if not blueprint_attachment:
-            return await ctx.send("No `.blueprint` file found in your message!")
+            if attachment.filename.endswith(".blueprint"):
+                blueprint_attachment = attachment
+            elif attachment.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+                image_attachment = attachment
 
-        try:
-            await ctx.send(f"Analyzing `{blueprint_attachment.filename}`...")
-            file_content = await blueprint_attachment.read()
-            blueprint_data = json.loads(file_content)
+            if not blueprint_attachment:
+                return await ctx.send("No `.blueprint` file found in your message!")
 
-            stats = await self.bot.analyzer._parse_blueprint_stats(ctx, blueprint_data)
+            try:
+                await ctx.send(f"Analyzing `{blueprint_attachment.filename}`...")
+                file_content = await blueprint_attachment.read()
+                blueprint_data = json.loads(file_content)
 
-            if 'error' in stats and stats['error']:
-                return await ctx.send(f"**Analysis Failed:** {stats.get('error')}")
+                stats = await self.bot.analyzer._parse_blueprint_stats(ctx, blueprint_data)
 
-            stats['file_url'] = blueprint_attachment.url
-            stats['image_url'] = image_attachment.url if image_attachment else None
-            stats['submission_date'] = datetime.now()
-            stats['vehicle_name'] = blueprint_attachment.filename.replace('.blueprint', '').replace('_', ' ')
+                if 'error' in stats and stats['error']:
+                    return await ctx.send(f"**Analysis Failed:** {stats.get('error')}")
 
-            valid_cols = [
-                "vehicle_id", "vehicle_name", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id",
-                "base_cost", "tank_weight", "tank_length", "tank_width", "tank_height", "tank_total_height",
-                "fuel_tank_capacity", "ground_pressure", "horsepower", "hpt", "top_speed", "travel_range",
-                "crew_count", "cannon_stats", "armor_mass", "upper_frontal_angle", "lower_frontal_angle",
-                "health", "attack", "defense", "breakthrough", "piercing", "armor", "cohesion",
-                "file_url", "submission_date", "image_url"
-            ]
+                stats['file_url'] = blueprint_attachment.url
+                stats['image_url'] = image_attachment.url if image_attachment else None
+                stats['submission_date'] = datetime.now()
+                stats['vehicle_name'] = blueprint_attachment.filename.replace('.blueprint', '').replace('_', ' ')
 
-            insert_data = {k: v for k, v in stats.items() if k in valid_cols}
-            columns = ", ".join(insert_data.keys())
-            placeholders = ", ".join([f"${i + 1}" for i in range(len(insert_data))])
+                valid_cols = [
+                    "vehicle_id", "vehicle_name", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id",
+                    "base_cost", "tank_weight", "tank_length", "tank_width", "tank_height", "tank_total_height",
+                    "fuel_tank_capacity", "ground_pressure", "horsepower", "hpt", "top_speed", "travel_range",
+                    "crew_count", "cannon_stats", "armor_mass", "upper_frontal_angle", "lower_frontal_angle",
+                    "health", "attack", "defense", "breakthrough", "piercing", "armor", "cohesion",
+                    "file_url", "submission_date", "image_url"
+                ]
 
-            prompt = f"""
-                    INSERT INTO blueprint_stats ({columns}) 
-                    VALUES ({placeholders})
-                    ON CONFLICT (vehicle_id) DO UPDATE 
-                    SET vehicle_name = EXCLUDED.vehicle_name,
-                        file_url = EXCLUDED.file_url,
-                        image_url = EXCLUDED.image_url,
-                        submission_date = EXCLUDED.submission_date;
-                """
-            await self.bot.sql.databaseExecuteDynamic(prompt, list(insert_data.values()))
+                insert_data = {k: v for k, v in stats.items() if k in valid_cols}
+                columns = ", ".join(insert_data.keys())
+                placeholders = ", ".join([f"${i + 1}" for i in range(len(insert_data))])
 
-            embed = discord.Embed(
-                title=f"{blueprint_data['header']['name']} Stats",
-                color=discord.Color.random()
-            )
-            embed.set_footer(text=f"Owner: {ctx.author.display_name} | Vehicle ID: {stats['vehicle_id']}")
-            embed.add_field(name="Era", value=f"{stats['vehicle_era']}")
-            embed.add_field(name="Weight", value=f"{stats['tank_weight'] / 1000.0:.2f} tons")
-            embed.add_field(name="Dimensions",
-                            value=f"L: {stats['tank_length']:.2f}m | W: {stats['tank_width']:.2f}m | H: {stats['tank_height']:.2f}m",
-                            inline=False)
-            embed.add_field(name="Crew", value=f"{stats['crew_count']} members")
-            embed.add_field(name="Powertrain", value=f"{stats['horsepower']} HP | {stats['hpt']:.2f} HP/T")
-            embed.add_field(name="Top Speed", value=f"~{stats['top_speed']} km/h")
-            embed.add_field(name="Fuel Capacity", value=f"{stats['fuel_tank_capacity']:.1f} L")
-            embed.add_field(name="Ground Pressure", value=f"{stats['ground_pressure']:.2f} kg/cm²")
-            embed.add_field(name="Armor Mass", value=f"{stats['armor_mass'] / 1000.0:.2f} tons")
-            embed.add_field(name="Frontal Angles",
-                            value=f"Upper: {stats['upper_frontal_angle']:.1f}°\nLower: {stats['lower_frontal_angle']:.1f}°")
+                prompt = f"""
+                        INSERT INTO blueprint_stats ({columns}) 
+                        VALUES ({placeholders})
+                        ON CONFLICT (vehicle_id) DO UPDATE 
+                        SET vehicle_name = EXCLUDED.vehicle_name,
+                            file_url = EXCLUDED.file_url,
+                            image_url = EXCLUDED.image_url,
+                            submission_date = EXCLUDED.submission_date;
+                    """
+                await self.bot.sql.databaseExecuteDynamic(prompt, list(insert_data.values()))
 
-            gif_file = None
-            bp_cog = self.bot.get_cog("blueprintFunctions")
-            if bp_cog:
-                try:
-                    if "0.2" in blueprint_data["header"]["gameVersion"]:
-                        baked_data = await self.bot.analyzer.bakeGeometryV2(ctx, blueprint_attachment)
-                        mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
-                    else:
-                        mesh_to_render = blueprint_data["meshes"][0]["meshData"]["mesh"]
-
-                    gif_file = await self.bot.analyzer.generate_blueprint_gif(mesh_to_render, blueprint_data['header']['name'])
-                    if gif_file:
-                        embed.set_image(url=f"attachment://{gif_file.filename}")
-                except Exception as e:
-                    print(f"Failed to generate analysis GIF: {e}")
-
-            sent_message = None
-            if gif_file:
-                sent_message = await ctx.send(embed=embed, file=gif_file)
-            else:
-                sent_message = await ctx.send(embed=embed)
-
-            if sent_message and gif_file:
-                final_gif_url = sent_message.embeds[0].image.url
-                await self.bot.sql.databaseExecuteDynamic(
-                    '''UPDATE blueprint_stats SET gif_url = $1 WHERE vehicle_id = $2;''',
-                    [final_gif_url, stats['vehicle_id']]
+                embed = discord.Embed(
+                    title=f"{blueprint_data['header']['name']} Stats",
+                    color=discord.Color.random()
                 )
+                embed.set_footer(text=f"Owner: {ctx.author.display_name} | Vehicle ID: {stats['vehicle_id']}")
+                embed.add_field(name="Era", value=f"{stats['vehicle_era']}")
+                embed.add_field(name="Weight", value=f"{stats['tank_weight'] / 1000.0:.2f} tons")
+                embed.add_field(name="Dimensions",
+                                value=f"L: {stats['tank_length']:.2f}m | W: {stats['tank_width']:.2f}m | H: {stats['tank_height']:.2f}m",
+                                inline=False)
+                embed.add_field(name="Crew", value=f"{stats['crew_count']} members")
+                embed.add_field(name="Powertrain", value=f"{stats['horsepower']} HP | {stats['hpt']:.2f} HP/T")
+                embed.add_field(name="Top Speed", value=f"~{stats['top_speed']} km/h")
+                embed.add_field(name="Fuel Capacity", value=f"{stats['fuel_tank_capacity']:.1f} L")
+                embed.add_field(name="Ground Pressure", value=f"{stats['ground_pressure']:.2f} kg/cm²")
+                embed.add_field(name="Armor Mass", value=f"{stats['armor_mass'] / 1000.0:.2f} tons")
+                embed.add_field(name="Frontal Angles",
+                                value=f"Upper: {stats['upper_frontal_angle']:.1f}°\nLower: {stats['lower_frontal_angle']:.1f}°")
 
-        except json.JSONDecodeError:
-            await ctx.send("**Error:** That file seems to be corrupted or not a valid JSON file.")
-        except Exception as e:
-            await ctx.send(f"**An unexpected error occurred:**\n```\n{e}\n```")
-            import traceback
-            traceback.print_exc()
-            await ctx.send(await self.bot.error.retrieveError(ctx))  # Send a funny error
+                gif_file = None
+                bp_cog = self.bot.get_cog("blueprintFunctions")
+                if bp_cog and attachment.size < 1000000:
+                    try:
+                        if "0.2" in blueprint_data["header"]["gameVersion"]:
+                            baked_data = await self.bot.analyzer.bakeGeometryV2(ctx, blueprint_attachment)
+                            mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
+                        else:
+                            mesh_to_render = blueprint_data["meshes"][0]["meshData"]["mesh"]
+
+                        gif_file = await self.bot.analyzer.generate_blueprint_gif(mesh_to_render, blueprint_data['header']['name'])
+                        if gif_file:
+                            embed.set_image(url=f"attachment://{gif_file.filename}")
+                    except Exception as e:
+                        print(f"Failed to generate analysis GIF: {e}")
+
+                sent_message = None
+                if gif_file:
+                    sent_message = await ctx.send(embed=embed, file=gif_file)
+                else:
+                    sent_message = await ctx.send(embed=embed)
+
+                if sent_message and gif_file:
+                    final_gif_url = sent_message.embeds[0].image.url
+                    await self.bot.sql.databaseExecuteDynamic(
+                        '''UPDATE blueprint_stats SET gif_url = $1 WHERE vehicle_id = $2;''',
+                        [final_gif_url, stats['vehicle_id']]
+                    )
+
+            except json.JSONDecodeError:
+                await ctx.send("**Error:** That file seems to be corrupted or not a valid JSON file.")
+            except Exception as e:
+                await ctx.send(f"**An unexpected error occurred:**\n```\n{e}\n```")
+                import traceback
+                traceback.print_exc()
+                await ctx.send(await self.bot.error.retrieveError(ctx))  # Send a funny error
 
 
 # This function is required by discord.py to load the cog
