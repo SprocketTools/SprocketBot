@@ -25,81 +25,87 @@ class blueprintAnalysisTools:
     @staticmethod
     def _render_worker(vertices, faces, iframes=12):
         """
-        Performs the heavy lifting of 3D plotting and GIF generation.
-        This function is designed to run in a separate thread.
+        Optimized 3D rendering:
+        - Reuses the Figure/Axes objects (avoids teardown/setup overhead).
+        - Uses raw buffer access (avoids PNG encoding/decoding).
+        - Manual margin adjustment (avoids costly bbox_inches calculation).
         """
         try:
-            # 1. Coordinate Transformations
-            # Re-apply Horizontal Flip (Invert X) to match game orientation
-            #vertices[:, 0] *= -1
-
-            # Swap axes for Matplotlib (Sprocket Y-up -> Matplotlib Z-up)
-            # Old X -> New X (0 -> 0)
-            # Old Y -> New Z (1 -> 2)
-            # Old Z -> New Y (2 -> 1)
+            # 1. Coordinate Transformations (Same as before)
             vertices = vertices[:, [0, 2, 1]]
 
-            images = []
-
-            # 2. Calculate Scene Bounds (for consistent camera)
+            # 2. Calculate Scene Bounds (Same as before)
             x_min, x_max = vertices[:, 0].min(), vertices[:, 0].max()
             y_min, y_max = vertices[:, 1].min(), vertices[:, 1].max()
             z_min, z_max = vertices[:, 2].min(), vertices[:, 2].max()
 
-            center = numpy.array([
-                numpy.mean([x_min, x_max]),
-                numpy.mean([y_min, y_max]),
-                numpy.mean([z_min, z_max])
+            center = np.array([
+                np.mean([x_min, x_max]),
+                np.mean([y_min, y_max]),
+                np.mean([z_min, z_max])
             ])
 
-            # Calculate padding (1.02 = 2% padding)
-            max_range = numpy.array([
+            max_range = np.array([
                 x_max - x_min,
                 y_max - y_min,
                 z_max - z_min
             ]).max() / 3.0 * 1.1
 
-            # Pre-compute polygons once
             polygons = [vertices[face['v']] for face in faces]
 
-            # 3. Frame Rendering Loop
+            # --- SETUP PHASE (Done ONCE) ---
+            # Set DPI lower if you want even more speed (e.g., 100 or 120)
+            fig = plt.figure(figsize=(8, 8), dpi=120)
+            ax = fig.add_subplot(111, projection='3d')
+
+            # Manual Layout: Removes whitespace without the slow 'bbox_inches="tight"'
+            fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+
+            # Styling
+            bg_color = (0.05, 0.05, 0.1)
+            fig.patch.set_facecolor(bg_color)
+            ax.set_facecolor(bg_color)
+            ax.axis('off')
+
+            # Add Geometry ONCE
+            mesh_collection = Poly3DCollection(
+                polygons,
+                edgecolors=(0.8, 1.0, 1.0),
+                facecolors=(0.1, 0.2, 0.3, 0.5),
+                linewidths=0.5
+            )
+            ax.add_collection3d(mesh_collection)
+
+            # Set Limits ONCE
+            ax.set_xlim(center[0] - max_range, center[0] + max_range)
+            ax.set_ylim(center[1] - max_range, center[1] + max_range)
+            ax.set_zlim(center[2] - max_range, center[2] + max_range)
+            ax.set_box_aspect([1, 1, 1])
+            ax.dist = 8.5
+
+            images = []
+
+            # --- RENDER LOOP (Fast) ---
             for i in range(iframes):
-                fig = plt.figure(figsize=(8, 8), dpi=150)
-                ax = fig.add_subplot(111, projection='3d')
-
-                mesh_collection = Poly3DCollection(
-                    polygons,
-                    edgecolors=(0.8, 1.0, 1.0),
-                    facecolors=(0.1, 0.2, 0.3, 0.5),
-                    linewidths=0.5
-                )
-                ax.add_collection3d(mesh_collection)
-
-                # Camera Rotation
-                azim = (360 / iframes) * i
+                # 1. Rotate Camera
+                azim = (360 / iframes) * i + (180/iframes)
                 elev = 15
                 ax.view_init(elev=elev, azim=azim)
-                ax.dist = 8.5  # Zoom in
 
-                # Lock Axis Limits (Cubic)
-                ax.set_xlim(center[0] - max_range, center[0] + max_range)
-                ax.set_ylim(center[1] - max_range, center[1] + max_range)
-                ax.set_zlim(center[2] - max_range, center[2] + max_range)
+                # 2. Draw to Canvas
+                fig.canvas.draw()
 
-                # Force Equal Aspect Ratio (Prevents Squishing)
-                ax.set_box_aspect([1, 1, 1])
+                # 3. Direct Buffer Access (Fastest Method)
+                # buffer_rgba returns an RGBA buffer directly, no swapping needed.
+                # Image.frombuffer is faster than frombytes as it avoids data copying.
+                w, h = fig.canvas.get_width_height()
+                buf = fig.canvas.buffer_rgba()
 
-                # Styling
-                ax.set_facecolor((0.05, 0.05, 0.1))
-                ax.axis('off')
+                image = Image.frombytes("RGBA", (w, h), buf, "raw", "RGBA")
+                images.append(image)
 
-                # Save Frame
-                buf = io.BytesIO()
-                plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, facecolor=ax.get_facecolor())
-                plt.close(fig)  # Critical: Release memory
-
-                buf.seek(0)
-                images.append(Image.open(buf))
+            # Cleanup
+            plt.close(fig)
 
             if not images:
                 return None
@@ -111,7 +117,7 @@ class blueprintAnalysisTools:
                 format='GIF',
                 save_all=True,
                 append_images=images[1:],
-                duration=1000,
+                duration=2000/iframes,
                 loop=0
             )
             gif_buffer.seek(0)
@@ -119,6 +125,8 @@ class blueprintAnalysisTools:
 
         except Exception as e:
             print(f"Render worker failed: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     # --- HELPER: Async Interface ---
@@ -838,6 +846,154 @@ class blueprintAnalysisTools:
         # print(f"There is {netPartPointsLength} vector elements and {netPartPointCount} points.")
 
         return blueprintData
+
+    async def bakeGeometryV3(self, ctx: commands.Context, attachment):
+        """
+        Optimized version of bakeGeometry using NumPy vectorization and Matrix caching.
+        """
+        blueprintData = json.loads(await attachment.read())
+
+        objects_by_vuid = {int(obj['vuid']): obj for obj in blueprintData['objects']}
+        blueprints_by_id = {bp['id']: bp for bp in blueprintData['blueprints']}
+        meshes_by_vuid = {mesh['vuid']: mesh for mesh in blueprintData['meshes']}
+
+        transform_cache = {}
+
+        final_vertices = []
+        final_faces = []
+        vertex_offset_counter = 0
+
+        structures = [obj for obj in blueprintData['objects'] if "structureBlueprintVuid" in obj]
+
+        for obj in structures:
+            if "structureBlueprintVuid" not in obj:
+                continue
+
+            bp_id = obj['structureBlueprintVuid']
+            bp = blueprints_by_id.get(bp_id)
+            if not bp or bp['type'] != 'structure':
+                continue
+
+            mesh_vuid = bp['blueprint']['bodyMeshVuid']
+            mesh_data_entry = meshes_by_vuid.get(mesh_vuid)
+
+            if not mesh_data_entry:
+                continue
+
+            # Calculate Global Transform Matrix
+            global_matrix = await self._get_world_transform(int(obj['vuid']), objects_by_vuid, transform_cache)
+
+            # Process Mesh Vertices
+            raw_verts = mesh_data_entry['meshData']['mesh']['vertices']
+            raw_faces = mesh_data_entry['meshData']['mesh']['faces']
+
+            if not raw_verts:
+                continue
+
+            vertices_np = numpy.array(raw_verts).reshape(-1, 3)
+
+            # Homogeneous coords
+            ones = numpy.ones((vertices_np.shape[0], 1))
+            vertices_homogenous = numpy.hstack([vertices_np, ones])
+
+            # Apply Transform: (N, 4) @ (4, 4).T -> (N, 4)
+            transformed_verts = vertices_homogenous @ global_matrix.T
+
+            xyz_verts = transformed_verts[:, :3]
+
+            # Append Standard Vertices
+            final_vertices.extend(xyz_verts.flatten().tolist())
+
+            # Process Standard Faces
+            for face in raw_faces:
+                new_face = copy.copy(face)
+                new_face['v'] = [idx + vertex_offset_counter for idx in face['v']]
+                final_faces.append(new_face)
+
+            vertex_offset_counter += len(vertices_np)
+
+            # Handle Mirroring (Flag 6 or 7)
+            # FIXED: Mirror logic now duplicates the WORLD SPACE vertices by flipping their X.
+            # This ensures symmetry across the vehicle centerline (Hull X-axis).
+            flags = int(obj.get("flags", 0))
+            if flags in [6, 7]:
+                xyz_mirror_verts = xyz_verts.copy()
+                xyz_mirror_verts[:, 0] *= -1  # Flip World X
+
+                final_vertices.extend(xyz_mirror_verts.flatten().tolist())
+
+                # Handle Mirrored Faces (Flip Winding)
+                for face in raw_faces:
+                    new_face = copy.copy(face)
+                    # Flip index order: [0, 1, 2] -> [0, 2, 1]
+                    indices = [idx + vertex_offset_counter for idx in face['v']]
+                    new_face['v'] = indices[::-1]
+                    final_faces.append(new_face)
+
+                vertex_offset_counter += len(xyz_mirror_verts)
+
+        if len(blueprintData['meshes']) > 0:
+            blueprintData['meshes'][0]['meshData']['mesh']['vertices'] = final_vertices
+            blueprintData['meshes'][0]['meshData']['mesh']['faces'] = final_faces
+
+        return blueprintData
+
+    async def _get_world_transform(self, vuid: int, objects_by_vuid: dict, memo: dict) -> numpy.ndarray:
+        """
+        Recursively calculates the global transformation matrix for a specific object.
+        Uses memoization to avoid re-calculating parents.
+        """
+        if vuid in memo:
+            return memo[vuid]
+
+        # Base case: Root of the tree (parent is -1)
+        if vuid == -1:
+            return numpy.identity(4)
+
+        obj = objects_by_vuid[vuid]
+
+        # 1. Local Translation
+        pos = obj["transform"]["pos"]
+
+        # 2. Local Rotation
+        rot = obj["transform"]["rot"]
+
+        rx, ry, rz = math.radians(rot[0]), math.radians(rot[1]), math.radians(rot[2])
+
+        # Manual matrix construction
+        c, s = math.cos(rz), math.sin(rz)
+        Mz = numpy.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+        c, s = math.cos(rx), math.sin(rx)
+        Mx = numpy.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+
+        c, s = math.cos(ry), math.sin(ry)
+        My = numpy.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+
+        # Order changed to My @ Mx @ Mz (matches V2 application order when Transposed)
+        R_matrix = My @ Mx @ Mz
+
+        # 3. Local Scale
+        # FIX: Disabled scaling per user request.
+        # This matches the behavior of V2 which ignored the "scale" parameter for structures.
+        S_matrix = numpy.identity(3)
+
+        # 4. Construct Local Transform Matrix (4x4)
+        RS = R_matrix @ S_matrix
+
+        local_matrix = numpy.identity(4)
+        local_matrix[0:3, 0:3] = RS
+        local_matrix[0:3, 3] = pos
+
+        # 5. Get Parent Global Transform
+        parent_vuid = int(obj["pvuid"])
+        parent_matrix = await self._get_world_transform(parent_vuid, objects_by_vuid, memo)
+
+        # 6. Global = Parent @ Local
+        global_matrix = parent_matrix @ local_matrix
+
+        memo[vuid] = global_matrix
+        return global_matrix
 
 async def runMeshTranslation(ctx: commands.Context, meshData, sourcePartInfo):
     # print("Hi!")

@@ -687,15 +687,28 @@ class blueprintFunctions2(commands.Cog):
 
                 gif_file = None
                 bp_cog = self.bot.get_cog("blueprintFunctions")
-                if bp_cog and attachment.size < 1000000:
+                iframes_in = 6
+
+                baked_data = await self.bot.analyzer.bakeGeometryV3(ctx, blueprint_attachment)
+                mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
+                complexity_score = len(str(mesh_to_render))
+
+                if complexity_score < 2000000:
+                    iframes_in = 8
+                if complexity_score < 600000:
+                    iframes_in = 12
+                if complexity_score < 200000:
+                    iframes_in = 24
+
+                if bp_cog and complexity_score < 3780000:
                     try:
                         if "0.2" in blueprint_data["header"]["gameVersion"]:
-                            baked_data = await self.bot.analyzer.bakeGeometryV2(ctx, blueprint_attachment)
+                            baked_data = await self.bot.analyzer.bakeGeometryV3(ctx, blueprint_attachment)
                             mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
                         else:
                             mesh_to_render = blueprint_data["meshes"][0]["meshData"]["mesh"]
-
-                        gif_file = await self.bot.analyzer.generate_blueprint_gif(mesh_to_render, blueprint_data['header']['name'])
+                        await ctx.send("Generating GIF, this could take awhile...")
+                        gif_file = await self.bot.analyzer.generate_blueprint_gif(mesh_to_render, blueprint_data['header']['name'], iframes=iframes_in)
                         if gif_file:
                             embed.set_image(url=f"attachment://{gif_file.filename}")
                     except Exception as e:
