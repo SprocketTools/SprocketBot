@@ -57,7 +57,7 @@ class blueprintAnalysisTools:
                 x_max - x_min,
                 y_max - y_min,
                 z_max - z_min
-            ]).max() / 2.0 * 1.02
+            ]).max() / 3.0 * 1.1
 
             # Pre-compute polygons once
             polygons = [vertices[face['v']] for face in faces]
@@ -147,6 +147,30 @@ class blueprintAnalysisTools:
         if gif_buffer:
             return discord.File(gif_buffer, filename=f'{name}_render.gif')
         return None
+
+    def runMeshMirror(self, meshData, sourcePartInfo):
+        # print("Hi!")
+
+        sourcePartPosX = sourcePartInfo["pos"][0]
+        sourcePartPosY = sourcePartInfo["pos"][1]
+        sourcePartPosZ = sourcePartInfo["pos"][2]
+        sourcePartRotX = math.radians(sourcePartInfo["rot"][0])
+        sourcePartRotY = math.radians(sourcePartInfo["rot"][1])
+        sourcePartRotZ = math.radians(sourcePartInfo["rot"][2])
+        sourcePartPoints = meshData["meshData"]["mesh"]["vertices"]
+        sourcePartPointsLength = len(sourcePartPoints)
+
+        # sourcePartSharedPoints = sourcePartInfo["compartment"]["sharedPoints"]
+        # sourcePartThicknessMap = sourcePartInfo["compartment"]["thicknessMap"]
+        # sourcePartFaceMap = sourcePartInfo["compartment"]["faceMap"]
+        # point positions (accounting for position + rotation)
+        pos = 0
+        # vector rotation
+        while pos < sourcePartPointsLength:
+            sourcePartPoints[pos] = -1 * (sourcePartPoints[pos])
+            pos += 3
+        # shared point lists (adjusted to not overlap with current faces)
+        return sourcePartPoints
 
     def _get_face_normal(self, v1, v2, v3):
         """Calculates the normal vector of a face defined by three vertices."""
@@ -597,7 +621,7 @@ class blueprintAnalysisTools:
             print(f"Blueprint Analysis Error: {e}")
             return {'valid': False, 'error': str(e)}
 
-    async def bakeGeometryV2(ctx: commands.Context, attachment):
+    async def bakeGeometryV2(self, ctx: commands.Context, attachment):
         blueprintData = json.loads(await attachment.read())
         blueprintDataSave = json.loads(await attachment.read())
         name = blueprintData["header"]["name"]
@@ -745,12 +769,7 @@ class blueprintAnalysisTools:
                                                     netPartPointsLength = len(newPoints)
                                                     netPartPointCount = int(netPartPointsLength) / 3
                                                     print(object["transform"])
-                                                    newPoints = copy.deepcopy(
-                                                        newPoints) + await runMeshMirror(ctx,
-                                                                                                            meshesOut[
-                                                                                                                relevantObjectID],
-                                                                                                            subobject[
-                                                                                                                "transform"])
+                                                    newPoints = copy.deepcopy(newPoints) + self.runMeshMirror(meshesOut[relevantObjectID], subobject["transform"])
                                                     print(newPoints)
                                                     for facein in meshesOut[relevantObjectID]["meshData"]["mesh"][
                                                         "faces"]:
@@ -895,3 +914,4 @@ def braveRotateVector(vector, rot):
 
     # Print the final rotated vector
     return vector_yz
+

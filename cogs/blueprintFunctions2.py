@@ -689,14 +689,12 @@ class blueprintFunctions2(commands.Cog):
             if bp_cog:
                 try:
                     if "0.2" in blueprint_data["header"]["gameVersion"]:
-                        await blueprint_attachment.seek(0)
-                        baked_data = await self.bot.analyzer.bakeGeometryV2(blueprint_attachment)
+                        baked_data = await self.bot.analyzer.bakeGeometryV2(ctx, blueprint_attachment)
                         mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
                     else:
                         mesh_to_render = blueprint_data["meshes"][0]["meshData"]["mesh"]
 
-                    gif_file = await self.bot.analyzer.generate_blueprint_gif(mesh_to_render,
-                                                                              blueprint_data['header']['name'])
+                    gif_file = await self.bot.analyzer.generate_blueprint_gif(mesh_to_render, blueprint_data['header']['name'])
                     if gif_file:
                         embed.set_image(url=f"attachment://{gif_file.filename}")
                 except Exception as e:
@@ -709,7 +707,7 @@ class blueprintFunctions2(commands.Cog):
                 sent_message = await ctx.send(embed=embed)
 
             if sent_message and gif_file:
-                final_gif_url = sent_message.attachments[0].url
+                final_gif_url = sent_message.embeds[0].image.url
                 await self.bot.sql.databaseExecuteDynamic(
                     '''UPDATE blueprint_stats SET gif_url = $1 WHERE vehicle_id = $2;''',
                     [final_gif_url, stats['vehicle_id']]
