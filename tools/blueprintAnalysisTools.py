@@ -117,7 +117,7 @@ class blueprintAnalysisTools:
                 format='GIF',
                 save_all=True,
                 append_images=images[1:],
-                duration=2000/iframes,
+                duration=3500/iframes,
                 loop=0
             )
             gif_buffer.seek(0)

@@ -699,6 +699,8 @@ class blueprintFunctions2(commands.Cog):
                     iframes_in = 12
                 if complexity_score < 200000:
                     iframes_in = 24
+                if complexity_score < 120000:
+                    iframes_in = 36
 
                 if bp_cog and complexity_score < 3780000:
                     try:
