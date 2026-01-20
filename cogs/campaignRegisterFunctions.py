@@ -191,7 +191,7 @@ class campaignRegisterFunctions(commands.Cog):
             flagURL = await textTools.getFileURLResponse(ctx,"What is your country's flag?\n-# Upload a picture of your flag.")
             population = await textTools.getFlooredIntResponse(ctx,"What is the population of your country?\n-# For numerical replies like this one, do not include any commas.", 1000)
 
-            latitude = await textTools.getFloatResponse(ctx,"What is the average latitude of your country on the globe?  Reply with a number in degrees.\nNote that this value does not need to be precise and can be estimated.")
+            latitude = 0
             land = await textTools.getFlooredFloatResponse(ctx, "How many square kilometers of land does your country control?", 1)
             governanceScale = await ctx.bot.campaignTools.getGovernmentType(ctx)
             companyOwner = 0
@@ -349,8 +349,8 @@ class campaignRegisterFunctions(commands.Cog):
         await self.bot.sql.databaseExecuteDynamic('''DELETE FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         await ctx.send(f"## Done!\nYour server is no longer a part of an external campaign.")
 
-    @commands.command(name="joinFaction", description="Add a server to an ongoing campaign")
-    async def joinFaction(self, ctx: commands.Context):
+    @commands.command(name="joinCampaign", description="Add a server to an ongoing campaign")
+    async def joinCampaign(self, ctx: commands.Context):
         # await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         campaignData = await self.bot.sql.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignData['campaignkey']
@@ -388,12 +388,12 @@ class campaignRegisterFunctions(commands.Cog):
             print(user)
         await ctx.send(f"## Done!")
 
-    @commands.command(name="leaveFactions", description="Add a server to an ongoing campaign")
-    async def leaveFactions(self, ctx: commands.Context):
+    @commands.command(name="exitCampaign", description="Add a server to an ongoing campaign")
+    async def exitCampaign(self, ctx: commands.Context):
         campaignData = await self.bot.sql.databaseFetchrowDynamic('''SELECT campaignkey FROM campaignservers WHERE serverid = $1;''', [ctx.guild.id])
         campaignKey = campaignData['campaignkey']
         await self.bot.sql.databaseExecuteDynamic('''UPDATE campaignusers SET status = False WHERE userid = $1 AND campaignkey = $2;''',[ctx.author.id, campaignKey])
-        await ctx.send(f"## Done!\nYou are no longer in a faction!")
+        await ctx.send(f"{await self.bot.error.retrieveCategorizedError(ctx, 'campaign')}\n\nYou are no longer connected to any factions.  We hope you return someday soon...")
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(campaignRegisterFunctions(bot))

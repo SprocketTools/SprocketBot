@@ -1,8 +1,14 @@
+import io
+import json
 from datetime import datetime
 import discord
+import pandas as pd
+import matplotlib.dates as mdates
 import type_hints
 from discord.ext import commands
-
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
 promptResponses = {}
 from cogs.textTools import textTools
 from google import genai
@@ -118,6 +124,101 @@ class testingFunctions(commands.Cog):
         print(promptResponses[ctx.author.id])
         promptResponses.__delitem__(ctx.author.id)
 
+    @commands.command(name="plotWebhookData", description="Scrape webhook embeds and plot data")
+    async def plotWebhookData(self, ctx: commands.Context, limit: int = 50):
+        """
+        Scrapes the last 'limit' messages, parses the Embed fields,
+        and plots Temp, MQ3, and MQ9 over time.
+        """
+        await ctx.typing()
+
+        data_list = []
+
+        # 1. Scrape Channel History
+        async for message in ctx.channel.history(limit=limit):
+            if not message.embeds:
+                continue
+
+            try:
+                embed = message.embeds[0]
+
+                # Capture the Discord timestamp (It is UTC by default)
+                entry = {'timestamp': message.created_at}
+
+                # Parse the Fields
+                for field in embed.fields:
+                    val = field.value
+
+                    if "Temp" in field.name:
+                        # Extract "22.7" from "22.7°F | 80%"
+                        parts = val.split('|')
+                        temp_str = parts[0].strip()  # "22.7°F"
+                        hum_str = parts[1].strip()  # "80%"
+
+                        entry['temp'] = float(temp_str[:-2])  # Remove °F
+                        entry['humidity'] = float(hum_str[:-1])  # Remove %
+
+                    elif "Air Quality" in field.name:
+                        # Extract MQ-3 and MQ-9
+                        lines = val.split('\n')
+                        for line in lines:
+                            if "MQ-3" in line:
+                                entry['mq3'] = int(line.split(':')[1].strip())
+                            if "MQ-9" in line:
+                                entry['mq9'] = int(line.split(':')[1].strip())
+
+                if 'temp' in entry:
+                    data_list.append(entry)
+
+            except Exception as e:
+                continue
+
+        if not data_list:
+            await ctx.send(f"No valid embed data found in the last {limit} messages.")
+            return
+
+        # 2. Convert to DataFrame & Handle Time
+        df = pd.DataFrame(data_list)
+
+        # Reverse to get oldest -> newest
+        df = df.iloc[::-1]
+
+        # --- TIMEZONE FIX ---
+        # Discord gives UTC. We convert to 'America/Los_Angeles' (Pacific Time)
+        # Note: This requires pandas to have the timezone data, which is standard.
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df['timestamp'] = df['timestamp'].dt.tz_convert('America/Los_Angeles')
+
+        # 3. Create the Plot
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+
+        # Plot 1: Temperature
+        sns.lineplot(data=df, x='timestamp', y='temp', ax=ax1, color='#ff9900', label='Temp (°F)', marker='o')
+        ax1.set_ylabel("Temperature")
+        ax1.grid(True, alpha=0.3)
+        ax1.legend(loc='upper left')
+
+        # Plot 2: Air Quality
+        sns.lineplot(data=df, x='timestamp', y='mq3', ax=ax2, color='#00ccff', label='MQ-3 (Alc)')
+        sns.lineplot(data=df, x='timestamp', y='mq9', ax=ax2, color='#ff3333', label='MQ-9 (CO)')
+        ax2.set_ylabel("Gas Level (0-4095)")
+        ax2.grid(True, alpha=0.3)
+        ax2.legend(loc='upper left')
+
+        ax1.set_title("Environmental Monitor Log (Pacific Time)")
+
+        # --- FORMAT DATE AXIS ---
+        # Formats the X-axis to look like "01-19 14:30" (Month-Day Hour:Minute)
+        date_fmt = mdates.DateFormatter('%m-%d %H:%M', tz=df['timestamp'].dt.tz)
+        ax2.xaxis.set_major_formatter(date_fmt)
+
+        # Rotate labels so they don't overlap
+        plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45, ha='right')
+
+        # 4. Send
+        file = self.create_plot_buffer(fig)
+        await ctx.send(file=file)
+
     @commands.command(name="getNames", description="testing some stuff")
     async def getNames(self, ctx: commands.Context, *, input:str):
         out = ""
@@ -125,6 +226,14 @@ class testingFunctions(commands.Cog):
         for ID in IDlist:
             out = out + ctx.guild.get_member(int(ID)).display_name + "\n"
         await ctx.reply(out)
+
+    def create_plot_buffer(self, figure):
+        """Helper to convert a matplotlib figure to a discord File object in memory"""
+        buffer = io.BytesIO()
+        figure.savefig(buffer, format='png', bbox_inches='tight', transparent=True)
+        buffer.seek(0)
+        plt.close(figure)  # Close to free up memory
+        return discord.File(buffer, filename="plot.png")
 
     @commands.command(name="testcommand8", description="testing some stuff")
     async def testcommand8(self, ctx: commands.Context):

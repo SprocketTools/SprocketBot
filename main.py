@@ -39,7 +39,38 @@ SQLsettings["database"] = instanceConfig[f"botinfo"]["sqldatabase"]
 ownerID = int(baseConfig["settings"]["ownerID"])
 githubPAT = baseConfig["settings"]["githubpat"]
 updateGithub = instanceConfig.getboolean("botinfo", "updateGithub", fallback=False)
-cogsList = ["cogs.textTools", "cogs.registerFunctions", "cogs.campaignRegisterFunctions", "cogs.autoResponderFunctions", "cogs.blueprintFunctions", "cogs.blueprintFunctions2", "cogs.errorFunctions", "cogs.adminFunctions", "cogs.imageFunctions", "cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.contestFunctions", "cogs.SprocketOfficialFunctions", "cogs.campaignManageFunctions", "cogs.jarvisFunctions", "cogs.campaignFinanceFunctions", "cogs.antiScamTools", "cogs.campaignUpdateFunctions", "cogs.testingFunctions", "cogs.campaignTransactionFunctions", "cogs.VCfunctions", "cogs.channelFunctions", "cogs.timedMessageTools", "cogs.serverFunctions", "cogs.flyoutTools", "cogs.clickupFunctions", "cogs.starboardFunctions", "cogs.roleColorTools", "cogs.observatoryFunctions"]
+cogsList = ["cogs.textTools",
+            "cogs.registerFunctions",
+            "cogs.campaignRegisterFunctions",
+            "cogs.autoResponderFunctions",
+            "cogs.blueprintFunctions",
+            "cogs.blueprintFunctions2",
+            "cogs.errorFunctions",
+            "cogs.adminFunctions",
+            "cogs.imageFunctions",
+            "cogs.campaignMapsFunctions",
+            "cogs.campaignInfoFunctions",
+            "cogs.contestFunctions",
+            "cogs.SprocketOfficialFunctions",
+            "cogs.campaignManageFunctions",
+            "cogs.jarvisFunctions",
+            "cogs.campaignFinanceFunctions",
+            "cogs.campaignResearchFunctions",
+            "cogs.campaignFactoryFunctions",
+            "cogs.antiScamTools",
+            "cogs.campaignUpdateFunctions",
+            "cogs.testingFunctions",
+            "cogs.campaignTransactionFunctions",
+            "cogs.VCfunctions",
+            "cogs.channelFunctions",
+            "cogs.timedMessageTools",
+            "cogs.serverFunctions",
+            "cogs.flyoutTools",
+            "cogs.clickupFunctions",
+            "cogs.starboardFunctions",
+            "cogs.roleColorTools",
+            "cogs.observatoryFunctions"]
+    # A long list of almost everything.  
 
 class Bot(commands.Bot):
     # ... (__init__ and setup_hook are unchanged) ...
