@@ -124,42 +124,51 @@ class testingFunctions(commands.Cog):
         print(promptResponses[ctx.author.id])
         promptResponses.__delitem__(ctx.author.id)
 
-    @commands.command(name="plotWebhookData", description="Scrape webhook embeds and plot data")
-    async def plotWebhookData(self, ctx: commands.Context, limit: int = 50):
+    @commands.command(name="plotWebhookData", description="Scrape data and 'Note:' messages")
+    async def plotWebhookData(self, ctx: commands.Context, limit: int = 1000):
         """
-        Scrapes the last 'limit' messages, parses the Embed fields,
-        and plots Temp/Hum (Dual Axis) and Gas Levels over time.
+        Scrapes the last 'limit' messages.
+        - Parses Embeds for Sensor Data (Temp/Hum/Gas).
+        - Parses Text Messages starting with "Note: " for events.
+        - Plots everything on 3 synchronized charts.
         """
         await ctx.typing()
 
-        data_list = []
+        sensor_data = []
+        note_data = []
 
         # 1. Scrape Channel History
         async for message in ctx.channel.history(limit=limit):
+
+            # --- CAPTURE NOTES ---
+            # Check if it's a user note (Text content starts with "Note: ")
+            if message.content.startswith("Note: "):
+                note_data.append({
+                    'timestamp': message.created_at,
+                    'note': "Event"  # Dummy value for Y-axis alignment
+                })
+                continue  # Skip embed processing for this message
+
+            # --- CAPTURE SENSOR DATA ---
+            # Only process if it has an embed
             if not message.embeds:
                 continue
 
             try:
                 embed = message.embeds[0]
-
-                # Capture the Discord timestamp (UTC)
                 entry = {'timestamp': message.created_at}
 
-                # Parse the Fields
                 for field in embed.fields:
                     val = field.value
 
                     if "Temp" in field.name:
-                        # Extract "22.7" from "22.7°F | 80%"
                         parts = val.split('|')
-                        temp_str = parts[0].strip()  # "22.7°F"
-                        hum_str = parts[1].strip()  # "80%"
-
+                        temp_str = parts[0].strip()
+                        hum_str = parts[1].strip()
                         entry['temp'] = float(temp_str[:-2])  # Remove °F
                         entry['humidity'] = float(hum_str[:-1])  # Remove %
 
                     elif "Air Quality" in field.name:
-                        # Extract MQ-3 and MQ-9
                         lines = val.split('\n')
                         for line in lines:
                             if "MQ-3" in line:
@@ -168,69 +177,102 @@ class testingFunctions(commands.Cog):
                                 entry['mq9'] = int(line.split(':')[1].strip())
 
                 if 'temp' in entry:
-                    data_list.append(entry)
+                    sensor_data.append(entry)
 
-            except Exception as e:
+            except Exception:
                 continue
 
-        if not data_list:
-            await ctx.send(f"No valid embed data found in the last {limit} messages.")
+        if not sensor_data:
+            await ctx.send("No sensor data found.")
             return
 
-        # 2. Convert to DataFrame & Handle Time
-        df = pd.DataFrame(data_list)
-        df = df.iloc[::-1]  # Oldest first
+        # 2. Process Sensor Data
+        df = pd.DataFrame(sensor_data)
+        df = df.sort_values('timestamp')  # Ensure chronological order
+        df['timestamp'] = pd.to_datetime(df['timestamp']).dt.tz_convert('America/Los_Angeles')
 
-        # Convert UTC to Pacific Time
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
-        df['timestamp'] = df['timestamp'].dt.tz_convert('America/Los_Angeles')
+        # 3. Process Note Data (if any)
+        df_notes = pd.DataFrame()
+        if note_data:
+            df_notes = pd.DataFrame(note_data)
+            df_notes = df_notes.sort_values('timestamp')
+            df_notes['timestamp'] = pd.to_datetime(df_notes['timestamp']).dt.tz_convert('America/Los_Angeles')
+            df_notes['y_val'] = 1  # Constant Y value to keep dots in a row
 
-        # 3. Create the Plot
-        # We use constrained_layout to prevent labels from getting cut off
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True, constrained_layout=True)
+        # 4. Create Plot (3 Rows)
+        # sharex=True aligns them all to the same timeline
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 12), sharex=True,
+                                            gridspec_kw={'height_ratios': [3, 3, 1]}, constrained_layout=True)
 
-        # --- PLOT 1: ENVIRONMENT (Dual Axis) ---
-        # Left Axis: Temperature
+        # --- GLOBAL COLOR SETTINGS (No Black) ---
+        text_color = 'white'
+        grid_color = '#555555'  # Dark Gray
+
+        # --- PLOT 1: ENVIRONMENT ---
         color_temp = '#ff9900'  # Orange
         sns.lineplot(data=df, x='timestamp', y='temp', ax=ax1, color=color_temp, label='Temp (°F)', marker='o',
                      legend=False)
         ax1.set_ylabel("Temperature (°F)", color=color_temp, fontsize=12, fontweight='bold')
-        ax1.tick_params(axis='y', labelcolor=color_temp)
-        ax1.grid(True, linestyle='--', alpha=0.3)
+        ax1.tick_params(axis='y', labelcolor=color_temp, colors=text_color)
+        ax1.tick_params(axis='x', colors=text_color)
+        ax1.grid(True, linestyle='--', alpha=0.3, color=grid_color)
 
-        # Right Axis: Humidity
-        ax1_hum = ax1.twinx()  # Create a second Y-axis sharing the same X
+        # Plot 1 Humidity (Twin Axis)
+        ax1_hum = ax1.twinx()
         color_hum = '#00ffcc'  # Cyan
         sns.lineplot(data=df, x='timestamp', y='humidity', ax=ax1_hum, color=color_hum, label='Humidity (%)',
                      linestyle='--', marker='x', legend=False)
         ax1_hum.set_ylabel("Humidity (%)", color=color_hum, fontsize=12, fontweight='bold')
-        ax1_hum.tick_params(axis='y', labelcolor=color_hum)
+        ax1_hum.tick_params(axis='y', labelcolor=color_hum, colors=text_color)
+        ax1_hum.spines['bottom'].set_color(text_color)
+        ax1_hum.spines['top'].set_color(text_color)
 
-        # Combine Legends for Top Plot
+        # Legend 1
         lines_1, labels_1 = ax1.get_legend_handles_labels()
         lines_2, labels_2 = ax1_hum.get_legend_handles_labels()
-        ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='upper left')
+        leg1 = ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='upper left')
+        plt.setp(leg1.get_texts(), color=text_color)  # Legend text white
 
-        ax1.set_title("Environment Log (Pacific Time)", fontsize=14)
+        ax1.set_title("Environment Log (Pacific Time)", fontsize=14, color=text_color)
 
         # --- PLOT 2: AIR QUALITY ---
         sns.lineplot(data=df, x='timestamp', y='mq3', ax=ax2, color='#00ccff', label='MQ-3 (Alc)')
         sns.lineplot(data=df, x='timestamp', y='mq9', ax=ax2, color='#ff3333', label='MQ-9 (CO)')
 
-        ax2.set_ylabel("Sensor Reading (0-4095)", fontsize=12)
-        ax2.grid(True, linestyle='--', alpha=0.3, which='both')
-        ax2.legend(loc='upper left')
+        ax2.set_ylabel("Sensor Reading", fontsize=12, color=text_color)
+        ax2.tick_params(axis='both', colors=text_color)
+        ax2.grid(True, linestyle='--', alpha=0.3, color=grid_color)
+        leg2 = ax2.legend(loc='upper left')
+        plt.setp(leg2.get_texts(), color=text_color)
 
-        # Force Integer Ticks on Y-axis (optional, makes it cleaner)
-        # ax2.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+        # --- PLOT 3: EVENTS / NOTES ---
+        if not df_notes.empty:
+            # Plot Red Dots
+            sns.scatterplot(data=df_notes, x='timestamp', y='y_val', ax=ax3, color='red', s=100, marker='o',
+                            label='User Note')
 
-        # --- FORMAT DATE AXIS ---
+            # Annotate dots with "Note" text (Optional - can get messy if too many)
+            # for i in range(df_notes.shape[0]):
+            #     ax3.text(df_notes.timestamp.iloc[i], 1.02, "Note", color='red', fontsize=8, ha='center')
+
+        # Styling Plot 3 to look like a timeline track
+        ax3.set_ylabel("Events", fontsize=12, color=text_color)
+        ax3.set_ylim(0.5, 1.5)  # Lock Y-axis so dots stay centered
+        ax3.set_yticks([])  # Hide Y numbers (not needed for boolean events)
+        ax3.tick_params(axis='x', colors=text_color)
+        ax3.grid(True, linestyle='--', alpha=0.3, color=grid_color)
+        ax3.spines['bottom'].set_color(text_color)
+        ax3.spines['top'].set_color(text_color)
+        ax3.spines['left'].set_color(text_color)
+        ax3.spines['right'].set_color(text_color)
+
+        # --- FORMAT DATE AXIS (Applied to Bottom Plot) ---
         date_fmt = mdates.DateFormatter('%m-%d %H:%M', tz=df['timestamp'].dt.tz)
-        ax2.xaxis.set_major_formatter(date_fmt)
-        plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45, ha='right')
-        ax2.set_xlabel("Time", fontsize=12)
+        ax3.xaxis.set_major_formatter(date_fmt)
+        plt.setp(ax3.xaxis.get_majorticklabels(), rotation=45, ha='right')
+        ax3.set_xlabel("Time", fontsize=12, color=text_color)
 
-        # 4. Send
+        # 5. Send
         file = self.create_plot_buffer(fig)
         await ctx.send(file=file)
 
