@@ -128,7 +128,7 @@ class testingFunctions(commands.Cog):
     async def plotWebhookData(self, ctx: commands.Context, limit: int = 50):
         """
         Scrapes the last 'limit' messages, parses the Embed fields,
-        and plots Temp, MQ3, and MQ9 over time.
+        and plots Temp/Hum (Dual Axis) and Gas Levels over time.
         """
         await ctx.typing()
 
@@ -142,7 +142,7 @@ class testingFunctions(commands.Cog):
             try:
                 embed = message.embeds[0]
 
-                # Capture the Discord timestamp (It is UTC by default)
+                # Capture the Discord timestamp (UTC)
                 entry = {'timestamp': message.created_at}
 
                 # Parse the Fields
@@ -179,41 +179,56 @@ class testingFunctions(commands.Cog):
 
         # 2. Convert to DataFrame & Handle Time
         df = pd.DataFrame(data_list)
+        df = df.iloc[::-1]  # Oldest first
 
-        # Reverse to get oldest -> newest
-        df = df.iloc[::-1]
-
-        # --- TIMEZONE FIX ---
-        # Discord gives UTC. We convert to 'America/Los_Angeles' (Pacific Time)
-        # Note: This requires pandas to have the timezone data, which is standard.
+        # Convert UTC to Pacific Time
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df['timestamp'] = df['timestamp'].dt.tz_convert('America/Los_Angeles')
 
         # 3. Create the Plot
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+        # We use constrained_layout to prevent labels from getting cut off
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True, constrained_layout=True)
 
-        # Plot 1: Temperature
-        sns.lineplot(data=df, x='timestamp', y='temp', ax=ax1, color='#ff9900', label='Temp (°F)', marker='o')
-        ax1.set_ylabel("Temperature")
-        ax1.grid(True, alpha=0.3)
-        ax1.legend(loc='upper left')
+        # --- PLOT 1: ENVIRONMENT (Dual Axis) ---
+        # Left Axis: Temperature
+        color_temp = '#ff9900'  # Orange
+        sns.lineplot(data=df, x='timestamp', y='temp', ax=ax1, color=color_temp, label='Temp (°F)', marker='o',
+                     legend=False)
+        ax1.set_ylabel("Temperature (°F)", color=color_temp, fontsize=12, fontweight='bold')
+        ax1.tick_params(axis='y', labelcolor=color_temp)
+        ax1.grid(True, linestyle='--', alpha=0.3)
 
-        # Plot 2: Air Quality
+        # Right Axis: Humidity
+        ax1_hum = ax1.twinx()  # Create a second Y-axis sharing the same X
+        color_hum = '#00ffcc'  # Cyan
+        sns.lineplot(data=df, x='timestamp', y='humidity', ax=ax1_hum, color=color_hum, label='Humidity (%)',
+                     linestyle='--', marker='x', legend=False)
+        ax1_hum.set_ylabel("Humidity (%)", color=color_hum, fontsize=12, fontweight='bold')
+        ax1_hum.tick_params(axis='y', labelcolor=color_hum)
+
+        # Combine Legends for Top Plot
+        lines_1, labels_1 = ax1.get_legend_handles_labels()
+        lines_2, labels_2 = ax1_hum.get_legend_handles_labels()
+        ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='upper left')
+
+        ax1.set_title("Environment Log (Pacific Time)", fontsize=14)
+
+        # --- PLOT 2: AIR QUALITY ---
         sns.lineplot(data=df, x='timestamp', y='mq3', ax=ax2, color='#00ccff', label='MQ-3 (Alc)')
         sns.lineplot(data=df, x='timestamp', y='mq9', ax=ax2, color='#ff3333', label='MQ-9 (CO)')
-        ax2.set_ylabel("Gas Level (0-4095)")
-        ax2.grid(True, alpha=0.3)
+
+        ax2.set_ylabel("Sensor Reading (0-4095)", fontsize=12)
+        ax2.grid(True, linestyle='--', alpha=0.3, which='both')
         ax2.legend(loc='upper left')
 
-        ax1.set_title("Environmental Monitor Log (Pacific Time)")
+        # Force Integer Ticks on Y-axis (optional, makes it cleaner)
+        # ax2.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
 
         # --- FORMAT DATE AXIS ---
-        # Formats the X-axis to look like "01-19 14:30" (Month-Day Hour:Minute)
         date_fmt = mdates.DateFormatter('%m-%d %H:%M', tz=df['timestamp'].dt.tz)
         ax2.xaxis.set_major_formatter(date_fmt)
-
-        # Rotate labels so they don't overlap
         plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45, ha='right')
+        ax2.set_xlabel("Time", fontsize=12)
 
         # 4. Send
         file = self.create_plot_buffer(fig)
