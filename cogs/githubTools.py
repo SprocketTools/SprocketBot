@@ -538,7 +538,7 @@ class githubTools(commands.Cog):
                 <a href="TopGearCalculator.html">Gear Calculator</a>
                 <a href="resources.html">Sprocket Guides</a>
                 <a href="credits.html">Credits</a>
-                <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
+                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Get Trolled</a>
                 <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
                 <a href="PaintsFeatured.html">Paint Catalog</a>
                 <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
@@ -635,7 +635,7 @@ class githubTools(commands.Cog):
                 <a href="TopGearCalculator.html">Gear Calculator</a>
                 <a href="resources.html">Sprocket Guides</a>
                 <a href="credits.html">Credits</a>
-                <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
+                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Get Trolled</a>
                 <a href="DecalsFeatured.html">Decal Catalog</a>
                 <a class="active" href="PaintsFeatured.html">Paint Catalog</a>
                 <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
@@ -718,7 +718,7 @@ class githubTools(commands.Cog):
                         <a href="TopGearCalculator.html">Gear Calculator</a>
                         <a href="resources.html">Sprocket Guides</a>
                         <a href="credits.html">Credits</a>
-                        <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
+                        <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Get Trolled</a>
                         <a href="DecalsFeatured.html">Decal Catalog</a>
                         <a class="active" href="PaintsFeatured.html">Paint Catalog</a>
                         <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
@@ -768,7 +768,7 @@ class githubTools(commands.Cog):
                                 <a href="TopGearCalculator.html">Gear Calculator</a>
                                 <a href="resources.html">Sprocket Guides</a>
                                 <a href="credits.html">Credits</a>
-                                <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
+                                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Get Trolled</a>
                                 <a class="active" href="DecalsFeatured.html">Decal Catalog</a>
                                 <a href="PaintsFeatured.html">Paint Catalog</a>
                                 <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
@@ -979,7 +979,7 @@ class githubTools(commands.Cog):
             <a href="VehicleGenerator.html">Random Tank Picker</a>
             <a href="resources.html">Guides</a>
             <a href="credits.html">Credits</a>
-            <a href="https://www.youtube.com/watch?v=p7YXXieghto">Get Trolled</a>
+            <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Get Trolled</a>
             <a href="DecalsFeatured.html">Decal Catalog</a>
             <a href="DecalsRGBmaker.html">RGB Decal Maker</a>
         </div>
