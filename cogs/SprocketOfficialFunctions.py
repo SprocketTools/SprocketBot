@@ -53,8 +53,8 @@ class SprocketOfficialFunctions(commands.Cog):
             await member.kick(reason="Did not claim member role in time.")
 
 
-    @commands.command(name="askHamish", description="Ask Hamish a question.")
-    async def askHamish(self, ctx: commands.Context):
+    @commands.command(name="askDevs", description="Ask Hamish a question.")
+    async def askDevs(self, ctx: commands.Context):
         role = ctx.author.roles
         if ctx.bot.botMode != True:
             channel = self.bot.get_channel(1142053423370481747)
@@ -82,7 +82,7 @@ class SprocketOfficialFunctions(commands.Cog):
         async for messagee in message_raw:
             messages.append({'author nickname': messagee.author.display_name, 'author username': messagee.author.name,
                              "user_id": messagee.author.id, 'content': messagee.content, 'message_url': messagee.jump_url})
-        ai_response = await ctx.bot.AI.get_response(prompt=f'''User 'DaniDani' wants to ask the game developer 'Hamish' a question.  Analyze the attached message history and see if an exact answer to DaniDani's question already exists.  If there are any exact answers to DaniDani's question, reply with a comma-separated list of the 'message_url' URLs that link to these exact answers from Hamish.  If DaniDani's question is a game suggestion, and not an more general question for the developer, reply with exactly 'no' so that the processing code allows the user to continue.  Otherwise, reply with exactly 'yes' and nothing else.''', temperature=0.1, instructions=f"Here is the question asked by the user 'DaniDani': {messageOut}\n----------------\nHere is the recent history in reverse order: {messages}\n\n")
+        ai_response = await ctx.bot.AI.get_response(prompt=f'''User '{ctx.author.name}' wants to ask the game developers 'Hamish' and 'Mark' a question.  Analyze the attached message history and see if an exact answer to {ctx.author.name}'s question already exists.  If there are any exact answers to {ctx.author.name}'s question, reply with a comma-separated list of the 'message_url' URLs that link to these exact answers from Hamish or Mark.  If {ctx.author.name}'s question is a game suggestion, and not an more general question for the developer, reply with exactly 'no' so that the processing code allows the user to continue.  Otherwise, reply with exactly 'yes' and nothing else.''', temperature=0.1, instructions=f"Here is the question asked by the user '{ctx.author.name}': {messageOut}\n----------------\nHere is the recent history in reverse order: \n\n\n {messages}\n\n")
 
         if "https://" in ai_response:
             await ctx.message.reply(f"It seems like this question has already been answered here: {ai_response}")
@@ -110,9 +110,9 @@ class SprocketOfficialFunctions(commands.Cog):
                 return
             if random.random() < 0.033:
                 if random.random() < 0.3:
-                    messageOut = "Dearest Hamish Dunn, I come bearing a humble question to offer to thus.  " + messageOut
+                    messageOut = "Dearest dev team, I come bearing a humble question to offer to thus. " + messageOut
                 elif random.random() < 0.6:
-                    messageOut = "Daddy Hamish, " + messageOut
+                    messageOut = "Mic drop! Just kidding, " + messageOut
                 elif random.random() < 0.8:
                     messageOut = "Testing testing 1-2-3\n" + messageOut
                 else:
