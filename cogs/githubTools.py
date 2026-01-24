@@ -594,8 +594,12 @@ class githubTools(commands.Cog):
                     </div>
                     <ul class="catalog">'''
                 HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
-                decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
-                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND (type <> 'paint' OR type IS NULL) ORDER BY name;''')]
+                if category == "featured":
+                    decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
+                        f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND (type <> 'paint' OR type IS NULL) ORDER BY RAND() LIMIT 12;''')]
+                else:
+                    decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
+                        f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND (type <> 'paint' OR type IS NULL) ORDER BY name;''')]
                 for decalInfo in decalList:
                     print("Hi!")
                     decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
@@ -684,8 +688,12 @@ class githubTools(commands.Cog):
                 </div>
                 <ul class="catalog">'''
             HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
-            decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
-                f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND type = 'paint' ORDER BY name;''')]
+            if category == "featured":
+                decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
+                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND type = 'paint' ORDER BY RAND() LIMIT 8;''')]
+            else:
+                decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
+                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND type = 'paint' ORDER BY name;''')]
             for decalInfo in decalList:
                 print("Hi!")
                 decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
