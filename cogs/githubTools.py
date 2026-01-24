@@ -596,7 +596,7 @@ class githubTools(commands.Cog):
                 HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
                 if category == "Featured":
                     decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
-                        f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND (type <> 'paint' OR type IS NULL) ORDER BY RAND() LIMIT 12;''')]
+                        f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND (type <> 'paint' OR type IS NULL) ORDER BY RANDOM() LIMIT 12;''')]
                 else:
                     decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
                         f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND (type <> 'paint' OR type IS NULL) ORDER BY name;''')]
@@ -690,7 +690,7 @@ class githubTools(commands.Cog):
             HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
             if category == "Featured":
                 decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
-                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND type = 'paint' ORDER BY RAND() LIMIT 8;''')]
+                    f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND type = 'paint' ORDER BY RANDOM() LIMIT 8;''')]
             else:
                 decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
                     f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND type = 'paint' ORDER BY name;''')]
