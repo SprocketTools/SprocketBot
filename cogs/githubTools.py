@@ -594,7 +594,7 @@ class githubTools(commands.Cog):
                     </div>
                     <ul class="catalog">'''
                 HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
-                if category == "featured":
+                if category == "Featured":
                     decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
                         f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND (type <> 'paint' OR type IS NULL) ORDER BY RAND() LIMIT 12;''')]
                 else:
@@ -688,7 +688,7 @@ class githubTools(commands.Cog):
                 </div>
                 <ul class="catalog">'''
             HTMLdoc = f'{HTMLdoc}{HTMLdocmid}'
-            if category == "featured":
+            if category == "Featured":
                 decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
                     f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND type = 'paint' ORDER BY RAND() LIMIT 8;''')]
             else:
