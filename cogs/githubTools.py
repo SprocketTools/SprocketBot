@@ -925,8 +925,13 @@ class githubTools(commands.Cog):
             return
         decalList = await self.bot.ui.getResponse(ctx, f"Reply with the a list of stripped names or URLs of the decal(s) you wish to change.  **Separate by newlines.**\nEx: `6_side_circle.png` or `https://sprockettools.github.io/img/dirt_stains.png`")
         listOut = decalList.split("\n")
+        await ctx.send("Are these decals (yes) or paints (no)?")
+        ispaint = await self.bot.ui.getYesNoChoice(ctx)
         userPrompt = f"Alright then, pick a new category to use with these."
-        newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+        if ispaint:
+            newCategory = await ctx.bot.ui.getChoiceFromList(ctx, imageCategoryList, userPrompt)
+        else:
+            newCategory = await ctx.bot.ui.getChoiceFromList(ctx, paintCategoryList, userPrompt)
         for decalName in listOut:
             values = [newCategory, decalName.replace("https://sprockettools.github.io/img/", "")]
             await self.bot.sql.databaseExecuteDynamic(
