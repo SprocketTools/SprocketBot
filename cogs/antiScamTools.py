@@ -111,7 +111,7 @@ class antiScamFunctions(commands.Cog):
             embed.add_field(name="User ID", value=f"{message.author.id}", inline=False)
             embed.add_field(name="User ping", value=f"<@{message.author.id}>", inline=False)
             embed.add_field(name="Server", value=f"{message.guild.name}>", inline=False)
-            embed.add_field(name="Spacing", value=f"{(message.created_at - oldPacket["timestamp"]).total_seconds()}s>", inline=False)
+            embed.add_field(name="Spacing", value=f'''{(message.created_at - oldPacket["timestamp"]).total_seconds()}s''', inline=False)
             # Send logs
             if logChannel:
                 await logChannel.send(embed=embed)
