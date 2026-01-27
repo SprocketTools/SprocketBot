@@ -37,9 +37,9 @@ class campaignRegisterFunctions(commands.Cog):
         if not await ctx.bot.ui.getYesNoChoice(ctx):
             return
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS campaigns, campaignservers, campaignfactions, campaignusers, campaignautopurchases;''')
-        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaigns (campaignname VARCHAR, campaignrules VARCHAR(50000), hostserverid BIGINT, campaignkey BIGINT, timescale BIGINT, currencyname VARCHAR, currencysymbol VARCHAR, publiclogchannelid BIGINT, privatemoneychannelid BIGINT, companychannelid BIGINT, managerchannelid BIGINT, defaultgdpgrowth REAL, defaultpopgrowth REAL, populationperkm INT, steelcost REAL, energycost REAL, active BOOLEAN, timedate TIMESTAMP, lastupdated TIMESTAMP);''')
+        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaigns (campaignname VARCHAR, campaignrules VARCHAR(50000), hostserverid BIGINT, campaignkey BIGINT, timescale BIGINT, currencyname VARCHAR, currencysymbol VARCHAR, publiclogchannelid BIGINT, privatemoneychannelid BIGINT, companychannelid BIGINT, managerchannelid BIGINT, defaultgdpgrowth REAL, defaultpopgrowth REAL, populationperkm INT, steelcost REAL, energycost REAL, active BOOLEAN, timedate TIMESTAMP, lastupdated TIMESTAMP, map_url VARCHAR DEFAULT NULL);''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignservers (serverid BIGINT, campaignkey BIGINT);''')
-        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, companyowner BIGINT, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, lifeexpectancy REAL, educationindex REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL, espionagespend REAL, espionagestaff INT, povertyrate REAL, latitude INT, infrastructureindex REAL, defensespend REAL, corespend REAL, educationspend REAL, popgrowth REAL);''')
+        await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignfactions (campaignkey BIGINT, factionkey BIGINT, landlordfactionkey BIGINT, approved BOOLEAN, hostactive BOOLEAN, companyowner BIGINT, factionname VARCHAR, description VARCHAR(50000), flagurl VARCHAR(50000), joinrole BIGINT, logchannel BIGINT, iscountry BOOL, money BIGINT, population BIGINT, landsize BIGINT, governance REAL, happiness REAL, taxpoor REAL, taxrich REAL, gdp BIGINT, gdpgrowth REAL, lifeexpectancy REAL, educationindex REAL, socialspend REAL, infrastructurespend REAL, averagesalary REAL, popworkerratio REAL, espionagespend REAL, espionagestaff INT, povertyrate REAL, latitude INT, infrastructureindex REAL, defensespend REAL, corespend REAL, educationspend REAL, popgrowth REAL, color VARCHAR(20) DEFAULT '#808080';);''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignusers (userid BIGINT, campaignkey BIGINT, factionkey BIGINT, status BOOLEAN);''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS campaignautopurchases (campaignkey BIGINT, factionkey BIGINT, userid BIGINT, name VARCHAR, amount BIGINT, lastupdated TIMESTAMP, monthfrequency INT, status BOOLEAN);''')
         await ctx.send("## Done!")
@@ -83,6 +83,7 @@ class campaignRegisterFunctions(commands.Cog):
         privateLogging = await textTools.getChannelResponse(ctx, "What Discord channel do you want to use to log player actions?  This will contain alot of stuff that players should not be able to see, such as purchases made by countries.\nReply with a mention of the desired channel.")
         companyChannel = await textTools.getChannelResponse(ctx,"What Discord channel do you want to use for companies?  Sprocket Bot will use this channel to create threads for companies so that they can conduct business. \nReply with a mention of a channel.")
         managerChannel = await textTools.getChannelResponse(ctx,"What Discord channel do you want to use for processing new vehicle submissions?  This channel should only be visible to campaign managers. \nReply with a mention of a channel.")
+        imgURL = await textTools.getFileURLResponse(ctx, "Upload a .png of your campaign map.  \nMaps need to have regions colored in white, separated by black borders.  Blue regions can represent water.\n-#You can upload a placeholder image for now and update it later.")
         defaultGDPgrowth = 0.05
         defaultpopgrowth = 0.01
         poppersquarekm = 1500
@@ -108,9 +109,10 @@ class campaignRegisterFunctions(commands.Cog):
                     energycost,
                     False,
                     datetime.datetime(startingyear, 1, 1),
-                    datetime.datetime.now()
+                    datetime.datetime.now(),
+                    imgURL
                     ]
-        await self.bot.sql.databaseExecuteDynamic('''INSERT INTO campaigns VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)''',datalist)
+        await self.bot.sql.databaseExecuteDynamic('''INSERT INTO campaigns VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)''',datalist)
         await self.bot.sql.databaseExecuteDynamic('''DELETE FROM campaignservers WHERE serverid = $1''',[ctx.guild.id])
         await self.bot.sql.databaseExecuteDynamic('''INSERT INTO campaignservers VALUES ($1, $2)''',[ctx.guild.id, userKey])
         await ctx.send(f"## Done!\nRemember to save your campaign registration key (**{userKey}**), as other servers will need this in order to join the campaign.")
@@ -170,6 +172,7 @@ class campaignRegisterFunctions(commands.Cog):
         await ctx.send("## Welcome!\nYou will now be asked several questions about your country to start the setup process!  Keep in mind that most of these settings can be changed later using the `-manageFaction` command.\nLet's begin: is your faction a country?")
         isCountry = await ctx.bot.ui.getYesNoChoice(ctx)
         factionName = await textTools.getResponse(ctx, "What is the name of your faction?")
+        factionColor = await textTools.getCappedResponse(ctx, "What is the hex color representing your faction's color on the map?  \n-# Use <https://htmlcolorcodes.com/color-picker/> to grab one if necessary.", 7)
         nameStatus = False
         while nameStatus == False:
             nameTest = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
@@ -251,10 +254,11 @@ class campaignRegisterFunctions(commands.Cog):
                     0, #defense spending
                     0, #corespend
                     0.05, #educationspend
-                    0.01 #population growth
+                    0.01, #population growth
+                    factionColor
                     ]
         await self.bot.sql.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2;''', [ctx.guild.id, factionName])
-        await self.bot.sql.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36)''', datalist)
+        await self.bot.sql.databaseExecuteDynamic('''INSERT INTO campaignfactions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37)''', datalist)
         nameTest = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT factionname FROM campaignfactions WHERE factionname = $1 AND campaignkey = $2;''', [factionName, campaignKey])
         if len(nameTest) > 1:
             await self.bot.sql.databaseExecuteDynamic('''DELETE FROM campaignfactions WHERE campaignkey = $1 AND factionname = $2 AND factionkey = $3;''',[ctx.guild.id, factionName, factionkey])

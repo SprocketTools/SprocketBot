@@ -83,10 +83,10 @@ class antiScamFunctions(commands.Cog):
 
         hashesMatch = (oldPacket["hashes"] == hashes) and (len(hashes) > 0)  # Only match if hashes exist
         contentMatch = (oldPacket["content"] == message.content) and (len(message.content) > 0)
-        timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 60
+        timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 8
         channelidMatch = (message.channel.id == oldPacket["channelid"])
-
-        if (contentMatch or hashesMatch) and timestampMatch and (not channelidMatch):
+        whitelist = ["<@1", "<@2", "<@3", "<@4", "<@5", "<@6", "<@7", "<@8", "<@9"]
+        if (contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and (item not in message.content for item in whitelist):
             print(f"Match detected for {message.author}")
 
             logChannel = self.bot.get_channel(1152377925916688484)
@@ -110,7 +110,8 @@ class antiScamFunctions(commands.Cog):
             embed.add_field(name="Username", value=f"{message.author.name}", inline=False)
             embed.add_field(name="User ID", value=f"{message.author.id}", inline=False)
             embed.add_field(name="User ping", value=f"<@{message.author.id}>", inline=False)
-
+            embed.add_field(name="Server", value=f"{message.guild.name}>", inline=False)
+            embed.add_field(name="Spacing", value=f"{(message.created_at - oldPacket["timestamp"]).total_seconds()}s>", inline=False)
             # Send logs
             if logChannel:
                 await logChannel.send(embed=embed)
