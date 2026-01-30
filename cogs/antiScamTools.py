@@ -13,6 +13,7 @@ from cogs.textTools import textTools
 userPacket = {}
 userStrikes = {}
 inspected = []
+to_delete = {}
 
 class antiScamFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
@@ -45,7 +46,10 @@ class antiScamFunctions(commands.Cog):
                             hashes.append(hashlib.md5(content).hexdigest())
             except Exception as e:
                 print(f"Error hashing attachment: {e}")
-
+        try:
+            print(to_delete[message.author.id][0])
+        except Exception:
+            to_delete[message.author.id] = []
         payload = {
             "message": message,
             "hashes": hashes,
@@ -72,25 +76,27 @@ class antiScamFunctions(commands.Cog):
         try:
             oldPacket = userPacket[message.author.id]
         except Exception:
-            oldPacket = {"hashes": [], "content": "", "timestamp": message.created_at, "channelid": message.channel.id}
+            oldPacket = {"hashes": [], "content": "", "timestamp": message.created_at, "channelid": message.channel.id, "msg": message}
 
         userPacket[message.author.id] = {
             "hashes": hashes,
             "content": message.content,
             "timestamp": message.created_at,
-            "channelid": message.channel.id
+            "channelid": message.channel.id,
+            "msg": message
         }
 
         hashesMatch = (oldPacket["hashes"] == hashes) and (len(hashes) > 0)  # Only match if hashes exist
         contentMatch = (oldPacket["content"] == message.content) and (len(message.content) > 0)
-        timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 40
+        timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 30
         channelidMatch = (message.channel.id == oldPacket["channelid"])
         whitelist = ["<@1", "<@2", "<@3", "<@4", "<@5", "<@6", "<@7", "<@8", "<@9"]
         if (contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and (item not in message.content for item in whitelist):
             print(f"Match detected for {message.author}")
 
             logChannel = self.bot.get_channel(1152377925916688484)
-
+            to_delete[message.author.id].append(message)
+            to_delete[message.author.id].append(oldPacket["msg"])
             # Update strikes
             try:
                 userStrikes[message.author.id] = userStrikes.get(message.author.id, 0) + 1
@@ -121,7 +127,7 @@ class antiScamFunctions(commands.Cog):
             if userStrikes[message.author.id] == int(serverConfig['flagthreshold']) - 1:
                 await message.add_reaction('⚠️')
                 try:
-                    await message.author.send(f"## Warning: you are triggering Sprocket Bot's anti scam functions in {message.guild.name}.\nPlease go to that server and send a message different from your last one, in order to reset your counter.")
+                    await message.author.send(f"### ⚠️ Warning: you are triggering Sprocket Bot's anti scam functions. ⚠️\nPlease go to any mutual servers and send a message different from your last one, in order to reset your counter.  Attachments are also tracked, so don't send the same ones.")
                 except:
                     pass
 
@@ -131,11 +137,28 @@ class antiScamFunctions(commands.Cog):
 
                 if action == "kick":
                     try:
-                        await message.author.send(f"You have been kicked from {message.guild.name}...")
-                        await message.author.ban(reason="Automated anti-scam functions", delete_message_seconds=600)
-                        await message.author.unban(reason="Automated anti-scam functions")
-                    except:
-                        pass
+                        delta = (datetime.datetime.now().astimezone() + datetime.timedelta(hours=1))
+                        await message.author.timeout(delta, reason="Anti-scam tools: verifying user")
+                        for message in to_delete[message.author.id]:
+                            try:
+                                await message.delete()
+                            except Exception:
+                                pass
+                        await message.author.send("# ⚠️ READ THE FOLLOWING INSTRUCTIONS CAREFULLY ⚠️")
+                        testMessage = await message.author.send("### You have tripped Sprocket Bot's automated anti-scam functions and are about to be kicked.")
+                        response = await textTools.getResponse(await self.bot.get_context(testMessage), f"To remove your timeout, I need to verify that you are human.\nPlease reply with **exactly** the following sentence:\n`Sprocket Chan found the wrong bolt thief, let me free!`")
+                        if len(response) < 5:
+                            await message.author.send(f"You have been kicked from {message.guild.name}...")
+                            await message.author.ban(reason="Automated anti-scam functions", delete_message_seconds=950)
+                            await message.author.unban(reason="Automated anti-scam functions")
+                        else:
+                            await message.author.send(f"Acknowledged.")
+                            await message.author.timeout(None, reason="Anti-scam tools: user verified in DMs")
+                            userStrikes[message.author.id] = 0
+                            to_delete[message.author.id] = []
+                            await message.author.send(f"Record cleared and timeout removed.")
+                    except Exception as e:
+                        print(e)
                 elif action == "timeout for 12 hours":
                     try:
                         await message.author.send(f"You have been timed out in {message.guild.name}...")
@@ -153,6 +176,7 @@ class antiScamFunctions(commands.Cog):
                         await channel.send(f"@{serverConfig['flagping']}")
         else:
             userStrikes[message.author.id] = 0
+            to_delete[message.author.id] = []
             pass
 
 
