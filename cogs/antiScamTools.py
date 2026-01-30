@@ -83,7 +83,7 @@ class antiScamFunctions(commands.Cog):
 
         hashesMatch = (oldPacket["hashes"] == hashes) and (len(hashes) > 0)  # Only match if hashes exist
         contentMatch = (oldPacket["content"] == message.content) and (len(message.content) > 0)
-        timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 8
+        timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 40
         channelidMatch = (message.channel.id == oldPacket["channelid"])
         whitelist = ["<@1", "<@2", "<@3", "<@4", "<@5", "<@6", "<@7", "<@8", "<@9"]
         if (contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and (item not in message.content for item in whitelist):
