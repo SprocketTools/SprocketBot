@@ -96,6 +96,13 @@ class timedMessageTools(commands.Cog):
         await self.bot.sql.databaseExecuteDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [messageID])
         await ctx.send("Dropped any that match.")
 
+    @commands.command(name="cancelMessageForUser", description="generate a key that can be used to initiate a campaign")
+    async def cancelMessageForUser(self, ctx: commands.Context, *, messageID):
+        if ctx.author.id not in [686640777505669141, 712509599135301673]:
+            return
+        await self.bot.sql.databaseExecuteDynamic('''DELETE FROM timedmessages WHERE ownerid = $1;''', [messageID])
+        await ctx.send("Dropped any that match.")
+
     @commands.command(name="scheduleMessage", description="generate a key that can be used to initiate a campaign")
     async def scheduleMessage(self, ctx: commands.Context):
         if ctx.author.id not in [686640777505669141, 712509599135301673]:
