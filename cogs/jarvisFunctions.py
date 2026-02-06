@@ -63,6 +63,11 @@ class jarvisFunctions(commands.Cog):
         except Exception:
             current_instructions = ""
 
+        wordlimit = 80
+        if "** **" in message.content:
+            wordlimit = 190
+        if "*** ***" in message.content:
+            wordlimit = 420
         # Determine the starting prompt based on the starting input
         mode = "gemma"
         messageOut = ""
@@ -71,7 +76,7 @@ class jarvisFunctions(commands.Cog):
                 ai_prompt = (f"You are pretending to be J.A.R.V.I.S. from the Marvel Cinematic Universe"
                                 f"\nYou are replying to a Discord conversation as {self.bot.user.id} - the conversation is included below."
                                 f"\nGenerate a brand new in-character reply to the newest message in the conversation: {message.content}"
-                                f"\nUse a word count limit of 70 in your reply."
+                                f"\nUse a word count limit of {wordlimit} in your reply."
                                 f"\nStart with just 'Sir, ' if you use an intro."
                                 f"\nPrioritize the user's latest message over past messages - Reusing old messages in your output is forbidden."
                                 f"\nImportant: {current_instructions}" 

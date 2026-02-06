@@ -147,7 +147,7 @@ class timedMessageTools(commands.Cog):
         ids = "Your IDs are: "
         for message in data:
             id = str(time_stamp+random.random()*10000)
-            ids = "\n" + str(id)
+            ids = ids + "\n" + str(id)
             await self.bot.sql.databaseExecuteDynamic('''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5), $6);''',[id, userDest, channelDest, message, int(time_stamp), "empty"])
             print(await self.bot.sql.databaseFetchdict('''SELECT * FROM timedmessages;'''))
         await ctx.send(f"## Message queued!\n{ids}")
