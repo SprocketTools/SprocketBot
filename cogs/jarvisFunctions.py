@@ -50,7 +50,8 @@ class jarvisFunctions(commands.Cog):
                 messages.append({'user nickname': messagee.author.display_name, 'user username': messagee.author.name,
                  "user id": messagee.author.id, 'user message content': messagee.content})
             for attachment in messagee.attachments:
-                attachmentss.append(attachment)
+                if attachment.content_type.startswith("image/"):
+                    attachmentss.append(attachment)
         messages.reverse()
 
         try:
