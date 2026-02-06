@@ -54,7 +54,7 @@ class jarvisFunctions(commands.Cog):
         messages.reverse()
 
         try:
-            attachmentss = attachmentss[:10]
+            attachmentss = attachmentss[:3]
         except Exception:
             pass
         print(messages)
@@ -89,7 +89,7 @@ class jarvisFunctions(commands.Cog):
                 mode = "gemma"
                 messageOut = await self.bot.AI.get_response(
                     prompt=ai_prompt,
-                    temperature=1.9,
+                    temperature=1.4,
                     mode=mode,
                     attachments=attachmentss
                 )
