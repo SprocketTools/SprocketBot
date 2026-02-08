@@ -1,3 +1,5 @@
+from typing import Union
+
 from google import genai
 import time, io
 import os, discord
@@ -391,71 +393,83 @@ class adminFunctions(commands.Cog):
 
     @commands.command()
     @commands.is_owner()  # Restricts the command to the bot owner
-    async def evilimpersonate(self, ctx, member: discord.Member, channelOut: discord.TextChannel, *, message: str):
+    async def evilimpersonate(self, ctx, member: Union[discord.Member, discord.User],
+                          target: Union[discord.TextChannel, int], *, message: str):
         """
-        Allows the bot owner to impersonate a user using a webhook.
-        Usage: !impersonate @user This is the message
+        Impersonate a user cross-server.
+        Usage: !impersonate @User #channel Message
+               !impersonate @User 123456789012345678 Message
         """
-        # Ensure the command is used in a guild text channel
-        if not isinstance(channelOut, discord.TextChannel):
-            await ctx.send("This command can only be used in a guild text channel.")
+        # 1. Resolve the Channel (Local Object or Remote ID)
+        channel_out = None
+        if isinstance(target, int):
+            # Try fetching from cache first (faster), then API (reliable)
+            channel_out = self.bot.get_channel(target) or await self.bot.fetch_channel(target)
+        else:
+            channel_out = target  # It's already a TextChannel object from the current server
+
+        # 2. Validate the Channel
+        if not isinstance(channel_out, discord.TextChannel):
+            await ctx.send(f"Could not find a valid text channel from the input: `{target}`.")
             return
 
-        # Create a webhook in the channel
+        # 3. Create Webhook & Send
+        webhook = None
         try:
-            webhook = await channelOut.create_webhook(name=f"Impersonator: {member.name}")
-        except discord.Forbidden:
-            await ctx.send("I do not have permission to create webhooks in this channel.")
-            return
-        except Exception as e:
-            await ctx.send(f"An error occurred while creating the webhook: {e}")
-            return
+            # Create webhook in the target channel (works cross-server if bot has permissions there)
+            webhook = await channel_out.create_webhook(name=f"Impersonator: {member.name}")
 
-        # Send the message using the webhook
-        try:
             await webhook.send(
                 content=message,
-                username=f"Evil {member.display_name}",
-                avatar_url=member.avatar.url or member.default_avatar.url  # Use default if no custom avatar
+                username=f"Evil + {member.display_name}",
+                avatar_url=member.avatar.url if member.avatar else member.default_avatar.url
             )
+        except discord.Forbidden:
+            await ctx.send(
+                f"I do not have `Manage Webhooks` permission in **{channel_out.guild.name}** > {channel_out.mention}.")
         except Exception as e:
-            await ctx.send(f"An error occurred while sending the message via webhook: {e}")
+            await ctx.send(f"Failed to send: {e}")
         finally:
             # Clean up: delete the webhook immediately after sending the message
             await webhook.delete()
             await ctx.reply("## Sent!")
 
     @commands.command()
-    @commands.is_owner()  # Restricts the command to the bot owner
-    async def impersonate(self, ctx, member: discord.Member, channelOut: discord.TextChannel, *, message: str):
+    async def impersonate(self, ctx, member: Union[discord.Member, discord.User], target: Union[discord.TextChannel, int], *, message: str):
         """
-        Allows the bot owner to impersonate a user using a webhook.
-        Usage: !impersonate @user This is the message
+        Impersonate a user cross-server.
+        Usage: !impersonate @User #channel Message
+               !impersonate @User 123456789012345678 Message
         """
-        # Ensure the command is used in a guild text channel
-        if not isinstance(channelOut, discord.TextChannel):
-            await ctx.send("This command can only be used in a guild text channel.")
+        # 1. Resolve the Channel (Local Object or Remote ID)
+        channel_out = None
+        if isinstance(target, int):
+            # Try fetching from cache first (faster), then API (reliable)
+            channel_out = self.bot.get_channel(target) or await self.bot.fetch_channel(target)
+        else:
+            channel_out = target  # It's already a TextChannel object from the current server
+
+        # 2. Validate the Channel
+        if not isinstance(channel_out, discord.TextChannel):
+            await ctx.send(f"Could not find a valid text channel from the input: `{target}`.")
             return
 
-        # Create a webhook in the channel
+        # 3. Create Webhook & Send
+        webhook = None
         try:
-            webhook = await channelOut.create_webhook(name=f"Impersonator: {member.name}")
-        except discord.Forbidden:
-            await ctx.send("I do not have permission to create webhooks in this channel.")
-            return
-        except Exception as e:
-            await ctx.send(f"An error occurred while creating the webhook: {e}")
-            return
+            # Create webhook in the target channel (works cross-server if bot has permissions there)
+            webhook = await channel_out.create_webhook(name=f"Impersonator: {member.name}")
 
-        # Send the message using the webhook
-        try:
             await webhook.send(
                 content=message,
                 username=member.display_name,
-                avatar_url=member.avatar.url or member.default_avatar.url  # Use default if no custom avatar
+                avatar_url=member.avatar.url if member.avatar else member.default_avatar.url
             )
+        except discord.Forbidden:
+            await ctx.send(
+                f"I do not have `Manage Webhooks` permission in **{channel_out.guild.name}** > {channel_out.mention}.")
         except Exception as e:
-            await ctx.send(f"An error occurred while sending the message via webhook: {e}")
+            await ctx.send(f"Failed to send: {e}")
         finally:
             # Clean up: delete the webhook immediately after sending the message
             await webhook.delete()
