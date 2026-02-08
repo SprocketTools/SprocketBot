@@ -417,7 +417,7 @@ class adminFunctions(commands.Cog):
         webhook = None
         try:
             # Create webhook in the target channel (works cross-server if bot has permissions there)
-            webhook = await channel_out.create_webhook(name=f"Impersonator: {member.name}")
+            webhook = await channel_out.create_webhook(name=f"{member.name}")
 
             await webhook.send(
                 content=message,
@@ -458,7 +458,7 @@ class adminFunctions(commands.Cog):
         webhook = None
         try:
             # Create webhook in the target channel (works cross-server if bot has permissions there)
-            webhook = await channel_out.create_webhook(name=f"Impersonator: {member.name}")
+            webhook = await channel_out.create_webhook(name=f"{member.name}")
 
             await webhook.send(
                 content=message,
