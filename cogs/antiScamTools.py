@@ -140,29 +140,33 @@ class antiScamFunctions(commands.Cog):
                 channel = self.bot.get_channel(serverConfig['managerchannelid'])
 
                 if action == "kick":
+                    delta = (datetime.datetime.now().astimezone() + datetime.timedelta(hours=1))
+                    await message.author.timeout(delta, reason="Anti-scam tools: verifying user")
+                    for message in to_delete[message.author.id]:
+                        try:
+                            await message.delete()
+                        except Exception:
+                            pass
+                    await message.author.send("# ⚠️ READ THE FOLLOWING INSTRUCTIONS CAREFULLY ⚠️")
+                    testMessage = await message.author.send("### You have tripped Sprocket Bot's automated anti-scam functions and are about to be kicked.")
+                    response = await textTools.getResponse(await self.bot.get_context(testMessage), f"To remove your timeout, I need to verify that you are human.\nPlease reply with **exactly** the following sentence:\n`Sprocket Chan found the wrong bolt thief, let me free!`")
                     try:
-                        delta = (datetime.datetime.now().astimezone() + datetime.timedelta(hours=1))
-                        await message.author.timeout(delta, reason="Anti-scam tools: verifying user")
-                        for message in to_delete[message.author.id]:
-                            try:
-                                await message.delete()
-                            except Exception:
-                                pass
-                        await message.author.send("# ⚠️ READ THE FOLLOWING INSTRUCTIONS CAREFULLY ⚠️")
-                        testMessage = await message.author.send("### You have tripped Sprocket Bot's automated anti-scam functions and are about to be kicked.")
-                        response = await textTools.getResponse(await self.bot.get_context(testMessage), f"To remove your timeout, I need to verify that you are human.\nPlease reply with **exactly** the following sentence:\n`Sprocket Chan found the wrong bolt thief, let me free!`")
-                        if len(response) < 5:
-                            await message.author.send(f"You have been kicked from {message.guild.name}...")
-                            await message.author.ban(reason="Automated anti-scam functions", delete_message_seconds=950)
-                            await message.author.unban(reason="Automated anti-scam functions")
-                        else:
+                        if response.lower.contains("bolt"):
                             await message.author.send(f"Acknowledged.")
                             await message.author.timeout(None, reason="Anti-scam tools: user verified in DMs")
                             userStrikes[message.author.id] = 0
                             to_delete[message.author.id] = []
                             await message.author.send(f"Record cleared and timeout removed.")
+                        else:
+                            await message.author.send(f"You have been kicked from {message.guild.name}...")
+                            await message.author.ban(reason="Automated anti-scam functions", delete_message_seconds=950)
+                            await message.author.unban(reason="Automated anti-scam functions")
                     except Exception as e:
-                        print(e)
+                        await message.author.send(f"You have been kicked from {message.guild.name}...")
+                        await message.author.ban(reason="Automated anti-scam functions", delete_message_seconds=950)
+                        await message.author.unban(reason="Automated anti-scam functions")
+                        await logChannel.send(f'This execution was ran with an error attached:\n{e}')
+
                 elif action == "timeout for 12 hours":
                     try:
                         await message.author.send(f"You have been timed out in {message.guild.name}...")

@@ -1,7 +1,11 @@
 import asyncio
 import datetime
 import random
+
+import aiohttp
 import discord
+from discord import Webhook
+
 import type_hints
 from discord.ext import commands
 import main
@@ -35,23 +39,35 @@ class SprocketOfficialFunctions(commands.Cog):
             file = await attachment.to_file()
             await channel.send(file=file, content="")
 
-    @main.bot.event
-    async def on_member_join(member):
-    # @commands.command(name="roleTest", description="Make a role test")
-    # async def roleTest(self, ctx: commands.Context):
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        print("Member joined")
         await asyncio.sleep(60*60*2)
-        guild = member.guild
-        if guild.id != 788349365466038283:
-            return
-        roles = member.roles
-        print(roles)
-        if "788490656087277628" not in str(member.roles):
-            try:
-                await member.send("You have been kicked from Sprocket Official for failing to agree to the rules within 2 hours.  You are welcome to rejoin and try again at https://discord.gg/sprocket")
-            except Exception:
-                pass
-            await member.kick(reason="Did not claim member role in time.")
+        try:
+            #await asyncio.sleep(5)
+            guild = member.guild
+            if guild.id == 788349365466038283:
+                roles = member.roles
+                if "788490656087277628" not in str(member.roles):
+                    try:
+                        await member.send("You have been kicked from Sprocket Official for failing to agree to the rules within 2 hours.  You are welcome to rejoin and try again at https://discord.gg/sprocket")
+                    except Exception:
+                        pass
+                    await member.kick(reason="Did not claim member role in time.")
+            if guild.id == 1137849402891960340:
+                if "1469937728996114455" not in str(member.roles):
+                    try:
+                        await member.send("You have been kicked from Zheifu Testing for failing to agree to the rules.  You are welcome to rejoin and try again at https://discord.gg/697ufH4hDa")
+                    except Exception:
+                        pass
+                    await member.kick(reason="Did not claim member role in time.")
+        except Exception as E:
+            print(E)
 
+    @commands.command(name="everyonerolestest", description="Ask Hamish a question.")
+    async def everyonerolestest(self, ctx: commands.Context):
+        for member in ctx.guild.members:
+            await member.add_roles(ctx.guild.get_role(1469937728996114455))
 
     @commands.command(name="askDevs", description="Ask Hamish a question.")
     async def askDevs(self, ctx: commands.Context):
