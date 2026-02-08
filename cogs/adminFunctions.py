@@ -389,6 +389,78 @@ class adminFunctions(commands.Cog):
         await self.bot.sql.databaseExecute(prompt)
         await ctx.send("Done!  Now go DM everyone that their config was reset...")
 
+    @commands.command()
+    @commands.is_owner()  # Restricts the command to the bot owner
+    async def evilimpersonate(self, ctx, member: discord.Member, channelOut: discord.TextChannel, *, message: str):
+        """
+        Allows the bot owner to impersonate a user using a webhook.
+        Usage: !impersonate @user This is the message
+        """
+        # Ensure the command is used in a guild text channel
+        if not isinstance(channelOut, discord.TextChannel):
+            await ctx.send("This command can only be used in a guild text channel.")
+            return
+
+        # Create a webhook in the channel
+        try:
+            webhook = await channelOut.create_webhook(name=f"Impersonator: {member.name}")
+        except discord.Forbidden:
+            await ctx.send("I do not have permission to create webhooks in this channel.")
+            return
+        except Exception as e:
+            await ctx.send(f"An error occurred while creating the webhook: {e}")
+            return
+
+        # Send the message using the webhook
+        try:
+            await webhook.send(
+                content=message,
+                username=f"Evil {member.display_name}",
+                avatar_url=member.avatar.url or member.default_avatar.url  # Use default if no custom avatar
+            )
+        except Exception as e:
+            await ctx.send(f"An error occurred while sending the message via webhook: {e}")
+        finally:
+            # Clean up: delete the webhook immediately after sending the message
+            await webhook.delete()
+            await ctx.reply("## Sent!")
+
+    @commands.command()
+    @commands.is_owner()  # Restricts the command to the bot owner
+    async def impersonate(self, ctx, member: discord.Member, channelOut: discord.TextChannel, *, message: str):
+        """
+        Allows the bot owner to impersonate a user using a webhook.
+        Usage: !impersonate @user This is the message
+        """
+        # Ensure the command is used in a guild text channel
+        if not isinstance(channelOut, discord.TextChannel):
+            await ctx.send("This command can only be used in a guild text channel.")
+            return
+
+        # Create a webhook in the channel
+        try:
+            webhook = await channelOut.create_webhook(name=f"Impersonator: {member.name}")
+        except discord.Forbidden:
+            await ctx.send("I do not have permission to create webhooks in this channel.")
+            return
+        except Exception as e:
+            await ctx.send(f"An error occurred while creating the webhook: {e}")
+            return
+
+        # Send the message using the webhook
+        try:
+            await webhook.send(
+                content=message,
+                username=member.display_name,
+                avatar_url=member.avatar.url or member.default_avatar.url  # Use default if no custom avatar
+            )
+        except Exception as e:
+            await ctx.send(f"An error occurred while sending the message via webhook: {e}")
+        finally:
+            # Clean up: delete the webhook immediately after sending the message
+            await webhook.delete()
+            await ctx.reply("## Sent!")
+
     @commands.command(name="addScamConfig", description="Reset everyone's server configurations")
     async def resetScamConfig(self, ctx: commands.Context):
         if ctx.author.id == 712509599135301673:
