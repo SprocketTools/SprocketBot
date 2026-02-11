@@ -43,7 +43,7 @@ class roleColorTools(commands.Cog):
                 server = self.bot.get_guild(colorInstance['serverid'])
                 if server in self.bot.guilds:
                     role = discord.utils.get(server.roles, id=colorInstance['roleid'])
-                    colorout = discord.Color.from_hsv(min(colorInstance['percent'], 1), 1, 1)
+                    colorout = discord.Color.from_hsv(min(colorInstance['percent'], 1), 0.8, 1)
                     await role.edit(color=colorout)
                     percentInceease = self.updateFrequency/(60*colorInstance['duration'])
                     await self.bot.sql.databaseExecuteDynamic('''UPDATE colorchangers SET percent = percent + $1 WHERE roleid = $2;''', [percentInceease, colorInstance['roleid']])
