@@ -131,16 +131,16 @@ class antiScamFunctions(commands.Cog):
             # Detection Logic
             hashesMatch = (oldPacket["hashes"] == hashes) and (len(hashes) > 0)
             contentMatch = (oldPacket["content"] == message.content) and (len(message.content) > 0)
-
+            contentMismatch = (oldPacket["content"] != message.content) and (len(message.content) > 0)
             # Timestamp check (60s threshold)
-            timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 60
+            timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 12.1
             channelidMatch = (message.channel.id == oldPacket["channelid"])
 
             # Whitelist logic
             whitelist = ["<@1", "<@2", "<@3", "<@4", "<@5", "<@6", "<@7", "<@8", "<@9"]
             is_whitelisted = any(item in message.content for item in whitelist)
 
-            if (contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and not is_whitelisted:
+            if (contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and not is_whitelisted and not contentMismatch:
                 print(f"Match detected for {message.author}")
 
                 logChannel = self.bot.get_channel(1152377925916688484)
