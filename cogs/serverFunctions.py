@@ -347,6 +347,9 @@ class serverFunctions(commands.Cog):
     @app_commands.command(name="roll", description="🎲 roll a dice")
     async def roll(self, interaction):
         result = random.randint(1, 6)
+        result2 = random.randint(1, 6)
+        if result*result2 > 35:
+            result = 7
         embed = discord.Embed(
             title=f"🎲 Dice Roll",
             description=f"**Result:** You rolled a `{result}`!",
