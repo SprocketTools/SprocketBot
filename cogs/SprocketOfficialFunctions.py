@@ -177,6 +177,79 @@ class SprocketOfficialFunctions(commands.Cog):
             await ctx.reply(await self.bot.error.retrieveError(ctx))
             return
 
+    @commands.command(name="askEpstein", description="Ask .... a question.")
+    async def askEpstein(self, ctx: commands.Context):
+        role = ctx.author.roles
+
+        await ctx.send(f"## Process started. \n\nSend a message containing your question.\n- Make sure that you have searched for previous replies on similar questions\n- Do not use this to post game suggestions, use the [Github tracker](<https://github.com/Muushy/Sprocket-Feedback/issues>) for this.")
+        messageOut = "This is a default response"
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        msg = ""
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=1800.0)
+            messageOut = await textTools.mild_sanitize(msg.content)
+        except Exception:
+            await ctx.reply(await self.bot.error.retrieveError(ctx))
+            return
+        unique_users = set()
+        async for message in ctx.channel.history(limit=100):
+            if not message.author.bot:  # Optional: exclude bots
+                unique_users.add(message.author)
+        user_list = list(unique_users)
+        random_member = random.choice(user_list)
+        response = await textTools.getResponse(ctx, f"## Confirm that you wish to send the following question: \n\n{messageOut}\n\nReply with 'yes' to confirm.")
+        avatarURL = random_member.display_avatar.url
+        userName = random_member.name
+        embed = discord.Embed(color=discord.Color.random(), description=messageOut)
+        embed.set_footer(text=f"Question by {userName}", icon_url=avatarURL)
+        sent_message = await ctx.author.send(embed=embed, content=messageOut)
+        await asyncio.sleep(4)
+        if main.botMode != "development":
+            await sent_message.add_reaction(":plus1:881246627510239323")
+            await sent_message.add_reaction(":minus1:881246627770282015")
+        for attachment in msg.attachments:
+            file = await attachment.to_file()
+            await ctx.author.send(file=file, content=" ")
+        await ctx.send("## Sent!")
+        await ctx.send("Also, <@712509599135301673> here's someone you can issue a warning for.  Politics rule, as per usual.\n\n\\- Jarvis")
+
+    @commands.command(name="askHamas", description="Ask .... a question.")
+    async def askEpstein(self, ctx: commands.Context):
+        role = ctx.author.roles
+
+        await ctx.send(f"## Process started. \n\nSend a message containing your question.\n- Make sure that you have searched for previous replies on similar questions\n- Do not use this to post game suggestions, use the [Github tracker](<https://github.com/Muushy/Sprocket-Feedback/issues>) for this.")
+        messageOut = "This is a default response"
+        def check(m: discord.Message):
+            return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
+        msg = ""
+        try:
+            msg = await ctx.bot.wait_for('message', check=check, timeout=1800.0)
+            messageOut = await textTools.mild_sanitize(msg.content)
+        except Exception:
+            await ctx.reply(await self.bot.error.retrieveError(ctx))
+            return
+        unique_users = set()
+        async for message in ctx.channel.history(limit=100):
+            if not message.author.bot:  # Optional: exclude bots
+                unique_users.add(message.author)
+        user_list = list(unique_users)
+        random_member = random.choice(user_list)
+        response = await textTools.getResponse(ctx, f"## Confirm that you wish to send the following question: \n\n{messageOut}\n\nReply with 'yes' to confirm.")
+        avatarURL = random_member.display_avatar.url
+        userName = random_member.name
+        embed = discord.Embed(color=discord.Color.random(), description=messageOut)
+        embed.set_footer(text=f"Question by {userName}", icon_url=avatarURL)
+        sent_message = await ctx.author.send(embed=embed, content=messageOut)
+        await asyncio.sleep(4)
+        if main.botMode != "development":
+            await sent_message.add_reaction(":plus1:881246627510239323")
+            await sent_message.add_reaction(":minus1:881246627770282015")
+        for attachment in msg.attachments:
+            file = await attachment.to_file()
+            await ctx.author.send(file=file, content=" ")
+        await ctx.send("## Sent!")
+        await ctx.send("Also, <@712509599135301673> here's someone you can issue a warning for.  Politics rule, as per usual.\n\n\\- Jarvis")
 
 
 

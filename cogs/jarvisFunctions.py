@@ -18,6 +18,7 @@ CLICKUP_API_BASE = "https://api.clickup.com/api/v2/list/"
 CLICKUP_ENDPOINT_SUFFIX = "/task"
 
 
+
 class jarvisFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
@@ -25,8 +26,10 @@ class jarvisFunctions(commands.Cog):
         self.on_message_cooldowns_burst = {}
         self.on_message_cooldowns_notify = {}
         self.cooldown = 14990 #retired
+        self.blacklist = ["penis", "nigge", "cock", "jerk", "jork", "mig-15", "mig 15", "fagot"]
         self.geminikey = self.bot.geminikey
         self.prior_instructions = {}
+
 
     # --- NEW: Separate handler for conversation to run in background ---
     async def _handle_conversation(self, message: discord.Message):
@@ -364,6 +367,11 @@ class jarvisFunctions(commands.Cog):
 
             self.on_message_cooldowns[user_id] = now
             self.on_message_cooldowns_notify[user_id] = False
+
+            for item in self.blacklist:
+                if item in message.content:
+                    await message.add_reaction("❌")
+                    return
 
             # FIRE AND FORGET: Move conversation logic to background task
             asyncio.create_task(self._handle_conversation(message))
