@@ -1,5 +1,7 @@
 import asyncio
 import datetime
+
+import aiohttp
 import requests
 import json
 import discord
@@ -15,6 +17,11 @@ from cogs.adminFunctions import adminFunctions  # For getServerConfig
 # ClickUp API Endpoints
 # Note: ClickUp API requires a Personal API Token.
 # The base URL for V2 is 'https://api.clickup.com/api/v2/'
+
+DEFAULT_TASK_DAYS = 7
+DEFAULT_CLICKUP_LIST_ID = "901317097085"
+CLICKUP_API_BASE = "[https://api.clickup.com/api/v2/list/](https://api.clickup.com/api/v2/list/)"
+CLICKUP_ENDPOINT_SUFFIX = "/task"
 
 class clickupFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
@@ -95,6 +102,128 @@ class clickupFunctions(commands.Cog):
             await ctx.send(
                 f"❌ Failed to set ClickUp mapping. Ensure the `clickup_mappings` table exists. Try running `/setupclickup` if you are the bot owner. Error: ```{e}```")
         # --- CRITICAL FIX END ---
+
+    @commands.command(name="addTask", description="Manually add a task to ClickUp.")
+    async def addNewTask(self, ctx: commands.Context, *, task_details: str = None):
+        server_config = await adminFunctions.getServerConfig(ctx)
+        api_key = server_config.get('clickupkey')
+
+        if not api_key or api_key == '0':
+            return await ctx.send("❌ Access denied. The ClickUp API key for this server is not set.")
+
+        # If no text is provided, check if the user replied to a message
+        if not task_details:
+            if ctx.message.reference and ctx.message.reference.message_id:
+                try:
+                    ref_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                    task_details = ref_msg.content
+                except Exception:
+                    return await ctx.send("❌ Could not read the replied message.")
+            else:
+                return await ctx.send(
+                    "❌ Please provide task details (e.g., `?addTask Fix the thrusters`) or reply to a message.")
+
+        status_msg = await ctx.send("⚙️ Parsing task details...")
+
+        # Calculate Dates
+        default_due_date = datetime.datetime.now() + datetime.timedelta(days=DEFAULT_TASK_DAYS)
+        default_due_date_ms = int(default_due_date.timestamp() * 1000)
+
+        # Defaults
+        task_title = "Task Requested Without Clear Title"
+        task_due_ms = default_due_date_ms
+        task_description = f"Original Request: {task_details}"
+
+        # Fetch limited history for context (helps the AI understand what the task is about)
+        messages = []
+        try:
+            async for msg in ctx.channel.history(limit=5, before=ctx.message):
+                messages.append({'author': msg.author.display_name, 'content': msg.content})
+        except:
+            pass
+        messages.append({'author': ctx.author.display_name, 'content': task_details})
+
+        # AI Prompt
+        ai_task_prompt = (
+            f"You are an assistant analyzing a user's manual task request in the context of a conversation.\n"
+            f"Conversation History (backwards, includes the request): \n{json.dumps(messages)}\n\n"
+            f"Current date is {datetime.datetime.now().strftime('%Y-%m-%d')}. If the user mentions a specific date or timeframe (e.g., 'tomorrow', 'next week', 'in 3 days'), calculate the Unix timestamp in milliseconds for that due date. If no date is specified, use {DEFAULT_TASK_DAYS} days from now (timestamp: {default_due_date_ms}).\n"
+            f"Extract the main task title and place all remaining relevant information (e.g., technical details, links, notes) into the description field.\n"
+            f"Respond ONLY with a single, raw JSON object in the format: "
+            f'{{"title": "Extracted Task Title", "description": "Remaining details or notes.", "due_date_ms": calculated_timestamp_in_milliseconds}}'
+        )
+
+        try:
+            ai_response = await self.bot.AI.get_response(
+                prompt=ai_task_prompt,
+                temperature=0.1,
+                instructions="Return ONLY a single, raw JSON object. Do not include any formatting or conversational text."
+            )
+
+            clean_response = ai_response.strip()
+            if clean_response.startswith('```json'): clean_response = clean_response[7:]
+            if clean_response.startswith('```'): clean_response = clean_response[3:]
+            if clean_response.endswith('```'): clean_response = clean_response[:-3]
+
+            task_info = json.loads(clean_response.strip())
+            task_title = task_info.get('title', task_title)
+            task_description = task_info.get('description', task_description)
+
+            ai_due_ms = task_info.get('due_date_ms')
+            if isinstance(ai_due_ms, (int, str)) and str(ai_due_ms).isdigit():
+                task_due_ms = int(ai_due_ms)
+            else:
+                task_due_ms = default_due_date_ms
+
+        except Exception as e:
+            return await status_msg.edit(content=f"❌ Task parsing failed. Error: ```{e}```")
+
+        if not task_title:
+            task_title = "Task Requested Without Clear Title"
+
+        final_description = f"Requested manually by {ctx.author.display_name} ({ctx.author.id}, {ctx.author.mention}).\n\n"
+        final_description += f"Task Notes: {task_description}"
+
+        # API Setup
+        list_id = DEFAULT_CLICKUP_LIST_ID
+        clean_list_id = "".join(filter(str.isalnum, list_id.strip()))
+        url = CLICKUP_API_BASE + clean_list_id + CLICKUP_ENDPOINT_SUFFIX
+        headers = {
+            "Authorization": api_key,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "name": task_title,
+            "description": final_description,
+            "due_date": task_due_ms,
+            "priority": 3,
+        }
+
+        # --- API CALL ---
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=payload) as response:
+                    if response.status >= 400:
+                        try:
+                            error_details = await response.json()
+                        except:
+                            error_details = {"message": "No detailed JSON error provided by ClickUp."}
+
+                        error_message = f"ClickUp API Error ({response.status}): Could not create task."
+                        return await status_msg.edit(
+                            content=f"❌ Failed: {error_message}\nDetails: `{error_details.get('message')}`")
+
+                    task_data = await response.json()
+                    due_date_obj = datetime.datetime.fromtimestamp(task_due_ms / 1000).strftime('%Y-%m-%d')
+
+                    await status_msg.edit(
+                        content=f"✅ Task **\"{task_data.get('name')}\"** successfully added to ClickUp.\n"
+                                f"Due: **{due_date_obj}**\n"
+                                f"View Task: {task_data.get('url')}"
+                    )
+
+        except Exception as e:
+            await status_msg.edit(content=f"❌ Encountered an unknown error during API call: ```{e}```")
 
     @tasks.loop(time=[
         # UPDATED TIME TO 16:00 UTC

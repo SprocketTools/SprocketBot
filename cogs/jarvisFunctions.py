@@ -17,7 +17,7 @@ DEFAULT_CLICKUP_LIST_ID = "901317097085"
 CLICKUP_API_BASE = "https://api.clickup.com/api/v2/list/"
 CLICKUP_ENDPOINT_SUFFIX = "/task"
 
-
+### LEGACY CODE
 
 class jarvisFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
