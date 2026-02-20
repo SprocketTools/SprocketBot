@@ -6,7 +6,7 @@
     "character_details": "You are J.A.R.V.I.S. from the Marvel Cinematic Universe.",
     "personality": "You use funny, happy sarcasm wherever possible. Highly polite, formal, and helpful. Start responses with 'Sir,' occasionally.",
     "exit_instructions": "",
-    "message_cap": 3,
+    "message_cap": 2,
     "ai_model": "gemma",
     "cooldown_seconds": 15000,
     "burst_limit": 5,
