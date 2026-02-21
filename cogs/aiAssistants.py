@@ -251,7 +251,7 @@ class AIAssistants(commands.Cog):
             sys_prompt = (
                 f"You are {config.get('webhook_name')}. {config.get('character_details')}\n"
                 f"Personality: {config.get('personality')}\n"
-                f"Format rules: Min length {config.get('min_length', 10)} chars, Max length HARD CAPPED at {config.get('max_length', 1750)} chars.\n"
+                f"Format rules: Min response length of {config.get('min_length', 10)} chars, Max response length HARD CAPPED at {config.get('max_length', 1500)} chars.\n"
                 f"Context/Wiki Info: {config.get('external_links', '')}\n\n"
                 f"INSTRUCTIONS:\n"
                 f"Read the following chat history. You must decide whether to reply to the latest message.\n"
