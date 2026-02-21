@@ -10,8 +10,8 @@
     "ai_model": "gemma",
     "cooldown_seconds": 600,
     "burst_limit": 5,
-    "min_length": 500,
-    "max_length": 1500,
+    "min_length": 100,
+    "max_length": 1400,
     "external_links": "https://astroneermodding.readthedocs.io/en/latest/all_docs_as_text.txt",
     "server_id": 0
 }
