@@ -1,0 +1,576 @@
+---- FREEFORM TUTORIAL ----
+
+Table of Contents
+1. Introduction to 3D Modeling in Sprocket
+1. Points build lines and faces to make meshes
+2. Triangles, Quads, and N-gons
+   1. Why mirrored bent quads aren’t symmetrical
+      1. Show old games as examples
+
+
+2. What changes with Sprocket
+1. Plate thickness
+2. Enclosed and open meshes
+3. Grid snap requirements
+
+
+3. Basic Operations
+3.1. Select
+1. Multi select
+2. Subtractive select
+3. Point select
+   1. Surface select
+   2. Ring select
+4. Edge select 
+   1. Surface select
+   2. Ring select
+5. Face select
+   1. Surface select
+   2. Ring select
+3.2. Scale
+1. Single-axis scale
+2. All-axis scale
+3. Combination of both to achieve two-axis scale
+3.3. Translate
+1. Single-axis movement
+2. Two-axis movement
+3. Coordinate based movement
+4. Grab and press an Axis key [note its significance for later]
+3.4. Rotate
+1. X, Y, and Z rotation
+2. Rotation snap
+3.5. Slope
+1. Press H key for slope
+
+
+4. Edit Options
+1. Smooth angle
+2. Geometry mirror
+3. Parts mirror
+4. Part repositioning
+5. Grid snap
+
+
+5. Common edit options
+1. Duplicate - shift+D
+2. Extrude - E
+   1. Single-axis extrusion
+3. Delete
+
+
+5. Points Editor 
+1. Merge or “weld”
+2. Hole generator
+   1. Higher-poly holes
+3. Fill
+
+
+6. Edge Editor
+1. Fill
+2. Split
+3. Mark weld
+4. Clear weld
+
+
+7. Face Editor
+1. Hole generator
+   1. Higher-poly holes
+2. Flip face
+
+
+8. Corner Editor
+
+
+9. Simple Techniques
+9.1 - Creating a pike nose
+9.2 - Creating a cylinder
+9.3 - Inserting a simple viewport into a tank + extrusion backwards
+9.4 - Creating custom fenders
+9.5 - Creating a custom mantlet + overview of mounting guns
+
+
+
+
+
+
+
+
+10. Common Techniques
+10.1 - Using Addon Structures for freeforming
+1. Ideal for porting models between vehicles
+10.2 - Splitting off faces to use as a new base for freeforming 
+1. Ideal for preventing part dislocation
+2. Not recommended for high-poly builds due to the 5k vertice limit
+10.3 - Stitching
+1. Free placement of points and edges that are then “stitched” together with faces
+10.4. Using part thickness as detailing
+10.5. Using parts as Freeform
+
+
+11. Complex examples
+1. Creating a really rounded corner using holes
+2. Rounded turret (T-34 style)
+3. Edge Chamfering (smooth look)
+4. Donut (make vertical circles, extrude, rotate, set position to zero, repeat, fill)
+5. Grille or radiator cover
+
+
+12. External tools
+-getAddon
+-transplant
+Tie this into grid snap
+
+
+13. Disabling grid snap
+
+
+14. Grid snap disabled examples
+1. Inset bolt hole
+2. Custom rivet
+   1. Show Hamish’s mention of the circular rivet with square geometry
+3. High Poly Circle
+4. MG cover used on G-50A
+
+
+
+
+
+
+0. Parts needing VAs
+Characters:
+Jacob - excited and somewhat panicked
+Mustafa - deep voiced, should sound like your classic cartoon villain
+
+Notes: Feel free to play with voicelines a bit and/or record multiple variations.
+---------------------------------------------------------------------------------
+
+[Lights turn on gradually, revealing Jacob standing in front of a partially complete TK-10 QSE]
+[Jacob works on partial #1, ]
+
+[Series of stop-motion clips plays, showing Jacob using various tools on the TK-10 QSE tank]
+[Jacob stands back, looking at the completed TK-10 QSE tank.  The camera is behind Jacob, looking at the tank]
+
+Jacob ver. A: Well, it’s done!  TIme to take it out for a test drive!  
+Jacob ver B: Ah, finally!  She’s a beauty.
+
+[Door creaking sounds]
+[Camera now looks at a garage door raising upwards]
+[Halfway in, the camera moves closer]
+[Mustafa is revealed with a gun drawn as the door raises]
+
+Jacob: Mustafa, what are you doing here!?
+
+Mustafa: I am here to steal your tank.
+
+Jacob: But why?
+
+Mustafa ver A: Because I can’t build good tanks like you.
+Mustafa ver B: Because I can’t make good tanks like you, and I need to have something cool to share with the world.
+
+[Scene freezes and has a black-and-white filter applied]
+[A red stamp appears on the screen, saying “Don’t be this guy”]
+
+Colson: Don’t be like this guy.
+
+[Immediately, various clips of building tanks in Sprocket start playing]
+[Intro music starts playing]
+
+Colson: In this video, I will be showing how to build Sprocket tanks in Freeform, starting from the fundamentals of Sprocket modeling and working up to complex examples that will make your tanks shine.  Let’s get started!
+
+
+---------------------------------------------------------------------------------
+
+
+[Jacob and Mustafa are in a movie theater, with the video playing on the main screen]
+{This portion of the script involves multiple sections condensed into 1 for simplicity.  These are optional, but still really appreciated.}
+
+Mustafa: You sure this is a good idea?
+Mustafa: What happened to the old multi select tool?
+Mustafa: I still like the old cubing method better.  
+Mustafa: This wasn’t so bad.
+
+Jacob: Yes, and you should probably subscribe to his channel to get notifications on when his other tutorials are uploaded.
+Jacob: What do you mean “there’s a slope tool?”  I wish I knew about this sooner!
+Jacob: And now I’m hungry for a pack of donuts!  
+Jacob: Is this the only time you use the x, y, and z keys for axis snapping?
+
+1. Introduction
+1. Introduction to 3D Modeling in Sprocket
+1. Points build lines and faces to make meshes
+2. Triangles, Quads, and N-gons
+   1. Why mirrored bent quads aren’t symmetrical
+      1. Show old games as examples
+
+
+Before we get started, there’s a couple things I need to cover.  This video is a looong one, and it is going to cover several basic topics at first.  If you already know how to use the slope tool and the cube method, then you may want to skip to the techniques section of this video.   Many portions of this guide were based upon an older freeform tutorial posted by Shid builder in the Sprocket Official discord.  Special thanks to him for allowing me to use his guide as a starting point.
+
+
+Freeforming in Sprocket is a process that involves a combination of points, edges, and faces.  It is similar to Blender and other 3D modeling software, with the main advantage being you don’t have to mess with setting up your lighting or deal with 99% of the very confusing user interface.  The buttons are all right here, or located in this list of keybinds that fits on a single page.  I’ll go through these as the video progresses, so buckle up and enjoy the ride.
+
+This video was recorded in the Geometric Internals public alpha, which at the time of filming is hidden away in an opt-in branch of the game.  Alot of you have asked me how to get to this version, and the process is the same as with any other Steam Beta.  If you’re watching this in the future, in which case Congrats on not trusting AI for everything, you probably don’t need to go through this process.
+2. Select, Transform, Rotate, Scale
+3. Basic Operations
+
+
+Let’s start with this example vehicle here, covering the selection tools for points, faces, and edges.  I’ve exposed my keypresses for this tutorial, so watch the left side for keypresses in case I don’t make it clear what I’m doing. 
+
+
+To get set up, select a compartment and click the “enter Freeform” mode.  Now you will see a bunch of lines running in between red cubes.  These red cubes are Points, and they make up the fundamentals of everything.  Points can be combined to create edges, symbolized by these black lines.  If you have at least 3 points or two edges, they can be filled in to create faces.  Those faces then provide armor, so that your poor Jacobs aren’t blown up when shot at with a 75mm cannon.
+
+Now, if you haven’t noticed already, selecting a compartment using the right mouse button brings up a panel full of expandable tabs and buttons that scream “try me” louder than the toys at your local store.  Before breaking down what all these buttons do, let’s start by going over to the edge tab.  Now we can select the edges present on our compartment by right-clicking them.  The process is the same for faces.
+
+[stopping point as of 4/28/2025]
+
+Moving objects around involves using the translator tool to move an object along an axis.  Press the W key to activate the translation tool.  Once you have selected an object, you can now move it along one axis using an arrow, or two axes using a box.  Grabbing the center of the translation tool will allow you to move it perpendicular to the in-game camera.  
+Some of you might be wondering why these arrows have red, blue, and green coloring on them.  These colors correspond to what are called “axes” that make up 3-dimensional space.    The red “X” position correlates to rightward position, the green “Y” position correlates to forward position, and the blue “Z” position correlates to vertical position.  Sprocket maintains industry-standard coloring for the “X”, “Y”, and “Z” axes.  Keep this in mind for later when we get into fine tuning object placement.
+
+The rotation tool is also available by pressing the D key.  Here you have tools available to rotate your selection around an axis of choice.  While this won’t achieve anything for a singular point, it can be used to rotate a combination of points, including edges and faces.  Important to keep in mind is the rotation snapping toggle, which can be turned off and on with the Ctrl+D keybind.  When turned on, rotations will be in increments of 15 degrees.  When turned off, rotations will be dependent on the DPI of your mouse.  If you ever wanted an excuse to purchase that 99-dollar high-DPI mouse, optimum precision on your builds is the perfect excuse to have!
+
+Object scaling is pretty straightforward.  Press the Q key to switch to the scaling tool, or click the appropriate button at the bottom left of the interface.  Click on a prong and drag it to scale your points relative to the center of your selection.  To scale an object in all directions, press the S key and drag the mouse cursor.
+
+
+A huge note to remember is that during any of these operations, you can press the x, y, or z keys to lock your movement to an axis.  [Jacob voiceline] This is applicable to any translation movement, including stock parts.  Say you want to quickly press the S key to start scaling, but only want to scale in one axis?  Press the correct button and your scaling will then be locked to that axis!  
+
+
+3. Selection Methods
+Now what if you eventually have a ton of points and faces?  Trying to edit them one by one looks a bit tedious, doesn't it?  Fortunately Sprocket 0.2 offers a plethora of unique ways to simplify this process.  
+
+We’ll start off by covering the shift key modifier.  While holding down the shift key, any selection operation will add to your existing selection.  If you click over something already selected, those items will become de-selected instead.  Note that I described the shift key as a “modifier,” because you can apply this to any of the following selection methods.  
+
+[Use the Carabineer] [use the turret]
+Holding the ctrl key while selecting will also select everything that is “co-planar” to your selection - in other words it will grab everything that is a part of the same slab of steel.  Now this isn’t the greatest example, as rounding errors make it difficult to select the entire roof of this tank.  What we’ll need to do is increase the smoothing angle to 5 degrees, then try it again.  We got most of the roof, so let’s hold down ctrl and shift simultaneously and grab the front bit of this turret.  There we go - now we can raise the roof and give it a tophat!
+
+
+Holding the alt key while selecting will trigger a ring select.  This tool is a bit finicky, as you have to make sure your mouse cursor is aligned with the “direction of selection travel.”  For points, you have to select on an edge near your intended point.  For faces, you have to select on your face near the edge you want to travel down.  Edges are thankfully a bit more straightforward.
+
+
+Selecting all attached geometry is pretty simple; hover over what you want to select and press L.  You can hold shift to repeat this multiple times.  Alternatively you can press the A key to select all geometry that is a part of your selected compartment, or clear your selection if you have anything selected at all.
+
+
+Selecting lots of points in a general area quickly can be achieved with a circle tool.  Use the C key to activate this tool, and it will lock your camera in place until you press the Escape key.  Hold the mouse button and drag the circle across the screen to select objects.  Points and edges are selected if the circle touches them, while faces are selected if the circle crosses their center point.  This tool does not wipe your existing selection, meaning you don’t have to hold the shift key while using it.  If you want to remove anything from your selection, hold down the middle mouse button (if you have one) and drag your cursor.
+
+
+Box selection is another tool that allows for quickly selecting items in a specified region.  Use the B key to activate this tool, and it will lock your camera in place until you press the Escape key.  Most traits carry over from the circle tool, including the middle mouse button and additive selection default.  
+
+
+Last but not least, what if you want to select all but a couple faces?  Instead of going around and selecting everything else, you can just select what you don’t want and then invert it!  Use the Ctrl+i keybind to invert your selection.  This is particularly useful when you want to delete all but a specific portion of your geometry.
+
+
+That’s all of the selection tools!  We will be making extensive use of these in a bit.  Next I’m going to go into detail on all of the freeform editing tools available, starting from the bottom up.
+
+
+
+
+4. Edit options
+[MK-154 Artemis]
+
+That’s all of the selection tools!  We will be making extensive use of all of those in a bit.  Next I’m going to go into detail on all of the freeform editing tools available, starting from the bottom of the side panel and working up.  
+
+Down here in the parts tab, we have… Unobstructed! [tada]  Nothing is obstructing this compartment.  How convenient.
+
+
+Next up we have the Rivets tab.  This is a very interesting tool that allows us to place pre-generate rivets onto faces.   You can either select a couple faces and generate rivets on just those, or generate rivets everywhere without a selection.  This tool isn’t the main focus of this video, so I’m going to skip over this for now.  Speaking of that, if you want to see me make a general beginner’s tutorial for Geometric Internals, let me know in the comments section!
+
+
+Next up, the info tab shows us some basic information about the compartment, such as its dimensions and armor mass.  This tool gives us some useful information for points, edges, and faces.  If we select multiple points by holding shift, we then get a measurement of how long the edge is, and the coordinate distance between the two points.  Edge selections will show the length of the edge, both in coordinate form and in raw form.  Face selections will show the armor mass of the whole compartment, and the slope of that face.
+
+
+Next up we have the position tab, hidden inside the edit tab.  These sliders allow us to move points to an exact location relative to the origin point of the compartment, which is the bottom center of the hull in this case.  Typing in numbers allows us to set the intended number, which is great when building replicas that have exact dimensions you need to match.  Selecting multiple points will result in the origin to average out between the selection.
+
+
+[stopping point 5/1/25]
+
+
+Further up the editing tab, we have the geometry mirror toggle.  This is different from the parts mirror toggle, since one controls parts, while the other controls freeform points.  Related to this is part repositioning.  When placing a part to a face, the part is now bound to that face.  Editing or moving that face will drag the attached parts along with it.  If you don’t want that to happen, just disable the setting.
+
+
+Smoothing angle is mainly related to how the game renders curved surfaces, such as this one.  As the smoothing angle is increased, this affects whether the curved surfaces appear blocky or smooth.  This not only affects visual style, but also affects shell penetrations a small amount.  Selection tools are impacted as well - the planar select tool will factor in the smoothing angle when grabbing faces.
+
+
+Next up is all the big buttons up here at the top, offering useful tools that can make freeform editing exponentially easier. These buttons will vary between what mode you are in, and we’ll cover the mode-specific tools after the universal ones.  The first one, the x button, is the delete tool.  This tool can also be triggered through the Delete key, where the result is… as expected.
+
+The duplicate button is next, and this also has a Shift+D keybind.  This allows you to create a detached copy of whatever you have selected.  Once you have the selection, you might be wondering what to do with it.  Fortunately, you can press the X, Y, or Z keys and restrict its movement to a single axis!  This also applies to moving parts, editing geometry, and…
+
+
+The extrude tool.  Using either the E key or the respective button, you can create new meshes that remain connected to the source.  Extruding points gets you lines, extruding lines gets you faces, and extruding faces gets you an enclosed volume.  
+
+
+The hole tool lets you make holes in a tank without using a cannon.  Start by selecting the points, edges, or faces around where you want the hole to be, and then press the button!  You can use the hole tool to fill in a gap, or replace existing faces.  Using the hole tool twice will lead to more points being added, and this also goes for selecting 8 points when generating a hole.  This tool is the simplest way to create a hole for your turret basket, which is important to prevent all your turret stuff from colliding with the hull.  We’ll be using this tool extensively later on.  Unfortunately I am not aware of a keybind that activates this tool yet, but this may change by the time you’re watching this video.  
+
+
+Now what if you didn’t like something that just happened?  Maybe you accidentally merged the entire compartment into a black hole.  Fortunately, Sprocket has an undo keybind.  Simply press Ctrl+Z to undo, or Ctrl+Y to redo.  You can only undo a certain amount of steps, but let’s be honest, most undo tools are like that.  It’s not like there’s software out there which simply doesn’t have undo at all...
+
+
+
+
+5. Points editor
+Unique to the points menu is the “fill” tool.  If you have 3 or 4 points selected, you can press F or click this button to create a face connected to the selected points.
+The weld tool, which may also be called the merge tool, allows you to unify all selected points into the last selected one.  This tool can also be triggered by the M button.  If you used a bulk selection tool like ring select, or want to change what point is merged into, hold shift and double right click that point.  
+
+
+[stopping point 5/24/25]
+
+
+
+
+6. Edge Editor
+The edge editing menu has a couple special tools of its own.  The split tool allows for taking an existing edge and splitting it down the center, leaving you with a ring selection of the new edges that resulted from the split.  Keep in mind that as of filming, splits are not mirrored at all.  You will need to make sure that you perform splits on both sides of your compartment if you wish to maintain its symmetry.
+
+
+Next up, we have… “mark weld” and “clear weld.”  These tools, despite the name, are used in conjunction with the smoothing angle.  If you have a curved surface, but want to add in a sharp edge regardless of the smoothing angle, you can mark that edge as a “weld.”  To undo it, you can instead clear the weld.  This is particularly useful when working on corners or intersecting plates that you want to have looking a specific way.
+
+
+
+
+7. Face Editor
+The face editor introduces the flip tool.  As shown before, all faces have a physical thickness, which allows for plenty of shenanigans that I’ll cover in detail later.  By default, this physical thickness is extruded into the vehicle.  By selecting faces and then flipping them, you can invert which direction the physical thickness gets extruded.  Hole generation currently has a bug that causes faces to also be flipped when generated, so to fix this, simply select all the faces and then flip them.  
+
+
+One lesser-known tool is the hidden Slope tool, which allows you to change the slope angle of a face relative to an upright angle.  [Jacob voiceline]  Start by selecting faces, and then open up the info tab on the right.  You’ll see that a slope angle is now displayed.  Then, press the H key and move the cursor to change the slope angle of the selected plates.  As you move your cursor, you’ll notice the slope angle on the right start to change.  Click to disengage the tool, and your new slope will be applied!
+
+
+Sprocket currently allows for faces that have either 3 or 4 points.  4-point faces are internally coded as a combination of 3-point faces, which don’t maintain symmetry across both sides.  Sprocket is not unique with these quirks - you can find them in games as far back as the 1990s.  I really wish I could build a straight ridgeline with this terrain.. [show ride breakdown] Thanks, very helpful.  
+The usual solution involves simply making the triangular faces yourself, as that does allow for getting around the symmetry problem.  If you somehow create a face with any other number of points, then that geometry will become corrupted and be unable to load.  [Windows XP error sound effect].  So don’t try to do that.
+8. Corner Editor
+And now… the corner editor [sound effect]
+
+
+Because it’s not feasible to get armor extrusion correct 100% of the time, this tool was added to allow the user to correct how armor gets extruded.  Most of the time, you can safely ignore this tab.  If you have odd interactions between faces, such as those with very acute angles, then you should make use of this tab.  
+
+
+The easiest way to use this mode is to go into the points editor, select the problematic points, and then jump into the corners editor.  Your points will be pre-selected, allowing you to edit them as you please.  This dropdown menu lets you adjust how the points extrude.  It’s best to try Auto, Face Normal, or Point Normal first.  If not, play around with the different options to see what works best for your specific build.  
+
+
+
+
+
+
+8.5. Transition
+Alright, we’ve made it through the basics of the Freeform editor!  [Tada]
+
+
+Now, this tutorial video has been split into a two-part system.  The first part was set up to cover nearly all the possible “tools” that are available to use.  The next part, on the other hand, will be covering how to use those tools to build whatever you can think of.  I will start with some simple examples of making freeform parts, and build up towards some complex examples.  But before I begin, remember that Sprocket is a game that involves practice, experimentation, and exploration in order to learn.  Don’t hesitate to make backup versions of your vehicle [do this anyways], play around with modeling the geometry a bit to get a desired shape, and revert to an older backup if it doesn’t work.  There’s many different ways you can approach modeling an object, so don’t hesitate to experiment and see what works best for you.
+
+
+Sprocket Freeform carries a few important differences from typical 3D modeling software that needs to be considered.  Plate thickness is present on all faces, which can be taken advantage of to reduce how much of a model you need to, well, model.  
+Sprocket also provides a benefit of allowing for open geometry, meaning that if you don’t like a face, you can just delete it. [noooo or scream sound effect]  And if you really want to get the veterans angry, you can just extrude lines into other faces.  Not all modeling software likes these kind of things - 3D printing software will usually do an “auto-repair” on open geometry and just fill in the missing faces.  Older versions of Sprocket were highly dependent on geometry being closed; if you deleted the wrong face, your tank would have an inaccurate volume - that’s if it was still functional.  This newfound flexibility means you don’t have to use the “cube methods” and other complex workarounds that were frequently used in older versions of Sprocket. 
+
+
+9. Basic Techniques
+[stopping point 5/25/2025]
+
+
+Alright, let’s get our feet wet and start by making a cylinder, to put our feet into? 
+
+
+Before we continue further, let’s save this cylinder compartment using the built-in save tool.  Simply give the compartment a useful name, or a completely useless one, I don’t mind, and click the save button.  While preparing this video, I was actually planning to show how to save this cylinder as an addon structure, as compartment saving was not implemented originally.  Fortunately, Hamish implemented compartment saving right as I was about to start recording.  Not only did this save me endless time with stop motion work, but I can now incorporate this immensely useful feature into the tutorial.  Saving and loading compartments is one of the best ways to have custom prefabs and parts ready to go, simplifying your work as you grow your freeforming skills.  I highly encourage you to use it frequently.
+
+
+Let’s move on to another simple task - adding a pike nose to this hull.  
+
+
+Moving onto another vehicle, let’s add a simple viewport into the front of this chassis.  
+
+
+Next up, let’s add some custom fenders using an addon structure.
+
+
+Now, let’s add a custom mantlet to this exposed gun.  
+
+
+
+
+
+
+
+
+
+
+
+
+10. Common Techniques
+Before we move on, I want to mention a few more things before moving into complex designs.  
+
+
+Addon Structures are the best way to add details onto a vehicle, without those details being locked onto a compartment.  Once you have the addon structure built, you can move it, copy it, or save it as a prefab part that can be placed onto other designs.  Use addon structures frequently, as these benefits are hard to overlook.  
+
+
+If you want to add a new part to a vehicle, but with the geometry still linked to another compartment, older versions of Sprocket typically require you to use a complex method known as the “cube method.”  Nowadays there are much simpler ways to go about this.  Simply take a face, duplicate it, and then extrude it along the desired axis.  Now you have a floating cube that you can then mold into any shape you wish! 
+
+
+Something to keep in mind is a technique called “stitching,” where instead of manipulating faces, you create a bunch of points floating around, then stitch them together by filling in faces.  This is particularly useful when trying to match replica designs, and create complex shapes that aren’t easy to make by manipulating faces.  
+
+
+Similar to stitching is face remapping, where faces are deleted and then filled back in to change how existing points are used to create geometry.  This technique is particularly useful in creating tunnels or complex surfaces, an example of which I will show later.
+
+
+Another tool to keep in mind is that the physical thickness of the plates can also be used as detailing.  Say for example you want to make a functioning crew hatch that opens up to reveal your severely traumatized driver. [“save me”] Once you create the upper shape for your hatch, all you have to do is increase the thickness of all its faces, and now your hatch looks fully complete.  This is significantly more efficient than trying to extrude the hatch face vertically, as it halves the amount of points you need to account for on future edits.
+
+
+  
+11. Complex Examples
+Next up, let’s cover some more complex techniques that show just how flexible the Freeform system is, and why a 
+
+
+To start off, let’s revert back to a stock hull for a bit.  These cornered edges are a bit bland, so let’s try turning them into a nicely rounded corner… using holes.  This might look a bit weird at first, but you’ll see why I’m taking this approach when it’s done.
+As you can see, we only had to make one split, and increasing the detail level is pretty easy.
+
+
+Next up, let’s try making a T-34-85 style rounded turret.  
+
+
+Now, instead of having this curved edge, what if we wanted to have a tight curve that looks similar to a rounded corner?  To do this, simply take all the edges and place them right next to each other.  Now you have a blunt corner!  These can be placed fairly easily on flat edges, such as the front of an actual T-34 hull, to further refine how object smoothing looks.
+
+
+  
+
+
+
+Let’s add a rotatable engine intake vent to this tank.  
+
+
+Now let’s rewind this for a sec.  
+12. Saving
+Now, let’s go back to this cylinder for a minute.  As you’ve probably noticed by now, cylinders are useful shapes to have.  How can we make this cylinder readily available to use another time?
+
+
+
+
+Sprocket currently enforces a grid snap restriction, meaning that all points need to sit somewhere on a grid.  This restriction was originally intended to help reduce blueprint file size, but the process of actually making that filesize improvement was never implemented.  Currently the game does not permit setting the grid size below 1mm, but because the game saves the grid size into the blueprint itself, there’s a way to get around this restriction and make some really fancy stuff [queue Nirrti builds].  Any compartment can be file edited to remove grid snap from it, all you have to do is open the file in a notepad editor, and use its replace tool to update the grid snaps.  I recommend saving a blueprint structure and editing it, then loading it into your tank.  This avoids alot of guesswork with finding the correct compartment on your entire vehicle.
+
+Also worth noting: there used to be a soft limit of 5,461.3 points per structure with early Geometric Internals builds, and breaking that limit might as well be summoning the Kraken. [Show among us] This limit has since been increased into a number sitting in the billions, making this problem irrelevant.
+
+Now that the hull has a 0mm grid snap, let’s create a high poly circle.  
+
+
+Using this circle, let’s stitch an inset hole into the front that can be used for placing bolts.  
+
+
+Next up, what about making a donut?  
+Donut (make vertical circles, extrude, rotate, set position to zero, repeat, fill)
+
+
+Now, to combine everything we’ve learned so far, let’s replicate this MG cover and mount it on our vehicle.
+
+
+Conclusion
+I hope you have found this tutorial useful for your Sprocket building endeavours.  This video has been in the works for over 7 months now, and I want to give immense thanks to everyone who has helped make this video possible.  Let me know in the comments section if you want to see me do more tutorials like this, and don’t forget to subscribe to my channel!  My next video will be out sooner.  
+
+Thanks for watching, and see you all soon!
+
+
+
+---- BEGINNERS TUTORIAL ----
+
+0:00 - 0:59
+Sprocket is hands down the best tank building game out there, but it's definitely not the easiest to learn.  Now, before we dive in, let's do an overview of the user interface from the compartments view. Left click will grab and place items. Pretty simple. The scroll wheel is used to zoom in and out. If you hold your middle mouse button, you'll orbit around the tank. To pan, hold down shift and hold down the middle mouse button as you drag your mouse around. Clicking on an object with the right mouse button will select it for editing. This is what you usually want to use when trying to open up a compartment or
+1:41 - 2:27
+edit it. Now, let's say we wanted to select multiple items. In order to do this, hold shift and right mouse button click items. You can see they're now both highlighted in yellow, which means they're both now going to be acted on when we edit them. This is where the scale, transform, and rotate tools come in. Right now, we're in the scale tool, which means we have these red, green, and blue um do you call them rectangles? Yeah. So when you click on one of these and start moving your cursor around, it will scale the items up in the axi that you select. And down here you have buttons to change
+2:27 - 3:17
+between resizing, scaling, moving, and rotating. Over here in the move tool, we can now move them along the side of the compartment. And over here in the rotate, we're now given these little orbital rings that we can click on, drag, and move into place. Using them in conjunction will let us do basically whatever we want with these parts. Now, what if we don't like what we just did? Fortunately, Sprocket has an undo keybind, which allows us to basically undo whatever we just did. You can though redo as well using control Y. Down here in the bottom right we have a
+3:17 - 3:57
+couple different view modes as well. This is the standard view which allows us to interact with compartments and components as they normally look. And here we have the internals view which lets us look inside the tank and interact with stuff inside it. We also have the armor inspector which allows us to test armor and see if it can be penned or not. We also have the filter tool here which allows us to change what items we want to select. Such as in the visibility mode, it changes what items we can select. In the internals view, it lets us hide specific items and they become
+3:57 - 4:37
+all grayed out. That's mainly it for the overview of the user interface. Now, let's go on to make our own tank. All right, so let's start working with the generated hole. We're going to want to make this a little bit more slopes than it is right now. Don't mind the steering wheel poking through. We can fix that later. Starting out with generated, it is pretty easy to get a vehicle going because you can just click on the faces and drag them to your liking. We also can just directly edit everything in here.
+4:37 - 5:26
+And you can click on a number and type in an exact value if you want as well. Now, let's go into free form editing so that we can play with it a little bit more. The free form editor gives us a lot more granular control over how we edit the vehicle cuz now we can like go to edges, right click here, and then split it to get extra edges that we can edit. And we can give this vein a pike nose if we really want to. I'm not going to go super indepth on free form editing because I have a 55minut tutorial just for that. So if you want to learn more about modeling
+5:26 - 6:17
+vehicles like this and get wild with things, go check that video out. Now let's work on getting a turret installed onto this hole. Generated holes make this a bit easier to work with. You just place the turret down. You don't have to do anything else. For free form holes, you need to cut a hole for the turret to slide into. To do that, let's go to the faces tab here. Select all the upper faces and go over here to this button that says create hole. Click that. And a bunch of lines have now appeared. Let's delete those because we don't really need those. And now we have all these edges
+6:18 - 7:08
+over here. We'll want to switch to the edge tab and then select all of the edges by holding shift and going around like that. Let's move them forward. And to scale it down just a little bit more, hit S and then drag inwards. Now we have a hole. So, let's place a turret down. Make sure it snaps in the middle. You'll see that as you drag it along, it'll stop and then let go again. You want to look for where it stops and then leave it there. Now, we'll want to go underneath and then zoom right in about here and grab this part. You want to grab the turret ring and
+7:08 - 7:54
+then drag it so that it goes right over the hole. Want to increase the diameter a little bit as well. You don't have to get exact with it, just enough that it'll sit on nicely. The main goal with aligning the turret ring is so that it doesn't collide with the arbored plates that make up the roof of your hole. We cut a hole for the turret ring to sit into. So, we don't want it to clip into the sides of that hole a bit too much. Keep in mind that it's a tongue twister to describe hole and hole because they sound almost identical. So, apologies for that. And there we go. Now, let's go
+7:54 - 8:45
+in here and drag the faces out so that it's bigger than the turret ar inside. There we go. All right. So, before moving forward, it wouldn't hurt to check and make sure that our turret is nicely aligned. You don't have to do this for a generated mode because it punches a hole on its own. For free form though, it does help. So, what we're going to do is hold control and right mouse click up around here in the back. This should select all of the faces that make up our roof. And if we go into the internals view, we see that they
+8:45 - 9:37
+don't poke through past the turret ring. That's a good sign. And that means everything is nicely aligned. You'll also notice that this guy's highlighted red here. This is the turret traverse motor. We'll come back to aligning that in the future. The near future, I should say. So, back at our turret. I'm not exactly going to make a T29 style turret with it, but I'm going to try and aim for something kind of like that to make it a little easier. Let's tweak this just a little more. And now let's go into free form edit. The process for this is going to be not
+9:37 - 10:30
+too hard, surprisingly. Let's start by going into the edges tab. Right click this edge, split it, and drag it down. And then we'll want to press S to scale it out a bit more. That should work. Now, let's come over to the back here. We'll go back into the faces tab. Right click to select this and then we'll press the E key followed by the Y key. This extrudes it out in a locked direction and allows us to basically have an easy time setting it
+10:30 - 11:28
+where we want it to go. Let's go back into the edges tab and we'll drag these guys out and drag these in. Now, if we want to get more detailed with this, what we can do is select these edges again, split them, and then right click to grab these guys. And then drag them out just a little bit more. We'll repeat that here. And then do it one more time here. Now, we could keep doing that forever. Or over here we have a smoothing angle. Let's bump this up to about 25°. So when we deselect it, we can see
+11:28 - 12:17
+the side is now nicely smoothed. This will work perfect for what we need. And with that, we now have a somewhat cursed combination of a hole and a turret. Perfect for what we need. It's safe to say our turret basket has plenty of space underneath it. We could put fuel underneath it later, but instead we can take this and drop it down. We don't want to go all the way to the bottom because the suspension parts would be in the way. Now, we'll also want to deal with this traverse motor or hand crank. As we're currently in the interwar era, there's no motor attached to it. Say we
+12:17 - 13:08
+do switch over to the midwar period for example and we do want to add a motor to it. Let's go about that big. You'll see it takes up a lot of space. Fortunately, we can rotate this device. I like to put it this way so that it takes up the least room for violating crew area, which we'll get to later. You have to make sure that the teeth of the wheel line up with the edge of the turret ring like this. If it's too far away, it won't work. And you'll see this red highlighted area there. Speaking of the vehicle era, I have it set to midwar here. And usually the dune
+13:08 - 13:51
+scenario is locked to the interwar period. I plan to actually take this into a late war scenario later on. So let's keep to late war for now. Now the vehicles that we're going to face later on in that scenario have pretty good penetration. We're going to want to set the armor now before we start placing components because if we place all the components and then deal with the armor later, it's going to lead to a lot of potential collision issues. In order to set the armor, what we need to do is go into the face tab and select all the faces we want to adjust.
+13:51 - 14:41
+Then go over here to thickness and increase the slider. You do have to watch out because sometimes it'll act funky. Like in this case, it's extruding it downwards. In that case, we want to go to the corners tab and change the thicken mode to face normal. That's my favorite. You can play through these to change how it works. My usual recommendation is to start with face normal, then edge auto, and if not, just run through them. So, we'll set the front to 180 mm. We'll set the side to 80 mm on the front and 60 mm in the back.
+14:41 - 15:33
+And let's set the top to about 15. Over in the hole, we'll want to set these guys to about 100. And then let's give these guys about the same. We'll give this about 70 because it's sloped. And these guys, let's do 80. So to add a mantlet, which is required before putting down the cannon, we want to go over to the firepower tab. Here we have a lot of options, although I'd recommend sticking away from the blank one just for now. Those are usually meant for custom mantlets, which is a
+15:33 - 16:18
+little more of an advanced technique, not really suited for this tutorial. So right away, it looks a bit small. I'm going to hold shift and scroll up to make it scale bigger before bolting it down. There we go. Now, let's add a cannon. We want to go over here to the cannon tab and click this guy. You'll notice that it also snaps to the middle here. So, let's make sure to take advantage of that. And the cannon is now nicely set inside the middle of the mantlet. And it also looks to be of good size.
+16:18 - 17:06
+Now, we want to go over to the internals view. By default, we got a 120 mm with 440 mm of propellant length. I'm going to make mine a bit bigger, but I'll keep the caliber as is. That should work pretty nicely. If you look at it from the side, you'll see that these red boxes demonstrate the traverse collision boxes. So that when it angles downward, it has to clear this area. When the cannon angles upwards, it has to clear this area. In order to fix the collisions, we need to well move it backwards away from the armor. We can just grab it and there we
+17:06 - 17:50
+go. We also can grab this guy which is the laying drive. And if we want to change it further, we just drag the sliders. We don't have much more room to elevate upwards, but we did have some more room to dep Wait, I got it backwards. We didn't have much more room to depress the gun, but we do have more room to elevate it if we wish. Now, if you zoom in closely, you'll see this blue line here. This indicates how offbalance the cannon is. And you want this line to be as short as you can make it. In order to fix this, let's select the
+17:50 - 18:31
+recoiled segment here. And we increase the length. We see that it starts to become a little more balanced. Let's select this guy here and give it a much bigger number. We want to type in about 2500. And you can see the line is now very small. You don't have to get it all the way down, but the closer the better. The thickness of the barrel also comes into play. So, if we like take this down to just 20 mm thickness, we see it becomes a little offbalance. Again, we'll want to increase the length again in order to compensate.
+18:31 - 19:14
+And then from here, while you have it selected, you can give your cannon a muzzle break of your choice. All right. Now, let's get on to the crew. We want to go over here to the crew tab and go to the internals view to make placement a little bit easier. For the driver, we can select this pose. We don't have to do it, but it's the easiest to work with. Depending on if you want one or two people in your hole, you can either place them in the middle or place them off to the side so that you get two guys to work with. Now, you do have to watch out because
+19:14 - 20:07
+the crew don't necessarily clip with the armor. They'll just start punching a hole in it. So, like up here, his head's poking through. If you were to shoot this with a cannon, it would not actually hit the armor. It would just go straight through. So to deal with this, let's move him back a little bit more. And we want to grab his feet and move them forward a bit. We also can select these to pitch his feet back. And then just play it a bit more until we get a pose that we like. And if we really like the pose, we can save it and then load it on the other guy. Now, let's put the steering wheel in a
+20:07 - 20:54
+slightly better spot and scale it down a bit. This is where crew roles come into play. Here, we'll want to have the operating mode set to steering controls. And now we have an error come up that there's no viewport. The driver can't see what he's doing. To fix that, let's go to equipment and grab this. We can scale it down a bit if we don't like how big it is. And there we go. We now have viewports out. And he's now good to go. If we want to decorate this up a little more, we can
+20:54 - 21:47
+go to hatches and give it an extra little bit like this. Not the prettiest, but it'll work. Turret crew is up next. Let's do the sitting position and put two guys in here. We want to have them positioned so they don't collide with the gun and also don't collide with the sides. Now, we want to have the first guy over here be the gunner because the lane drive is on his side. We could move it over, but this works. Let's have him as the gun layer. other gun layer. Oh, looks like one of these is too far. So, let's fix that.
+21:47 - 22:37
+Let's move it a little closer and assign him as the gunner. Looks like it's missing a gunner site. So, we'll go back to the firepower tab and put down a gunner site. We can have symmetry for this. There we go. Next up, this guy will be the loader. And he can do just that because being the loader is a fairly intensive job. And while we're in here, let's take a look at the turret traverse motor cuz we're still in the late war era. We can uncheck that. Set it. That'll work.
+22:37 - 23:20
+And here is where we want to pay attention to the turret traverse max speed and the time it takes to get there. You usually don't want this to be more than 3 or 4 seconds. The lower you can get that number, the better. And the higher you can get this number, the better as well. So to balance it out, let's bring it the ratio to about this so that the time to max speed is 2 seconds, which is good enough for something armored like this. And the max speed is still acceptable.
+23:20 - 24:13
+And the best way to find out is to go for a test drive real quick. Look at that. The traverse speed is pretty good. And the vehicle drives forward. It seems our ally has already encountered the enemies, but he can't really do anything because we didn't put ammunition in the tank. To fix our ammunition problem, let's go to the cannon tab and grab an ammo rack from the back. Not from the back. Let's place it in the back. We'll put it there. Let's drag it forward so that it doesn't clip with too much. And then
+24:13 - 25:05
+scale it up to hold more ammunition. It looks like if we go all the way up, it will clip out the top. So, we don't want to do that. Let's play around with the orientation a little bit. Looks like we need to turn off the default snapping for rotation for now. That gives us a little more precise control over how we rotate it. That'll work good. It's not clipping with this up here or the armor in the back. Modifying the tracks is up next. We'll want to select the road wheels here to get started. And a lot of settings pop up. This is
+25:05 - 25:43
+definitely one of the more crowded menus in the game, so I won't be able to cover everything here, but I'll try and briefly go through the stuff. Now, if you ever want to change the size of your road wheel base, you'll want to disable the sync to chassis button here because then it gives you a little more fine control over fins. I'm going to keep it where it was for now because I kind of like how the setup works. Over here in the wheel tab, we can change a couple of the settings like if we want to go with bigger wheels. We can change their thickness. We can
+25:43 - 26:31
+adjust their offset. Down here in the suspension tab, we can play with the rest angle if we want to change how much play the arms have. Another way to do that is down here in the torsion bar. Adjusting the torsion bar is kind of a two-step setup here. You can play with the length of the torsion bar and its diameter. The thicker you make the torsion bar, the stiffer your suspension will be. And the longer it is, the more smooth your suspension will be. Usually, if you want a smooth suspension, you're going to want to make the diameter a bit smaller and make the length a bit longer.
+26:31 - 27:13
+We'll set it about there for now. The rest of these settings are largely cosmetic, although we can go through here and change what wheel type we're using, which we can do with the other wheels as well. Don't mind the white box wheel. Next up, we need to decide whether we're using a clutch braking or twin transmission powertrain. Clutch braking is a more compact transmission style that locks up one track in order to turn the tank, while twin transmissions control their turning by shifting one transmission down to a lower gear. Our vehicle is large enough that it should have little issue fitting
+27:13 - 27:57
+a twin transmission system. All right. To get everything all nice and positioned, I'm first going to also go back to the engine and let's make it a V12. We want to set it now so that we don't come back to it later and have to reposition everything if we want to make it bigger. So, there's a lot of ways we can do this. What I'm going to do is take it and put it off to the side here. Now, what I need to do is split the drivetrain twice. We right click to select it and then click the split button up here. It then gives us these little blue orbs that we can move around.
+27:57 - 28:46
+And also pay attention here as I move this up and down. This runs into collisions because the angle of the drive shaft is exceeding a limit of I think 5° maybe 15. It's something pretty small. We'll also want to watch it here. One of the downsides that we do have to note with twin transmissions is at least in this configuration, we don't have a lot of room for gears. So, if we want more gears, we're going to want to do an alternative setup, which involves taking them, rotating them like this, and then placing them adjacent to the engine. We're going to want to come back to
+28:46 - 29:32
+these guys and remove them. Slide this guy over here. And then we want to take the engine and rotate it 180°. And then we're going to want to take these and split them again down the middle. And then let's take these. And there we go. This now gives us a little more room to add gears into the transmission if we want to. We'll come back and set the gears later. All right, let's get the engine tuned next. This is one of the more vague areas of the game. I'm going to start with the simple method and then
+29:32 - 30:16
+I'm going to go to the more precise method afterwards. Over here in the RPM tab is where we're going to want to pay attention. Make sure you're in the advanced mode, by the way. Our upshift RPM should be about 90% of the safe limit. In this case, 3600. 90% of that is about 3,300. You don't want to set it all the way to the top or you'll have issues trying to shift later on. Like you'll get to the higher gears and it won't shift. 90% is a good value. The downshift we want to be about half of that. The idle RPM doesn't really matter much yet. That might change in the future. Now, let's
+30:16 - 31:10
+go over to the transmissions. Want to set our first gear. Let's go down here for about now. We'll click the G1 / N in order to get the smooth curve here. You want a curve like this to make your shifting work better. It is very important that you have your reverse gears synced to your drive gears. You want them to match up for twin transmissions because otherwise you will have difficulty turning. Looks like these changes cause some collision issues. So, let's adjust it back up and let's see how it drives. Acceleration is good. Turning is a bit slow though. Our RPM is
+31:10 - 31:58
+only about 300. So that indicates our first gear is too small. To fix this, let's make the first gear a bit higher and then sink the reverse gear. That is very important here. Our turning speed is now a lot nicer. We're getting some higher RPMs out of the engine and the turret can't really keep up. Now, that was the rough method to get some approximate numbers, but there are better ways to go about it. For this, we want to use the https://sprockettools.github.io gear calculator. Here, we can plug in a couple stats about our vehicle and then get the optimal gear ratios out of it.
+31:58 - 32:45
+It'll also tell us the ideal upshift RPM, downshift RPM, and give us an estimate about how fast the vehicle can go. And if we plug those numbers into our transmission, it looks like it actually builds up speed fairly nicely with those numbers in place. That is good to know. Oh, looks like we still need to put fuel in this tank. Adding fuel into the tank is generally one of the easier things to do. Just go to powertrain and fuel tanks. We have the option of internal fuel tanks or external ones. Let's go with some internal ones for now. We'll just place a box down and
+32:45 - 33:27
+then go to the scaling tab to change how much fuel it has. It does look like it's colliding with the torsion bar, so we'll want to lift that up. 1,000 L of fuel should be more than enough for whatever this guy will need to tackle. And with that, all that's left is to start decorating. Most of the parts that we'll need are in the crew and then you have to go through all the various tabs and you can select basically anything from here and just place it on. There are also some parts in the compartments
+33:28 - 34:16
+structural tab. So, I want to use these as well. There's also fenders over in the tracks and fenders tab along with some other spare parts that you can slap on. They don't have a practical use yet, but that might change in the future. There's even more decor over in the powertrain and vents, exhaust, and fuel tanks tabs, so keep these in mind as well. One of my favorite tricks is to take objects like this and either rotate them around or insert them in slightly using the translation tool. Opens up some options for retexturing parts without
+34:16 - 35:15
+necessarily having to change the armor model at the same time. Hatches in particular are pretty good for sinking inside the vehicle. What I'm going to do here is take them, rotate them just a little bit, and then sync them in. Now you have a kind of custom hatch without having to really use complex parts. Another useful trick, hold Alt while clicking one of the translation arrows, and it will allow you to duplicate a part straight on from the original. It's really efficient when you need to mass-produce items like this.
+35:15 - 36:00
+Now that we have a little bit more time to play around with the thicken tool, I'm coming back to the turret face and adjusting how all the edges extrude. So here I'm going to the edge manual and clicking next edge until this blue line points along the face that clips right next to this other face. You can see that if it goes the wrong way, then we get this weird little clipping out here. We want it to go this way along the face that it intersects. Once we made that adjustment, it's now looking much better along this edge. We have the welding marks visible, which is very nice.
+36:00 - 36:42
+With placing parts now done, let's go and deal with the paint job. We have a lot of options here for various paints. In this case, let's go with this one. We get a lot of settings over here that we can play with such as increasing or decreasing the scale. In this case, we probably want to go with a bigger scale. And looks like this paint job is a bit rough right now. So, let's clean it up a bit. give it just a little bit of dirt. There's other settings here that you can play with to change how the paint looks, such as if you want to give it some more
+36:42 - 37:21
+color or change what type of color it has. I think this custom paint job looks a bit better. So, I think I'm going to stick with this for now. Now, if you're looking for more paint jobs like this, the first place you'll want to check out is the official Sprocket Discord, which has tons of paint jobs. The second place you'll want to check out is the currently under construction paint catalog in the https://sprockettools.github.io website linked in the video description. Which speaking of that, it has a much
+37:21 - 38:04
+more builtout decal catalog. Let's take a look at an example of embedding one of these into our tank. Let's try this dirt damage decal by Hey, I know that guy. So, we'll want to click on it cuz the website says to do that. And now to place it down, we're going to just want to place any decal. Let's put it down here. And paste the decal in. And it should update. We don't want to grab that. So, we're going to want to pull this back a little bit to avoid that weird seam. And there we go. We now have some dust
+38:04 - 38:59
+effects on the bottom. And there we have it. This ended up being some weird German leopard one looking kind of deal with some Soviet piked nose mixed in with it. Well, only one way to find out if it works. All right, so this scenario has only static infantry firing guns at us as we drive out there. We also have no allies, so Oh, here's one of them. So, you look closely. Oh, they penned us in the front apparently. H looks like there's a bug in the armor
+38:59 - 40:03
+somewhere. Yeah, that's not good. Let's fix that. Oh, there's one right in front of us. So, they're not even aware we're here. So, let's take advantage of that and aim just a little bit above him. I'm not sure if that went through or hit him or what. That was a bit low. That definitely hits. Oh, there's the next one. That was too high. Yeah, that definitely jacked him up. What we're going to do now is let's attempt to just run straight to the
+40:03 - 41:01
+border cuz there will be infantry to the sides of us. But because we geared this well enough, we are fast enough to clear their traverse limits. And we made it. Before wrapping up this video, let's go over some of the most common problems that people run into and some solutions to help prevent them or fix them. If your gun won't traverse correctly, check the gun laying drive. If any of the values are negative, such as in this case, the time to top speed is negative, you want to fix your center of mass or
+41:01 - 41:43
+change the ratio so that it supports your gun's time to top speed. If your tank keeps getting stuck when trying to climb obstacles, make sure your road wheels are able to maintain contact with the ground. A couple people have pointed out with this design that at least as right now, the hole sticks out a little too far, which means that if we were to ever drive over a big obstacle, the hole would get stuck on that obstacle and then the vehicle would get stuck. So, to fix this, I'm going to take these points, drag them back,
+41:43 - 42:24
+and there we go. This should have an easier time clearing obstacles now. And if we wanted to make it even better, we could take these wheels and move them a little bit forward. A very key detail to keep in mind is that at least with the current sprocket updates, these wheels do not actually provide any traction of any sort. So only your road wheels will actually allow you to move and climb stuff. The same goes for your sprocket in the rear or the front if you set it that way. It cannot help you climb over anything. So, make sure to rely mainly on your
+42:24 - 43:05
+road wheels and keep clearance for them as necessary. If your tank tends to tip forward or backwards in strange ways, it is likely due to the center of mass being off center. Sprocket tends to lock the center of mass to the very middle of these platforms that the tank is built on. So, if your tank tends to tip forward or backwards, shift the entire vehicle closer to the center and that should fix your problem. I hope you found this video useful in your endeavors to master sprockets. It seems like I failed to make this video a short one, but that's probably due to how much stuff there is to cover.
+
+
+
+
+
+
