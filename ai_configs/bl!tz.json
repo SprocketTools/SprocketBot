@@ -5,13 +5,17 @@
     "webhook_avatar": "https://astroneer.wiki.gg/images/Bl%21tz_1.png",
     "character_details": "You are pretending to be the villian 'bl!tz' from the video game Astroneer.",
     "personality": "Be a bit grumpy and condescending.  Prioritize helping the user with Astroneer Modding help over staying in character.",
+    "knowledge_url": "https://astroneermodding.readthedocs.io/en/latest/all_docs_as_text.txt",
     "exit_instructions": "",
-    "message_cap": 5,
-    "ai_model": "gemma",
+    "message_cap": 1,
+    "context_limit": 20,
+    "ai_model": "normal",
     "cooldown_seconds": 600,
-    "burst_limit": 5,
+    "burst_limit": 2,
     "min_length": 100,
-    "max_length": 1625,
+    "max_length": 1700,
     "external_links": "https://astroneermodding.readthedocs.io/en/latest/all_docs_as_text.txt",
-    "server_id": 0
+    "server_id": 0,
+    "channel_id": 0,
+    "temperature": 0.3
 }

@@ -2,6 +2,7 @@ import os
 import json
 import asyncio
 import datetime
+import aiohttp
 import discord
 from discord.ext import commands
 import type_hints
@@ -22,30 +23,47 @@ class AIAssistants(commands.Cog):
         # Blacklist for NSFW/Racist terms
         self.blacklist = ["penis", "nigge", "cock", "jerk", "jork", "mig-15", "mig 15", "fagot"]
 
-        # Load all configs on startup
-        self.load_configs()
+    async def cog_load(self):
+        """Native discord.py method that runs asynchronously when the cog loads."""
+        await self.load_configs()
 
-    def load_configs(self):
-        """Loads all JSON files from the ai_configs directory."""
+    async def load_configs(self):
+        """Loads all JSON files from the ai_configs directory and fetches knowledge URLs."""
         if not os.path.exists(self.configs_dir):
             os.makedirs(self.configs_dir)
             print(f"[AI Engine] Created {self.configs_dir} directory. Add JSONs and restart.")
             return
 
-        for filename in os.listdir(self.configs_dir):
-            if filename.endswith(".json"):
-                try:
-                    with open(os.path.join(self.configs_dir, filename), "r", encoding="utf-8") as f:
-                        config = json.load(f)
-                        # We use a clean base name for flexible triggering
-                        key = config.get("activation_name", "").lower().strip()
-                        # Strip trailing commas or spaces if they accidentally added them
-                        if key.endswith(","): key = key[:-1].strip()
+        async with aiohttp.ClientSession() as session:
+            for filename in os.listdir(self.configs_dir):
+                if filename.endswith(".json"):
+                    try:
+                        with open(os.path.join(self.configs_dir, filename), "r", encoding="utf-8") as f:
+                            config = json.load(f)
 
-                        if key:
-                            self.ai_personas[key] = config
-                except Exception as e:
-                    print(f"[AI Engine] Failed to load config {filename}: {e}")
+                            # We use a clean base name for flexible triggering
+                            key = config.get("activation_name", "").lower().strip()
+                            if key.endswith(","): key = key[:-1].strip()
+
+                            # --- FETCH KNOWLEDGE BASE URL ---
+                            knowledge_url = config.get("knowledge_url", "")
+                            if knowledge_url.startswith("http"):
+                                try:
+                                    print(f"[AI Engine] Fetching knowledge base for '{key}'...")
+                                    async with session.get(knowledge_url) as r:
+                                        if r.status == 200:
+                                            config["_cached_knowledge"] = await r.text()
+                                            print(
+                                                f"[AI Engine] Successfully loaded {len(config['_cached_knowledge'])} characters of knowledge.")
+                                        else:
+                                            print(f"[AI Engine] Failed to fetch knowledge: HTTP {r.status}")
+                                except Exception as e:
+                                    print(f"[AI Engine] Failed to fetch knowledge URL: {e}")
+
+                            if key:
+                                self.ai_personas[key] = config
+                    except Exception as e:
+                        print(f"[AI Engine] Failed to load config {filename}: {e}")
 
         print(f"[AI Engine] Loaded {len(self.ai_personas)} AI Personas successfully.")
 
@@ -106,6 +124,11 @@ class AIAssistants(commands.Cog):
                 if server_id != 0 and message.guild.id != server_id:
                     continue
 
+                # Check Channel Whitelist
+                allowed_channel_id = config.get("channel_id", 0)
+                if allowed_channel_id != 0 and message.channel.id != allowed_channel_id:
+                    continue
+
                 # --- FETCH SERVER CONFIG ---
                 ctx = await self.bot.get_context(message)
                 try:
@@ -115,7 +138,6 @@ class AIAssistants(commands.Cog):
                     serverconfig = {}
 
                 # --- COOLDOWN & BURST LOGIC ---
-                # Prioritize Server Config -> fallback to JSON Config -> fallback to defaults
                 base_cooldown = serverconfig.get("jarviscooldown", config.get("cooldown_seconds", 60))
                 burst_limit = serverconfig.get("jarvisburst", config.get("burst_limit", 5))
                 active_cooldown = base_cooldown
@@ -126,7 +148,6 @@ class AIAssistants(commands.Cog):
                         f'''SELECT userid, COUNT(userid) AS value_occurrence FROM errorlist GROUP BY userid ORDER BY value_occurrence DESC LIMIT 10;''')
                     top_error_users = [int(row['userid']) for row in userSetList if 'userid' in row]
                 except Exception as e:
-                    print(f"[AI Engine] DB fetch error for cooldowns: {e}")
                     top_error_users = []
 
                 # Apply Reductions
@@ -184,10 +205,36 @@ class AIAssistants(commands.Cog):
         queue = asyncio.Queue()
         await queue.put(initial_message)
 
+        history = []
+        context_limit = config.get("context_limit", 0)
+
+        # --- FETCH PREVIOUS CONTEXT MESSAGES ---
+        if context_limit > 0:
+            try:
+                past_messages = []
+                # Retrieve 'context_limit' messages prior to the summon command
+                async for msg in channel.history(limit=context_limit, before=initial_message):
+                    # Flag messages from bots as 'AI' and real users as 'User'
+                    role = "AI" if msg.author.bot else "User"
+                    past_messages.append({
+                        "role": role,
+                        "author": msg.author.display_name,
+                        "content": msg.clean_content
+                    })
+
+                # Reverse them so they are in chronological order
+                past_messages.reverse()
+                history.extend(past_messages)
+                print(f"[AI Engine] Fetched {len(past_messages)} previous context messages.")
+            except discord.Forbidden:
+                print(f"[AI Engine] WARNING: Missing 'Read Message History' permission in #{channel.name}")
+            except Exception as e:
+                print(f"[AI Engine] Error fetching context history: {e}")
+
         self.active_sessions[channel.id] = {
             "config": config,
             "queue": queue,
-            "history": [],
+            "history": history,
             "message_count": 0
         }
 
@@ -211,7 +258,7 @@ class AIAssistants(commands.Cog):
         queue = session["queue"]
         history = session["history"]
         message_cap = config.get("message_cap", 10)
-        use_webhook = config.get("use_webhook", True)  # Default to True
+        use_webhook = config.get("use_webhook", True)
 
         channel = self.bot.get_channel(channel_id)
         if not channel:
@@ -230,77 +277,122 @@ class AIAssistants(commands.Cog):
 
         while session["message_count"] < message_cap:
             try:
-                # Wait for a user message (timeout after 2 minutes of silence)
                 print(f"[AI Engine] Waiting for messages in #{channel.name}...")
                 message: discord.Message = await asyncio.wait_for(queue.get(), timeout=120.0)
             except asyncio.TimeoutError:
                 print(f"[AI Engine] Session timed out (idle) in #{channel.name}.")
                 break
 
-            # Add user message to history
-            history.append({"role": "User", "author": message.author.display_name, "content": message.content})
+            # --- PROCESS ATTACHMENTS (Images + Text Files) ---
+            ai_model = config.get("ai_model", "normal")
+            attachments = []
+            message_content = message.clean_content
 
-            # Keep history trimmed to last 10 interactions to prevent context overflow
-            if len(history) > 10:
+            for att in message.attachments:
+                # Handle Images
+                if att.content_type and att.content_type.startswith("image/"):
+                    attachments.append(att)
+                    ai_model = "gemma"
+                    # Handle Text Files
+                elif att.filename.endswith(".txt") or (att.content_type and att.content_type.startswith("text/")):
+                    try:
+                        file_bytes = await att.read()
+                        file_text = file_bytes.decode('utf-8')
+                        message_content += f"\n\n[USER ATTACHED TEXT FILE: {att.filename}]\n{file_text}"
+                        print(f"[AI Engine] Appended text file {att.filename} to user prompt.")
+                    except Exception as e:
+                        print(f"[AI Engine] Failed to read text attachment: {e}")
+
+            # Add user message to history
+            history.append({"role": "User", "author": message.author.display_name, "content": message_content})
+
+            # --- DYNAMIC HISTORY TRIMMER ---
+            # Automatically preserve the configured context_limit + the active message cap + a small buffer
+            max_memory = config.get("context_limit", 0) + message_cap + 5
+
+            # Prevent context from exceeding 30 interactions total to avoid extreme token bloat
+            max_memory = min(max_memory, 30)
+
+            while len(history) > max_memory:
                 history.pop(0)
 
-            # --- PREPARE AI PROMPT ---
+            # --- PREPARE SYSTEM INSTRUCTIONS (Developer Context) ---
             is_last_message = (session["message_count"] >= message_cap - 1)
             exit_instructions = config.get("exit_instructions", "").strip()
 
-            sys_prompt = (
+            system_instruction = (
                 f"You are {config.get('webhook_name')}. {config.get('character_details')}\n"
                 f"Personality: {config.get('personality')}\n"
-                f"Format rules: Minimum response length of {config.get('min_length', 10)} chars.  Limit your response to {config.get('max_length', 1750)} chars - this is a hard cap on message length you must follow.\n"
-                f"Context/Wiki Info: {config.get('external_links', '')}\n\n"
+                f"Format rules: Min length {config.get('min_length', 10)} chars, Max length {config.get('max_length', 2000)} chars.\n\n"
+            )
+
+            # Inject the cached knowledge base directly into the strict system instructions
+            cached_knowledge = config.get("_cached_knowledge", "")
+            if cached_knowledge:
+                system_instruction += (
+                    f"=== INTERNAL KNOWLEDGE BASE ===\n"
+                    f"You MUST use the information below to answer user questions accurately. Do not invent answers if the topic is covered here:\n\n"
+                    f"{cached_knowledge}\n"
+                    f"===============================\n\n"
+                )
+
+            system_instruction += (
                 f"INSTRUCTIONS:\n"
-                f"Read the following chat history. You must decide whether to reply to the latest message.\n"
+                f"Read the user's chat history. You must decide whether to reply to the latest message.\n"
                 f"- If you choose NOT to reply (e.g., the message wasn't directed at you), output EXACTLY `******` and nothing else.\n"
             )
 
             # Exit logic instructions (Strictly Constrained)
-            # if exit_instructions:
-            #     sys_prompt += f"- DO NOT end the conversation unless the user explicitly dismisses you, says goodbye, or the conversation has reached a definitive conclusion.\n"
-            #     sys_prompt += f"- If and ONLY if those conditions are met, include the tag `[end]` in your response and follow these exit instructions: {exit_instructions}\n"
-            # else:
-            #     sys_prompt += f"- DO NOT end the conversation unless the user explicitly dismisses you, says goodbye, or the conversation has reached a definitive conclusion.\n"
-            #     sys_prompt += f"- If and ONLY if those conditions are met, include the tag `[end]` anywhere in your response.\n"
+            if exit_instructions:
+                system_instruction += f"- DO NOT end the conversation unless the user explicitly dismisses you, says goodbye, or the conversation has reached a definitive conclusion.\n"
+                system_instruction += f"- If and ONLY if those conditions are met, include the tag `[end]` in your response and follow these exit instructions: {exit_instructions}\n"
+            else:
+                system_instruction += f"- DO NOT end the conversation unless the user explicitly dismisses you, says goodbye, or the conversation has reached a definitive conclusion.\n"
+                system_instruction += f"- If and ONLY if those conditions are met, include the tag `[end]` anywhere in your response.\n"
 
             # Hard cap warning injection
             if is_last_message:
-                sys_prompt += "\n⚠️ SYSTEM ALERT: This is your final message before the conversation hard-cap is reached. You MUST wrap up the conversation now and include the `[end]` tag in your response."
+                system_instruction += "\n⚠️ SYSTEM ALERT: This is your final message before the conversation hard-cap is reached. You MUST wrap up the conversation now and include the `[end]` tag in your response."
                 if exit_instructions:
-                    sys_prompt += f" Follow your exit instructions: {exit_instructions}"
-                sys_prompt += "\n"
+                    system_instruction += f" Follow your exit instructions: {exit_instructions}"
+                system_instruction += "\n"
 
-            sys_prompt += f"- Generate your in-character response. Do not include your own name at the start.\n\n"
-            sys_prompt += "CHAT HISTORY:\n"
+            system_instruction += f"- Generate your in-character response. Do not include your own name at the start.\n\n"
 
+            # --- PREPARE USER PROMPT (Chat History) ---
+            user_prompt = "CHAT HISTORY:\n"
             for entry in history:
-                sys_prompt += f"{entry['role']} ({entry.get('author', 'AI')}): {entry['content']}\n"
-            sys_prompt += "Your Response:"
+                user_prompt += f"{entry['role']} ({entry.get('author', 'AI')}): {entry['content']}\n"
+            user_prompt += "Your Response:"
 
-            # --- PROCESS ATTACHMENTS ---
-            ai_model = config.get("ai_model", "normal")
-            attachments = []
-            for att in message.attachments:
-                if att.content_type and att.content_type.startswith("image/"):
-                    attachments.append(att)
-                    ai_model = "gemma"
+            # Get temperature (Default 0.4 for strong factual recall)
+            ai_temp = config.get("temperature", 0.4)
 
-            async with channel.typing():
-                try:
-                    print(f"[AI Engine] Generating response using model '{ai_model}'...")
+            # --- CALL AI API ---
+            try:
+                print(f"[AI Engine] Generating response using model '{ai_model}' with temp {ai_temp}...")
+
+                # If webhook is false, show typing indicator. If true, hide it.
+                if use_webhook:
                     ai_response = await self.bot.AI.get_response(
-                        prompt=sys_prompt,
-                        temperature=0.8,
-                        instructions="Follow system prompt exactly. Strip markdown formatting.",
+                        prompt=user_prompt,
+                        temperature=ai_temp,
+                        instructions=system_instruction,
                         mode=ai_model,
                         attachments=attachments
                     )
-                except Exception as e:
-                    print(f"[AI Engine] API Error: {e}")
-                    ai_response = "******"  # Skip on error
+                else:
+                    async with channel.typing():
+                        ai_response = await self.bot.AI.get_response(
+                            prompt=user_prompt,
+                            temperature=ai_temp,
+                            instructions=system_instruction,
+                            mode=ai_model,
+                            attachments=attachments
+                        )
+            except Exception as e:
+                print(f"[AI Engine] API Error: {e}")
+                ai_response = "******"  # Skip on error
 
             # Clean response
             ai_response = (ai_response or "******").strip()
@@ -308,7 +400,6 @@ class AIAssistants(commands.Cog):
             # --- HANDLE AI DECISIONS ---
             if ai_response == "******" or ai_response == "":
                 print(f"[AI Engine] AI chose to stay silent.")
-                await asyncio.sleep(4)
                 continue
 
             # Check for [end] tag
@@ -331,8 +422,12 @@ class AIAssistants(commands.Cog):
                             avatar_url=config.get("webhook_avatar")
                         )
                     else:
-                        # Send directly from the bot
-                        await channel.send(content=ai_response)
+                        # Send directly from the bot as a reply
+                        try:
+                            await message.reply(content=ai_response)
+                        except discord.HTTPException:
+                            # Fallback if the user deleted their message while the AI was thinking
+                            await channel.send(content=ai_response)
 
                     session["message_count"] += 1
                     history.append({"role": "AI", "content": ai_response})
@@ -344,9 +439,6 @@ class AIAssistants(commands.Cog):
                 print(f"[AI Engine] AI signaled [end] tag.")
                 break
 
-            # Mandatory 4-Second Rate Limit Delay before processing the next message
-            await asyncio.sleep(4)
-
         # --- EXIT CONVERSATION ---
         await self.end_session(channel_id)
 
@@ -354,6 +446,7 @@ class AIAssistants(commands.Cog):
         """Cleans up the active session and sets the cooldown."""
         if channel_id in self.active_sessions:
             print(f"[AI Engine] Ending session in channel {channel_id}")
+            self.session_cooldowns[channel_id] = datetime.datetime.now()
             del self.active_sessions[channel_id]
 
 
