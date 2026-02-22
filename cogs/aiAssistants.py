@@ -443,10 +443,10 @@ class AIAssistants(commands.Cog):
         await self.end_session(channel_id)
 
     async def end_session(self, channel_id: int):
-        """Cleans up the active session and sets the cooldown."""
+        """Cleans up the active session."""
         if channel_id in self.active_sessions:
             print(f"[AI Engine] Ending session in channel {channel_id}")
-            self.session_cooldowns[channel_id] = datetime.datetime.now()
+            # We removed the session_cooldowns line here since cooldowns are now per-user!
             del self.active_sessions[channel_id]
 
 
