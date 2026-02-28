@@ -423,11 +423,14 @@ class blueprintAnalysisTools:
                                                                                                 proj_len)
 
                     if cal > 0:
-                        essential_str = (
+                        debug_str = (
                             f"**{int(cal)}x{int(prop_len)}mm Cannon**\n"
-                            f"Velocity: {vel:.1f} m/s | Penetration: {pen:.0f} mm"
+                            f"Bore Length: {bore:.2f}m | ER: {er:.1f}\n"
+                            f"Proj Mass: {proj_mass:.1f}kg | Prop Mass: {prop_mass:.1f}kg\n"
+                            f"Muzzle Vel: {vel:.1f}m/s | Kinetic: {ke:.2f}MJ\n"
+                            f"Penetration: {pen:.0f}mm"
                         )
-                        cannons_info.append(essential_str)
+                        cannons_info.append(debug_str)
 
                 if bp_type == "track":
                     track_sep_m = bp.get("separation", 0) / 1000.0
