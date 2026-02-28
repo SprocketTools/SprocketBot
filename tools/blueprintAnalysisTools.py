@@ -183,52 +183,53 @@ class blueprintAnalysisTools:
             return None  # Avoid division by zero for degenerate faces
         return normal / norm_len
 
-    def _calculate_cannon_stats(self, caliber_mm: float, propellant_length_mm: float, barrel_length_mm: float,
-                                k_value: float, psi: float, projectile_length_mm: float):
-        """Calculates kinetic energy and DeMarre penetration based on Sprocket's internal equations."""
-        if caliber_mm <= 0 or propellant_length_mm <= 0:
-            return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    def _calculate_cannon_stats(self, caliber_mm, prop_len_mm, barrel_len_mm, k_val, psi, proj_len_mm):
+        if caliber_mm <= 0 or prop_len_mm <= 0:
+            return 0, 0, 0, 0, 0, 0, 0
 
-        # Convert to meters
+        # Reference values from WWI baseline (The 'Unity' point for Sprocket math)
+        P_REF = 25000.0
+        K_REF = 2400.0
+
+        # 1. Physics Correction: Diminishing returns on pressure (1/3 power scaling)
+        pressure_scaling = (psi / P_REF) ** (1.0 / 3.0)
+
+        # 2. Physics Correction: Material Quality scaling
+        # K-value is applied relative to the 2400 standard
+        effective_k = k_val * (k_val / K_REF)
+
+        # Basic dimensions
         D = caliber_mm / 1000.0
-        PL = propellant_length_mm / 1000.0
-        L = barrel_length_mm / 1000.0
-        ProjL = projectile_length_mm / 1000.0
+        PL = prop_len_mm / 1000.0
+        L = barrel_len_mm / 1000.0
+        ProjL = proj_len_mm / 1000.0
 
-        # Bore Length includes the breech block scaling (3 * Caliber)
-        bore_length = L + PL + (3 * D)
-
-        # Expansion Ratio (Includes a 2% friction/rifling penalty to Barrel Length)
-        expansion_ratio = ((L * 0.98) + PL + (3 * D)) / PL if PL > 0 else 0
-
-        # Mass Calculations (Derived directly from shell dimensions)
+        # Mass Calculations
         projectile_mass = 5300.0 * (D ** 2) * ProjL
         propellant_mass = 903.2 * (D ** 2) * PL
+        effective_mass = projectile_mass + (propellant_mass / 4.0)
 
-        # Muzzle Velocity (Using the Le Duc interior ballistics model)
-        velocity = 0
-        if projectile_mass > 0 and expansion_ratio > 0:
-            # Effective mass accounts for the weight of the expanding gas pushing itself
-            effective_mass = projectile_mass + (propellant_mass / 4.0)
-            adiabatic_expansion = 1 - (expansion_ratio ** -0.2)
+        # Interior Ballistics (Using the pressure-corrected model)
+        expansion_ratio = ((L * 0.98) + PL + (3 * D)) / PL if PL > 0 else 0
+        adiabatic_expansion = 1 - (expansion_ratio ** -0.2)
 
-            if adiabatic_expansion > 0:
-                # Base velocity dynamically driven by operating pressure (PSI)
-                velocity = ((146.64 * psi) * (propellant_mass / effective_mass) * adiabatic_expansion) ** 0.5
+        # Calculate velocity at reference pressure, then scale by the 1/3 law
+        v_at_ref = 0
+        if adiabatic_expansion > 0:
+            v_at_ref = ((146.64 * P_REF) * (propellant_mass / effective_mass) * adiabatic_expansion) ** 0.5
+        velocity = v_at_ref * pressure_scaling
 
-        # Penetration (DeMarre Equation adapted for Sprocket's specific scaling)
+        # Penetration (DeMarre using the quality-corrected K)
+        # 119.5 is the empirical constant to map Sprocket units to mm
         penetration_mm = 0.0
-        if velocity > 0 and D > 0:
-            # Game uses an empirical divider of 119.5 to map the K-Value against standard meters
-            demarre_base = (projectile_mass * (velocity ** 2)) / (k_value * 119.5 * (D ** 1.5))
-            penetration_mm = demarre_base ** (1.0 / 1.4)
+        if velocity > 0 and D > 0 and effective_k > 0:
+            demarre_term = (projectile_mass * (velocity ** 2)) / (effective_k * 119.5 * (D ** 1.5))
+            penetration_mm = demarre_term ** (1.0 / 1.4)
 
-        # Kinetic Energy (Megajoules)
-        ke_mj = (0.5 * projectile_mass * (velocity ** 2)) / 1000000.0
+        ke_mj = (0.5 * projectile_mass * (velocity ** 2)) / 1_000_000.0
+        bore_len = L + PL + (3 * D)
 
-        expansion_ratio_rounded = round(expansion_ratio, 1)
-
-        return velocity, ke_mj, penetration_mm, projectile_mass, propellant_mass, bore_length, expansion_ratio_rounded
+        return velocity, ke_mj, penetration_mm, projectile_mass, propellant_mass, bore_len, round(expansion_ratio, 1)
 
     def _get_barrel_length(self, segments):
         """Recursively parses barrel segment dictionaries to find total barrel length"""
@@ -388,40 +389,45 @@ class blueprintAnalysisTools:
                 bp = bp_data['bp']
 
                 # Capture Cannons Data dynamically
-                # Capture Cannons Data dynamically
-                # Capture Cannons Data dynamically
                 if bp_type == 'cannon':
                     cal = bp.get('caliber', 0)
-
-                    # Extract variables directly from the game's blueprint code
-                    k_val = bp.get('K', 1900)
-                    psi_val = bp.get('PSI', 40000)
+                    k_val = bp.get('K', 2400)
+                    psi_val = bp.get('PSI', 25000)
                     b_len = self._get_barrel_length(bp.get('segments', []))
 
-                    # Link to the specific Ammunition blueprint!
+                    # Link to the specific Ammunition (shellSlot)
                     shell_id = bp.get('shellID')
                     prop_len = bp.get('breechLength', 0)
-                    proj_len = cal * 3.0  # Standard 3:1 ratio fallback
+                    proj_len = cal * 3.0  # Fallback
 
                     if shell_id is not None and shell_id in blueprints:
-                        shell_bp = blueprints[shell_id]['bp']
-                        prop_len = shell_bp.get('propellantLength', prop_len)
-                        proj_len = shell_bp.get('projectileLength', proj_len)
+                        shell_data = blueprints[shell_id]['bp']
+                        # shellSlot stores length directly
+                        prop_len = shell_data.get('propellantLength', prop_len)
 
-                    # Rely purely on the physics engine and the true shell dimensions
+                        # Check for specific projectile overrides in generatedProjectiles
+                        gen_projs = shell_data.get('generatedProjectiles', [])
+                        if gen_projs:
+                            first_proj = gen_projs[0]
+                            for func in first_proj.get('functions', []):
+                                f_id = func.get('id')
+                                f_def = func.get('definition', {})
+                                if f_id == 'AP':
+                                    k_val = f_def.get('penetratorConstant', k_val)
+                                elif f_id == 'Propellant':
+                                    # Some versions store prop length here
+                                    prop_len = f_def.get('length', prop_len)
+
                     vel, ke, pen, proj_mass, prop_mass, bore, er = self._calculate_cannon_stats(cal, prop_len, b_len,
                                                                                                 k_val, psi_val,
                                                                                                 proj_len)
 
                     if cal > 0:
-                        debug_str = (
-                            f"[{int(cal)}x{int(prop_len)}mm Cannon]\n"
-                            f"Bore Length: {bore:.2f}m | ER: {er:.1f}\n"
-                            f"Proj Mass: {proj_mass:.1f}kg | Prop Mass: {prop_mass:.1f}kg\n"
-                            f"Muzzle Vel: {vel:.1f}m/s | Kinetic: {ke:.2f}MJ\n"
-                            f"Penetration: {pen:.0f}mm"
+                        essential_str = (
+                            f"**{int(cal)}x{int(prop_len)}mm Cannon**\n"
+                            f"Velocity: {vel:.1f} m/s | Penetration: {pen:.0f} mm"
                         )
-                        cannons_info.append(debug_str)
+                        cannons_info.append(essential_str)
 
                 if bp_type == "track":
                     track_sep_m = bp.get("separation", 0) / 1000.0
