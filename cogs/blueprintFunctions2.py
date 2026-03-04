@@ -378,15 +378,19 @@ class blueprintFunctions2(commands.Cog):
                 complexity_score = len(str(mesh_to_render))
                 if complexity_score < 7000000:
                     iframes_in = 3
-                if complexity_score < 3500000:
+                if complexity_score < 3800000:
                     iframes_in = 6
-                if complexity_score < 2000000:
+                if complexity_score < 2500000:
                     iframes_in = 8
                 if complexity_score < 900000:
                     iframes_in = 12
+                if complexity_score < 600000:
+                    iframes_in = 16
+                if complexity_score < 450000:
+                    iframes_in = 18
                 if complexity_score < 200000:
                     iframes_in = 24
-                if complexity_score < 120000:
+                if complexity_score < 190000:
                     iframes_in = 36
 
                 if bp_cog and complexity_score < 8780000:
