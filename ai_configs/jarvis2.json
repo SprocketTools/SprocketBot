@@ -1,5 +1,5 @@
 {
-    "activation_name": "Sprocket Bot",
+    "activation_name": "Larry",
     "use_webhook": false,
     "webhook_name": "J.A.R.V.I.S.",
     "webhook_avatar": "https://i.imgur.com/example_jarvis_icon.png",
@@ -17,5 +17,5 @@
     "external_links": "",
     "server_id": 1047656233408151634,
     "channel_id": 0,
-    "temperature": 0.7
+    "temperature": 0.87
 }
