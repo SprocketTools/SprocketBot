@@ -157,6 +157,136 @@ class blueprintFunctions2(commands.Cog):
         except Exception as e:
             await ctx.send(f"**Error updating table:**\n```\n{e}\n```")
 
+    @commands.command(name="test_ballistics", help="Upload a CSV with PSI, caliber, propellant_length, barrel_length, velocity")
+    async def test_ballistics(self, ctx: commands.Context):
+        if not ctx.message.attachments:
+            await ctx.send("Please attach a .csv file!")
+            return
+
+        attachment = ctx.message.attachments[0]
+        if not attachment.filename.endswith('.csv'):
+            await ctx.send("File must be a .csv!")
+            return
+
+        # Download and read the CSV into Pandas
+        csv_bytes = await attachment.read()
+        import pandas as pd
+        import io
+
+        try:
+            df = pd.read_csv(io.BytesIO(csv_bytes))
+
+            # Verify columns exist (ignoring case/spaces)
+            df.columns = df.columns.str.strip().str.lower()
+            required_cols = ['psi', 'caliber', 'propellant length', 'barrel length', 'velocity']
+            for col in required_cols:
+                if col not in df.columns:
+                    await ctx.send(f"Missing required column: `{col}`")
+                    return
+
+            results = []
+            for index, row in df.iterrows():
+                psi = float(row['psi'])
+                cal = float(row['caliber'])
+                prop = float(row['propellant length'])
+                barrel = float(row['barrel length']) * 1000.0  # Convert meters to mm for bot math
+                expected_v = float(row['velocity'])
+
+                # Assume standard WWI shell profile for testing
+                proj_len = cal * 3.0
+                k_val = 2400.0
+
+                # Run the bot's math engine!
+                calc_v, _, _, _, _, _, _ = self._calculate_cannon_stats(cal, prop, barrel, k_val, psi, proj_len)
+
+                error_margin = abs(calc_v - expected_v)
+                error_pct = (error_margin / expected_v) * 100 if expected_v > 0 else 0
+
+                results.append({
+                    'PSI': psi,
+                    'Caliber': cal,
+                    'Prop_Len': prop,
+                    'Barrel_m': barrel / 1000.0,
+                    'Expected_V': expected_v,
+                    'Calculated_V': round(calc_v, 2),
+                    'Error_m/s': round(error_margin, 2),
+                    'Error_%': round(error_pct, 2)
+                })
+
+            # Create an output dataframe
+            res_df = pd.DataFrame(results)
+            mean_err = res_df['Error_m/s'].mean()
+            mean_pct = res_df['Error_%'].mean()
+            max_err = res_df['Error_m/s'].max()
+
+            # Save the results to a new CSV and send back to Discord
+            out_buffer = io.StringIO()
+            res_df.to_csv(out_buffer, index=False)
+            out_buffer.seek(0)
+
+            summary = (
+                f"**Ballistics Test Complete! ({len(res_df)} rows)**\n"
+                f"Average Error: `{mean_err:.2f} m/s` (`{mean_pct:.2f}%`)\n"
+                f"Max Error: `{max_err:.2f} m/s`\n"
+                f"*See attached CSV for detailed breakdown per gun.*"
+            )
+
+            await ctx.send(
+                content=summary,
+                file=discord.File(fp=io.BytesIO(out_buffer.getvalue().encode()), filename="ballistics_test_results.csv")
+            )
+
+        except Exception as e:
+            await ctx.send(f"Error processing CSV: {e}")
+
+    def _calculate_cannon_stats(self, caliber_mm, prop_len_mm, barrel_len_mm, k_val, psi, proj_len_mm):
+        if caliber_mm <= 0 or prop_len_mm <= 0:
+            return 0, 0, 0, 0, 0, 0, 0
+
+        # Reference values from WWI baseline (The 'Unity' point for Sprocket math)
+        P_REF = 25000.0
+        K_REF = 2400.0
+
+        # 1. Physics Correction: Diminishing returns on pressure (1/3 power scaling)
+        pressure_scaling = (psi / P_REF) ** (1.0 / 3.0)
+
+        # 2. Physics Correction: Material Quality scaling
+        # K-value is applied relative to the 2400 standard
+        effective_k = k_val * (k_val / K_REF)
+
+        # Basic dimensions
+        D = caliber_mm / 1000.0
+        PL = prop_len_mm / 1000.0
+        L = barrel_len_mm / 1000.0
+        ProjL = proj_len_mm / 1000.0
+
+        # Mass Calculations
+        projectile_mass = 5300.0 * (D ** 2) * ProjL
+        propellant_mass = 903.2 * (D ** 2) * PL
+        effective_mass = projectile_mass + (propellant_mass / 4.0)
+
+        # Interior Ballistics (Using the pressure-corrected model)
+        expansion_ratio = ((L * 0.98) + PL + (3 * D)) / PL if PL > 0 else 0
+        adiabatic_expansion = 1 - (expansion_ratio ** -0.2)
+
+        # Calculate velocity at reference pressure, then scale by the 1/3 law
+        v_at_ref = 0
+        if adiabatic_expansion > 0:
+            v_at_ref = ((146.64 * P_REF) * (propellant_mass / effective_mass) * adiabatic_expansion) ** 0.5
+        velocity = v_at_ref * pressure_scaling
+
+        # Penetration (DeMarre using the quality-corrected K)
+        # 119.5 is the empirical constant to map Sprocket units to mm
+        penetration_mm = 0.0
+        if velocity > 0 and D > 0 and effective_k > 0:
+            demarre_term = (projectile_mass * (velocity ** 2)) / (effective_k * 119.5 * (D ** 1.5))
+            penetration_mm = demarre_term ** (1.0 / 1.4)
+
+        ke_mj = (0.5 * projectile_mass * (velocity ** 2)) / 1_000_000.0
+        bore_len = L + PL + (3 * D)
+
+        return velocity, ke_mj, penetration_mm, projectile_mass, propellant_mass, bore_len, round(expansion_ratio, 1)
+
     @commands.command(name="analyzeBlueprint", description="Analyze a .blueprint file and save its stats.")
     async def analyze_blueprint(self, ctx: commands.Context):
         for attachment in ctx.message.attachments:
@@ -241,22 +371,25 @@ class blueprintFunctions2(commands.Cog):
 
                 gif_file = None
                 bp_cog = self.bot.get_cog("blueprintFunctions")
-                iframes_in = 6
+                iframes_in = 1
 
                 baked_data = await self.bot.analyzer.bakeGeometryV3(ctx, blueprint_attachment)
                 mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
                 complexity_score = len(str(mesh_to_render))
-
+                if complexity_score < 7000000:
+                    iframes_in = 3
+                if complexity_score < 3500000:
+                    iframes_in = 6
                 if complexity_score < 2000000:
                     iframes_in = 8
-                if complexity_score < 600000:
+                if complexity_score < 900000:
                     iframes_in = 12
                 if complexity_score < 200000:
                     iframes_in = 24
                 if complexity_score < 120000:
                     iframes_in = 36
 
-                if bp_cog and complexity_score < 3780000:
+                if bp_cog and complexity_score < 8780000:
                     try:
                         if "0.2" in blueprint_data["header"]["gameVersion"]:
                             baked_data = await self.bot.analyzer.bakeGeometryV3(ctx, blueprint_attachment)
