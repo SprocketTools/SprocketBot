@@ -261,14 +261,26 @@ class blueprintAnalysisTools:
         v_man = 100 * math.sqrt(max(0, v_man_sq))
         muzzle_velocity = v_man / 3.28084
 
-        # 7. Energy and Penetration (Krupp/DeMarre Formula)
+        # 7. Energy and Penetration (Tuned Krupp/DeMarre Formula)
         ke_mj = (0.5 * proj_mass_kg * math.pow(muzzle_velocity, 2)) / 1_000_000.0
 
         caliber_dm = caliber_mm / 100.0
         penetration_mm = 0.0
 
         if k_val > 0 and caliber_dm > 0:
-            penetration_mm = 100.0 * (muzzle_velocity * math.sqrt(proj_mass_kg)) / (k_val * math.sqrt(caliber_dm))
+            # --- Exactly Tuned Exponents from Game Data ---
+            EXP_V = 1.0250
+            EXP_M = 0.4384
+            EXP_D = 0.5485
+            EXP_MASTER = 1.3979
+
+            # Equation: base = (V^exp_v * M^exp_m) / (K * D^exp_d)
+            pen_dm_base = (math.pow(muzzle_velocity, EXP_V) * math.pow(proj_mass_kg, EXP_M)) / (
+                        k_val * math.pow(caliber_dm, EXP_D))
+
+            # Final calculation
+            pen_dm = math.pow(pen_dm_base, EXP_MASTER)
+            penetration_mm = pen_dm * 100.0
 
         return (
             round(muzzle_velocity, 2),
