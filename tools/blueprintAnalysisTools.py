@@ -184,35 +184,101 @@ class blueprintAnalysisTools:
         return normal / norm_len
 
     def _calculate_cannon_stats(self, caliber_mm, prop_len_mm, barrel_len_mm, k_val, psi, proj_len_mm):
+
+        # 2. TRAVEL CALCULATION (The 'Anomaly Fix')
+        # Bullet Travel is the distance from the end of the case to the muzzle.
+        bullet_travel_mm = barrel_len_mm + (caliber_mm*3)
+
+        print("STATS: ", caliber_mm, prop_len_mm, barrel_len_mm, k_val, psi, proj_len_mm)
+
         if caliber_mm <= 0 or prop_len_mm <= 0:
-            return 0, 0, 0, 0, 0, 0, 0
+            return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
 
-        # 1. Physical Dimensions
-        D = caliber_mm / 1000.0
-        PL = prop_len_mm / 1000.0
-        ProjL = D * 3.0  # Fixed shell-to-caliber ratio
+        # --- FIX: Fallback for missing/zero projectile length ---
+        #if not proj_len_mm or proj_len_mm <= 0:
+        shell_len_mm = caliber_mm * 3.0
+        #else:
+            #shell_len_mm = proj_len_mm
 
-        # 2. Geometry: Expansion Ratio (Locked to User Discovery)
-        # Formula: ER = (L * 0.98 + PL + 3.0 * D) / PL
-        bore_len_eff = (barrel_len_mm / 1000.0 * 0.98) + PL + (3.0 * D)
-        expansion_ratio = round(bore_len_eff / PL, 1) if PL > 0 else 0
-        er_capped = min(expansion_ratio, 50.0)
+        # 1. Internal Constants
+        LENGTH_CONV = 1 / 25.4
+        MAX_ER = 50.0
+        PROJ_DENSITY = 7000.0
+        LOAD_DENSITY = 0.97
 
-        # 3. Muzzle Velocity Physics
-        projectile_mass = 5300.0 * (D ** 2) * ProjL
-        propellant_mass = 903.2 * (D ** 2) * PL
-        # Current best guess for Gas Factor is 0.1772
-        effective_mass = projectile_mass + (propellant_mass * 0.1772)
+        # 2. Geometry & Unit Alignment
+        case_mm = prop_len_mm
 
-        # Final Velocity Formula (Exponents to be refined in Stage 2)
-        base_v = 23.19 * (psi ** 0.3369)
-        velocity = base_v * (propellant_mass / effective_mass) ** 0.5 * (er_capped ** 0.2056)
+        # Blueprint barrel segments act as the pure travel distance
+        bullet_travel_in = barrel_len_mm * LENGTH_CONV
+        total_length_m = (barrel_len_mm + prop_len_mm + shell_len_mm) / 1000.0
 
-        # 4. Secondary Stats
-        ke_mj = (0.5 * projectile_mass * (velocity ** 2)) / 1_000_000.0
-        # Penetration follows (DeMarre)...
+        if bullet_travel_in <= 0:
+            return 0.0, 0.0, 0.0, 0.0, 0.0, total_length_m, 1.0
 
-        return velocity, ke_mj, 0, projectile_mass, propellant_mass, (barrel_len_mm / 1000.0) + PL + ProjL, expansion_ratio
+        # 3. Volume and Expansion Ratio (Imperial Path)
+        proj_len_mm = caliber_mm * 3.0
+
+        # 4. VOLUME & EXPANSION
+        area_m2 = np.pi * np.power(caliber_mm / 2000.0, 2.0)
+        case_vol_grains = (case_mm * 0.001 * area_m2 * 1000.0) * 15432.0
+
+        net_capacity_water = case_vol_grains / 252.4
+        area_bore_in = 0.773 * np.power(caliber_mm * LENGTH_CONV, 2.0)
+        bore_vol_in = (bullet_travel_mm * LENGTH_CONV) * area_bore_in
+
+        er_raw = (bore_vol_in + net_capacity_water) / net_capacity_water
+        er = np.minimum(er_raw, MAX_ER)
+
+        print(er)
+        # 4. Mass Balance
+        powder_weight_grains = LOAD_DENSITY * case_vol_grains
+        propellant_mass_kg = powder_weight_grains / 15432.4
+
+        proj_vol_m3 = (shell_len_mm / 1000.0) * area_m2
+        proj_mass_kg = proj_vol_m3 * PROJ_DENSITY
+        proj_weight_grains = proj_mass_kg * 15432.4
+
+        # Secondary safety catch
+        if proj_weight_grains <= 0:
+            return 0.0, 0.0, 0.0, 0.0, propellant_mass_kg, total_length_m, er
+
+        a = powder_weight_grains / proj_weight_grains
+
+        # 5. Pressure & Powley Polynomials
+        operating_pressure = (psi + 17902) / 1.516
+
+        mf2_poly = (1.071 + er - 0.009736 * math.pow(er, 2.0))
+        mf2 = 0.024075 * (9.3 - a) * mf2_poly
+        k = 0.53 / a + 0.26
+
+        # Check for unphysical mass ratio (a >= 9.3) causing math collapse
+        if mf2 <= 0 or k <= 0 or a >= 9.3:
+            return 0.0, 0.0, 0.0, proj_mass_kg, propellant_mass_kg, total_length_m, er
+
+        # 6. Final Velocity Calculation (FPS -> M/S)
+        v_man_sq = (operating_pressure / k / mf2 * (er - 1) / 0.86 / 134.7)
+        v_man = 100 * math.sqrt(max(0, v_man_sq))
+        muzzle_velocity = v_man / 3.28084
+
+        # 7. Energy and Penetration (Krupp/DeMarre Formula)
+        ke_mj = (0.5 * proj_mass_kg * math.pow(muzzle_velocity, 2)) / 1_000_000.0
+
+        caliber_dm = caliber_mm / 100.0
+        penetration_mm = 0.0
+
+        if k_val > 0 and caliber_dm > 0:
+            penetration_mm = 100.0 * (muzzle_velocity * math.sqrt(proj_mass_kg)) / (k_val * math.sqrt(caliber_dm))
+
+        return (
+            round(muzzle_velocity, 2),
+            round(ke_mj, 2),
+            round(penetration_mm, 2),
+            round(proj_mass_kg, 2),
+            round(propellant_mass_kg, 2),
+            round(total_length_m, 2),
+            round(er, 2)
+        )
 
     def _get_barrel_length(self, segments):
         """Recursively parses barrel segment dictionaries to find total barrel length"""
