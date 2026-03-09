@@ -287,7 +287,7 @@ class blueprintFunctions2(commands.Cog):
 
         return velocity, ke_mj, penetration_mm, projectile_mass, propellant_mass, bore_len, round(expansion_ratio, 1)
 
-    @commands.command(name="analyzeBlueprint", description="Analyze a .blueprint file and save its stats.")
+    @commands.command(name="analyzeBlueprint", description="Analyze a .blueprint file and save its stats.", extras={'category': 'utility'})
     async def analyze_blueprint(self, ctx: commands.Context):
         for attachment in ctx.message.attachments:
             if not ctx.message.attachments:
