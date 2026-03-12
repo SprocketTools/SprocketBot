@@ -65,7 +65,12 @@ class contestFunctions(commands.Cog):
                         submission_channel_id BIGINT,
                         log_channel_id BIGINT,
                         entryLimit INT DEFAULT 0,
-                        violationLimit INT DEFAULT 0
+                        violationLimit INT DEFAULT 0,
+                        caliber_min FLOAT DEFAULT 0,
+                        caliber_max FLOAT DEFAULT 0,
+                        prop_min FLOAT DEFAULT 0,
+                        prop_max FLOAT DEFAULT 0,
+                        barrel_limit_m FLOAT DEFAULT 0
                     );
                 ''')
 

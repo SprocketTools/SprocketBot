@@ -9,7 +9,7 @@
     "exit_instructions": "",
     "message_cap": 2,
     "context_limit": 20,
-    "ai_model": "gemma",
+    "ai_model": "normal",
     "cooldown_seconds": 15000,
     "burst_limit": 3,
     "min_length": 10,
