@@ -485,9 +485,8 @@ class blueprintAnalysisTools:
 
                     if cal > 0:
                         essential_str = (
-                            f"{int(cal)}x{int(prop_len)}mm Cannon\n"
-                            f"Muzzle Vel: {vel:.1f} m/s\nKinetic: {ke:.2f} MJ\n"
-                            f"Penetration: {pen:.0f} mm"
+                            f"**{int(cal)}x{int(prop_len)}mm Cannon\n**"
+                            f"{vel:.0f} m/s | {ke:.1f} MJ KE | {pen:.0f}mm pen"
                         )
                         cannons_info.append(essential_str)
 
@@ -626,55 +625,110 @@ class blueprintAnalysisTools:
             best_array_bp = None
             roadwheel_diameter_m = -1.0
 
+            # --- Extract Suspension Type & Scale via GUIDs ---
+            suspension_type = "torsionBar"
+            suspension_scale = 1.0
+
+            for bp_entry in blueprint_data.get('blueprints', []):
+                bp_type = bp_entry.get('type', '')
+                bp_data = bp_entry.get('blueprint', {})
+
+                if bp_type == 'trackWheelMount':
+                    mount_id = bp_data.get('mountID', '')
+                    if mount_id == 'b84298aa-f287-4752-aca5-fa2b78ce4f02':  # HVSS
+                        suspension_type = 'HVSS'
+                        suspension_scale = bp_data.get('scale', 1.0)
+                    elif mount_id == 'c9314baa-f287-4752-aca5-fa2b78ce4f02':  # VVSS
+                        suspension_type = 'VVSS'
+                        suspension_scale = bp_data.get('scale', 1.0)
+                    elif mount_id == 'a5d242f0-ab76-4f51-b8c0-5ffd795c9130':  # Leaf Spring
+                        suspension_type = 'leafSpring'
+                        suspension_scale = bp_data.get('scale', 1.0)
+            # ---------------------------------------------
+
             # Find all wheel array *objects*
             for obj in blueprint_data.get('objects', []):
-                # Find objects that are wheel arrays AND have a wheel attached
                 if "wheelMountArrayBlueprintVuid" in obj and "sharedWheelBlueprintVuid" in obj:
                     array_bp_id = obj.get('wheelMountArrayBlueprintVuid')
                     wheel_bp_id = obj.get('sharedWheelBlueprintVuid')
 
-                    # Check if this is a wheel we care about
                     if wheel_bp_id in wheel_diameters_m:
                         current_diameter_m = wheel_diameters_m[wheel_bp_id]
 
-                        # We only want roadwheels, not return rollers (which are smaller)
+                        # We only want roadwheels, not return rollers
                         if current_diameter_m > roadwheel_diameter_m:
                             roadwheel_diameter_m = current_diameter_m
-                            # Now store the *blueprint* of the array
                             best_array_bp = blueprints.get(array_bp_id, {}).get('bp', {})
 
             if best_array_bp and roadwheel_diameter_m > 0 and belt_width_m > 0:
-                # We found the correct roadwheel array, now use its stats
                 roadwheel_array_bp = best_array_bp
 
-                # Convert all to meters (diameters are already in m, others are mm)
-                startingLength = roadwheel_array_bp.get('length', 0) / 1000.0  # e.g., 5949
-                wheelDiameter = roadwheel_diameter_m  # e.g., 0.9
-                wheelSpacing = roadwheel_array_bp.get('spacing', 0) / 1000.0  # e.g., 135
-                groupSize = roadwheel_array_bp.get('perGroup', 1)  # e.g., 2
-                groupOffset = roadwheel_array_bp.get('groupingOffset', 0)  # e.g., 0
-                groupSpacing = roadwheel_array_bp.get('groupSpacing', 0) / 1000.0  # e.g., 250
+                # Convert all to meters
+                wheelDiameter = roadwheel_diameter_m
+                wheelSpacing = roadwheel_array_bp.get('spacing', 0) / 1000.0
 
-                # Logic from contactlength command
-                maxLength = startingLength + wheelSpacing + groupSpacing - wheelDiameter
-                wheel = 1
-                currentLength = -1 * wheelSpacing
-                wheelGroupPos = groupOffset
-                finalLength = 0
+                # --- NEW: Use Explicit In-Game Count & Hard Limits ---
+                unitCount = roadwheel_array_bp.get('count', 1)
+                startingLength = roadwheel_array_bp.get('length', 0) / 1000.0
+                xOffset = roadwheel_array_bp.get('xOffset', 0) / 1000.0
+                usable_length = startingLength - xOffset
 
-                while currentLength <= maxLength:
-                    finalLength = currentLength
-                    currentLength += wheelDiameter + wheelSpacing
-                    wheel += 1
-                    wheelGroupPos += 1
-                    if wheelGroupPos == groupSize:
-                        currentLength += groupSpacing
-                        wheelGroupPos -= groupSize
+                # Extract Spacing Mode Variables
+                spacingMode = roadwheel_array_bp.get('spacingMode', 0)
+                interleaveFraction = roadwheel_array_bp.get('interleaveOverlapFraction', 0.5)
+                groupSize = roadwheel_array_bp.get('perGroup', 1)
+                groupOffset = roadwheel_array_bp.get('groupingOffset', 0)
+                groupSpacing = roadwheel_array_bp.get('groupSpacing', 0) / 1000.0
 
-                contact_length_m = finalLength + wheelSpacing
+                # 1. Determine Unit Footprint (W)
+                bogie_internal_spacing = 0.0
+                if suspension_type == 'HVSS':
+                    bogie_internal_spacing = 1.325
+                elif suspension_type == 'VVSS':
+                    bogie_internal_spacing = 0.9
+                elif suspension_type == 'leafSpring':
+                    bogie_internal_spacing = 1.2
+
+                unitWidth = wheelDiameter + (bogie_internal_spacing * suspension_scale)
+
+                # 2. Determine Effective Spacing between units
+                if spacingMode == 1:
+                    overlap = wheelDiameter * interleaveFraction
+                    effectiveSpacing = -overlap
+                else:
+                    effectiveSpacing = wheelSpacing
+
+                # 3. Simulate Layout using Exact Count
+                contact_length_m = 0.0
+                if unitCount > 0:
+                    currentPos = 0.0
+                    wheelGroupPos = groupOffset
+
+                    for i in range(unitCount):
+                        # The physical footprint extends to the rear edge of this unit
+                        contact_length_m = currentPos + unitWidth
+
+                        # Add gaps for the NEXT unit (only if this isn't the last unit)
+                        if i < unitCount - 1:
+                            currentPos += unitWidth + effectiveSpacing
+                            wheelGroupPos += 1
+
+                            # Grouped Mode (2) adds an extra structural gap
+                            if spacingMode == 2 and wheelGroupPos >= groupSize:
+                                currentPos += groupSpacing
+                                wheelGroupPos = 0
+
+                # 4. Apply Absolute Game Limits
+                # The contact length (flat track on the ground) cannot exceed the physical array bounds
+                if contact_length_m > usable_length:
+                    contact_length_m = usable_length
+
+                # Failsafe: Contact length cannot be physically smaller than a single unit
+                if contact_length_m < unitWidth:
+                    contact_length_m = unitWidth
 
                 if contact_length_m > 0:
-                    contact_area_m2 = contact_length_m * belt_width_m * 2  # two tracks
+                    contact_area_m2 = (contact_length_m - wheelDiameter) * belt_width_m * 2  # two tracks
                     contact_area_cm2 = contact_area_m2 * 10000.0
                     tank_weight_kg = stats["tank_weight"]
 
@@ -682,6 +736,7 @@ class blueprintAnalysisTools:
                         ground_pressure = tank_weight_kg / contact_area_cm2
 
             stats["ground_pressure"] = ground_pressure
+            stats["contact_length"] = contact_length_m
 
             # 9. Fuel Tank Capacity
             total_fuel_liters = 0.0

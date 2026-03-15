@@ -320,7 +320,7 @@ class blueprintFunctions2(commands.Cog):
                 stats['image_url'] = image_attachment.url if image_attachment else None
                 stats['submission_date'] = datetime.now()
                 stats['vehicle_name'] = blueprint_attachment.filename.replace('.blueprint', '').replace('_', ' ')
-
+                contact_len = stats.get('contact_length', 0)
                 valid_cols = [
                     "vehicle_id", "vehicle_name", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id",
                     "base_cost", "tank_weight", "tank_length", "tank_width", "tank_height", "tank_total_height",
@@ -346,29 +346,29 @@ class blueprintFunctions2(commands.Cog):
                 await self.bot.sql.databaseExecuteDynamic(prompt, list(insert_data.values()))
 
                 embed = discord.Embed(
-                    title=f"{blueprint_data['header']['name']} Stats",
-                    color=discord.Color.random()
+                    title=f"{blueprint_data['header']['name']}",
+                    color=ctx.author.accent_color
                 )
                 embed.set_footer(text=f"Owner: {ctx.author.display_name} | Vehicle ID: {stats['vehicle_id']}")
                 embed.add_field(name="Era", value=f"{stats['vehicle_era']}")
                 embed.add_field(name="Weight", value=f"{stats['tank_weight'] / 1000.0:.2f} tons")
+                embed.add_field(name="Crew", value=f"{stats['crew_count']} members")
+
                 embed.add_field(name="Dimensions",
                                 value=f"L: {stats['tank_length']:.2f}m | W: {stats['tank_width']:.2f}m | H: {stats['tank_height']:.2f}m",
                                 inline=False)
-                embed.add_field(name="Crew", value=f"{stats['crew_count']} members")
+
 
                 # --- ADDED ARMAMENT ---
                 if stats.get('cannon_stats') and stats['cannon_stats'] != "None":
-                    embed.add_field(name="Armament", value=f"```\n{stats['cannon_stats']}\n```", inline=False)
-
-                embed.add_field(name="Powertrain", value=f"{stats['horsepower']} HP | {stats['hpt']:.2f} HP/T")
-                embed.add_field(name="Top Speed", value=f"~{stats['top_speed']} km/h")
-                embed.add_field(name="Fuel Capacity", value=f"{stats['fuel_tank_capacity']:.1f} L")
-                embed.add_field(name="Ground Pressure", value=f"{stats['ground_pressure']:.2f} kg/cm²")
+                    embed.add_field(name="Armament", value=f"\n{stats['cannon_stats']}\n", inline=False)
+                embed.add_field(name="Powertrain",value=f"{stats['horsepower']} HP | {stats['hpt']:.1f} HP/T", inline=False)
                 embed.add_field(name="Armor Mass", value=f"{stats['armor_mass'] / 1000.0:.2f} tons")
-                embed.add_field(name="Frontal Angles",
-                                value=f"Upper: {stats['upper_frontal_angle']:.1f}°\nLower: {stats['lower_frontal_angle']:.1f}°")
+                embed.add_field(name="Fuel Capacity", value=f"{stats['fuel_tank_capacity']:.0f}L")
+                embed.add_field(name="Approx. Speed", value=f"~{stats['top_speed']} km/h")
+                embed.add_field(name="Track & Suspension (report issues)",value=f"**Ground Pressure:** {stats.get('ground_pressure', 0):.2f} kg/cm²\n**Contact Length:** {contact_len:.2f} m", inline=False)
 
+                #embed.add_field(name="Frontal Angles",value=f"Upper: {stats['upper_frontal_angle']:.1f}°\nLower: {stats['lower_frontal_angle']:.1f}°")
                 gif_file = None
                 bp_cog = self.bot.get_cog("blueprintFunctions")
                 iframes_in = 1
