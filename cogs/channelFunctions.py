@@ -49,7 +49,7 @@ class ChannelConfig(commands.Cog):
                 await self.bot.error.sendError(ctx)
                 return
 
-            exists = await self.bot.sql.databaseFetchrowDynamic(
+            exists = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT * FROM channel_blocks WHERE channel_id = $1 AND category = $2;''',
                 [target_channel.id, selection]
             )
