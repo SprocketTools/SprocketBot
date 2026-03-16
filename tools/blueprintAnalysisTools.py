@@ -344,6 +344,7 @@ class blueprintAnalysisTools:
 
             # 1. Tank Weight
             stats["tank_weight"] = blueprint_data["header"]["mass"]
+            stats["base_cost"] = blueprint_data["header"]["cost"]
             tank_weight_tons = stats["tank_weight"] / 1000.0
 
             # 2. Crew Count

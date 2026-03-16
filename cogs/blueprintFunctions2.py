@@ -370,18 +370,12 @@ class blueprintFunctions2(commands.Cog):
                 embed.set_footer(text=f"Owner: {ctx.author.display_name} | Vehicle ID: {stats['vehicle_id']}")
                 embed.add_field(name="Era", value=f"{stats['vehicle_era']}")
                 embed.add_field(name="Weight", value=f"{stats['tank_weight'] / 1000.0:.2f} tons")
-                embed.add_field(name="Crew", value=f"{stats['crew_count']} members")
-
-                embed.add_field(name="Dimensions",
-                                value=f"L: {stats['tank_length']:.2f}m | W: {stats['tank_width']:.2f}m | H: {stats['tank_height']:.2f}m",
-                                inline=False)
-
-
-                # --- ADDED ARMAMENT ---
+                embed.add_field(name="Cost", value=f"⚙{int(round(stats['base_cost'], -1)):,.0f}")
+                embed.add_field(name="Dimensions", value=f"L: {stats['tank_length']:.2f}m | W: {stats['tank_width']:.2f}m | H: {stats['tank_height']:.2f}m", inline=False)
                 if stats.get('cannon_stats') and stats['cannon_stats'] != "None":
                     embed.add_field(name="Armament", value=f"\n{stats['cannon_stats']}\n", inline=False)
                 embed.add_field(name="Powertrain",value=f"{stats['horsepower']} HP | {stats['hpt']:.1f} HP/T | {stats['top_speed']} km/h", inline=False)
-                embed.add_field(name="Armor Mass", value=f"{stats['armor_mass'] / 1000.0:.2f} tons")
+                embed.add_field(name="Crew", value=f"{stats['crew_count']} members")
                 embed.add_field(name="Fuel Capacity", value=f"{stats['fuel_tank_capacity']:.0f}L")
                 embed.add_field(name="Ground Pressure", value=f"{stats.get('ground_pressure', 0):.2f} kg/cm²")
                 embed.add_field(name="RPG Stats", value=rpg_text, inline=False)
