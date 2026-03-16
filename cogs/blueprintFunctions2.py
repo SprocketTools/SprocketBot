@@ -366,7 +366,7 @@ class blueprintFunctions2(commands.Cog):
                 embed.add_field(name="Armor Mass", value=f"{stats['armor_mass'] / 1000.0:.2f} tons")
                 embed.add_field(name="Fuel Capacity", value=f"{stats['fuel_tank_capacity']:.0f}L")
                 embed.add_field(name="Approx. Speed", value=f"~{stats['top_speed']} km/h")
-                embed.add_field(name="Track & Suspension (report issues)",value=f"**Ground Pressure:** {stats.get('ground_pressure', 0):.2f} kg/cm²\n**Contact Length:** {contact_len:.2f} m", inline=False)
+                embed.add_field(name="Track & Suspension (report issues)",value=f"**Ground Pressure:** {stats.get('ground_pressure', 0):.2f} kg/cm²\n**Roadwheel diameter:** {stats['roadwheel_diam']:.2f} m\n**Contact Length:** {contact_len:.2f} m", inline=False)
 
                 #embed.add_field(name="Frontal Angles",value=f"Upper: {stats['upper_frontal_angle']:.1f}°\nLower: {stats['lower_frontal_angle']:.1f}°")
                 gif_file = None

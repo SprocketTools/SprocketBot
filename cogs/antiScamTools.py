@@ -137,7 +137,7 @@ class antiScamFunctions(commands.Cog):
             channelidMatch = (message.channel.id == oldPacket["channelid"])
 
             # Whitelist logic
-            whitelist = ["<@1", "<@2", "<@3", "<@4", "<@5", "<@6", "<@7", "<@8", "<@9"]
+            whitelist = []
             is_whitelisted = any(item in message.content for item in whitelist)
 
             if (contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and not is_whitelisted and not contentMismatch:

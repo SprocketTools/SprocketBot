@@ -26,7 +26,7 @@ class ChannelConfig(commands.Cog):
     @commands.command(name="configureChannel", description="Enable/Disable a command category in a channel")
     async def configureChannel(self, ctx: commands.Context, channel: discord.TextChannel = None):
 
-        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id == self.bot.ownerid):
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id == self.bot.owner_id):
             return await self.bot.error.sendError(ctx)
         target_channel = channel or ctx.channel
         embed = discord.Embed(title=f"Config for {target_channel.mention}",

@@ -621,7 +621,7 @@ class blueprintAnalysisTools:
             ground_pressure = 0.0
             contact_length_m = 0.0
             belt_width_m = track_width_m  # from section 5
-
+            wheelDiameter = 0.0
             best_array_bp = None
             roadwheel_diameter_m = -1.0
 
@@ -736,8 +736,8 @@ class blueprintAnalysisTools:
                         ground_pressure = tank_weight_kg / contact_area_cm2
 
             stats["ground_pressure"] = ground_pressure
-            stats["contact_length"] = contact_length_m
-
+            stats["contact_length"] = contact_length_m - wheelDiameter
+            stats["roadwheel_diam"] = wheelDiameter
             # 9. Fuel Tank Capacity
             total_fuel_liters = 0.0
             m_to_liters = 1000.0  # 1 m^3 = 1000 L
