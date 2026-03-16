@@ -328,6 +328,15 @@ class blueprintAnalysisTools:
             stats["piercing"] = 0
             stats["armor"] = 0
             stats["cohesion"] = 0
+            stats["upper_frontal_angle"] = 0.0
+            stats["lower_frontal_angle"] = 0.0
+            stats["health"] = 0
+            stats["attack"] = 0
+            stats["defense"] = 0
+            stats["breakthrough"] = 0
+            stats["piercing"] = 0
+            stats["armor"] = 0
+            stats["cohesion"] = 0
 
             # --- Real Data ---
             stats["vehicle_id"] = random.randint(1_000_000_000, 9_999_999_999)  # Random 10-digit ID
@@ -407,6 +416,18 @@ class blueprintAnalysisTools:
             cylinder_displacement = 1.0  # Default
             total_armor_volume = 0.0
             cannons_info = []
+            max_pen = 0.0
+            max_mv = 0.0
+            total_ke_mj = 0.0
+
+            # Additional trackers for database validation
+            best_proj_mass = 0.0
+            best_prop_mass = 0.0
+            best_gun_len = 0.0
+            best_er = 0.0
+            best_caliber = 0.0
+            best_prop_len = 0.0
+            best_bore_len = 0.0
 
             vehicle_era = blueprint_data["header"].get("era", "Latewar")
 
@@ -490,6 +511,18 @@ class blueprintAnalysisTools:
                         )
                         cannons_info.append(essential_str)
 
+                        total_ke_mj += ke
+                        if pen > max_pen:
+                            max_pen = pen
+                            max_mv = vel
+                            best_proj_mass = proj_mass
+                            best_prop_mass = prop_mass
+                            best_gun_len = bore
+                            best_er = er
+                            best_caliber = cal
+                            best_prop_len = prop_len
+                            best_bore_len = b_len / 1000.0
+
                 if bp_type == "track":
                     track_sep_m = bp.get("separation", 0) / 1000.0
                 if bp_type == "trackBelt":
@@ -520,6 +553,17 @@ class blueprintAnalysisTools:
                 stats["cannon_stats"] = "\n\n".join(cannons_info)[:1000]  # Ensure it fits in db
             else:
                 stats["cannon_stats"] = "None"
+
+            stats["muzzle_velocity"] = max_mv
+            stats["penetration"] = max_pen
+            stats["ke_mj"] = total_ke_mj
+            stats["proj_mass"] = best_proj_mass
+            stats["prop_mass"] = best_prop_mass
+            stats["gun_len"] = best_gun_len
+            stats["er"] = best_er
+            stats["caliber"] = best_caliber
+            stats["prop_len"] = best_prop_len
+            stats["bore_len"] = best_bore_len
 
             stats["armor_mass"] = total_armor_volume * 7850  # Convert m^3 of steel to kg
 
@@ -830,8 +874,45 @@ class blueprintAnalysisTools:
                         elif -90 <= sprocket_angle < 0:
                             lower_plate_angles.append(abs(sprocket_angle))
 
-            stats["upper_frontal_angle"] = np.mean(upper_plate_angles) if upper_plate_angles else 0.0
-            stats["lower_frontal_angle"] = np.mean(lower_plate_angles) if lower_plate_angles else 0.0
+            # 9. D&D-Style RPG Stats Generation
+            # Convert masses to tons to keep RPG numbers balanced (10-200 range instead of millions)
+            weight_tons = stats.get("tank_weight", 0) / 1000.0
+            armor_mass_tons = stats.get("armor_mass", 0) / 1000.0
+
+            l = stats.get("tank_length", 0)
+            w = stats.get("tank_width", 0)
+            # Failsafe to grab highest available height metric
+            h = stats.get("tank_total_height", stats.get("tank_height", 0))
+
+            vol_factor = math.sqrt((h * w * l) + 1)
+            print("vol", vol_factor)
+            ke_mj = stats.get("ke_mj", 0)
+            pen = stats.get("penetration", 0)
+            mv = stats.get("muzzle_velocity", 0)
+            top_speed = stats.get("top_speed", 0)
+            gp = stats.get("ground_pressure", 0)
+
+            # Hit Points & Damage
+            stats["hit_points"] = int(weight_tons * vol_factor)
+            stats["damage_rating"] = int(4 * (ke_mj + 3) - 11)
+
+            # Penetration & Accuracy
+            stats["penetration_rating"] = int((pen + (4 * ke_mj)) / 2)
+            stats["accuracy_rating"] = int(100 * (mv / (100 + mv))) if mv > 0 else 0
+
+            # Mobility
+            mr = 0.0
+            if vol_factor > 0:
+                mr = (top_speed * 4) / (1 + gp) / (vol_factor+1)**0.5
+            stats["mobility_rating"] = int(mr)
+
+            # Armor Rating
+            armor_div = (4 * w) + l + h
+            if armor_div > 0:
+                # Using tons for armor mass so armor rating stays aligned with penetration scales
+                stats["armor_rating"] = int((80 * armor_mass_tons /(armor_mass_tons + weight_tons)) + (0.1 + weight_tons) + (0.2 * mr))
+            else:
+                stats["armor_rating"] = int(0.1 * mr)
 
             return stats
 

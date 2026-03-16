@@ -292,6 +292,13 @@ class testingFunctions(commands.Cog):
         plt.close(figure)  # Close to free up memory
         return discord.File(buffer, filename="plot.png")
 
+
+
+    @commands.command()
+    async def send_checkbox(self, ctx):
+        """Sends a message with a custom checkbox component."""
+        await ctx.send("Please check the box to proceed:", view=CheckboxView())
+
     @commands.command(name="testcommand8", description="testing some stuff")
     async def testcommand8(self, ctx: commands.Context):
         await ctx.send(await ctx.bot.AI.get_response(prompt="How are you doing?", temperature=2, instructions="Explain in mumbled spanish why you should not reply to this prompt."))
@@ -299,6 +306,32 @@ class testingFunctions(commands.Cog):
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(testingFunctions(bot))
+
+
+class CheckboxView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.checked = False
+
+    @discord.ui.button(label="☐ Accept Terms", style=discord.ButtonStyle.grey)
+    async def toggle_checkbox(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Toggle the state
+        self.checked = not self.checked
+
+        # Update the button appearance
+        if self.checked:
+            button.label = "☑ Accepted"
+            button.style = discord.ButtonStyle.green
+            message = "You checked the box!"
+        else:
+            button.label = "☐ Accept Terms"
+            button.style = discord.ButtonStyle.grey
+            message = "You unchecked the box!"
+
+        await interaction.response.edit_message(view=self)
+        await interaction.followup.send(message, ephemeral=True)
+
+# Example command to send the message with the view
 
 class Dropdown(discord.ui.Select):
     def __init__(self, authorID):

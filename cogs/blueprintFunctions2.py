@@ -119,15 +119,14 @@ class blueprintFunctions2(commands.Cog):
                                   crew_count INT,
                                   cannon_stats TEXT,
                                   armor_mass REAL,
-                                  upper_frontal_angle REAL,
-                                  lower_frontal_angle REAL,
-                                  health INT, 
-                                  attack INT,
-                                  defense INT,
-                                  breakthrough INT,
-                                  piercing INT,
-                                  armor INT,
-                                  cohesion INT,
+                                  hit_points REAL,
+                                  damage_rating REAL,
+                                  penetration_rating REAL,
+                                  accuracy_rating REAL,
+                                  mobility_rating REAL,
+                                  armor_rating REAL,
+                                  muzzle_velocity REAL,
+                                  gun_len REAL,
                                   file_url VARCHAR,
                                   submission_date TIMESTAMP,
                                   gif_url VARCHAR,
@@ -143,7 +142,15 @@ class blueprintFunctions2(commands.Cog):
                 ("host_id", "BIGINT"),
                 ("faction_id", "BIGINT"),
                 ("gif_url", "VARCHAR"),
-                ("image_url", "VARCHAR")
+                ("image_url", "VARCHAR"),
+                ("hit_points", "REAL"),
+                ("damage_rating", "REAL"),
+                ("penetration_rating", "REAL"),
+                ("accuracy_rating", "REAL"),
+                ("mobility_rating", "REAL"),
+                ("armor_rating", "REAL"),
+                ("muzzle_velocity", "REAL"),
+                ("gun_len", "REAL")
             ]
 
             for col, dtype in columns_to_ensure:
@@ -321,13 +328,24 @@ class blueprintFunctions2(commands.Cog):
                 stats['submission_date'] = datetime.now()
                 stats['vehicle_name'] = blueprint_attachment.filename.replace('.blueprint', '').replace('_', ' ')
                 contact_len = stats.get('contact_length', 0)
+                hp = stats.get("hit_points", 0)
+                arm = stats.get("armor_rating", 0)
+                mob = stats.get("mobility_rating", 0)
+                dmg = stats.get("damage_rating", 0)
+                pen_rtg = stats.get("penetration_rating", 0)
+                acc = stats.get("accuracy_rating", 0)
+                rpg_text = (
+                    f"**HP:** {hp} | **Armor:** {arm} | **Mobility:** {mob}\n"
+                    f"**Damage:** {dmg} | **Penetration:** {pen_rtg} | **Accuracy:** {acc}"
+                )
                 valid_cols = [
                     "vehicle_id", "vehicle_name", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id",
                     "base_cost", "tank_weight", "tank_length", "tank_width", "tank_height", "tank_total_height",
                     "fuel_tank_capacity", "ground_pressure", "horsepower", "hpt", "top_speed", "travel_range",
-                    "crew_count", "cannon_stats", "armor_mass", "upper_frontal_angle", "lower_frontal_angle",
-                    "health", "attack", "defense", "breakthrough", "piercing", "armor", "cohesion",
-                    "file_url", "submission_date", "image_url"
+                    "crew_count", "armor_mass",
+                    "hit_points", "damage_rating", "penetration_rating", "accuracy_rating", "mobility_rating",
+                    "armor_rating",
+                    "muzzle_velocity", "gun_len"
                 ]
 
                 insert_data = {k: v for k, v in stats.items() if k in valid_cols}
@@ -347,7 +365,7 @@ class blueprintFunctions2(commands.Cog):
 
                 embed = discord.Embed(
                     title=f"{blueprint_data['header']['name']}",
-                    color=ctx.author.accent_color
+                    color=ctx.author.color
                 )
                 embed.set_footer(text=f"Owner: {ctx.author.display_name} | Vehicle ID: {stats['vehicle_id']}")
                 embed.add_field(name="Era", value=f"{stats['vehicle_era']}")
@@ -362,12 +380,11 @@ class blueprintFunctions2(commands.Cog):
                 # --- ADDED ARMAMENT ---
                 if stats.get('cannon_stats') and stats['cannon_stats'] != "None":
                     embed.add_field(name="Armament", value=f"\n{stats['cannon_stats']}\n", inline=False)
-                embed.add_field(name="Powertrain",value=f"{stats['horsepower']} HP | {stats['hpt']:.1f} HP/T", inline=False)
+                embed.add_field(name="Powertrain",value=f"{stats['horsepower']} HP | {stats['hpt']:.1f} HP/T | {stats['top_speed']} km/h", inline=False)
                 embed.add_field(name="Armor Mass", value=f"{stats['armor_mass'] / 1000.0:.2f} tons")
                 embed.add_field(name="Fuel Capacity", value=f"{stats['fuel_tank_capacity']:.0f}L")
-                embed.add_field(name="Approx. Speed", value=f"~{stats['top_speed']} km/h")
-                embed.add_field(name="Track & Suspension (report issues)",value=f"**Ground Pressure:** {stats.get('ground_pressure', 0):.2f} kg/cm²\n**Roadwheel diameter:** {stats['roadwheel_diam']:.2f} m\n**Contact Length:** {contact_len:.2f} m", inline=False)
-
+                embed.add_field(name="Ground Pressure", value=f"{stats.get('ground_pressure', 0):.2f} kg/cm²")
+                embed.add_field(name="RPG Stats", value=rpg_text, inline=False)
                 #embed.add_field(name="Frontal Angles",value=f"Upper: {stats['upper_frontal_angle']:.1f}°\nLower: {stats['lower_frontal_angle']:.1f}°")
                 gif_file = None
                 bp_cog = self.bot.get_cog("blueprintFunctions")

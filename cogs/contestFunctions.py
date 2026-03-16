@@ -648,9 +648,10 @@ class contestFunctions(commands.Cog):
                 "vehicle_id", "vehicle_name", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id",
                 "base_cost", "tank_weight", "tank_length", "tank_width", "tank_height", "tank_total_height",
                 "fuel_tank_capacity", "ground_pressure", "horsepower", "hpt", "top_speed", "travel_range",
-                "crew_count", "cannon_stats", "armor_mass", "upper_frontal_angle", "lower_frontal_angle",
-                "health", "attack", "defense", "breakthrough", "piercing", "armor", "cohesion",
-                "file_url", "submission_date", "image_url"
+                "crew_count", "armor_mass",
+                "hit_points", "damage_rating", "penetration_rating", "accuracy_rating", "mobility_rating",
+                "armor_rating",
+                "muzzle_velocity", "gun_len"
             ]
 
             insert_data = {k: v for k, v in stats.items() if k in valid_cols}
