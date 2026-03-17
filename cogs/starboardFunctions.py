@@ -200,6 +200,32 @@ class starboardFunctions(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(name="boardrep", description="Add a new starboard")
+    async def boardrep(self, ctx: commands.Context, channel: discord.TextChannel = None):
+        try:
+            data_rchannel = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboarded WHERE starboard_channel_id = $1;''',[channel.id])
+            counter = 0
+            board_messages = []
+            for message in data_rchannel:
+                real_message = await channel.fetch_message(message['starboard_msg_id'])
+                if real_message.author.id == ctx.author.id:
+                    counter += 1
+                    board_messages.append(message)
+            print(data_rchannel)
+            if counter == 0:
+                await ctx.send(await self.bot.error.retrieveError(ctx))
+                await ctx.send("Unfortunately you don't have any boards on that channel yet.  Try bribing your friends with Discord Nitro or [a teaser for Sprocket's future updates!](<https://www.youtube.com/watch?v=CGSM48Qr1zs>)")
+            embed = discord.Embed(color=ctx.author.color, title=f"Board posts by {ctx.author.mention} in {channel.mention}")
+            if counter == 1:
+                embed.add_field(name=f"The one (1) entry", value=f"{(await channel.fetch_message(board_messages[0]['messageid'])).jump_url}", inline=False)
+            if counter > 1:
+                embed.add_field(name=f"The first entry", value=f"{(await channel.fetch_message(board_messages[0]['messageid'])).jump_url}", inline=False)
+                embed.add_field(name=f"The last entry", value=f"{(await channel.fetch_message(board_messages[-1]['messageid'])).jump_url}", inline=False)
+                embed.add_field(name=f"Total",value=f"{len(board_messages)} entries",inline=False)
+            embed.set_footer(text=await self.bot.error.retrieveCategorizedError(ctx, "sprocket"))
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
 
     @commands.command(name="addStarboard", description="Add a new starboard")
     async def addNewStarboard(self, ctx: commands.Context):

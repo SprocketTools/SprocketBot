@@ -11,7 +11,7 @@ class errorTools:
         else:
             query = '''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''
 
-        error_record = await self.bot.sql.databaseFetchrow(query)
+        error_record = (await self.bot.sql.databaseFetchdict(query))[0]
         if not error_record:
             return "Oops, I couldn't find an error!"
 
