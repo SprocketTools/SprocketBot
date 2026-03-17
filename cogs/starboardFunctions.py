@@ -186,6 +186,19 @@ class starboardFunctions(commands.Cog):
 
         await ctx.send("Done!")
 
+    @commands.command(name="listStarboards", description="Add a new starboard")
+    async def listStarboards(self, ctx: commands.Context):
+        data_rchannel = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboards WHERE serverid = $1;''',[ctx.guild.id])
+        embed = discord.Embed(color=ctx.author.color, title=f"Starboards in {ctx.guild.name}")
+        print(data_rchannel)
+        for entry in data_rchannel:
+            print(entry)
+            
+            embed.add_field(name=f"<#{entry['sourcechannel']}>", value=f"{entry['count']}x {entry['emoji']}", inline=False)
+
+        await ctx.send(embed=embed)
+
+
     @commands.command(name="addStarboard", description="Add a new starboard")
     async def addNewStarboard(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
