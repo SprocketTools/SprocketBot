@@ -1,6 +1,7 @@
 from datetime import datetime
 from discord.ext import commands
 
+
 class errorTools:
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -11,22 +12,29 @@ class errorTools:
         else:
             query = '''SELECT error from errorlist WHERE status = true AND errortype NOT IN ('mlp', 'catgirl') ORDER BY RANDOM() LIMIT 1;'''
 
-        error_record = (await self.bot.sql.databaseFetchdict(query))[0]
-        if not error_record:
+        # Fetch the records first without immediately indexing [0]
+        records = await self.bot.sql.databaseFetchdict(query)
+
+        # Safely check if records exist and isn't empty
+        if not records or len(records) == 0:
             return "Oops, I couldn't find an error!"
 
-        error_text = await self.errorfyText(ctx, error_record["error"])
+        error_record = records[0]
+        error_text = await self.errorfyText(ctx, error_record.get("error", "Unknown error"))
         return error_text.replace('@', '')
 
     async def retrieveCategorizedError(self, ctx: commands.Context, category: str):
-        error_record = await self.bot.sql.databaseFetchrowDynamic(
+        # Swapped to databaseFetchdictDynamic to avoid the NoneType iterable crash
+        records = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT error from errorlist WHERE status = true AND errortype = $1 ORDER BY RANDOM() LIMIT 1;''',
             [category]
         )
-        if not error_record:
+
+        if not records or len(records) == 0:
             return f"Oops, I couldn't find an error in the '{category}' category!"
 
-        error_text = await self.errorfyText(ctx, error_record["error"])
+        error_record = records[0]
+        error_text = await self.errorfyText(ctx, error_record.get("error", "Unknown error"))
         return error_text.replace('@', '')
 
     async def sendCategorizedError(self, ctx: commands.Context, category: str):

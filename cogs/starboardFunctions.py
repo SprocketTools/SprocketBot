@@ -200,34 +200,94 @@ class starboardFunctions(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="boardrep", description="Add a new starboard")
+    @commands.command(name="boardrep", description="Check how many starboard posts a user has")
     async def boardrep(self, ctx: commands.Context, channel: discord.TextChannel = None):
         try:
-            data_rchannel = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboarded WHERE starboard_channel_id = $1;''',[channel.id])
-            counter = 0
-            board_messages = []
-            for message in data_rchannel:
-                real_message = await channel.fetch_message(message['starboard_msg_id'])
-                print(str(real_message.author.id), str(ctx.author.id))
-                if str(real_message.author.id) == str(ctx.author.id):
-                    counter += 1
-                    board_messages.append(message)
-            print(data_rchannel)
-            if counter == 0:
-                await ctx.send(await self.bot.error.retrieveError(ctx))
-                await ctx.send("Unfortunately you don't have any boards on that channel yet.  Try bribing your friends with Discord Nitro or [a teaser for Sprocket's future updates!](<https://www.youtube.com/watch?v=CGSM48Qr1zs>)")
+            if channel is None:
+                await ctx.send(
+                    "Please specify the starboard channel you want to check. Example: `-boardrep #starboard`")
                 return
-            embed = discord.Embed(color=ctx.author.color, title=f"Board posts by {ctx.author.mention} in {channel.mention}")
-            if counter == 1:
-                embed.add_field(name=f"The one (1) entry", value=f"{(await channel.fetch_message(board_messages[0]['messageid'])).jump_url}", inline=False)
-            if counter > 1:
-                embed.add_field(name=f"The first entry", value=f"{(await channel.fetch_message(board_messages[0]['messageid'])).jump_url}", inline=False)
-                embed.add_field(name=f"The last entry", value=f"{(await channel.fetch_message(board_messages[-1]['messageid'])).jump_url}", inline=False)
-                embed.add_field(name=f"Total",value=f"{len(board_messages)} entries",inline=False)
+
+            status_msg = await ctx.send(f"Scanning {channel.mention} for your posts... this may take a moment.")
+
+            board_messages = []
+            non_starboard_streak = 0
+
+            # Fetch all messages in the starboard channel history
+            async for msg in channel.history(limit=None):
+
+                # 1. Is this a valid starboard message? (Regardless of who it belongs to)
+                is_starboard_msg = False
+                if msg.author.id == self.bot.user.id and msg.embeds:
+                    embed = msg.embeds[0]
+                    if embed.footer and "id:" in str(embed.footer.text).lower():
+                        is_starboard_msg = True
+
+                # 2. Apply Failsafe Logic
+                if is_starboard_msg:
+                    non_starboard_streak = 0  # Reset streak because we found a valid post!
+
+                    # 3. Match the user using their display name or avatar URL
+                    is_author = False
+                    if embed.author:
+                        if embed.author.name == ctx.author.display_name:
+                            is_author = True
+                        elif str(embed.author.icon_url) == str(ctx.author.display_avatar.url):
+                            is_author = True
+
+                    if is_author:
+                        board_messages.append(msg)
+                else:
+                    # It's a normal chat message or unrelated bot message
+                    non_starboard_streak += 1
+                    if non_starboard_streak >= 10:
+                        break  # Failsafe triggered! Abort the scan.
+
+            # Handle the empty results (either no posts, or aborted early)
+            if len(board_messages) == 0:
+                await ctx.send(await self.bot.error.retrieveError(ctx))
+
+                if non_starboard_streak >= 10:
+                    await self.bot.error.retrieveCategorizedError(ctx, "mlp")
+                    await ctx.send(f"I don't think {channel.mention} is a starboard channel, as I'm finding too many non-starboard posts.")
+                else:
+                    await self.bot.error.retrieveError(ctx)
+                    await ctx.send(
+                        "Unfortunately you don't have any boards on that channel yet. Try bribing your friends with Discord Nitro or [a teaser for Sprocket's future updates!](<https://www.youtube.com/watch?v=CGSM48Qr1zs>)")
+
+                await status_msg.delete()
+                return
+
+            # Reverse the list so the oldest is first, newest is last
+            board_messages.reverse()
+
+            embed = discord.Embed(color=ctx.author.color,
+                                  title=f"Board posts by {ctx.author.display_name} in {channel.name}")
+
+            # Extract the original message jump links directly from the starboard embeds
+            if len(board_messages) == 1:
+                orig_link = board_messages[0].embeds[0].fields[0].value
+                embed.add_field(name="The one (1) entry", value=orig_link, inline=False)
+            else:
+                first_link = board_messages[0].embeds[0].fields[0].value
+                last_link = board_messages[-1].embeds[0].fields[0].value
+
+                embed.add_field(name="The first entry", value=first_link, inline=False)
+                embed.add_field(name="The latest entry", value=last_link, inline=False)
+                embed.add_field(name="Total", value=f"{len(board_messages)} entries", inline=False)
+
+            # Optional: Add a warning if the scan was cut off but they still had *some* posts
+            if non_starboard_streak >= 10:
+                embed.description = "Note: this scan is incomplete due to resource limitations"
+
             embed.set_footer(text=await self.bot.error.retrieveCategorizedError(ctx, "sprocket"))
+
+            await status_msg.delete()
             await ctx.send(embed=embed)
+
         except Exception as e:
-            print(e)
+            print(f"Error in boardrep: {e}")
+            await ctx.send("An error occurred while scanning the channel.")
 
     @commands.has_permissions(manage_guild=True)
     @commands.command(name="addStarboard", description="Add a new starboard")
