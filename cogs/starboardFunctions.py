@@ -66,31 +66,66 @@ class starboardFunctions(commands.Cog):
             # Fetch the last 100 messages in the starboard channel to check for existing starboard messages
             # Count the number of star reactions on the message
 
+            # --- Get the current reaction count safely ---
             try:
                 star_reaction = discord.utils.get(message.reactions, emoji=payload.emoji)
-                print("got here")
-                print(star_reaction.count)
             except Exception:
                 star_reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name)
-                print("got here")
-                print(star_reaction.count)
 
-            if star_reaction and star_reaction.count >= starboard['count']:
-                print("got here too")
+            reaction_count = star_reaction.count if star_reaction else 0
+
+            # --- Check if already starboarded ---
+            starboard_entry = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT * FROM starboarded WHERE messageid = $1;''', [message.id])
+
+            if len(starboard_entry) > 0:
+                # It is already on the starboard! Let's update the count.
+                sb_data = starboard_entry[0]
+                sb_msg_id = sb_data.get("starboard_msg_id")
+                sb_channel_id = sb_data.get("starboard_channel_id")
+
+                if sb_msg_id and sb_channel_id:
+                    sb_channel = self.bot.get_channel(sb_channel_id)
+                    if sb_channel:
+                        try:
+                            sb_msg = await sb_channel.fetch_message(sb_msg_id)
+                            # Edit the message content above the embed to show the new count
+                            await sb_msg.edit(
+                                content=f"{payload.emoji} **{reaction_count}** | {message.channel.mention}")
+                        except Exception as e:
+                            print(f"Failed to update existing starboard message: {e}")
+                continue  # Skip the creation logic since we just updated it
+
+            # --- Create NEW Starboard Entry ---
+            if reaction_count >= starboard['count']:
+                # Fetch the starboard channel
+                starboard_channel = self.bot.get_channel(starboard["channelsend"])
+                if not starboard_channel:
+                    print("Invalid starboard channel")
+                    continue
+
                 # Create the embed for the starboard message
                 embed = discord.Embed(description=message.content, color=message.author.color)
                 if message.attachments:
                     try:
-                        embed.set_image(url=message.attachments[0])
+                        embed.set_image(url=message.attachments[0].url)  # Make sure to use .url
                     except Exception:
                         pass
-                embed.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
-                embed.add_field(name="Link to message", value=f"[Jump to Message]({message.jump_url})")
-                embed.set_footer(text=f"id: {message.id}")
+                embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+                embed.add_field(name="Source", value=f"[Jump to Message]({message.jump_url})")
+                embed.set_footer(text=f"ID: {message.id}")
 
-                # Send the embed to the starboard channel
-                await starboard_channel.send(embed=embed)
-                await self.bot.sql.databaseExecuteDynamic('''INSERT INTO starboarded VALUES ($1)''', [message.id])
+                # The text that goes *above* the embed
+                display_content = f"{payload.emoji} **{reaction_count}** | {message.channel.mention}"
+
+                # Send it to the starboard channel
+                sent_msg = await starboard_channel.send(content=display_content, embed=embed)
+
+                # Save the new tracking IDs to the database
+                await self.bot.sql.databaseExecuteDynamic(
+                    '''INSERT INTO starboarded (messageid, starboard_msg_id, starboard_channel_id) VALUES ($1, $2, $3)''',
+                    [message.id, sent_msg.id, starboard_channel.id]
+                )
 
     @commands.command(name="setupStarboardDatabase", description="Set up the starboards")
     async def setupStarboardDatabase(self, ctx: commands.Context):
@@ -98,6 +133,13 @@ class starboardFunctions(commands.Cog):
             return
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS starboards (serverid BIGINT, emoji VARCHAR, count INT, channelsend BIGINT, sourcechannel BIGINT)''')
         await self.bot.sql.databaseExecute('''CREATE TABLE IF NOT EXISTS starboarded (messageid BIGINT)''')
+
+        try:
+            await self.bot.sql.databaseExecute('''ALTER TABLE starboarded ADD COLUMN starboard_msg_id BIGINT;''')
+            await self.bot.sql.databaseExecute('''ALTER TABLE starboarded ADD COLUMN starboard_channel_id BIGINT;''')
+        except Exception:
+            pass
+
         await ctx.send("Done!")
 
     @commands.command(name="addStarboard", description="Add a new starboard")
