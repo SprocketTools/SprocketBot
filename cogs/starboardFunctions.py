@@ -165,11 +165,68 @@ class starboardFunctions(commands.Cog):
                 try:
                     sent_msg = await starboard_channel.send(content=display_content, embed=embed)
                     await self.bot.sql.databaseExecuteDynamic(
-                        '''INSERT INTO starboarded (messageid, starboard_msg_id, starboard_channel_id) VALUES ($1, $2, $3)''',
-                        [message.id, sent_msg.id, starboard_channel.id]
+                        '''INSERT INTO starboarded (messageid, starboard_msg_id, starboard_channel_id, author_id) VALUES ($1, $2, $3, $4)''',
+                        [message.id, sent_msg.id, starboard_channel.id, message.author.id]
                     )
                 except Exception as e:
                     print(f"Failed to send/save new starboard post: {e}")
+
+    @commands.has_permissions(manage_guild=True)
+    @commands.command(name="syncStarboard", description="Retroactively fills database with old starboard posts")
+    async def syncStarboard(self, ctx: commands.Context, channel: discord.TextChannel):
+        status = await ctx.send(f"Starting sync for {channel.mention}... This will take a while.")
+        count = 0
+        deleted_count = 0
+
+        async for msg in channel.history(limit=None):
+            if msg.author.id == self.bot.user.id and msg.embeds:
+                embed = msg.embeds[0]
+                if embed.footer and "id:" in str(embed.footer.text).lower():
+                    # 1. Get Original Message ID from Footer
+                    try:
+                        orig_msg_id = int(str(embed.footer.text).lower().replace("id:", "").strip())
+                    except ValueError:
+                        continue
+
+                    # 2. Extract original channel from the Jump Link to fetch the author ID
+                    author_id = None
+                    jump_link = embed.fields[0].value if embed.fields else ""
+                    match = re.search(r'channels/\d+/(\d+)/(\d+)', jump_link)
+
+                    if match:
+                        orig_channel_id = int(match.group(1))
+                        orig_channel = self.bot.get_channel(orig_channel_id)
+                        if orig_channel:
+                            try:
+                                # Fetch the original message to get the exact author ID
+                                orig_msg = await orig_channel.fetch_message(orig_msg_id)
+                                author_id = orig_msg.author.id
+                            except discord.NotFound:
+                                deleted_count += 1  # Original message was deleted!
+                            except Exception:
+                                pass
+
+                    # 3. Update or Insert into the database
+                    existing = await self.bot.sql.databaseFetchdictDynamic(
+                        "SELECT messageid FROM starboarded WHERE messageid = $1", [orig_msg_id])
+
+                    if len(existing) > 0:
+                        await self.bot.sql.databaseExecuteDynamic(
+                            "UPDATE starboarded SET starboard_msg_id=$1, starboard_channel_id=$2, author_id=$3 WHERE messageid=$4",
+                            [msg.id, channel.id, author_id, orig_msg_id]
+                        )
+                    else:
+                        await self.bot.sql.databaseExecuteDynamic(
+                            "INSERT INTO starboarded (messageid, starboard_msg_id, starboard_channel_id, author_id) VALUES ($1, $2, $3, $4)",
+                            [orig_msg_id, msg.id, channel.id, author_id]
+                        )
+
+                    count += 1
+                    if count % 50 == 0:
+                        await status.edit(content=f"Syncing {channel.mention}... Processed {count} posts.")
+
+        await status.edit(
+            content=f"✅ **Sync Complete!** Processed {count} starboard posts. ({deleted_count} original messages were deleted, so their author IDs couldn't be recovered).")
 
     @commands.command(name="setupStarboardDatabase", description="Set up the starboards")
     async def setupStarboardDatabase(self, ctx: commands.Context):
@@ -183,6 +240,10 @@ class starboardFunctions(commands.Cog):
             await self.bot.sql.databaseExecute('''ALTER TABLE starboarded ADD COLUMN starboard_channel_id BIGINT;''')
         except Exception:
             pass
+        try:
+            await self.bot.sql.databaseExecute('''ALTER TABLE starboarded ADD COLUMN author_id BIGINT;''')
+        except Exception:
+            pass  # Column already exists
 
         await ctx.send("Done!")
 
@@ -204,91 +265,41 @@ class starboardFunctions(commands.Cog):
     async def boardrep(self, ctx: commands.Context, channel: discord.TextChannel = None):
         try:
             if channel is None:
-                await ctx.send(
+                return await ctx.send(
                     "Please specify the starboard channel you want to check. Example: `-boardrep #starboard`")
-                return
 
-            status_msg = await ctx.send(f"Scanning {channel.mention} for your posts... this may take a moment.")
+            # 1. Lightning Fast SQL Query
+            records = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT * FROM starboarded WHERE starboard_channel_id = $1 AND author_id = $2 ORDER BY starboard_msg_id ASC;''',
+                [channel.id, ctx.author.id]
+            )
 
-            board_messages = []
-            non_starboard_streak = 0
-            starboard_streak = 0
-            # Fetch all messages in the starboard channel history
-            async for msg in channel.history(limit=None):
-
-                # 1. Is this a valid starboard message? (Regardless of who it belongs to)
-                is_starboard_msg = False
-                if msg.author.id == self.bot.user.id and msg.embeds:
-                    embed = msg.embeds[0]
-                    if embed.footer and "id:" in str(embed.footer.text).lower():
-                        is_starboard_msg = True
-
-                # 2. Apply Failsafe Logic
-                if is_starboard_msg:
-                    non_starboard_streak = 0  # Reset streak because we found a valid post!
-
-                    # 3. Match the user using their display name or avatar URL
-                    is_author = False
-                    if embed.author:
-                        if embed.author.name == ctx.author.display_name:
-                            is_author = True
-                        elif str(embed.author.icon_url) == str(ctx.author.display_avatar.url):
-                            is_author = True
-
-                    if is_author:
-                        board_messages.append(msg)
-                    starboard_streak += 1
-                else:
-                    # It's a normal chat message or unrelated bot message
-                    non_starboard_streak += 1
-                    if non_starboard_streak >= 10:
-                        break  # Failsafe triggered! Abort the scan.
-
-            # Handle the empty results (either no posts, or aborted early)
-            if len(board_messages) == 0:
+            if not records or len(records) == 0:
                 await ctx.send(await self.bot.error.retrieveError(ctx))
+                return await ctx.send(
+                    "Unfortunately you don't have any boards on that channel yet. Try bribing your friends with Discord Nitro or [a teaser for Sprocket's future updates!](<https://www.youtube.com/watch?v=CGSM48Qr1zs>)")
 
-                if non_starboard_streak >= 10 and starboard_streak <= 10:
-                    await self.bot.error.retrieveCategorizedError(ctx, "mlp")
-                    await ctx.send(f"I don't think {channel.mention} is a starboard channel, as I'm finding too many non-starboard posts.")
-                else:
-                    await self.bot.error.retrieveError(ctx)
-                    await ctx.send(
-                        "Unfortunately you don't have any boards on that channel yet. Try bribing your friends with Discord Nitro or [a teaser for Sprocket's future updates!](<https://www.youtube.com/watch?v=CGSM48Qr1zs>)")
-
-                await status_msg.delete()
-                return
-
-            # Reverse the list so the oldest is first, newest is last
-            board_messages.reverse()
-
+            # 2. Build the Embed
             embed = discord.Embed(color=ctx.author.color,
                                   title=f"Board posts by {ctx.author.display_name} in {channel.name}")
 
-            # Extract the original message jump links directly from the starboard embeds
-            if len(board_messages) == 1:
-                orig_link = board_messages[0].embeds[0].fields[0].value
-                embed.add_field(name="The one (1) entry", value=orig_link, inline=False)
+            # Helper function to construct jump links to the starboard messages
+            def make_jump(sb_msg_id):
+                return f"https://discord.com/channels/{ctx.guild.id}/{channel.id}/{sb_msg_id}"
+
+            if len(records) == 1:
+                embed.add_field(name="The one (1) entry", value=make_jump(records[0]['starboard_msg_id']), inline=False)
             else:
-                first_link = board_messages[0].embeds[0].fields[0].value
-                last_link = board_messages[-1].embeds[0].fields[0].value
-
-                embed.add_field(name="The first entry", value=first_link, inline=False)
-                embed.add_field(name="The latest entry", value=last_link, inline=False)
-                embed.add_field(name="Total", value=f"{len(board_messages)} entries", inline=False)
-
-            # Optional: Add a warning if the scan was cut off but they still had *some* posts
-            # if non_starboard_streak >= 10:
-            #     embed.description = "Note: this scan is incomplete due to resource limitations"
+                embed.add_field(name="The first entry", value=make_jump(records[0]['starboard_msg_id']), inline=False)
+                embed.add_field(name="The latest entry", value=make_jump(records[-1]['starboard_msg_id']), inline=False)
+                embed.add_field(name="Total", value=f"{len(records)} entries", inline=False)
 
             embed.set_footer(text=await self.bot.error.retrieveCategorizedError(ctx, "sprocket"))
-
-            await status_msg.delete()
             await ctx.send(embed=embed)
 
         except Exception as e:
             print(f"Error in boardrep: {e}")
-            await ctx.send("An error occurred while scanning the channel.")
+            await ctx.send("An error occurred while fetching your starboard records.")
 
     @commands.has_permissions(manage_guild=True)
     @commands.command(name="addStarboard", description="Add a new starboard")
