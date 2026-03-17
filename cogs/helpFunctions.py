@@ -20,7 +20,7 @@ class helpFunctions(commands.Cog):
 
     @commands.command(name="help", description="View all the bot commands")
     async def help(self, ctx: commands.Context):
-        embed = discord.Embed(title=f"**Quick Help**",description="*Sprocket Bot's prefix is* `-`\nUse `-adminhelp` or `-campaignhelp` for additional help menus.",color=discord.Color.random())
+        embed = discord.Embed(title=f"**Quick Help**",description="*Sprocket Bot's prefix is* `-`\nUse `-adminhelp`, `-modhelp`, or `-campaignhelp` for additional help menus.",color=discord.Color.random())
         embed.add_field(name="", value="", inline=False)
         embed.add_field(name="SprocketHelp", value="Get help with building in Sprocket", inline=False)
         embed.add_field(name="bakeGeometry", value="Bake 0.2 compartments together", inline=False)
