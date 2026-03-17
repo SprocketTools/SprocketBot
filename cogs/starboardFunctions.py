@@ -12,120 +12,164 @@ class starboardFunctions(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
 
-
-
-        # Fetch the message
+        # Fetch the channel safely
         channel = self.bot.get_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
+        if not channel: return
 
+        # Fetch the message safely
         try:
-            await message.add_reaction('310177266011340803')
-        except discord.Forbidden:
-            print("blocked")
-            return False
+            message = await channel.fetch_message(payload.message_id)
         except Exception:
-            pass
+            return
 
+        # Hardcoded date check
         if int(message.created_at.timestamp()) < 1738411320:
             return
 
         msg_guild = self.bot.get_guild(payload.guild_id)
-        data_rchannel = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboards WHERE sourcechannel = $1 OR (serverid = $2 AND sourcechannel < 5);''',[payload.channel_id, payload.guild_id])
-        #print(data_rchannel)
+        if not msg_guild: return
+
+        # Fetch starboard configs
+        data_rchannel = await self.bot.sql.databaseFetchdictDynamic(
+            '''SELECT * FROM starboards WHERE sourcechannel = $1 OR (serverid = $2 AND sourcechannel < 5);''',
+            [payload.channel_id, payload.guild_id]
+        )
         if len(data_rchannel) == 0:
-            data_rchannel = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboards WHERE serverid = $1 AND sourcechannel < 5;''',[msg_guild.id])
-        #print(data_rchannel)
-        for starboard in data_rchannel:
-            #print(starboard["emoji"] + " vs. " + str(payload.emoji))
-            # Check if the reaction is the star emoji
-            if str(payload.emoji) != str(starboard["emoji"]):
-                #print("no match")
+            data_rchannel = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT * FROM starboards WHERE serverid = $1 AND sourcechannel < 5;''',
+                [msg_guild.id]
+            )
+
+        if len(data_rchannel) == 0:
+            return
+
+        # 1. Did the user click an emoji that is actually part of our configs?
+        clicked_emoji_str = str(payload.emoji).strip()
+        is_valid_trigger = any(str(sb["emoji"]).strip() == clicked_emoji_str for sb in data_rchannel)
+        if not is_valid_trigger:
+            return
+
+        # Safety check for author reacting to themselves
+        if payload.user_id != self.bot.owner_id:
+            if message.author.id == payload.user_id or message.author.bot:
+                return
+
+        # 2. Group all starboard configs by their Destination Channel
+        # This allows us to combine counts for multiple emojis going to the same place!
+        destinations = {}
+        for sb in data_rchannel:
+            dest = sb['channelsend']
+            if dest not in destinations:
+                destinations[dest] = {'emojis': set(), 'min_threshold': 99999}
+
+            destinations[dest]['emojis'].add(str(sb['emoji']).strip())
+
+            # If multiple emojis have different thresholds, we take the lowest one to trigger the post
+            if sb['count'] < destinations[dest]['min_threshold']:
+                destinations[dest]['min_threshold'] = sb['count']
+
+        # 3. Process each destination channel
+        for dest_channel_id, dest_data in destinations.items():
+
+            if clicked_emoji_str not in dest_data['emojis']:
                 continue
 
+            total_count = 0
+            display_parts = []
 
+            # Extract current reactions from the message safely
+            active_reactions = {}
+            active_ids = {}
 
-            # Check if the user who reacted is the same as the message author
-            if payload.member.id != self.bot.owner_id:
-                if message.author.id == payload.user_id:
-                    #await channel.send(f"{payload.member.mention}, you cannot star your own messages.")
-                    continue
+            for r in message.reactions:
+                raw_str = str(r.emoji).strip()
+                active_reactions[raw_str] = r.count
+                # If it's a custom emoji, save the ID as a fallback backup
+                if hasattr(r.emoji, 'id') and r.emoji.id:
+                    active_ids[str(r.emoji.id)] = {"count": r.count, "str": raw_str}
 
-                # Check if the message author is a bot
-                if message.author.bot:
-                    #await channel.send(f"{payload.member.mention}, you cannot star bot messages.")
-                    continue
+            # Explicitly check for every emoji configured for this destination
+            for expected_emoji in dest_data['emojis']:
+                count = 0
+                display_str = expected_emoji
 
-            if len(await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM starboarded WHERE messageid = $1;''', [message.id])) > 0:
+                # 1. Try exact string match first
+                if expected_emoji in active_reactions:
+                    count = active_reactions[expected_emoji]
+                else:
+                    # 2. Fallback: Extract ID and check if the emoji was renamed/animated
+                    import re
+                    match = re.search(r'<a?:[^:]+:(\d+)>', expected_emoji)
+                    if match:
+                        e_id = match.group(1)
+                        if e_id in active_ids:
+                            count = active_ids[e_id]["count"]
+                            display_str = active_ids[e_id]["str"]
+
+                # If we found this emoji on the message, add it to the display string
+                if count > 0:
+                    total_count += count
+                    display_parts.append(f"{display_str} **{count}**")
+
+            # Stop if somehow there are no reactions left
+            if total_count == 0:
                 continue
-            # Fetch the starboard channel
-            starboard_channel = self.bot.get_channel(starboard["channelsend"])
-            if not starboard_channel:
-                print("Invalid channel")
-                continue
 
-            # Fetch the last 100 messages in the starboard channel to check for existing starboard messages
-            # Count the number of star reactions on the message
+            # Format: ⭐ **5** | 🌟 **2** | #general
+            display_content = " | ".join(display_parts) + f" | {message.channel.mention}"
 
-            # --- Get the current reaction count safely ---
-            try:
-                star_reaction = discord.utils.get(message.reactions, emoji=payload.emoji)
-            except Exception:
-                star_reaction = discord.utils.get(message.reactions, emoji=payload.emoji.name)
+            # --- Check if already starboarded in THIS channel ---
+            existing_entries = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT * FROM starboarded WHERE messageid = $1;''',
+                [message.id]
+            )
 
-            reaction_count = star_reaction.count if star_reaction else 0
+            target_entry = None
+            for row in existing_entries:
+                if row.get("starboard_channel_id") == dest_channel_id:
+                    target_entry = row
+                    break
 
-            # --- Check if already starboarded ---
-            starboard_entry = await self.bot.sql.databaseFetchdictDynamic(
-                '''SELECT * FROM starboarded WHERE messageid = $1;''', [message.id])
-
-            if len(starboard_entry) > 0:
-                # It is already on the starboard! Let's update the count.
-                sb_data = starboard_entry[0]
-                sb_msg_id = sb_data.get("starboard_msg_id")
-                sb_channel_id = sb_data.get("starboard_channel_id")
-
-                if sb_msg_id and sb_channel_id:
-                    sb_channel = self.bot.get_channel(sb_channel_id)
+            if target_entry:
+                # Update the combined count string
+                sb_msg_id = target_entry.get("starboard_msg_id")
+                if sb_msg_id:
+                    sb_channel = self.bot.get_channel(dest_channel_id)
                     if sb_channel:
                         try:
                             sb_msg = await sb_channel.fetch_message(sb_msg_id)
-                            # Edit the message content above the embed to show the new count
-                            await sb_msg.edit(
-                                content=f"{payload.emoji} **{reaction_count}** | {message.channel.mention}")
+                            await sb_msg.edit(content=display_content)
                         except Exception as e:
                             print(f"Failed to update existing starboard message: {e}")
-                continue  # Skip the creation logic since we just updated it
+                continue
 
-            # --- Create NEW Starboard Entry ---
-            if reaction_count >= starboard['count']:
-                # Fetch the starboard channel
-                starboard_channel = self.bot.get_channel(starboard["channelsend"])
+                # --- Create NEW Starboard Entry ---
+            if total_count >= dest_data['min_threshold']:
+                starboard_channel = self.bot.get_channel(dest_channel_id)
                 if not starboard_channel:
-                    print("Invalid starboard channel")
                     continue
 
-                # Create the embed for the starboard message
                 embed = discord.Embed(description=message.content, color=message.author.color)
                 if message.attachments:
                     try:
-                        embed.set_image(url=message.attachments[0].url)  # Make sure to use .url
+                        embed.set_image(url=message.attachments[0].url)
                     except Exception:
                         pass
-                embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+
+                avatar_url = message.author.display_avatar.url if hasattr(message.author,
+                                                                          'display_avatar') else None
+                embed.set_author(name=message.author.display_name, icon_url=avatar_url)
                 embed.add_field(name="Source", value=f"[Jump to Message]({message.jump_url})")
                 embed.set_footer(text=f"ID: {message.id}")
 
-                # The text that goes *above* the embed
-                display_content = f"{payload.emoji} **{reaction_count}** | {message.channel.mention}"
-
-                # Send it to the starboard channel
-                sent_msg = await starboard_channel.send(content=display_content, embed=embed)
-
-                # Save the new tracking IDs to the database
-                await self.bot.sql.databaseExecuteDynamic(
-                    '''INSERT INTO starboarded (messageid, starboard_msg_id, starboard_channel_id) VALUES ($1, $2, $3)''',
-                    [message.id, sent_msg.id, starboard_channel.id]
-                )
+                try:
+                    sent_msg = await starboard_channel.send(content=display_content, embed=embed)
+                    await self.bot.sql.databaseExecuteDynamic(
+                        '''INSERT INTO starboarded (messageid, starboard_msg_id, starboard_channel_id) VALUES ($1, $2, $3)''',
+                        [message.id, sent_msg.id, starboard_channel.id]
+                    )
+                except Exception as e:
+                    print(f"Failed to send/save new starboard post: {e}")
 
     @commands.command(name="setupStarboardDatabase", description="Set up the starboards")
     async def setupStarboardDatabase(self, ctx: commands.Context):
