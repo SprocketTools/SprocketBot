@@ -17,8 +17,58 @@ class blueprintFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
 
-    @commands.command(name="bakeGeometry", description="merge compartment geometry into itself.")
+    @commands.command(name="bakeGeometry", description="Selectively merge a 'source' compartment into a 'target' compartment (0.2+).")
     async def bakeGeometry(self, ctx: commands.Context):
+        serverID = (ctx.guild.id)
+        try:
+            channel = int([dict(row) for row in
+                           await self.bot.sql.databaseFetch(f'SELECT * FROM serverconfig WHERE serverid = {serverID}')][0]['commandschannelid'])
+            if ctx.channel.id != channel and ctx.author.id != main.ownerID:
+                await ctx.send(f"Utility commands are restricted to <#{channel}>")
+                return
+        except Exception:
+            await ctx.send(await self.bot.error.retrieveCategorizedError(ctx, "blueprint"))
+            await ctx.send(
+                "Utility commands are restricted to the server's bot commands channel, but the server owner has not set a channel yet! Ask them to run the `-setup` command.")
+            return
+
+        if not ctx.message.attachments:
+            return await ctx.send("Please upload a .blueprint file.")
+
+        for attachment in ctx.message.attachments:
+            try:
+                blueprintData = json.loads(await attachment.read())
+                name = blueprintData["header"].get("name", "Tank")
+
+                # Enforce the modern format
+                if "0.2" not in str(blueprintData["header"].get("gameVersion", "")):
+                    await ctx.send(f"⚠️ **{name}** is a legacy blueprint. Please use `-bakeGeometryLegacy` instead.")
+                    continue
+
+                status = await ctx.send("Baking geometry using the v0.2 matrix processor...")
+
+                # Use the new Selective Processor
+                # Pass the already-parsed dictionary directly!
+                blueprintDataSave, error_msg = await self.bakeGeometrySelective210(blueprintData)
+
+                if blueprintDataSave is None:
+                    await status.delete()
+                    await ctx.send(f"❌ **Merge Failed:** {error_msg}")
+                    continue
+
+                stringOut = json.dumps(blueprintDataSave, indent=4)
+                data = io.BytesIO(stringOut.encode())
+
+                await status.delete()
+                await ctx.send(file=discord.File(data, f'{name}(merged).blueprint'))
+
+            except Exception as e:
+                await ctx.send(f"An error occurred while processing {attachment.filename}: `{e}`")
+                import traceback
+                traceback.print_exc()
+
+    @commands.command(name="bakeGeometryLegacy", description="merge compartment geometry into itself.")
+    async def bakeGeometryLegacy(self, ctx: commands.Context):
         # country = await getUserCountry(ctx)
         serverID = (ctx.guild.id)
         try:
@@ -738,6 +788,113 @@ class blueprintFunctions(commands.Cog):
 
         memo[vuid] = world_transform
         return world_transform
+
+    async def bakeGeometrySelective210(self, blueprintData):
+        objects_by_vuid = {int(obj["vuid"]): obj for obj in blueprintData.get("objects", [])}
+        meshes_by_vuid = {int(mesh["vuid"]): mesh for mesh in blueprintData.get("meshes", [])}
+
+        target_mesh_vuids = set()
+        source_mesh_vuids = set()
+
+        # 1. Look for the names where they actually live: inside the meshes array!
+        for mesh in blueprintData.get("meshes", []):
+            mesh_data = mesh.get("meshData", {})
+            raw_name = mesh_data.get("name")
+            name = str(raw_name).lower().strip() if raw_name else ""
+
+            if name == "target":
+                target_mesh_vuids.add(mesh.get("vuid"))
+            elif name == "source":
+                source_mesh_vuids.add(mesh.get("vuid"))
+
+        if not target_mesh_vuids or not source_mesh_vuids:
+            return None, f"Found {len(target_mesh_vuids)} 'target' mesh(es) and {len(source_mesh_vuids)} 'source' mesh(es). You must have at least one of each."
+
+        # 2. Map those Mesh VUIDs to Blueprint IDs
+        target_bp_ids = {}
+        source_bp_ids = {}
+
+        for bp in blueprintData.get("blueprints", []):
+            if bp.get("type") == "structure":
+                body_mesh_vuid = bp.get("blueprint", {}).get("bodyMeshVuid")
+                if body_mesh_vuid in target_mesh_vuids:
+                    target_bp_ids[bp.get("id")] = body_mesh_vuid
+                elif body_mesh_vuid in source_mesh_vuids:
+                    source_bp_ids[bp.get("id")] = body_mesh_vuid
+
+        target_objs = []
+        source_objs = []
+
+        # 3. Map Blueprint IDs to Physical Objects in the game world
+        for obj in objects_by_vuid.values():
+            bp_vuid = obj.get("structureBlueprintVuid")
+            if bp_vuid in target_bp_ids:
+                target_objs.append({
+                    "obj_vuid": obj["vuid"],
+                    "mesh_vuid": target_bp_ids[bp_vuid]
+                })
+            elif bp_vuid in source_bp_ids:
+                source_objs.append({
+                    "obj_vuid": obj["vuid"],
+                    "mesh_vuid": source_bp_ids[bp_vuid]
+                })
+
+        if not target_objs or not source_objs:
+            return None, "Found the meshes, but could not find the physical objects attached to the tank."
+
+        transform_cache = {}
+
+        # 4. Merge EVERY source into EVERY target
+        for t_data in target_objs:
+            target_mesh = meshes_by_vuid.get(t_data["mesh_vuid"])
+            if not target_mesh:
+                continue
+
+            target_world = await self._get_world_transform(t_data["obj_vuid"], objects_by_vuid, transform_cache)
+            try:
+                target_world_inv = numpy.linalg.inv(target_world)
+            except numpy.linalg.LinAlgError:
+                continue
+
+            target_vertices_flat = target_mesh["meshData"]["mesh"]["vertices"]
+            target_faces = target_mesh["meshData"]["mesh"]["faces"]
+
+            for s_data in source_objs:
+                source_mesh = meshes_by_vuid.get(s_data["mesh_vuid"])
+                if not source_mesh:
+                    continue
+
+                source_world = await self._get_world_transform(s_data["obj_vuid"], objects_by_vuid, transform_cache)
+                relative_transform = numpy.dot(target_world_inv, source_world)
+
+                source_vertices_flat = source_mesh["meshData"]["mesh"]["vertices"]
+                if not source_vertices_flat:
+                    continue
+
+                s_vertices = numpy.array(source_vertices_flat).reshape(-1, 3)
+                s_vertices_homo = numpy.hstack([s_vertices, numpy.ones((s_vertices.shape[0], 1))])
+
+                transformed_s_homo = numpy.dot(relative_transform, s_vertices_homo.T).T
+                transformed_s = transformed_s_homo[:, :3]
+
+                det = numpy.linalg.det(relative_transform[0:3, 0:3])
+                flip_faces = (det < 0)
+
+                vertex_offset = len(target_vertices_flat) // 3
+                target_vertices_flat.extend([coord for vertex in transformed_s.tolist() for coord in vertex])
+
+                for face in source_mesh["meshData"]["mesh"]["faces"]:
+                    new_face = copy.deepcopy(face)
+                    face_indices = [v_idx + vertex_offset for v_idx in new_face["v"]]
+
+                    if flip_faces:
+                        new_face["v"] = [face_indices[0], face_indices[2], face_indices[1]]
+                    else:
+                        new_face["v"] = face_indices
+
+                    target_faces.append(new_face)
+
+        return blueprintData, "Success"
 
     async def bakeGeometry210(self, attachment):
         blueprintData = json.loads(await attachment.read())

@@ -490,29 +490,6 @@ class adminFunctions(commands.Cog):
         await ctx.send("Done!")
         await adminFunctions.updateServerConfig(self)
 
-    @commands.command(name="help", description="View all the bot commands")
-    async def help(self, ctx: commands.Context):
-        embed = discord.Embed(title=f"**Sprocket Bot Commands**",
-                              description="*Sprocket Bot's prefix is* `-`\n",
-                              color=discord.Color.random())
-        embed.add_field(name="", value="", inline=False)
-        embed.add_field(name="SprocketHelp", value="Get help with building in Sprocket", inline=False)
-        embed.add_field(name="getAddon", value="Make an addon structure out of a tank blueprint", inline=False)
-        embed.add_field(name="bakeGeometry", value="Bake 0.127 compartments together", inline=False)
-        embed.add_field(name="trasplant", value="Copy turrets between 0.2 tanks", inline=False)
-        embed.add_field(name="tunePowertrain", value="Calibrate your tank's powertrain", inline=False)
-        embed.add_field(name="submitTank", value="Submit a tank to an ongoing contest", inline=False)
-        embed.add_field(name="submitDecal", value="Submit decals to the SprocketTools decal repository", inline=False)
-        embed.add_field(name="addError", value="Add a funny response to Sprocket Bot's error catalog", inline=False)
-        embed.add_field(name="weather", value="Apply wear and tear effects to attached photos", inline=False)
-        embed.add_field(name="play [search term]", value="Play YouTube music in your voice chat", inline=False)
-        embed.add_field(name="skip", value="Skip the current music track", inline=False)
-        embed.add_field(name="help", value="Shows this message", inline=False)
-        embed.add_field(name="settings", value="Adjust the server configuration", inline=False)
-        embed.set_thumbnail(url='https://sprockettools.github.io/SprocketToolsLogo.png')
-        embed.set_footer(text=await self.bot.error.retrieveError(ctx))
-        await ctx.send(embed=embed)
-
     # @commands.command(name="viewServerConfig", description="View my server configurations")
     # async def viewServerConfig(self, ctx: commands.Context):
     #     if ctx.author.guild_permissions.administrator == False and ctx.author.id != main.ownerID:

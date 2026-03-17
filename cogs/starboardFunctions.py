@@ -321,7 +321,23 @@ class starboardFunctions(commands.Cog):
             except Exception as e:
                 await ctx.send(await self.bot.error.getError(ctx) + "\n\nSomething went wrong: " + e)
 
-
+    @commands.has_permissions(manage_guild=True)
+    @commands.command(name="deleteStarboard", description="Delete a new starboard")
+    async def deleteStarboard(self, ctx: commands.Context):
+        serverid = ctx.guild.id
+        emojis = str(await textTools.getResponse(ctx, "What emojis do you want to remove?  List multiple by splitting with spaces.")).split(" ")
+        await ctx.send("Are you deleting a channel-specific starboard?")
+        channelsend = await textTools.getChannelResponse(ctx, "What is the destination channel?")
+        if await ctx.bot.ui.getYesNoChoice(ctx):
+            sourcechannel = await textTools.getChannelResponse(ctx, "What is the current source channel?")
+        else:
+            sourcechannel = 0
+        for emoji in emojis:
+            try:
+                await self.bot.sql.databaseExecuteDynamic('''DELETE FROM starboards WHERE serverid = $1 AND emoji = $2 AND channelsend = $3 AND sourcechannel = $4;''', [serverid, emoji, channelsend, sourcechannel])
+                await ctx.send("## Starboard deleted!")
+            except Exception as e:
+                await ctx.send(await self.bot.error.getError(ctx) + "\n\nSomething went wrong deleting a starboard: " + e)
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(starboardFunctions(bot))
