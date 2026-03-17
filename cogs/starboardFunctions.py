@@ -208,13 +208,14 @@ class starboardFunctions(commands.Cog):
             board_messages = []
             for message in data_rchannel:
                 real_message = await channel.fetch_message(message['starboard_msg_id'])
-                if real_message.author.id == ctx.author.id:
+                if str(real_message.author.id) == str(ctx.author.id):
                     counter += 1
                     board_messages.append(message)
             print(data_rchannel)
             if counter == 0:
                 await ctx.send(await self.bot.error.retrieveError(ctx))
                 await ctx.send("Unfortunately you don't have any boards on that channel yet.  Try bribing your friends with Discord Nitro or [a teaser for Sprocket's future updates!](<https://www.youtube.com/watch?v=CGSM48Qr1zs>)")
+                return
             embed = discord.Embed(color=ctx.author.color, title=f"Board posts by {ctx.author.mention} in {channel.mention}")
             if counter == 1:
                 embed.add_field(name=f"The one (1) entry", value=f"{(await channel.fetch_message(board_messages[0]['messageid'])).jump_url}", inline=False)
