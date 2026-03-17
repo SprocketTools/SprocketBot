@@ -212,7 +212,7 @@ class starboardFunctions(commands.Cog):
 
             board_messages = []
             non_starboard_streak = 0
-
+            starboard_streak = 0
             # Fetch all messages in the starboard channel history
             async for msg in channel.history(limit=None):
 
@@ -237,6 +237,7 @@ class starboardFunctions(commands.Cog):
 
                     if is_author:
                         board_messages.append(msg)
+                    starboard_streak += 1
                 else:
                     # It's a normal chat message or unrelated bot message
                     non_starboard_streak += 1
@@ -247,7 +248,7 @@ class starboardFunctions(commands.Cog):
             if len(board_messages) == 0:
                 await ctx.send(await self.bot.error.retrieveError(ctx))
 
-                if non_starboard_streak >= 10:
+                if non_starboard_streak >= 10 and starboard_streak <= 10:
                     await self.bot.error.retrieveCategorizedError(ctx, "mlp")
                     await ctx.send(f"I don't think {channel.mention} is a starboard channel, as I'm finding too many non-starboard posts.")
                 else:
@@ -277,8 +278,8 @@ class starboardFunctions(commands.Cog):
                 embed.add_field(name="Total", value=f"{len(board_messages)} entries", inline=False)
 
             # Optional: Add a warning if the scan was cut off but they still had *some* posts
-            if non_starboard_streak >= 10:
-                embed.description = "Note: this scan is incomplete due to resource limitations"
+            # if non_starboard_streak >= 10:
+            #     embed.description = "Note: this scan is incomplete due to resource limitations"
 
             embed.set_footer(text=await self.bot.error.retrieveCategorizedError(ctx, "sprocket"))
 
