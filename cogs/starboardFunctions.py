@@ -227,6 +227,7 @@ class starboardFunctions(commands.Cog):
         except Exception as e:
             print(e)
 
+    @commands.has_permissions(manage_guild=True)
     @commands.command(name="addStarboard", description="Add a new starboard")
     async def addNewStarboard(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
