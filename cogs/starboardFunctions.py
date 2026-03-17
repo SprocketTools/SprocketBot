@@ -230,8 +230,6 @@ class starboardFunctions(commands.Cog):
     @commands.has_permissions(manage_guild=True)
     @commands.command(name="addStarboard", description="Add a new starboard")
     async def addNewStarboard(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID:
-            return
         serverid = ctx.guild.id
         emojis = str(await textTools.getResponse(ctx, "What is the emoji?  List multiple by splitting with spaces.")).split(" ")
         count = await textTools.getIntResponse(ctx, "What is the reaction requirement?")
