@@ -208,6 +208,7 @@ class starboardFunctions(commands.Cog):
             board_messages = []
             for message in data_rchannel:
                 real_message = await channel.fetch_message(message['starboard_msg_id'])
+                print(str(real_message.author.id), str(ctx.author.id))
                 if str(real_message.author.id) == str(ctx.author.id):
                     counter += 1
                     board_messages.append(message)
