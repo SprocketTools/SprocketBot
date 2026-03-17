@@ -193,8 +193,10 @@ class starboardFunctions(commands.Cog):
         print(data_rchannel)
         for entry in data_rchannel:
             print(entry)
-            
-            embed.add_field(name=f"<#{entry['sourcechannel']}>", value=f"{entry['count']}x {entry['emoji']}", inline=False)
+            if entry['sourcechannel'] == 0:
+                embed.add_field(name=f"Server-wide default", value=f"{entry['count']}x {entry['emoji']}", inline=False)
+            else:
+                embed.add_field(name=f"<#{entry['sourcechannel']}>", value=f"{entry['count']}x {entry['emoji']}", inline=False)
 
         await ctx.send(embed=embed)
 
