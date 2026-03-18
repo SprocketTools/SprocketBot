@@ -321,7 +321,17 @@ class blueprintFunctions2(commands.Cog):
                 stats = await self.bot.analyzer._parse_blueprint_stats(ctx, blueprint_data)
 
                 if 'error' in stats and stats['error']:
-                    return await ctx.send(f"**Analysis Failed:** {stats.get('error')}")
+                    if stats.get('error') == "'cost'":
+                        await self.bot.error.sendCategorizedError(ctx, "blueprint")
+                        await ctx.send("Your blueprint is older than Sprocket version 0.2.50 and is missing a cost value!  Save the blueprint and try again.")
+                    elif stats.get('error') == "'mesh'":
+                        await self.bot.error.sendCategorizedError(ctx, "blueprint")
+                        await ctx.send("Your blueprint has a generated compartment somewhere!  Convert it to freeform in-game and run the command again.")
+                    else:
+                        await self.bot.error.sendCategorizedError(ctx, "blueprint")
+                        await ctx.send(f"**Analysis Failed:** {stats.get('error')}")
+
+                    return
 
                 stats['file_url'] = blueprint_attachment.url
                 stats['image_url'] = image_attachment.url if image_attachment else None
