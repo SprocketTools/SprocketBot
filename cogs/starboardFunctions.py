@@ -55,18 +55,17 @@ class starboardFunctions(commands.Cog):
                 return
 
         # 2. Group all starboard configs by their Destination Channel
-        # This allows us to combine counts for multiple emojis going to the same place!
         destinations = {}
         for sb in data_rchannel:
             dest = sb['channelsend']
+            emoji_str = str(sb['emoji']).strip()
+
             if dest not in destinations:
-                destinations[dest] = {'emojis': set(), 'min_threshold': 99999}
+                destinations[dest] = {'emojis': set(), 'thresholds': {}}
 
-            destinations[dest]['emojis'].add(str(sb['emoji']).strip())
-
-            # If multiple emojis have different thresholds, we take the lowest one to trigger the post
-            if sb['count'] < destinations[dest]['min_threshold']:
-                destinations[dest]['min_threshold'] = sb['count']
+            destinations[dest]['emojis'].add(emoji_str)
+            # Store the specific requirement for each emoji independently
+            destinations[dest]['thresholds'][emoji_str] = sb['count']
 
         # 3. Process each destination channel
         for dest_channel_id, dest_data in destinations.items():
@@ -74,8 +73,9 @@ class starboardFunctions(commands.Cog):
             if clicked_emoji_str not in dest_data['emojis']:
                 continue
 
-            total_count = 0
             display_parts = []
+            meets_threshold = False
+            has_any_reactions = False
 
             # Extract current reactions from the message safely
             active_reactions = {}
@@ -84,7 +84,6 @@ class starboardFunctions(commands.Cog):
             for r in message.reactions:
                 raw_str = str(r.emoji).strip()
                 active_reactions[raw_str] = r.count
-                # If it's a custom emoji, save the ID as a fallback backup
                 if hasattr(r.emoji, 'id') and r.emoji.id:
                     active_ids[str(r.emoji.id)] = {"count": r.count, "str": raw_str}
 
@@ -106,13 +105,15 @@ class starboardFunctions(commands.Cog):
                             count = active_ids[e_id]["count"]
                             display_str = active_ids[e_id]["str"]
 
-                # If we found this emoji on the message, add it to the display string
                 if count > 0:
-                    total_count += count
+                    has_any_reactions = True
                     display_parts.append(f"{display_str} **{count}**")
 
-            # Stop if somehow there are no reactions left
-            if total_count == 0:
+                    # Check if THIS specific emoji met its specific requirement
+                    if count >= dest_data['thresholds'][expected_emoji]:
+                        meets_threshold = True
+
+            if not has_any_reactions:
                 continue
 
             # Format: ⭐ **5** | 🌟 **2** | #general
@@ -143,8 +144,9 @@ class starboardFunctions(commands.Cog):
                             print(f"Failed to update existing starboard message: {e}")
                 continue
 
-                # --- Create NEW Starboard Entry ---
-            if total_count >= dest_data['min_threshold']:
+            # --- Create NEW Starboard Entry ---
+            # Now we use our boolean flag instead of a summed integer!
+            if meets_threshold:
                 starboard_channel = self.bot.get_channel(dest_channel_id)
                 if not starboard_channel:
                     continue
