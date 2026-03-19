@@ -159,12 +159,12 @@ class contestFunctions(commands.Cog):
 
             if target_obj and isinstance(target_obj, (discord.TextChannel, discord.Thread)):
                 submission_channel_id = target_obj.id
-                overlap = await self.bot.sql.databaseFetchrowDynamic(
+                overlap = await self.bot.sql.databaseFetchdictDynamic(
                     '''SELECT name FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
                     [submission_channel_id]
                 )
-                if overlap:
-                    await ctx.send(f"Channel occupied by '{overlap['name']}'. Choose another.")
+                if len(overlap) < 0:
+                    await ctx.send(f"Channel occupied by '{overlap[0]['name']}'. Choose another.")
                     continue
                 break
             else:
