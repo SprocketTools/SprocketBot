@@ -343,14 +343,17 @@ class contestFunctions(commands.Cog):
                                                        ["Min Height", "Max Width", "Min Torsion", "Allow HVSS", "Back"])
                 cmap = {"Min Height": "hullheightmin", "Max Width": "hullwidthmax",
                         "Min Torsion": "torsionbarlengthmin"}
-                if sub == "Allow HVSS":
-                    val = await ctx.bot.ui.getYesNoChoice(ctx, "Allow HVSS?")
-                    await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET allowhvss=$1 WHERE contest_id=$2",
-                                                              [val, data['contest_id']])
-                elif sub in cmap:
-                    val = await textTools.getFloatResponse(ctx, f"Enter {sub}:")
-                    await self.bot.sql.databaseExecuteDynamic(f"UPDATE contests SET {cmap[sub]}=$1 WHERE contest_id=$2",
-                                                              [val, data['contest_id']])
+                try:
+                    if sub == "Allow HVSS":
+                        val = await ctx.bot.ui.getYesNoChoice(ctx)
+                        await self.bot.sql.databaseExecuteDynamic("UPDATE contests SET allowhvss=$1 WHERE contest_id=$2",
+                                                                  [val, data['contest_id']])
+                    elif sub in cmap:
+                        val = await textTools.getFloatResponse(ctx, f"Enter {sub}:")
+                        await self.bot.sql.databaseExecuteDynamic(f"UPDATE contests SET {cmap[sub]}=$1 WHERE contest_id=$2",
+                                                                  [val, data['contest_id']])
+                except Exception as e:
+                    await ctx.send(f"Error: {e}")
 
             elif selection == "Mobility":
                 sub = await ctx.bot.ui.getButtonChoice(ctx, ["Min HP/T", "Max Gnd Press", "Min Belt Width", "Back"])
