@@ -111,11 +111,12 @@ class contestFunctions(commands.Cog):
         # 1. Basic Info
         name = await textTools.getCappedResponse(ctx, "What is the name of this contest?", 64)
 
-        exists = await self.bot.sql.databaseFetchrowDynamic(
+        exists = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT name FROM contests WHERE name = $1 AND serverID = $2;''',
             [name, ctx.guild.id]
         )
-        if exists:
+        print(exists)
+        if len(exists) > 1:
             return await ctx.send("A contest with that name already exists in this server.")
 
         contest_id = random.randint(10000000, 99999999)
