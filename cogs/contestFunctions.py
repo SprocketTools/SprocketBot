@@ -288,17 +288,17 @@ class contestFunctions(commands.Cog):
                     if chan:
                         overlap = await self.bot.sql.databaseFetchrowDynamic(
                             "SELECT name FROM contests WHERE submission_channel_id=$1 AND status=TRUE AND contest_id!=$2",
-                            [chan.id, data['contest_id']])
+                            [chan, data['contest_id']])
                         if overlap:
                             await ctx.send(f"Occupied by {overlap['name']}")
                         else:
                             await self.bot.sql.databaseExecuteDynamic(
                                 "UPDATE contests SET submission_channel_id=$1 WHERE contest_id=$2",
-                                [chan.id, data['contest_id']])
+                                [chan, data['contest_id']])
                 elif sub == "Log Channel":
                     chan = await textTools.getChannelResponse(ctx, "Mention new log channel:")
                     if chan: await self.bot.sql.databaseExecuteDynamic(
-                        "UPDATE contests SET log_channel_id=$1 WHERE contest_id=$2", [chan.id, data['contest_id']])
+                        "UPDATE contests SET log_channel_id=$1 WHERE contest_id=$2", [chan, data['contest_id']])
 
             elif selection == "Weight/Cost/Limit":
                 sub = await ctx.bot.ui.getButtonChoice(ctx, ["Max Weight", "Max Cost", "Entry Limit", "Max Violations",
@@ -516,28 +516,49 @@ class contestFunctions(commands.Cog):
         if not blueprint_attachment:
             return await ctx.send("Invalid file type. Please upload a `.blueprint` file.")
 
-        # 1. AUTO-DETECT CONTEST
-        contest_data = await self.bot.sql.databaseFetchrowDynamic(
+        # 1. AUTO-DETECT CONTEST (Using the safe dictionary fetcher)
+        contest_records = await self.bot.sql.databaseFetchdictDynamic(
             '''SELECT * FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
             [ctx.channel.id]
         )
 
+        # Safely extract the first record. If it's an error object or empty list, it safely becomes None.
+        contest_data = contest_records[0] if (isinstance(contest_records, list) and len(contest_records) > 0) else None
+
+        # 2. IF NOT IN A CONTEST CHANNEL, OFFER THE DROPDOWN
         if not contest_data:
+            await ctx.send("⚠️ This channel isn't directly linked to an active contest. Let's pick one manually:")
+
+            # This triggers the interactive dropdown menu!
             contest_id = await self._pick_contest(ctx)
-            if not contest_id: return
-            contest_data = await self.bot.sql.databaseFetchrowDynamic(
+            if not contest_id:
+                return  # User cancelled or no contests exist
+
+            # Fetch the specifically selected contest safely
+            contest_records = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT * FROM contests WHERE contest_id = $1 AND serverID = $2;''',
                 [contest_id, ctx.guild.id]
             )
+            contest_data = contest_records[0] if (
+                        isinstance(contest_records, list) and len(contest_records) > 0) else None
 
-        # 2. Process
+            if not contest_data:
+                return await ctx.send("❌ Error: Could not load the selected contest data.")
+
+        # 3. Process
         await self._process_entry(ctx, ctx.message, blueprint_attachment, image_attachment, contest_data, silent=False)
 
     # --- INTERNAL ENTRY PROCESSOR ---
     async def _process_entry(self, ctx, message, bp_attachment, img_attachment, contest_data, silent=False):
         try:
-            contest_id = contest_data['contest_id']
-            contest_name = contest_data['name']
+            # 1. Protect against invalid channels (contest_data is None)
+            if not contest_data:
+                if not silent: await ctx.send(
+                    "❌ No active contest found here. Make sure you are in the correct submission channel!")
+                return False
+
+            contest_id = contest_data.get('contest_id')
+            contest_name = contest_data.get('name', 'Unknown')
             entry_limit = contest_data.get('entrylimit', 0)
             violation_limit = contest_data.get('violationlimit', 0)
 
@@ -560,11 +581,19 @@ class contestFunctions(commands.Cog):
 
             bp_json = json.loads(file_bytes.decode('utf-8'))
 
+            # 2. Protect against missing headers
+            game_version = str(bp_json.get("header", {}).get("gameVersion", ""))
+
             # B. Analyze
             if not silent:
                 msg = await ctx.send("Analyzing blueprint...")
 
             stats = await self.bot.analyzer._parse_blueprint_stats(ctx, bp_json)
+
+            # 3. Protect against analyzer returning None
+            if not stats:
+                if not silent: await msg.edit(content="**Analysis Failed:** Could not read vehicle data.")
+                return False
 
             if 'error' in stats and stats['error']:
                 if not silent: await msg.edit(content=f"**Analysis Failed:** {stats.get('error')}")
@@ -580,18 +609,18 @@ class contestFunctions(commands.Cog):
             # C. Rules Check
             warnings = []
             declared_weight = stats.get('tank_weight', 0) / 1000.0
-            if contest_data['weightlimit'] and contest_data['weightlimit'] > 0:
+            if contest_data.get('weightlimit') and contest_data['weightlimit'] > 0:
                 if declared_weight > contest_data['weightlimit']:
                     warnings.append(f"Weight: {declared_weight:.2f}t > Limit {contest_data['weightlimit']}t")
 
-            if contest_data['costlimit'] and contest_data['costlimit'] > 0:
+            if contest_data.get('costlimit') and contest_data['costlimit'] > 0:
                 if not silent:
                     user_cost = await textTools.getIntResponse(ctx, "Enter the in-game **Cost** of your vehicle:")
                     stats['base_cost'] = user_cost
-                if stats['base_cost'] > contest_data['costlimit']:
-                    warnings.append(f"Cost: {stats['base_cost']} > Limit {contest_data['costlimit']}")
+                if stats.get('base_cost', 0) > contest_data['costlimit']:
+                    warnings.append(f"Cost: {stats.get('base_cost', 0)} > Limit {contest_data['costlimit']}")
 
-            # D. Violation Check (Replacing old "Submit anyway?" flow)
+            # D. Violation Check
             if not silent: await msg.delete()
 
             if warnings:
@@ -604,8 +633,6 @@ class contestFunctions(commands.Cog):
                         await ctx.send(embed=fail_embed)
                     return False
                 else:
-                    # Permitted violations (Leniency)
-                    # We continue, but we'll append warnings to the final messages
                     pass
 
             # E. ENTRY LIMIT & BUMP LOGIC
@@ -615,6 +642,10 @@ class contestFunctions(commands.Cog):
                    ORDER BY submission_date ASC;''',
                 [stats['owner_id'], contest_id]
             )
+
+            # 4. Safeguard in case DB returns None instead of empty list
+            if user_entries is None:
+                user_entries = []
 
             overwrite_target_id = None
             for entry in user_entries:
@@ -632,7 +663,7 @@ class contestFunctions(commands.Cog):
                     )
             else:
                 if entry_limit > 0 and len(user_entries) >= entry_limit:
-                    oldest_entry = user_entries[0]  # Sorted ASC, so index 0 is oldest
+                    oldest_entry = user_entries[0]
                     await self.bot.sql.databaseExecuteDynamic(
                         '''UPDATE blueprint_stats SET host_id = 0 WHERE vehicle_id = $1;''',
                         [oldest_entry['vehicle_id']]
@@ -667,10 +698,13 @@ class contestFunctions(commands.Cog):
             gif_file = None
             sent_msg = None
             try:
-                if "0.2" in bp_json["header"]["gameVersion"]:
-                    await bp_attachment.seek(0)
-                    baked_data = await self.bot.analyzer.bakeGeometryV2(bp_attachment)
-                    mesh = baked_data["meshes"][0]["meshData"]["mesh"]
+                if "0.2" in game_version:
+                    # 5. Removed the broken await bp_attachment.seek(0)
+                    baked_data = await self.bot.analyzer.bakeGeometryV3(ctx, bp_attachment)
+                    if baked_data and "meshes" in baked_data and len(baked_data["meshes"]) > 0:
+                        mesh = baked_data["meshes"][0]["meshData"]["mesh"]
+                    else:
+                        mesh = bp_json["meshes"][0]["meshData"]["mesh"]
                 else:
                     mesh = bp_json["meshes"][0]["meshData"]["mesh"]
 
