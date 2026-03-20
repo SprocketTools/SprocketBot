@@ -771,6 +771,121 @@ class contestFunctions(commands.Cog):
     # ----------------------------------------------------------------------------------
     # VIEWING & DOWNLOAD
     # ----------------------------------------------------------------------------------
+
+    @commands.command(name="contestRules", aliases=["rules"], description="View the rules and requirements for an active contest.")
+    async def contestRules(self, ctx: commands.Context):
+        # 1. AUTO-DETECT CONTEST
+        contest_records = await self.bot.sql.databaseFetchdictDynamic(
+            '''SELECT * FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
+            [ctx.channel.id]
+        )
+
+        contest_data = contest_records[0] if (isinstance(contest_records, list) and len(contest_records) > 0) else None
+
+        # 2. IF NOT IN A CONTEST CHANNEL, OFFER THE DROPDOWN
+        if not contest_data:
+            await ctx.send("Let's pull up the rules for a specific contest:")
+            contest_id = await self._pick_contest(ctx)
+            if not contest_id: return
+
+            contest_records = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT * FROM contests WHERE contest_id = $1 AND serverID = $2;''',
+                [contest_id, ctx.guild.id]
+            )
+            contest_data = contest_records[0] if (
+                        isinstance(contest_records, list) and len(contest_records) > 0) else None
+
+            if not contest_data:
+                return await ctx.send("❌ Error: Could not load the selected contest data.")
+
+        # 3. BUILD THE EMBED
+        embed = discord.Embed(title=f"📜 Rules: {contest_data.get('name', 'Unknown')}", color=discord.Color.blue())
+
+        if contest_data.get('description'):
+            embed.description = contest_data['description']
+
+        if contest_data.get('ruleslink'):
+            embed.description = f"{embed.description or ''}\n\n[📖 Extended Rules Document]({contest_data['ruleslink']})"
+
+        # --- General Constraints ---
+        general = []
+        if contest_data.get('era'): general.append(f"**Era:** {contest_data['era']}")
+        if contest_data.get('weightlimit'): general.append(f"**Max Weight:** {contest_data['weightlimit']}t")
+        if contest_data.get('costlimit'): general.append(f"**Max Cost:** {contest_data['costlimit']}")
+
+        entry_limit = contest_data.get('entrylimit', 0)
+        general.append(f"**Max Entries:** {entry_limit if entry_limit > 0 else 'Unlimited'}")
+        general.append(f"**Allowed Violations:** {contest_data.get('violationlimit', 0)}")
+
+        if general:
+            embed.add_field(name="General Constraints", value="\n".join(general), inline=False)
+
+        # --- Mobility & Dimensions ---
+        mobility = []
+        c_min = contest_data.get('crewmin', 0)
+        c_max = contest_data.get('crewmax', 0)
+        if c_max > 0 or c_min > 0:
+            if c_max > 0:
+                mobility.append(f"**Crew:** {c_min} to {c_max} members")
+            else:
+                mobility.append(f"**Crew:** Min {c_min} members")
+
+        if contest_data.get('minhpt'): mobility.append(f"**Min Power-to-Weight:** {contest_data['minhpt']} hp/t")
+        if contest_data.get('groundpressuremax'): mobility.append(
+            f"**Max Ground Pressure:** {contest_data['groundpressuremax']}")
+        if contest_data.get('hullheightmin'): mobility.append(f"**Min Hull Height:** {contest_data['hullheightmin']}m")
+        if contest_data.get('hullwidthmax'): mobility.append(f"**Max Hull Width:** {contest_data['hullwidthmax']}m")
+        if contest_data.get('torsionbarlengthmin'): mobility.append(
+            f"**Min Torsion Bar Length:** {contest_data['torsionbarlengthmin']}m")
+        if contest_data.get('beltwidthmin'): mobility.append(
+            f"**Min Track Belt Width:** {contest_data['beltwidthmin']}m")
+        if contest_data.get('allowhvss') is not None: mobility.append(
+            f"**HVSS Allowed:** {'Yes' if contest_data['allowhvss'] else 'No'}")
+
+        if mobility:
+            embed.add_field(name="Mobility & Dimensions", value="\n".join(mobility), inline=True)
+
+        # --- Firepower & Armor ---
+        combat = []
+        if contest_data.get('caliberlimit'): combat.append(
+            f"**Max Gun Caliber (Legacy):** {contest_data['caliberlimit']}mm")
+
+        cal_min = contest_data.get('caliber_min', 0)
+        cal_max = contest_data.get('caliber_max', 0)
+        if cal_max > 0 or cal_min > 0:
+            if cal_max > 0 and cal_min > 0:
+                combat.append(f"**Caliber:** {cal_min}mm - {cal_max}mm")
+            elif cal_min > 0:
+                combat.append(f"**Min Caliber:** {cal_min}mm")
+            elif cal_max > 0:
+                combat.append(f"**Max Caliber:** {cal_max}mm")
+
+        prop_min = contest_data.get('prop_min', 0)
+        prop_max = contest_data.get('prop_max', 0)
+        if prop_max > 0 or prop_min > 0:
+            if prop_max > 0 and prop_min > 0:
+                combat.append(f"**Propellant Length:** {prop_min}mm - {prop_max}mm")
+            elif prop_min > 0:
+                combat.append(f"**Min Propellant:** {prop_min}mm")
+            elif prop_max > 0:
+                combat.append(f"**Max Propellant:** {prop_max}mm")
+
+        if contest_data.get('barrel_limit_m'): combat.append(
+            f"**Max Barrel Length:** {contest_data['barrel_limit_m']}m")
+        if contest_data.get('armormax'): combat.append(f"**Max Effective Armor:** {contest_data['armormax']}mm")
+
+        if combat:
+            embed.add_field(name="Firepower & Armor", value="\n".join(combat), inline=True)
+
+        # --- Deadline ---
+        if contest_data.get('deadline'):
+            dl = contest_data['deadline']
+            # Uses Discord's dynamic timestamp feature! Shows exact local time to the user, plus a relative countdown (e.g., "in 2 days")
+            embed.add_field(name="Deadline", value=f"<t:{int(dl.timestamp())}:F>\n(<t:{int(dl.timestamp())}:R>)",
+                            inline=False)
+
+        await ctx.send(embed=embed)
+
     @commands.command(name="viewAllEntries", description="List ALL entries for a contest")
     async def viewAllEntries(self, ctx: commands.Context):
         # Now returns ID
