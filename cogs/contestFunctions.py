@@ -772,7 +772,8 @@ class contestFunctions(commands.Cog):
     # VIEWING & DOWNLOAD
     # ----------------------------------------------------------------------------------
 
-    @commands.command(name="contestRules", aliases=["rules"], description="View the rules and requirements for an active contest.")
+    @commands.command(name="contestRules",
+                      description="View the rules and requirements for an active contest.")
     async def contestRules(self, ctx: commands.Context):
         # 1. AUTO-DETECT CONTEST
         contest_records = await self.bot.sql.databaseFetchdictDynamic(
@@ -785,21 +786,24 @@ class contestFunctions(commands.Cog):
         # 2. IF NOT IN A CONTEST CHANNEL, OFFER THE DROPDOWN
         if not contest_data:
             await ctx.send("Let's pull up the rules for a specific contest:")
-            contest_id = await self._pick_contest(ctx)
-            if not contest_id: return
+
+            # Using your restored UI picker!
+            contest_id = await self._pick_contest(ctx, False)
+            if not contest_id:
+                return
 
             contest_records = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT * FROM contests WHERE contest_id = $1 AND serverID = $2;''',
                 [contest_id, ctx.guild.id]
             )
-            contest_data = contest_records[0] if (
-                        isinstance(contest_records, list) and len(contest_records) > 0) else None
 
-            if not contest_data:
+            if not contest_records:
                 return await ctx.send("❌ Error: Could not load the selected contest data.")
 
+            contest_data = contest_records[0]
+
         # 3. BUILD THE EMBED
-        embed = discord.Embed(title=f"📜 Rules: {contest_data.get('name', 'Unknown')}", color=discord.Color.blue())
+        embed = discord.Embed(title=f"📜 Rules: {contest_data.get('name') or 'Unknown'}", color=discord.Color.blue())
 
         if contest_data.get('description'):
             embed.description = contest_data['description']
@@ -813,17 +817,19 @@ class contestFunctions(commands.Cog):
         if contest_data.get('weightlimit'): general.append(f"**Max Weight:** {contest_data['weightlimit']}t")
         if contest_data.get('costlimit'): general.append(f"**Max Cost:** {contest_data['costlimit']}")
 
-        entry_limit = contest_data.get('entrylimit', 0)
+        # Safely handle None values for integers
+        entry_limit = contest_data.get('entrylimit') or 0
         general.append(f"**Max Entries:** {entry_limit if entry_limit > 0 else 'Unlimited'}")
-        general.append(f"**Allowed Violations:** {contest_data.get('violationlimit', 0)}")
+        general.append(f"**Allowed Violations:** {contest_data.get('violationlimit') or 0}")
 
         if general:
             embed.add_field(name="General Constraints", value="\n".join(general), inline=False)
 
         # --- Mobility & Dimensions ---
         mobility = []
-        c_min = contest_data.get('crewmin', 0)
-        c_max = contest_data.get('crewmax', 0)
+        c_min = contest_data.get('crewmin') or 0
+        c_max = contest_data.get('crewmax') or 0
+
         if c_max > 0 or c_min > 0:
             if c_max > 0:
                 mobility.append(f"**Crew:** {c_min} to {c_max} members")
@@ -850,8 +856,9 @@ class contestFunctions(commands.Cog):
         if contest_data.get('caliberlimit'): combat.append(
             f"**Max Gun Caliber (Legacy):** {contest_data['caliberlimit']}mm")
 
-        cal_min = contest_data.get('caliber_min', 0)
-        cal_max = contest_data.get('caliber_max', 0)
+        cal_min = contest_data.get('caliber_min') or 0
+        cal_max = contest_data.get('caliber_max') or 0
+
         if cal_max > 0 or cal_min > 0:
             if cal_max > 0 and cal_min > 0:
                 combat.append(f"**Caliber:** {cal_min}mm - {cal_max}mm")
@@ -860,8 +867,9 @@ class contestFunctions(commands.Cog):
             elif cal_max > 0:
                 combat.append(f"**Max Caliber:** {cal_max}mm")
 
-        prop_min = contest_data.get('prop_min', 0)
-        prop_max = contest_data.get('prop_max', 0)
+        prop_min = contest_data.get('prop_min') or 0
+        prop_max = contest_data.get('prop_max') or 0
+
         if prop_max > 0 or prop_min > 0:
             if prop_max > 0 and prop_min > 0:
                 combat.append(f"**Propellant Length:** {prop_min}mm - {prop_max}mm")
@@ -880,7 +888,7 @@ class contestFunctions(commands.Cog):
         # --- Deadline ---
         if contest_data.get('deadline'):
             dl = contest_data['deadline']
-            # Uses Discord's dynamic timestamp feature! Shows exact local time to the user, plus a relative countdown (e.g., "in 2 days")
+            # Uses Discord's dynamic timestamp feature! Shows exact local time to the user, plus a relative countdown
             embed.add_field(name="Deadline", value=f"<t:{int(dl.timestamp())}:F>\n(<t:{int(dl.timestamp())}:R>)",
                             inline=False)
 
@@ -1063,19 +1071,35 @@ class contestFunctions(commands.Cog):
 
         contests = await self.bot.sql.databaseFetchdictDynamic(query, [ctx.guild.id])
 
-        if not contests:
-            await ctx.send("No contests found.")
+        if not contests or not isinstance(contests, list) or len(contests) == 0:
+            await ctx.send("❌ No active contests were found on this server.")
             return None
 
-        contest_names = [c['name'] for c in contests]
-        selected_name = await ctx.bot.ui.getChoiceFromList(ctx, contest_names, "Select a contest:")
+        try:
+            # Force names to strings just in case someone named their contest a pure number
+            contest_names = [str(c['name']) for c in contests]
+            selected_name = await ctx.bot.ui.getChoiceFromList(ctx, contest_names, "Select a contest:")
 
-        if not selected_name: return None
+            if not selected_name:
+                await ctx.send("❌ Menu timed out or was cancelled.")
+                return None
 
-        for c in contests:
-            if c['name'] == selected_name:
-                return c['contest_id']
-        return None
+            # THE FIX: Extract the string if Discord wrapped it in a list!
+            if isinstance(selected_name, list):
+                selected_name = selected_name[0]
+
+            for c in contests:
+                if str(c['name']).strip() == str(selected_name).strip():
+                    return c['contest_id']
+
+            # Anti-Freeze: If it STILL doesn't match, tell us why!
+            await ctx.send(f"❌ Error: Could not match the selection '{selected_name}' to the database.")
+            return None
+
+        except Exception as e:
+            print(f"Dropdown Menu Error: {e}")
+            await ctx.send("An error occurred while generating the contest menu.")
+            return None
 
     async def _check_manager(self, ctx: commands.Context):
         if ctx.author.id == ctx.guild.owner_id or ctx.author.guild_permissions.manage_guild or ctx.author.id == self.bot.ownerid:
