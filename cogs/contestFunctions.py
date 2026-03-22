@@ -15,12 +15,12 @@ from typing import Union
 from cogs.textTools import textTools
 
 CHAOS_VEHICLE_TYPES = {
-    "Tankette": {"weight": (2.0, 5.0), "caliber": (12, 37)},
+    "Tankette": {"weight": (2.0, 5.0), "caliber": (20, 37)},
     "Light Tank": {"weight": (5.0, 15.0), "caliber": (20, 50)},
     "Medium Tank": {"weight": (15.0, 35.0), "caliber": (50, 88)},
     "Heavy Tank": {"weight": (35.0, 65.0), "caliber": (85, 122)},
     "Super Heavy Tank": {"weight": (65.0, 150.0), "caliber": (105, 183)},
-    "Armored Car": {"weight": (2.0, 15.0), "caliber": (12, 50)},
+    "Armored Car": {"weight": (2.0, 15.0), "caliber": (20, 47)},
     "Tank Destroyer": {"weight": (10.0, 50.0), "caliber": (75, 152)},
     "SPG": {"weight": (10.0, 40.0), "caliber": (105, 183)}
 }
@@ -47,87 +47,68 @@ class contestFunctions(commands.Cog):
         except Exception as e:
             print(f"Stats table sync error: {e}")
 
-        # 2. Main Contests Table
+        # 2. Main Contests Table (WITH ALL NEW COLUMNS)
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contests;''')
         await self.bot.sql.databaseExecute('''
-                    CREATE TABLE IF NOT EXISTS contests (
-                        contest_id BIGINT PRIMARY KEY,
-                        name VARCHAR,
-                        serverID BIGINT,
-                        ownerID BIGINT,
-                        description VARCHAR,
-                        rulesLink VARCHAR,
-                        status BOOLEAN,
-                        deadline TIMESTAMP,
-                        costlimit BIGINT,
-                        weightLimit REAL,
-                        era VARCHAR,
-                        crewMin INT,
-                        crewMax INT,
-                        hullHeightMin REAL,
-                        hullWidthMax REAL,
-                        torsionBarLengthMin REAL,
-                        allowHVSS BOOLEAN,
-                        beltWidthMin REAL,
-                        groundPressureMax REAL,
-                        minHPT REAL,
-                        caliberLimit REAL,
-                        armorMax REAL,
-                        submission_channel_id BIGINT,
-                        log_channel_id BIGINT,
-                        entryLimit INT DEFAULT 0,
-                        violationLimit INT DEFAULT 0,
-                        caliber_min FLOAT DEFAULT 0,
-                        caliber_max FLOAT DEFAULT 0,
-                        prop_min FLOAT DEFAULT 0,
-                        prop_max FLOAT DEFAULT 0,
-                        barrel_limit_m FLOAT DEFAULT 0
-                    );
-                ''')
+                        CREATE TABLE IF NOT EXISTS contests (
+                            contest_id BIGINT PRIMARY KEY,
+                            name VARCHAR,
+                            serverID BIGINT,
+                            ownerID BIGINT,
+                            description VARCHAR,
+                            rulesLink VARCHAR,
+                            status BOOLEAN,
+                            deadline TIMESTAMP,
+                            costlimit BIGINT,
+                            weightLimit REAL,
+                            era VARCHAR,
+                            crewMin INT,
+                            crewMax INT,
+                            hullHeightMin REAL,
+                            hullWidthMax REAL,
+                            torsionBarLengthMin REAL,
+                            allowHVSS BOOLEAN,
+                            beltWidthMin REAL,
+                            groundPressureMax REAL,
+                            minHPT REAL,
+                            caliberLimit REAL,
+                            armorMax REAL,
+                            submission_channel_id BIGINT,
+                            log_channel_id BIGINT,
+                            entryLimit INT DEFAULT 0,
+                            violationLimit INT DEFAULT 0,
+                            caliber_min FLOAT DEFAULT 0,
+                            caliber_max FLOAT DEFAULT 0,
+                            prop_min FLOAT DEFAULT 0,
+                            prop_max FLOAT DEFAULT 0,
+                            barrel_limit_m FLOAT DEFAULT 0,
+                            chaos_level INT DEFAULT 0,
+                            chaos_vehicle_types VARCHAR,
+                            ai_companion BOOLEAN DEFAULT FALSE,
+                            ai_prompt VARCHAR
+                        );
+                    ''')
 
         # 3. User Chaos Rolls Table (NEW)
         await self.bot.sql.databaseExecute('''
-                    CREATE TABLE IF NOT EXISTS user_chaos_rolls (
-                        user_id BIGINT,
-                        contest_id BIGINT,
-                        target_weight REAL,
-                        gun_count INT,
-                        vehicle_type VARCHAR,
-                        target_caliber REAL,
-                        min_fuel REAL,
-                        PRIMARY KEY (user_id, contest_id)
-                    );
-                ''')
+                        CREATE TABLE IF NOT EXISTS user_chaos_rolls (
+                            user_id BIGINT,
+                            contest_id BIGINT,
+                            target_weight REAL,
+                            gun_count INT,
+                            vehicle_type VARCHAR,
+                            target_caliber REAL,
+                            min_fuel REAL,
+                            PRIMARY KEY (user_id, contest_id)
+                        );
+                    ''')
 
-        # 3. Migrations
-        columns_to_add = [
-            ("status", "BOOLEAN"), ("deadline", "TIMESTAMP"), ("rulesLink", "VARCHAR"),
-            ("description", "VARCHAR"), ("costlimit", "BIGINT"), ("weightLimit", "REAL"),
-            ("era", "VARCHAR"), ("crewMin", "INT"), ("crewMax", "INT"),
-            ("hullHeightMin", "REAL"), ("hullWidthMax", "REAL"), ("torsionBarLengthMin", "REAL"),
-            ("allowHVSS", "BOOLEAN"), ("beltWidthMin", "REAL"), ("groundPressureMax", "REAL"),
-            ("minHPT", "REAL"), ("caliberLimit", "REAL"), ("armorMax", "REAL"),
-            ("submission_channel_id", "BIGINT"), ("log_channel_id", "BIGINT"),
-            ("entryLimit", "INT"), ("violationLimit", "INT")
-        ]
-
-        print("--- Running Contest DB Migrations ---")
-        for col_name, col_type in columns_to_add:
-            try:
-                await self.bot.sql.databaseExecute(
-                    f'''ALTER TABLE contests ADD COLUMN IF NOT EXISTS {col_name} {col_type};''')
-            except Exception:
-                pass
-
+        # 4. Cleanup old deprecated tables
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contestcategories;''')
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contest_entries;''')
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contestsubmissions;''')
 
         await ctx.send("Done! Contest system ready.")
-
-        # ----------------------------------------------------------------------------------
-        # MANAGEMENT: Create and Edit Contests
-        # ----------------------------------------------------------------------------------
 
     @commands.command(name="createContest", description="Start a new building contest")
     async def createContest(self, ctx: commands.Context):
@@ -687,21 +668,21 @@ class contestFunctions(commands.Cog):
                 # Weight (+/- 0.5t allowance)
                 target_w = user_roll['target_weight']
                 if declared_weight < (target_w - 0.5) or declared_weight > (target_w + 0.5):
-                    warnings.append(f"Chaos Weight: {declared_weight:.2f}t is outside your target {target_w}t (±0.5t)")
+                    warnings.append(f"Weight: {declared_weight:.2f}t is outside your target {target_w}t (±0.5t)")
 
                 # Gun Count
                 if actual_guns != user_roll['gun_count']:
                     warnings.append(
-                        f"Chaos Guns: Found {actual_guns} cannons, but your roll requires exactly {user_roll['gun_count']}")
+                        f"Guns: Found {actual_guns} cannons, but your roll requires exactly {user_roll['gun_count']}")
 
                 # Caliber (Allowing a 1.5mm float tolerance for game rounding)
                 target_c = user_roll['target_caliber']
                 if abs(actual_cal - target_c) > 1.5:
-                    warnings.append(f"Chaos Caliber: {actual_cal}mm does not match your required {target_c}mm")
+                    warnings.append(f"Caliber: {actual_cal}mm does not match your required {target_c}mm")
 
                 # Fuel
                 if actual_fuel < user_roll['min_fuel']:
-                    warnings.append(f"Chaos Fuel: {actual_fuel}L < Your Minimum {user_roll['min_fuel']}L")
+                    warnings.append(f"Fuel: {actual_fuel}L < Your Minimum {user_roll['min_fuel']}L")
 
             # ==========================================================
             # 4. STANDARD GLOBAL ENFORCEMENT
