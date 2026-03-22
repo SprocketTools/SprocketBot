@@ -961,7 +961,7 @@ class contestFunctions(commands.Cog):
 
             embed.add_field(name="Classification", value=f"**Vehicle Type:** {user_roll['vehicle_type']}", inline=False)
 
-            primary = f"**Target Weight:** {user_roll['target_weight']}t (±0.5t)\n**Min Fuel Capacity:** {user_roll['min_fuel']} L"
+            primary = f"**Target Weight:** {round(user_roll['target_weight'], 2)}t (±0.5t)\n**Min Fuel Capacity:** {user_roll['min_fuel']} L"
             embed.add_field(name="Chassis Specs", value=primary, inline=True)
 
             armament = f"**Required Guns:** {user_roll['gun_count']}\n**Required Caliber:** {user_roll['target_caliber']}mm"
@@ -972,32 +972,39 @@ class contestFunctions(commands.Cog):
                 embed.add_field(name="Deadline", value=f"<t:{int(dl.timestamp())}:F>\n(<t:{int(dl.timestamp())}:R>)",
                                 inline=False)
 
-            return await ctx.send(content=f"<@{ctx.author.id}>", embed=embed)
+            await ctx.send(content=f"<@{ctx.author.id}>", embed=embed)
             # We RETURN here so the standard global embed below doesn't print!
 
         # =====================================================================
         # 4. STANDARD GLOBAL RULES EMBED (Fallback)
         # =====================================================================
-        embed = discord.Embed(title=f"📜 Rules: {contest_data.get('name') or 'Unknown'}", color=discord.Color.blue())
+        # THE FIX: Normalize keys to lowercase to bypass database case-sensitivity!
+        c_data = {k.lower(): v for k, v in contest_data.items()}
 
-        if contest_data.get('description'): embed.description = contest_data['description']
-        if contest_data.get(
-            'ruleslink'): embed.description = f"{embed.description or ''}\n\n[📖 Extended Rules Document]({contest_data['ruleslink']})"
+        embed = discord.Embed(title=f"📜 Rules: {c_data.get('name') or 'Unknown'}", color=discord.Color.blue())
+
+        desc_text = c_data.get('description')
+        if desc_text and len(str(desc_text)) > 6:
+            embed.description = str(desc_text)
+
+        rules_text = c_data.get('ruleslink')
+        if rules_text and len(str(rules_text)) > 6:
+            embed.description = f"{embed.description or ''}\n\n[📖 Extended Rules Document]({rules_text})"
 
         general = []
-        if contest_data.get('era'): general.append(f"**Era:** {contest_data['era']}")
-        if contest_data.get('weightlimit'): general.append(f"**Max Weight:** {contest_data['weightlimit']}t")
-        if contest_data.get('costlimit'): general.append(f"**Max Cost:** {contest_data['costlimit']}")
+        if c_data.get('era'): general.append(f"**Era:** {c_data['era']}")
+        if c_data.get('weightlimit'): general.append(f"**Max Weight:** {c_data['weightlimit']}t")
+        if c_data.get('costlimit'): general.append(f"**Max Cost:** {c_data['costlimit']}")
 
-        entry_limit = contest_data.get('entrylimit') or 0
+        entry_limit = c_data.get('entrylimit') or 0
         general.append(f"**Max Entries:** {entry_limit if entry_limit > 0 else 'Unlimited'}")
-        general.append(f"**Allowed Violations:** {contest_data.get('violationlimit') or 0}")
-
+        general.append(f"**Allowed Violations:** {c_data.get('violationlimit') or 0}")
+        print(len("\n".join(general)))
         if general: embed.add_field(name="General Constraints", value="\n".join(general), inline=False)
 
         mobility = []
-        c_min = contest_data.get('crewmin') or 0
-        c_max = contest_data.get('crewmax') or 0
+        c_min = c_data.get('crewmin') or 0
+        c_max = c_data.get('crewmax') or 0
 
         if c_max > 0 or c_min > 0:
             if c_max > 0:
@@ -1005,26 +1012,24 @@ class contestFunctions(commands.Cog):
             else:
                 mobility.append(f"**Crew:** Min {c_min} members")
 
-        if contest_data.get('minhpt'): mobility.append(f"**Min Power-to-Weight:** {contest_data['minhpt']} hp/t")
-        if contest_data.get('groundpressuremax'): mobility.append(
-            f"**Max Ground Pressure:** {contest_data['groundpressuremax']}")
-        if contest_data.get('hullheightmin'): mobility.append(f"**Min Hull Height:** {contest_data['hullheightmin']}m")
-        if contest_data.get('hullwidthmax'): mobility.append(f"**Max Hull Width:** {contest_data['hullwidthmax']}m")
-        if contest_data.get('torsionbarlengthmin'): mobility.append(
-            f"**Min Torsion Bar Length:** {contest_data['torsionbarlengthmin']}m")
-        if contest_data.get('beltwidthmin'): mobility.append(
-            f"**Min Track Belt Width:** {contest_data['beltwidthmin']}m")
-        if contest_data.get('allowhvss') is not None: mobility.append(
-            f"**HVSS Allowed:** {'Yes' if contest_data['allowhvss'] else 'No'}")
+        if c_data.get('minhpt'): mobility.append(f"**Min Power-to-Weight:** {c_data['minhpt']} hp/t")
+        if c_data.get('groundpressuremax'): mobility.append(
+            f"**Max Ground Pressure:** {c_data['groundpressuremax']}")
+        if c_data.get('hullheightmin'): mobility.append(f"**Min Hull Height:** {c_data['hullheightmin']}m")
+        if c_data.get('hullwidthmax'): mobility.append(f"**Max Hull Width:** {c_data['hullwidthmax']}m")
+        if c_data.get('torsionbarlengthmin'): mobility.append(
+            f"**Min Torsion Bar Length:** {c_data['torsionbarlengthmin']}m")
+        if c_data.get('beltwidthmin'): mobility.append(f"**Min Track Belt Width:** {c_data['beltwidthmin']}m")
+        if c_data.get('allowhvss') is not None: mobility.append(
+            f"**HVSS Allowed:** {'Yes' if c_data['allowhvss'] else 'No'}")
 
         if mobility: embed.add_field(name="Mobility & Dimensions", value="\n".join(mobility), inline=True)
 
         combat = []
-        if contest_data.get('caliberlimit'): combat.append(
-            f"**Max Gun Caliber (Legacy):** {contest_data['caliberlimit']}mm")
+        if c_data.get('caliberlimit'): combat.append(f"**Max Gun Caliber (Legacy):** {c_data['caliberlimit']}mm")
 
-        cal_min = contest_data.get('caliber_min') or 0
-        cal_max = contest_data.get('caliber_max') or 0
+        cal_min = c_data.get('caliber_min') or 0
+        cal_max = c_data.get('caliber_max') or 0
 
         if cal_max > 0 or cal_min > 0:
             if cal_max > 0 and cal_min > 0:
@@ -1034,8 +1039,8 @@ class contestFunctions(commands.Cog):
             elif cal_max > 0:
                 combat.append(f"**Max Caliber:** {cal_max}mm")
 
-        prop_min = contest_data.get('prop_min') or 0
-        prop_max = contest_data.get('prop_max') or 0
+        prop_min = c_data.get('prop_min') or 0
+        prop_max = c_data.get('prop_max') or 0
 
         if prop_max > 0 or prop_min > 0:
             if prop_max > 0 and prop_min > 0:
@@ -1045,14 +1050,13 @@ class contestFunctions(commands.Cog):
             elif prop_max > 0:
                 combat.append(f"**Max Propellant:** {prop_max}mm")
 
-        if contest_data.get('barrel_limit_m'): combat.append(
-            f"**Max Barrel Length:** {contest_data['barrel_limit_m']}m")
-        if contest_data.get('armormax'): combat.append(f"**Max Effective Armor:** {contest_data['armormax']}mm")
+        if c_data.get('barrel_limit_m'): combat.append(f"**Max Barrel Length:** {c_data['barrel_limit_m']}m")
+        if c_data.get('armormax'): combat.append(f"**Max Effective Armor:** {c_data['armormax']}mm")
 
         if combat: embed.add_field(name="Firepower & Armor", value="\n".join(combat), inline=True)
 
-        if contest_data.get('deadline'):
-            dl = contest_data['deadline']
+        if c_data.get('deadline'):
+            dl = c_data['deadline']
             embed.add_field(name="Deadline", value=f"<t:{int(dl.timestamp())}:F>\n(<t:{int(dl.timestamp())}:R>)",
                             inline=False)
 
