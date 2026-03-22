@@ -656,8 +656,10 @@ class contestFunctions(commands.Cog):
             actual_guns = 0
             for bp in bp_json.get("blueprints", []):
                 bp_type = str(bp.get("type", "")).lower()
-                if "cannon" in bp_type:
+                # THE FIX: Only count the literal barrel ("cannon"), ignore "cannonbreech" or "cannonmount"
+                if bp_type == "cannon":
                     actual_guns += 1
+
             if actual_guns == 0:
                 actual_guns = 1  # Failsafe assumption for custom mantlets
 
