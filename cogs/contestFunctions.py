@@ -8,11 +8,22 @@ import asyncio
 import os
 import random
 import zipfile
+import random
 import io
 import pandas as pd
 from typing import Union
 from cogs.textTools import textTools
 
+CHAOS_VEHICLE_TYPES = {
+    "Tankette": {"weight": (2.0, 5.0), "caliber": (12, 37)},
+    "Light Tank": {"weight": (5.0, 15.0), "caliber": (20, 50)},
+    "Medium Tank": {"weight": (15.0, 35.0), "caliber": (50, 88)},
+    "Heavy Tank": {"weight": (35.0, 65.0), "caliber": (85, 122)},
+    "Super Heavy Tank": {"weight": (65.0, 150.0), "caliber": (105, 183)},
+    "Armored Car": {"weight": (2.0, 15.0), "caliber": (12, 50)},
+    "Tank Destroyer": {"weight": (10.0, 50.0), "caliber": (75, 152)},
+    "SPG": {"weight": (10.0, 40.0), "caliber": (105, 183)}
+}
 
 class contestFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
@@ -74,6 +85,20 @@ class contestFunctions(commands.Cog):
                     );
                 ''')
 
+        # 3. User Chaos Rolls Table (NEW)
+        await self.bot.sql.databaseExecute('''
+                    CREATE TABLE IF NOT EXISTS user_chaos_rolls (
+                        user_id BIGINT,
+                        contest_id BIGINT,
+                        target_weight REAL,
+                        gun_count INT,
+                        vehicle_type VARCHAR,
+                        target_caliber REAL,
+                        min_fuel REAL,
+                        PRIMARY KEY (user_id, contest_id)
+                    );
+                ''')
+
         # 3. Migrations
         columns_to_add = [
             ("status", "BOOLEAN"), ("deadline", "TIMESTAMP"), ("rulesLink", "VARCHAR"),
@@ -129,6 +154,19 @@ class contestFunctions(commands.Cog):
 
         # New: Violation Limit
         vio_lim = await textTools.getIntResponse(ctx, "Max Rule Violations allowed (0 for strict):")
+
+        # --- CHAOS MODE SETTINGS ---
+        chaos_level = await textTools.getIntResponse(ctx,"Enable Randomized Vehicle Stats? Enter a randomization level from 1 to 10 (Enter `0` to disable randomization):")
+
+        # Clamp the value between 0 and 10 for math safety
+        chaos_level = max(0, min(10, chaos_level))
+
+        chaos_vehicle_types = ""
+
+        # Only ask the follow-up questions if they actually enabled Chaos Mode!
+        if chaos_level > 0:
+            type_list = ", ".join(list(CHAOS_VEHICLE_TYPES.keys()))
+            chaos_vehicle_types = await textTools.getResponse(ctx,f"Enter the **allowed Vehicle Types** for randomization, separated by semicolons (or type 'All').\n*(Available types: {type_list})*")
 
         # 3. Channels
         submission_channel_id = 0
@@ -188,10 +226,10 @@ class contestFunctions(commands.Cog):
 
         # 5. Insert
         await self.bot.sql.databaseExecuteDynamic(
-            '''INSERT INTO contests (contest_id, name, serverID, ownerID, description, rulesLink, status, deadline, weightLimit, costlimit, submission_channel_id, log_channel_id, entryLimit, violationLimit) 
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 0, $13);''',
+            '''INSERT INTO contests (contest_id, name, serverID, ownerID, description, rulesLink, status, deadline, weightLimit, costlimit, submission_channel_id, log_channel_id, entryLimit, violationLimit, prop_max, barrel_limit_m, chaos_level, chaos_vehicle_types) 
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 0, $13, $14, $15, $16, $17);''',
             [contest_id, name, ctx.guild.id, ctx.author.id, desc, rules, True, deadline, weight_lim, cost_lim,
-             submission_channel_id, log_channel_id, vio_lim]
+             submission_channel_id, log_channel_id, vio_lim, 0.0, 0.0, chaos_level, chaos_vehicle_types]
         )
 
         formatted_date = deadline.strftime("%B %d, %Y")
@@ -610,19 +648,121 @@ class contestFunctions(commands.Cog):
             clean_name = bp_attachment.filename.replace('.blueprint', '').replace('_', ' ').strip()
             stats['vehicle_name'] = clean_name
 
-            # C. Rules Check
+            # C. Rules Check & Chaos Enforcement
             warnings = []
-            declared_weight = stats.get('tank_weight', 0) / 1000.0
-            if contest_data.get('weightlimit') and contest_data['weightlimit'] > 0:
-                if declared_weight > contest_data['weightlimit']:
-                    warnings.append(f"Weight: {declared_weight:.2f}t > Limit {contest_data['weightlimit']}t")
 
+            # --- 1. FETCH CHAOS ROLL ---
+            user_roll = None
+            if contest_data.get('chaos_level') and contest_data['chaos_level'] > 0:
+                user_records = await self.bot.sql.databaseFetchdictDynamic(
+                    '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
+                    [stats['owner_id'], contest_id]
+                )
+                if not user_records:
+                    if not silent:
+                        await msg.delete()
+                        await ctx.send(
+                            "❌ **Wait!** This contest uses Randomized Stats. You must roll your unique requirements first by typing `-rules` in this channel before submitting.")
+                    return False
+                user_roll = user_records[0]
+
+            # --- 2. GATHER ACTUAL STATS ---
+            declared_weight = stats.get('tank_weight', 0) / 1000.0
+            actual_cal = stats.get('caliber', 0)
+            actual_fuel = stats.get('fuel_tank_capacity', 0)
+
+            # Safely count the number of cannons directly from the blueprint structure
+            actual_guns = 0
+            for bp in bp_json.get("blueprints", []):
+                bp_type = str(bp.get("type", "")).lower()
+                if "cannon" in bp_type:
+                    actual_guns += 1
+            if actual_guns == 0:
+                actual_guns = 1  # Failsafe assumption for custom mantlets
+
+            # ==========================================================
+            # 3. CHAOS MODE ENFORCEMENT (Overrides Global Limits)
+            # ==========================================================
+            if user_roll:
+                # Weight (+/- 0.5t allowance)
+                target_w = user_roll['target_weight']
+                if declared_weight < (target_w - 0.5) or declared_weight > (target_w + 0.5):
+                    warnings.append(f"Chaos Weight: {declared_weight:.2f}t is outside your target {target_w}t (±0.5t)")
+
+                # Gun Count
+                if actual_guns != user_roll['gun_count']:
+                    warnings.append(
+                        f"Chaos Guns: Found {actual_guns} cannons, but your roll requires exactly {user_roll['gun_count']}")
+
+                # Caliber (Allowing a 1.5mm float tolerance for game rounding)
+                target_c = user_roll['target_caliber']
+                if abs(actual_cal - target_c) > 1.5:
+                    warnings.append(f"Chaos Caliber: {actual_cal}mm does not match your required {target_c}mm")
+
+                # Fuel
+                if actual_fuel < user_roll['min_fuel']:
+                    warnings.append(f"Chaos Fuel: {actual_fuel}L < Your Minimum {user_roll['min_fuel']}L")
+
+            # ==========================================================
+            # 4. STANDARD GLOBAL ENFORCEMENT
+            # ==========================================================
+
+            # Only enforce global weight/caliber if Chaos Mode is NOT active for this user
+            if not user_roll:
+                if contest_data.get('weightlimit') and contest_data['weightlimit'] > 0:
+                    if declared_weight > contest_data['weightlimit']:
+                        warnings.append(f"Weight: {declared_weight:.2f}t > Limit {contest_data['weightlimit']}t")
+
+                if contest_data.get('caliber_min') and contest_data['caliber_min'] > 0:
+                    if actual_cal < contest_data['caliber_min']:
+                        warnings.append(f"Caliber: {actual_cal}mm < Minimum {contest_data['caliber_min']}mm")
+
+                if contest_data.get('caliber_max') and contest_data['caliber_max'] > 0:
+                    if actual_cal > contest_data['caliber_max']:
+                        warnings.append(f"Caliber: {actual_cal}mm > Limit {contest_data['caliber_max']}mm")
+
+            # Cost and remaining global stats apply to EVERYONE
             if contest_data.get('costlimit') and contest_data['costlimit'] > 0:
                 if not silent:
                     user_cost = await textTools.getIntResponse(ctx, "Enter the in-game **Cost** of your vehicle:")
                     stats['base_cost'] = user_cost
                 if stats.get('base_cost', 0) > contest_data['costlimit']:
-                    warnings.append(f"Cost: {stats.get('base_cost', 0)} > Limit {contest_data['costlimit']}")
+                    warnings.append(f"Cost: ${stats.get('base_cost', 0):,} > Limit ${contest_data['costlimit']:,}")
+
+            prop = stats.get('prop_len', 0)
+            if contest_data.get('prop_min') and contest_data['prop_min'] > 0:
+                if prop < contest_data['prop_min']: warnings.append(
+                    f"Propellant: {prop}mm < Minimum {contest_data['prop_min']}mm")
+            if contest_data.get('prop_max') and contest_data['prop_max'] > 0:
+                if prop > contest_data['prop_max']: warnings.append(
+                    f"Propellant: {prop}mm > Limit {contest_data['prop_max']}mm")
+
+            barrel = stats.get('gun_len', 0)
+            if contest_data.get('barrel_limit_m') and contest_data['barrel_limit_m'] > 0:
+                if barrel > contest_data['barrel_limit_m']: warnings.append(
+                    f"Barrel Length: {barrel:.2f}m > Limit {contest_data['barrel_limit_m']}m")
+
+            # --- Mobility & Dimensions ---
+            crew = stats.get('crew_count', 0)
+            if contest_data.get('crewmin') and contest_data['crewmin'] > 0:
+                if crew < contest_data['crewmin']: warnings.append(f"Crew: {crew} < Minimum {contest_data['crewmin']}")
+            if contest_data.get('crewmax') and contest_data['crewmax'] > 0:
+                if crew > contest_data['crewmax']: warnings.append(f"Crew: {crew} > Limit {contest_data['crewmax']}")
+
+            hpt = stats.get('hpt', 0)
+            if contest_data.get('minhpt') and contest_data['minhpt'] > 0:
+                if hpt < contest_data['minhpt']: warnings.append(
+                    f"Power-to-Weight: {hpt:.1f} < Minimum {contest_data['minhpt']} hp/t")
+
+            gp = stats.get('ground_pressure', 0)
+            if contest_data.get('groundpressuremax') and contest_data['groundpressuremax'] > 0:
+                if gp > contest_data['groundpressuremax']: warnings.append(
+                    f"Ground Pressure: {gp:.2f} > Limit {contest_data['groundpressuremax']}")
+
+            w_width = stats.get('tank_width', 0)
+            if contest_data.get('hullwidthmax') and contest_data['hullwidthmax'] > 0:
+                if w_width > contest_data['hullwidthmax']: warnings.append(
+                    f"Width: {w_width:.2f}m > Limit {contest_data['hullwidthmax']}m")
 
             # D. Violation Check
             if not silent: await msg.delete()
@@ -772,7 +912,7 @@ class contestFunctions(commands.Cog):
     # VIEWING & DOWNLOAD
     # ----------------------------------------------------------------------------------
 
-    @commands.command(name="contestRules",
+    @commands.command(name="contestRules", aliases=["rules"],
                       description="View the rules and requirements for an active contest.")
     async def contestRules(self, ctx: commands.Context):
         # 1. AUTO-DETECT CONTEST
@@ -786,46 +926,94 @@ class contestFunctions(commands.Cog):
         # 2. IF NOT IN A CONTEST CHANNEL, OFFER THE DROPDOWN
         if not contest_data:
             await ctx.send("Let's pull up the rules for a specific contest:")
-
-            # Using your restored UI picker!
             contest_id = await self._pick_contest(ctx, False)
-            if not contest_id:
-                return
+            if not contest_id: return
 
             contest_records = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT * FROM contests WHERE contest_id = $1 AND serverID = $2;''',
                 [contest_id, ctx.guild.id]
             )
-
             if not contest_records:
                 return await ctx.send("❌ Error: Could not load the selected contest data.")
-
             contest_data = contest_records[0]
 
-        # 3. BUILD THE EMBED
+        # =====================================================================
+        # 3. RANDOMIZED STATS INTERCEPT
+        # =====================================================================
+        if contest_data.get('chaos_level') and contest_data['chaos_level'] > 0:
+            contest_id = contest_data['contest_id']
+
+            # Check if this user already has assigned stats
+            user_records = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
+                [ctx.author.id, contest_id]
+            )
+
+            user_roll = user_records[0] if (isinstance(user_records, list) and len(user_records) > 0) else None
+
+            # If they don't have stats yet, generate and save them!
+            if not user_roll:
+                status_msg = await ctx.send("🎲 **Generating your unique randomized vehicle requirements...**")
+
+                new_stats = self._generate_chaos_roll(contest_data['chaos_level'],
+                                                      contest_data.get('chaos_vehicle_types', ''))
+
+                await self.bot.sql.databaseExecuteDynamic(
+                    '''INSERT INTO user_chaos_rolls (user_id, contest_id, target_weight, gun_count, vehicle_type, target_caliber, min_fuel)
+                       VALUES ($1, $2, $3, $4, $5, $6, $7);''',
+                    [ctx.author.id, contest_id, new_stats['target_weight'], new_stats['gun_count'],
+                     new_stats['vehicle_type'], new_stats['target_caliber'], new_stats['min_fuel']]
+                )
+
+                # Fetch it back to guarantee we have the exact database record
+                user_records = await self.bot.sql.databaseFetchdictDynamic(
+                    '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
+                    [ctx.author.id, contest_id]
+                )
+                user_roll = user_records[0]
+                await status_msg.delete()
+
+            # --- BUILD THE PERSONALIZED EMBED ---
+            embed = discord.Embed(title=f"🎲 Your Official Requirements: {contest_data.get('name')}",
+                                  color=discord.Color.purple())
+            embed.description = f"This contest uses **Randomized Vehicle Stats** (Level {contest_data['chaos_level']}). These are your permanent, unique design constraints!\n\n*(You must also adhere to any global rules set by the host).*\""
+
+            embed.add_field(name="Classification", value=f"**Vehicle Type:** {user_roll['vehicle_type']}", inline=False)
+
+            primary = f"**Target Weight:** {user_roll['target_weight']}t (±0.5t)\n**Min Fuel Capacity:** {user_roll['min_fuel']} L"
+            embed.add_field(name="Chassis Specs", value=primary, inline=True)
+
+            armament = f"**Required Guns:** {user_roll['gun_count']}\n**Required Caliber:** {user_roll['target_caliber']}mm"
+            embed.add_field(name="Armament", value=armament, inline=True)
+
+            if contest_data.get('deadline'):
+                dl = contest_data['deadline']
+                embed.add_field(name="Deadline", value=f"<t:{int(dl.timestamp())}:F>\n(<t:{int(dl.timestamp())}:R>)",
+                                inline=False)
+
+            return await ctx.send(content=f"<@{ctx.author.id}>", embed=embed)
+            # We RETURN here so the standard global embed below doesn't print!
+
+        # =====================================================================
+        # 4. STANDARD GLOBAL RULES EMBED (Fallback)
+        # =====================================================================
         embed = discord.Embed(title=f"📜 Rules: {contest_data.get('name') or 'Unknown'}", color=discord.Color.blue())
 
-        if contest_data.get('description'):
-            embed.description = contest_data['description']
+        if contest_data.get('description'): embed.description = contest_data['description']
+        if contest_data.get(
+            'ruleslink'): embed.description = f"{embed.description or ''}\n\n[📖 Extended Rules Document]({contest_data['ruleslink']})"
 
-        if contest_data.get('ruleslink'):
-            embed.description = f"{embed.description or ''}\n\n[📖 Extended Rules Document]({contest_data['ruleslink']})"
-
-        # --- General Constraints ---
         general = []
         if contest_data.get('era'): general.append(f"**Era:** {contest_data['era']}")
         if contest_data.get('weightlimit'): general.append(f"**Max Weight:** {contest_data['weightlimit']}t")
         if contest_data.get('costlimit'): general.append(f"**Max Cost:** {contest_data['costlimit']}")
 
-        # Safely handle None values for integers
         entry_limit = contest_data.get('entrylimit') or 0
         general.append(f"**Max Entries:** {entry_limit if entry_limit > 0 else 'Unlimited'}")
         general.append(f"**Allowed Violations:** {contest_data.get('violationlimit') or 0}")
 
-        if general:
-            embed.add_field(name="General Constraints", value="\n".join(general), inline=False)
+        if general: embed.add_field(name="General Constraints", value="\n".join(general), inline=False)
 
-        # --- Mobility & Dimensions ---
         mobility = []
         c_min = contest_data.get('crewmin') or 0
         c_max = contest_data.get('crewmax') or 0
@@ -848,10 +1036,8 @@ class contestFunctions(commands.Cog):
         if contest_data.get('allowhvss') is not None: mobility.append(
             f"**HVSS Allowed:** {'Yes' if contest_data['allowhvss'] else 'No'}")
 
-        if mobility:
-            embed.add_field(name="Mobility & Dimensions", value="\n".join(mobility), inline=True)
+        if mobility: embed.add_field(name="Mobility & Dimensions", value="\n".join(mobility), inline=True)
 
-        # --- Firepower & Armor ---
         combat = []
         if contest_data.get('caliberlimit'): combat.append(
             f"**Max Gun Caliber (Legacy):** {contest_data['caliberlimit']}mm")
@@ -882,13 +1068,10 @@ class contestFunctions(commands.Cog):
             f"**Max Barrel Length:** {contest_data['barrel_limit_m']}m")
         if contest_data.get('armormax'): combat.append(f"**Max Effective Armor:** {contest_data['armormax']}mm")
 
-        if combat:
-            embed.add_field(name="Firepower & Armor", value="\n".join(combat), inline=True)
+        if combat: embed.add_field(name="Firepower & Armor", value="\n".join(combat), inline=True)
 
-        # --- Deadline ---
         if contest_data.get('deadline'):
             dl = contest_data['deadline']
-            # Uses Discord's dynamic timestamp feature! Shows exact local time to the user, plus a relative countdown
             embed.add_field(name="Deadline", value=f"<t:{int(dl.timestamp())}:F>\n(<t:{int(dl.timestamp())}:R>)",
                             inline=False)
 
@@ -1100,6 +1283,75 @@ class contestFunctions(commands.Cog):
             print(f"Dropdown Menu Error: {e}")
             await ctx.send("An error occurred while generating the contest menu.")
             return None
+
+    def _generate_chaos_roll(self, chaos_level: int, vehicle_types_str: str) -> dict:
+        """Generates a unique set of requirements based on vehicle class bounds."""
+        c_level = max(1, min(10, chaos_level))
+
+        # ==========================================
+        # 1. PRIMARY STATS (Independent)
+        # ==========================================
+
+        # Parse the allowed vehicle types. If empty or invalid, allow all of them!
+        available_types = list(CHAOS_VEHICLE_TYPES.keys())
+        if vehicle_types_str:
+            parsed_types = [t.strip() for t in str(vehicle_types_str).split(';') if t.strip() in CHAOS_VEHICLE_TYPES]
+            if parsed_types:
+                available_types = parsed_types
+
+        vehicle_type = random.choice(available_types)
+        limits = CHAOS_VEHICLE_TYPES[vehicle_type]
+
+        # WEIGHT ROLL
+        w_min, w_max = limits["weight"]
+        w_mid = (w_max + w_min) / 2.0
+        # Chaos 1 = 10% of range (near the midpoint), Chaos 10 = 100% of range (could be anything)
+        w_range = (w_max - w_min) * (c_level / 10.0)
+        target_weight = round(random.uniform(w_mid - w_range / 2, w_mid + w_range / 2), 1)
+
+        # GUN COUNT: 79% (1), 19% (2), 1% (3), 1% (4)
+        g_roll = random.randint(1, 100)
+        if g_roll <= 79:
+            gun_count = 1
+        elif g_roll <= 98:
+            gun_count = 2
+        elif g_roll <= 99:
+            gun_count = 3
+        else:
+            gun_count = 4
+
+        # ==========================================
+        # 2. SECONDARY STATS (Dependent on Primary)
+        # ==========================================
+
+        # BASE CALIBER CALCULATION: Proportional to weight, inversely proportional to gun count.
+        base_caliber = (target_weight * 2.5) / gun_count
+
+        # Apply chaos spread to the mathematical caliber
+        cal_variance = base_caliber * (c_level * 0.08)
+        raw_caliber = random.uniform(base_caliber - cal_variance, base_caliber + cal_variance)
+
+        # BOUNDARY CHECK: Clamp the raw caliber to the vehicle type's absolute limits
+        c_min, c_max = limits["caliber"]
+        clamped_caliber = max(c_min, min(c_max, raw_caliber))
+
+        # Snap to nearest common real-world caliber
+        common_calibers = [12, 15, 20, 25, 30, 37, 40, 47, 50, 57, 75, 76, 85, 88, 90, 100, 105, 120, 122, 128, 130,
+                           152, 155, 183]
+        target_caliber = min(common_calibers, key=lambda x: abs(x - clamped_caliber))
+
+        # MINIMUM FUEL: Scales up directly with the weight budget as a balancing penalty
+        fuel_variance = c_level * 0.03
+        fuel_multiplier = random.uniform(1.0 - fuel_variance, 1.0 + fuel_variance)
+        min_fuel = int((target_weight * 15) * fuel_multiplier)
+
+        return {
+            "target_weight": target_weight,
+            "gun_count": gun_count,
+            "vehicle_type": vehicle_type,
+            "target_caliber": target_caliber,
+            "min_fuel": min_fuel
+        }
 
     async def _check_manager(self, ctx: commands.Context):
         if ctx.author.id == ctx.guild.owner_id or ctx.author.guild_permissions.manage_guild or ctx.author.id == self.bot.ownerid:
