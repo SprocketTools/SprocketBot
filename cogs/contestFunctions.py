@@ -306,7 +306,7 @@ class contestFunctions(commands.Cog):
                 if sub == "Submission Channel":
                     chan = await textTools.getChannelResponse(ctx, "Mention new submission channel:")
                     if chan:
-                        overlap = await self.bot.sql.databaseFetchrowDynamic(
+                        overlap = await self.bot.sql.databaseFetchdictDynamic(
                             "SELECT name FROM contests WHERE submission_channel_id=$1 AND status=TRUE AND contest_id!=$2",
                             [chan, data['contest_id']])
                         if overlap:
