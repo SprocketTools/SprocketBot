@@ -912,7 +912,7 @@ class contestFunctions(commands.Cog):
     # VIEWING & DOWNLOAD
     # ----------------------------------------------------------------------------------
 
-    @commands.command(name="contestRules", aliases=["rules"],
+    @commands.command(name="contestRules",
                       description="View the rules and requirements for an active contest.")
     async def contestRules(self, ctx: commands.Context):
         # 1. AUTO-DETECT CONTEST
