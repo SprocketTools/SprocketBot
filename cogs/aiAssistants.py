@@ -292,7 +292,7 @@ class AIAssistants(commands.Cog):
                 # Handle Images
                 if att.content_type and att.content_type.startswith("image/"):
                     attachments.append(att)
-                    ai_model = "gemma"
+                    ai_model = "normal"
                     # Handle Text Files
                 elif att.filename.endswith(".txt") or (att.content_type and att.content_type.startswith("text/")):
                     try:

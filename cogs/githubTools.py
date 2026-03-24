@@ -216,7 +216,7 @@ class githubTools(commands.Cog):
         try:
             # Find all decals with a colon in the strippedname
             invalid_decals = [dict(row) for row in await self.bot.sql.databaseFetch(
-                f'''SELECT strippedname FROM imagecatalog WHERE strippedname LIKE '%"%';'''
+                f'''SELECT strippedname FROM imagecatalog WHERE strippedname LIKE '%"%' OR strippedname LIKE '%"%';'''
             )]
         except Exception as e:
             await ctx.send(f"An error occurred while querying the database: ```{e}```")
