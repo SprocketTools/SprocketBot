@@ -110,6 +110,80 @@ class contestFunctions(commands.Cog):
 
         await ctx.send("Done! Contest system ready.")
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot: return
+
+        # Ignore explicit bot commands so we don't double-trigger
+        if message.content.startswith('-'): return
+
+        # --- DEBUG 1 ---
+        # print(f"DEBUG: Message sent in {message.channel.name}")
+
+        contest_records = await self.bot.sql.databaseFetchdictDynamic(
+            '''SELECT * FROM contests WHERE submission_channel_id = $1 AND status = TRUE;''',
+            [message.channel.id]
+        )
+        if not contest_records: return
+
+        contest_data = {k.lower(): v for k, v in contest_records[0].items()}
+
+        # --- DEBUG 2 ---
+        print(f"DEBUG: Contest found ({contest_data.get('name')}). AI Enabled? {contest_data.get('ai_companion')}")
+
+        if not contest_data.get('ai_companion'): return
+
+        # ==========================================
+        # SCENARIO A: AUTO-SUBMIT BLUEPRINT
+        # ==========================================
+        bp_attachment = next((a for a in message.attachments if a.filename.endswith(".blueprint")), None)
+
+        if bp_attachment:
+            print(f"DEBUG: Blueprint attached! Processing {bp_attachment.filename}...")
+            ctx = await self.bot.get_context(message)
+            img_attachment = next(
+                (a for a in message.attachments if a.filename.lower().endswith(('.png', '.jpg', '.jpeg'))), None)
+
+            async with message.channel.typing():
+                try:
+                    success, stats, warnings, clean_name = await self._process_entry(ctx, message, bp_attachment,
+                                                                                     img_attachment, contest_data,
+                                                                                     silent=True)
+                    print(f"DEBUG: Validator finished. Success: {success}, Warnings: {len(warnings)}")
+                except Exception as e:
+                    print(f"DEBUG: Validator crashed! {e}")
+                    return
+
+                tank_data = {
+                    "name": clean_name,
+                    "weight": stats.get('tank_weight', 0) / 1000.0 if stats else 0,
+                    "cost": stats.get('base_cost', 0) if stats else 0,
+                    "warnings": warnings or [],
+                    "rejected": not success
+                }
+
+                print("DEBUG: Sending data to AITools...")
+                ai_text = await self._ask_gemma_judge(contest_data.get('ai_prompt'), message.author.display_name,
+                                                      contest_data, tank_data=tank_data)
+
+                print("DEBUG: AI Responded! Sending to Discord...")
+                await message.reply(ai_text)
+            return
+
+        # ==========================================
+        # SCENARIO B: CONVERSATIONAL CHAT
+        # ==========================================
+        if message.content:
+            print("DEBUG: Text message detected. Sending chat to AI...")
+            async with message.channel.typing():
+                ai_text = await self._ask_gemma_judge(
+                    ai_prompt=contest_data.get('ai_prompt'),
+                    user_name=message.author.display_name,
+                    contest_data=contest_data,
+                    user_message=message.content
+                )
+                await message.reply(ai_text)
+
     @commands.command(name="createContest", description="Start a new building contest")
     async def createContest(self, ctx: commands.Context):
         if not await self._check_manager(ctx): return
@@ -446,7 +520,9 @@ class contestFunctions(commands.Cog):
             "Min Belt Width": "beltwidthmin",
             "Allow HVSS?": "allowhvss",
             "Max Entries Per User": "entrylimit",
-            "Max Rule Violations": "violationlimit"
+            "Max Rule Violations": "violationlimit",
+            "Enable AI Judge?": "ai_companion",
+            "Set AI Persona Prompt": "ai_prompt"
         }
 
         selection = await ctx.bot.ui.getChoiceFromList(ctx, list(rules_map.keys()), "Select rule to modify:")
@@ -455,6 +531,46 @@ class contestFunctions(commands.Cog):
 
         if db_column == "allowhvss":
             val = await ctx.bot.ui.getYesNoChoice(ctx)
+
+            # --- NEW AI INPUT LOGIC ---
+        elif db_column == "ai_companion":
+            val = await ctx.bot.ui.getYesNoChoice(ctx)
+
+        elif db_column == "ai_prompt":
+            import os
+            import json
+
+            # 1. Scan the personas folder and load all valid JSONs
+            personas = {}
+            if not os.path.exists("personas"):
+                os.makedirs("personas")
+
+            for filename in os.listdir("personas"):
+                if filename.endswith(".json"):
+                    try:
+                        with open(os.path.join("personas", filename), "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            if "name" in data:
+                                personas[data["name"]] = data
+                    except Exception as e:
+                        print(f"Failed to load {filename}: {e}")
+
+            # 2. Build the dropdown options
+            options = list(personas.keys()) + ["✏️ Custom Prompt"]
+
+            # 3. Ask the host to pick one
+            choice = await ctx.bot.ui.getChoiceFromList(ctx, options, "Select an AI Persona for this contest:")
+            if not choice: return
+
+            # 4. Process and Serialize
+            if choice == "✏️ Custom Prompt":
+                val = await textTools.getResponse(ctx, "Enter the custom instructions for the AI Judge:")
+            else:
+                # Serialize the entire dictionary into a string so the DB can hold it!
+                val = json.dumps(personas[choice])
+                await ctx.send(f"✅ Persona successfully set to **{choice}**!")
+            # --------------------------
+
         elif db_column == "era":
             val = await ctx.bot.ui.getChoiceFromList(ctx, ["WWI", "Interwar", "Earlywar", "Midwar", "Latewar"],
                                                      "Select Era:")
@@ -578,7 +694,7 @@ class contestFunctions(commands.Cog):
             if not contest_data:
                 if not silent: await ctx.send(
                     "❌ No active contest found here. Make sure you are in the correct submission channel!")
-                return False
+                return False, {}, [], "Unknown"
 
             contest_id = contest_data.get('contest_id')
             contest_name = contest_data.get('name', 'Unknown')
@@ -590,7 +706,7 @@ class contestFunctions(commands.Cog):
                 async with session.get(bp_attachment.url) as resp:
                     if resp.status != 200:
                         if not silent: await ctx.send("Failed to download blueprint.")
-                        return False
+                        return False, {}, [], "Unknown"
                     file_bytes = await resp.read()
 
             # Save Locally
@@ -616,11 +732,11 @@ class contestFunctions(commands.Cog):
             # 3. Protect against analyzer returning None
             if not stats:
                 if not silent: await msg.edit(content="**Analysis Failed:** Could not read vehicle data.")
-                return False
+                return False, {}, [], "Unknown"
 
             if 'error' in stats and stats['error']:
                 if not silent: await msg.edit(content=f"**Analysis Failed:** {stats.get('error')}")
-                return False
+                return False, {}, [], "Unknown"
 
             stats['owner_id'] = message.author.id
             stats['host_id'] = contest_id
@@ -644,7 +760,7 @@ class contestFunctions(commands.Cog):
                         await msg.delete()
                         await ctx.send(
                             "❌ **Wait!** This contest uses Randomized Stats. You must roll your unique requirements first by typing `-rules` in this channel before submitting.")
-                    return False
+                    return False, stats, warnings, clean_name
                 user_roll = user_records[0]
 
             # --- 2. GATHER ACTUAL STATS ---
@@ -758,7 +874,7 @@ class contestFunctions(commands.Cog):
                         fail_embed.description = f"Found {len(warnings)} rule violations (Limit: {violation_limit})."
                         fail_embed.add_field(name="Issues", value="\n".join(warnings))
                         await ctx.send(embed=fail_embed)
-                    return False
+                    return False, stats, warnings, clean_name
                 else:
                     pass
 
@@ -889,7 +1005,7 @@ class contestFunctions(commands.Cog):
             print(f"Entry Processing Error: {e}")
             import traceback
             traceback.print_exc()
-            return False
+            return False, stats, warnings, clean_name
 
     # ----------------------------------------------------------------------------------
     # VIEWING & DOWNLOAD
@@ -1346,6 +1462,64 @@ class contestFunctions(commands.Cog):
         await ctx.send("You need **Manage Server** permissions.")
         return False
 
+    async def _ask_gemma_judge(self, ai_prompt: str, user_name: str, contest_data: dict, user_message: str = None,
+                               tank_data: dict = None):
+        """Builds the context dossier and passes it to the central AITools handler."""
+        try:
+            # 1. Safely decode the database string
+            persona_data = {}
+            try:
+                persona_data = json.loads(ai_prompt) if ai_prompt else {}
+            except Exception:
+                persona_data = {"base_persona": ai_prompt}
+
+            # 2. Extract fields
+            base_persona = persona_data.get("base_persona", "You are a sassy mechanical engineer judging tank designs.")
+            length_target = persona_data.get("length_target", "Keep it to 1-3 sentences.")
+
+            # 3. Build the core context prompt
+            prompt = f"Context: You are managing a contest named '{contest_data.get('name')}'. "
+            prompt += f"Max Weight: {contest_data.get('weightlimit')}t. Max Cost: {contest_data.get('costlimit')}.\n\n"
+
+            # Scenario A: Chatting
+            if user_message:
+                chat_style = persona_data.get("chat_style", "Answer their question briefly and in-character.")
+                prompt += f"User ({user_name}) asks: \"{user_message}\"\n"
+                prompt += f"Task: {chat_style} {length_target} Do not use markdown formatting.\nAI Response:"
+
+            # Scenario B: Tank Inspection
+            elif tank_data:
+                is_rejected = tank_data['rejected']
+                status = "REJECTED" if is_rejected else "ACCEPTED"
+                warnings = "\n".join(tank_data['warnings']) if tank_data['warnings'] else "None! Perfect."
+
+                reaction_style = persona_data.get("rejection_style") if is_rejected else persona_data.get(
+                    "acceptance_style")
+                if not reaction_style:
+                    reaction_style = "Provide a highly opinionated, in-character response declaring it accepted or rejected."
+
+                prompt += f"User ({user_name}) submitted a vehicle named '{tank_data['name']}'.\n"
+                prompt += f"Stats: {tank_data['weight']:.1f} tons, ${tank_data['cost']}.\n"
+                prompt += f"Rule Violations: {warnings}\n"
+                prompt += f"Final Status: {status}\n"
+                prompt += f"Task: {reaction_style} {length_target}\nAI Response:"
+
+            # 4. Hand off to your existing AITools!
+            # Using mode="gemma" to trigger your specific gemma-3-27b-it configuration
+
+            response_text = await self.bot.AI.get_response(
+                prompt=prompt,
+                instructions=base_persona,
+                mode="gemma",
+                temperature=0.8,
+                attachments=None
+            )
+
+            return response_text if response_text else "*(The inspector is currently unavailable. Try again later.)*"
+
+        except Exception as e:
+            print(f"Contest AI Builder Error: {e}")
+            return "*(The inspector is currently on a smoke break. Try again later.)*"
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(contestFunctions(bot))

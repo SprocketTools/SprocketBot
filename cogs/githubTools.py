@@ -235,7 +235,7 @@ class githubTools(commands.Cog):
 
         for decal in invalid_decals:
             old_stripped_name = decal['strippedname']
-            new_stripped_name = old_stripped_name.replace(":", "_")
+            new_stripped_name = old_stripped_name.replace(":", "_").replace("\"", "_")
 
             # Define all file paths
             old_catalog_path = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{old_stripped_name}"
