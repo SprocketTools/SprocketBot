@@ -150,6 +150,7 @@ class contestFunctions(commands.Cog):
                                                                                      img_attachment, contest_data,
                                                                                      silent=True)
                     print(f"DEBUG: Validator finished. Success: {success}, Warnings: {len(warnings)}")
+                    print(warnings)
                 except Exception as e:
                     print(f"DEBUG: Validator crashed! {e}")
                     return
@@ -166,6 +167,20 @@ class contestFunctions(commands.Cog):
                 ai_text = await self._ask_gemma_judge(contest_data.get('ai_prompt'), message.author.display_name,
                                                       contest_data, tank_data=tank_data)
 
+                if not success and warnings:
+                    # Format the warnings nicely for Discord (e.g., bullet points)
+                    formatted_warnings = "\n".join([f"{w}" for w in warnings])
+                    injection_string = f"\n```{formatted_warnings}```\n"
+
+                    # Inject it where the AI placed the tag
+                    if "[warnings]" in ai_text.lower():
+                        # Case-insensitive replace just in case the AI capitalized it
+                        import re
+                        ai_text = re.sub(r'\[warnings\]', injection_string, ai_text, flags=re.IGNORECASE)
+                    else:
+                        # Failsafe: The AI forgot the tag, so append it to the end
+                        ai_text += f"\n\n*(Automated Violation Report):*{injection_string}"
+
                 print("DEBUG: AI Responded! Sending to Discord...")
                 await message.reply(ai_text)
             return
@@ -174,13 +189,28 @@ class contestFunctions(commands.Cog):
         # SCENARIO B: CONVERSATIONAL CHAT
         # ==========================================
         if message.content:
-            print("DEBUG: Text message detected. Sending chat to AI...")
             async with message.channel.typing():
+
+                # 1. Secretly fetch the user's Chaos Roll if applicable
+                secret_context = ""
+                if contest_data.get('chaos_level') and contest_data['chaos_level'] > 0:
+                    user_records = await self.bot.sql.databaseFetchdictDynamic(
+                        '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
+                        [message.author.id, contest_data['contest_id']]
+                    )
+
+                    if user_records and len(user_records) > 0:
+                        roll = user_records[0]
+                        secret_context = f"\n\n[System Note: This user's specific randomized requirements are - Type: {roll['vehicle_type']}, Weight: {round(roll['target_weight'], 1)}t, Caliber: {roll['target_caliber']}mm, Guns: {roll['gun_count']}, Fuel: {roll['min_fuel']}L. If they ask about their rules or roll, tell them these exact numbers.]"
+                    else:
+                        secret_context = f"\n\n[System Note: This user has not received their randomized stats yet. Tell them to use your server's rules command to generate their vehicle requirements first.]"
+
+                # 2. Ask the AI, injecting the secret context at the end of the user's message
                 ai_text = await self._ask_gemma_judge(
                     ai_prompt=contest_data.get('ai_prompt'),
                     user_name=message.author.display_name,
                     contest_data=contest_data,
-                    user_message=message.content
+                    user_message=message.content + secret_context
                 )
                 await message.reply(ai_text)
 
@@ -786,21 +816,21 @@ class contestFunctions(commands.Cog):
                 # Weight (+/- 0.5t allowance)
                 target_w = user_roll['target_weight']
                 if declared_weight < (target_w - 0.5) or declared_weight > (target_w + 0.5):
-                    warnings.append(f"Weight: {declared_weight:.2f}t is outside your target {target_w}t (±0.5t)")
+                    warnings.append(f"Weight: {declared_weight:.2f}t is too far outside the target {(target_w + 0.5):.1f} - {(target_w - 0.5):.1f} ton weight")
 
                 # Gun Count
                 if actual_guns != user_roll['gun_count']:
                     warnings.append(
-                        f"Guns: Found {actual_guns} cannons, but your roll requires exactly {user_roll['gun_count']}")
+                        f"Guns: {actual_guns} guns were equipped, but {user_roll['gun_count']} are required")
 
                 # Caliber (Allowing a 1.5mm float tolerance for game rounding)
                 target_c = user_roll['target_caliber']
                 if abs(actual_cal - target_c) > 1.5:
-                    warnings.append(f"Caliber: {actual_cal}mm does not match your required {target_c}mm")
+                    warnings.append(f"Caliber: {actual_cal}mm does not match the required {int(target_c)}mm caliber")
 
                 # Fuel
                 if actual_fuel < user_roll['min_fuel']:
-                    warnings.append(f"Fuel: {actual_fuel}L < Your Minimum {user_roll['min_fuel']}L")
+                    warnings.append(f"Fuel: {int(actual_fuel)}L does not meet the minimum {int(user_roll['min_fuel'])}L capacity")
 
             # ==========================================================
             # 4. STANDARD GLOBAL ENFORCEMENT
@@ -1478,7 +1508,7 @@ class contestFunctions(commands.Cog):
             length_target = persona_data.get("length_target", "Keep it to 1-3 sentences.")
 
             # 3. Build the core context prompt
-            prompt = f"Context: You are managing a contest named '{contest_data.get('name')}'. "
+            prompt = f"Context: You are collecting tank design blueprints as part of a critical '{contest_data.get('name')}'."
             prompt += f"Max Weight: {contest_data.get('weightlimit')}t. Max Cost: {contest_data.get('costlimit')}.\n\n"
 
             # Scenario A: Chatting
@@ -1490,8 +1520,7 @@ class contestFunctions(commands.Cog):
             # Scenario B: Tank Inspection
             elif tank_data:
                 is_rejected = tank_data['rejected']
-                status = "REJECTED" if is_rejected else "ACCEPTED"
-                warnings = "\n".join(tank_data['warnings']) if tank_data['warnings'] else "None! Perfect."
+                num_warnings = len(tank_data['warnings']) if tank_data['warnings'] else 0
 
                 reaction_style = persona_data.get("rejection_style") if is_rejected else persona_data.get(
                     "acceptance_style")
@@ -1499,10 +1528,13 @@ class contestFunctions(commands.Cog):
                     reaction_style = "Provide a highly opinionated, in-character response declaring it accepted or rejected."
 
                 prompt += f"User ({user_name}) submitted a vehicle named '{tank_data['name']}'.\n"
-                prompt += f"Stats: {tank_data['weight']:.1f} tons, ${tank_data['cost']}.\n"
-                prompt += f"Rule Violations: {warnings}\n"
-                prompt += f"Final Status: {status}\n"
-                prompt += f"Task: {reaction_style} {length_target}\nAI Response:"
+
+                if is_rejected:
+                    prompt += f"Final Status: REJECTED ({num_warnings} rule violations).\n"
+                    prompt += f"Task: {reaction_style} {length_target} You MUST include the exact text `[warnings]` somewhere in your response where the list of broken rules should go. Do not explain the rules yourself, just use the tag.\nAI Response:"
+                else:
+                    prompt += f"Final Status: ACCEPTED\n"
+                    prompt += f"Task: {reaction_style} {length_target}\nAI Response:"
 
             # 4. Hand off to your existing AITools!
             # Using mode="gemma" to trigger your specific gemma-3-27b-it configuration
