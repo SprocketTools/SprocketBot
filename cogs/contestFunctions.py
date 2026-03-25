@@ -189,23 +189,48 @@ class contestFunctions(commands.Cog):
         # SCENARIO B: CONVERSATIONAL CHAT
         # ==========================================
         if message.content:
-            async with message.channel.typing():
+            # Check if the user explicitly pinged the bot
+            is_pinged = self.bot.user in message.mentions
+            force_reply = is_pinged
+            secret_context = ""
 
-                # 1. Secretly fetch the user's Chaos Roll if applicable
-                secret_context = ""
-                if contest_data.get('chaos_level') and contest_data['chaos_level'] > 0:
-                    user_records = await self.bot.sql.databaseFetchdictDynamic(
-                        '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
-                        [message.author.id, contest_data['contest_id']]
+            # 1. Secretly fetch the user's Chaos Roll if applicable
+            if contest_data.get('chaos_level') and contest_data['chaos_level'] > 0:
+                user_records = await self.bot.sql.databaseFetchdictDynamic(
+                    '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
+                    [message.author.id, contest_data['contest_id']]
+                )
+
+                if user_records and len(user_records) > 0:
+                    roll = user_records[0]
+                    secret_context = f"\n\n[System Note: This user's specific randomized requirements are - Type: {roll['vehicle_type']}, Weight: {round(roll['target_weight'], 1)}t, Caliber: {roll['target_caliber']}mm, Guns: {roll['gun_count']}, Fuel: {roll['min_fuel']}L. If they ask about their rules or roll, tell them these exact numbers.]"
+                else:
+                    # --- THE AUTO-ROLL INTERCEPT ---
+                    force_reply = True  # ALWAYS reply when giving a new roll!
+                    new_stats = self._generate_chaos_roll(
+                        contest_data['chaos_level'],
+                        contest_data.get('chaos_vehicle_types', '')
                     )
 
-                    if user_records and len(user_records) > 0:
-                        roll = user_records[0]
-                        secret_context = f"\n\n[System Note: This user's specific randomized requirements are - Type: {roll['vehicle_type']}, Weight: {round(roll['target_weight'], 1)}t, Caliber: {roll['target_caliber']}mm, Guns: {roll['gun_count']}, Fuel: {roll['min_fuel']}L. If they ask about their rules or roll, tell them these exact numbers.]"
-                    else:
-                        secret_context = f"\n\n[System Note: This user has not received their randomized stats yet. Tell them to use your server's rules command to generate their vehicle requirements first.]"
+                    await self.bot.sql.databaseExecuteDynamic(
+                        '''INSERT INTO user_chaos_rolls (user_id, contest_id, target_weight, gun_count, vehicle_type, target_caliber, min_fuel)
+                           VALUES ($1, $2, $3, $4, $5, $6, $7);''',
+                        [message.author.id, contest_data['contest_id'], new_stats['target_weight'],
+                         new_stats['gun_count'],
+                         new_stats['vehicle_type'], new_stats['target_caliber'], new_stats['min_fuel']]
+                    )
 
-                # 2. Ask the AI, injecting the secret context at the end of the user's message
+                    secret_context = f"\n\n[System Note: This user did not have a vehicle assignment yet, so you just generated one for them! Their new permanent requirements are: Type: {new_stats['vehicle_type']}, Weight: {round(new_stats['target_weight'], 1)}t, Caliber: {new_stats['target_caliber']}mm, Guns: {new_stats['gun_count']}, Fuel: {new_stats['min_fuel']}L. Welcome them to the contest and excitedly (or aggressively) announce these specific requirements to them in your response!]"
+
+            # 2. THE CHATTER FILTER (RNG RATELIMIT)
+            # If it's not an important event and they didn't ping the bot, roll a 25% chance to reply.
+            if not force_reply:
+                # 75% chance to silently ignore casual chatter
+                if random.random() > 0.15:
+                    return
+
+            # 3. Ask the AI
+            async with message.channel.typing():
                 ai_text = await self._ask_gemma_judge(
                     ai_prompt=contest_data.get('ai_prompt'),
                     user_name=message.author.display_name,
