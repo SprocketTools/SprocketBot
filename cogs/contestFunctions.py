@@ -233,7 +233,7 @@ class contestFunctions(commands.Cog):
             # --- 3. THE CHATTER FILTER ---
             if not force_reply:
                 # 95% chance to silently ignore casual chatter
-                if random.random() > 0.05:
+                if random.random() > 0.03:
                     return
 
             # --- 4. ASK THE AI ---
