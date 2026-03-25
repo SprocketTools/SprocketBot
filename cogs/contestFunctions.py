@@ -1062,6 +1062,34 @@ class contestFunctions(commands.Cog):
             traceback.print_exc()
             return False, stats, warnings, clean_name
 
+    @commands.command(name="resetRoll", description="[Host] Clear a user's randomized stats so they can roll again.")
+    async def resetRoll(self, ctx: commands.Context, target: discord.Member = None):
+        if not await self._check_manager(ctx): return
+
+        # 1. Ask which contest we are managing
+        contest_id = await self._pick_contest(ctx)
+        if not contest_id: return
+
+        contest_data = await self.bot.sql.databaseFetchrowDynamic(
+            '''SELECT name, chaos_level FROM contests WHERE contest_id = $1 AND serverID = $2;''',
+            [contest_id, ctx.guild.id]
+        )
+
+        if not contest_data.get('chaos_level') or contest_data['chaos_level'] == 0:
+            return await ctx.send("❌ This contest does not have Randomized Stats (Chaos Mode) enabled.")
+
+        # 2. Default to the command author if no one is pinged
+        user_to_reset = target or ctx.author
+
+        # 3. Delete their record from the database
+        await self.bot.sql.databaseExecuteDynamic(
+            '''DELETE FROM user_chaos_rolls WHERE contest_id = $1 AND user_id = $2;''',
+            [contest_id, user_to_reset.id]
+        )
+
+        await ctx.send(
+            f"✅ Successfully cleared the Chaos Roll for **{user_to_reset.display_name}** in '{contest_data['name']}'!\n*(They can now type in the submission channel to trigger the AI to generate a brand new set of requirements).*")
+
     # ----------------------------------------------------------------------------------
     # VIEWING & DOWNLOAD
     # ----------------------------------------------------------------------------------
