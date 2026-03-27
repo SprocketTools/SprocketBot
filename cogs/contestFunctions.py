@@ -139,21 +139,37 @@ class contestFunctions(commands.Cog):
         bp_attachment = next((a for a in message.attachments if a.filename.endswith(".blueprint")), None)
 
         if bp_attachment:
-            print(f"DEBUG: Blueprint attached! Processing {bp_attachment.filename}...")
             ctx = await self.bot.get_context(message)
             img_attachment = next(
                 (a for a in message.attachments if a.filename.lower().endswith(('.png', '.jpg', '.jpeg'))), None)
+
+            # 1. Fetch persona data early to get the processing phrase
+            ai_prompt = contest_data.get('ai_prompt')
+            persona_data = {}
+            if ai_prompt:
+                try:
+                    persona_data = json.loads(ai_prompt)
+                except Exception:
+                    pass
+
+            processing_phrase = persona_data.get("processing_phrase", "Taking a look at this...")
+
+            # Send the initial confirmation message instantly
+            processing_msg = await message.reply(f"*( {processing_phrase} )*")
 
             async with message.channel.typing():
                 try:
                     success, stats, warnings, clean_name = await self._process_entry(ctx, message, bp_attachment,
                                                                                      img_attachment, contest_data,
                                                                                      silent=True)
-                    print(f"DEBUG: Validator finished. Success: {success}, Warnings: {len(warnings)}")
-                    print(warnings)
                 except Exception as e:
                     print(f"DEBUG: Validator crashed! {e}")
+                    await processing_msg.edit(content="❌ *(An error occurred while inspecting this blueprint.)*")
                     return
+
+                # --- VISUAL CONFIRMATION ---
+                await message.add_reaction('✅' if success else '❌')
+                status_header = "✅ **[OFFICIAL SUBMISSION ACCEPTED]**\n" if success else "❌ **[OFFICIAL SUBMISSION REJECTED]**\n"
 
                 tank_data = {
                     "name": clean_name,
@@ -163,45 +179,38 @@ class contestFunctions(commands.Cog):
                     "rejected": not success
                 }
 
-                print("DEBUG: Sending data to AITools...")
                 ai_text = await self._ask_gemma_judge(contest_data.get('ai_prompt'), message.author.display_name,
                                                       contest_data, tank_data=tank_data)
 
                 if not success and warnings:
-                    # Format the warnings nicely for Discord (e.g., bullet points)
-                    formatted_warnings = "\n".join([f"{w}" for w in warnings])
-                    injection_string = f"\n```{formatted_warnings}```\n"
+                    formatted_warnings = "\n".join([f"❌ **{w}**" for w in warnings])
+                    injection_string = f"\n\n{formatted_warnings}\n\n"
 
-                    # Inject it where the AI placed the tag
                     if "[warnings]" in ai_text.lower():
-                        # Case-insensitive replace just in case the AI capitalized it
                         import re
                         ai_text = re.sub(r'\[warnings\]', injection_string, ai_text, flags=re.IGNORECASE)
                     else:
-                        # Failsafe: The AI forgot the tag, so append it to the end
                         ai_text += f"\n\n*(Automated Violation Report):*{injection_string}"
 
-                print("DEBUG: AI Responded! Sending to Discord...")
-                await message.reply(ai_text)
+                # Edit the processing message with the final response
+                final_reply = f"{status_header}\n{ai_text}"
+                await processing_msg.edit(content=final_reply)
             return
 
         # ==========================================
         # SCENARIO B: CONVERSATIONAL CHAT
         # ==========================================
         if message.content:
-            # Check if the user explicitly pinged the bot
             is_pinged = self.bot.user in message.mentions
             force_reply = is_pinged
             secret_context = ""
 
-            # --- 1. PYTHON TEXT ANALYSIS (The Keyword Trigger) ---
-            # Look for context clues that they are asking for their assignment
             chat_lower = message.content.lower()
             keywords = ['rule', 'requirement', 'roll', 'stat', 'build', 'assignment', 'what do i', 'give me']
-            if any(k in chat_lower for k in keywords):
+            asking_for_stats = any(k in chat_lower for k in keywords)
+            if asking_for_stats:
                 force_reply = True
 
-            # --- 2. FETCH OR GENERATE STATS ---
             if contest_data.get('chaos_level') and contest_data['chaos_level'] > 0:
                 user_records = await self.bot.sql.databaseFetchdictDynamic(
                     '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
@@ -210,10 +219,16 @@ class contestFunctions(commands.Cog):
 
                 if user_records and len(user_records) > 0:
                     roll = user_records[0]
-                    # Instruct the AI to analyze the intent before revealing!
-                    secret_context = f"\n\n[System Note: This user's secret requirements are - Type: {roll['vehicle_type']}, Weight: {round(roll['target_weight'], 1)}t, Caliber: {roll['target_caliber']}mm, Guns: {roll['gun_count']}, Fuel: {roll['min_fuel']}L. ANALYZE THEIR MESSAGE: If they are explicitly asking for their rules, roll, or what to build, read these exact numbers to them. If they are just making conversation, reply normally in-character and DO NOT mention these numbers.]"
+                    if asking_for_stats:
+                        dm_success = await self._send_roll_dm(message.author, contest_data, roll)
+                        if dm_success:
+                            secret_context = "\n\n[System Note: The user asked for their vehicle requirements. You just sent the documents to their private direct messages (mailbox). Tell them aggressively/in-character to go check their mailbox! DO NOT state any numbers or vehicle types in this channel.]"
+                        else:
+                            secret_context = "\n\n[System Note: The user asked for their requirements, but their Discord DMs are closed! Yell at them in-character to open their mailbox so you can send the documents.]"
+                    else:
+                        secret_context = "\n\n[System Note: The user is just chatting. Reply in-character. Do NOT mention any of their specific vehicle stats.]"
                 else:
-                    force_reply = True  # ALWAYS reply when generating a new roll
+                    force_reply = True
                     new_stats = self._generate_chaos_roll(
                         contest_data['chaos_level'],
                         contest_data.get('chaos_vehicle_types', '')
@@ -227,16 +242,16 @@ class contestFunctions(commands.Cog):
                          new_stats['vehicle_type'], new_stats['target_caliber'], new_stats['min_fuel']]
                     )
 
-                    # Instruct the AI to withhold the numbers if they just said hello!
-                    secret_context = f"\n\n[System Note: You just secretly generated new contest requirements for this user: Type: {new_stats['vehicle_type']}, Weight: {round(new_stats['target_weight'], 1)}t, Caliber: {new_stats['target_caliber']}mm, Guns: {new_stats['gun_count']}. ANALYZE THEIR MESSAGE: If they are asking for an assignment, rules, or what to build, aggressively announce these specific numbers! If they are just saying hello or chatting, welcome them to the contest but DO NOT reveal the numbers yet.]"
+                    dm_success = await self._send_roll_dm(message.author, contest_data, new_stats)
+                    if dm_success:
+                        secret_context = "\n\n[System Note: This user did not have a vehicle assignment, so you just generated one and sent it to their private DMs. Welcome them to the contest and excitedly (or aggressively) tell them to check their mailbox for their assignment! DO NOT reveal the numbers in this channel.]"
+                    else:
+                        secret_context = "\n\n[System Note: You tried to assign this new user a vehicle, but their Discord DMs are closed! Tell them they must open their mailbox/DMs to receive their assignment.]"
 
-            # --- 3. THE CHATTER FILTER ---
             if not force_reply:
-                # 95% chance to silently ignore casual chatter
                 if random.random() > 0.03:
                     return
 
-            # --- 4. ASK THE AI ---
             async with message.channel.typing():
                 ai_text = await self._ask_gemma_judge(
                     ai_prompt=contest_data.get('ai_prompt'),
@@ -1440,6 +1455,43 @@ class contestFunctions(commands.Cog):
     # ----------------------------------------------------------------------------------
     # HELPERS
     # ----------------------------------------------------------------------------------
+
+    async def _send_roll_dm(self, user: discord.Member, contest_data: dict, roll: dict) -> bool:
+        """Attempts to DM the user their specific Chaos Roll requirements and global rules."""
+        try:
+            embed = discord.Embed(title=f"🎲 Your Official Requirements: {contest_data.get('name')}",
+                                  color=discord.Color.purple())
+
+            embed.description = f"This contest uses **Randomized Vehicle Stats** (Level {contest_data.get('chaos_level', 0)}). These are your unique design constraints!\n\n*(You must also adhere to the global rules listed below).*"
+
+            embed.add_field(name="Classification", value=f"**Vehicle Type:** {roll['vehicle_type']}", inline=False)
+
+            primary = f"**Target Weight:** {round(roll['target_weight'], 2)}t (±0.5t)\n**Min Fuel Capacity:** {roll['min_fuel']} L"
+            embed.add_field(name="Chassis Specs", value=primary, inline=True)
+
+            armament = f"**Required Guns:** {roll['gun_count']}\n**Required Caliber:** {roll['target_caliber']}mm"
+            embed.add_field(name="Armament", value=armament, inline=True)
+
+            # --- Extract Global Rules ---
+            c_data = {k.lower(): v for k, v in contest_data.items()}
+            global_rules = []
+            if c_data.get('weightlimit'): global_rules.append(f"**Max Weight:** {c_data['weightlimit']}t")
+            if c_data.get('costlimit'): global_rules.append(f"**Max Cost:** {c_data['costlimit']}")
+            if c_data.get('era'): global_rules.append(f"**Era:** {c_data['era']}")
+            vio_limit = c_data.get('violationlimit', 0)
+            global_rules.append(f"**Allowed Violations:** {'Strict (0)' if vio_limit == 0 else vio_limit}")
+
+            embed.add_field(name="Global Rules", value="\n".join(global_rules), inline=False)
+
+            if c_data.get('ruleslink') and str(c_data.get('ruleslink')).lower() != 'none':
+                embed.add_field(name="Extended Rules", value=f"[Read Full Rules Here]({c_data['ruleslink']})",
+                                inline=False)
+
+            await user.send(embed=embed)
+            return True
+        except discord.Forbidden:
+            return False  # Fails if they have server DMs turned off
+
     async def _pick_contest(self, ctx: commands.Context, only_active=True):
         query = '''SELECT name, contest_id FROM contests WHERE serverID = $1'''
         if only_active:
