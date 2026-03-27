@@ -858,6 +858,8 @@ class contestFunctions(commands.Cog):
                         await msg.delete()
                         await ctx.send(
                             "❌ **Wait!** This contest uses Randomized Stats. You must roll your unique requirements first by typing `-rules` in this channel before submitting.")
+                    warnings.append(
+                        "NO ASSIGNMENT FOUND: User must ask for their vehicle assignment before submitting a blueprint!")
                     return False, stats, warnings, clean_name
                 user_roll = user_records[0]
 
@@ -1137,8 +1139,7 @@ class contestFunctions(commands.Cog):
     # VIEWING & DOWNLOAD
     # ----------------------------------------------------------------------------------
 
-    @commands.command(name="contestRules",
-                      description="View the rules and requirements for an active contest.")
+    #@commands.command(name="contestRules", description="View the rules and requirements for an active contest.")
     async def contestRules(self, ctx: commands.Context):
         # 1. AUTO-DETECT CONTEST
         contest_records = await self.bot.sql.databaseFetchdictDynamic(
@@ -1538,7 +1539,7 @@ class contestFunctions(commands.Cog):
             # 3. FALLBACK: STANDARD EMBED DM
             # ==========================================
             print("DEBUG DM: Sending static Embed fallback...")
-            embed = discord.Embed(title=f"🎲 Your Official Requirements: {contest_data.get('name')}",
+            embed = discord.Embed(title=f"Your Official Requirements: {contest_data.get('name')}",
                                   color=discord.Color.purple())
             embed.description = f"This contest uses **Randomized Vehicle Stats** (Level {contest_data.get('chaos_level', 0)}). These are your unique design constraints!\n\n*(You must also adhere to the global rules listed below).*"
             embed.add_field(name="Classification", value=f"**Vehicle Type:** {roll['vehicle_type']}", inline=False)
