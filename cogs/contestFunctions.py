@@ -1716,7 +1716,7 @@ class contestFunctions(commands.Cog):
                 if not reaction_style:
                     reaction_style = "Provide a highly opinionated, in-character response declaring it accepted or rejected."
 
-                prompt += f"The competitor you are speaking to just submitted their vehicle named '{tank_data['name']}'.\n"
+                prompt += f"You are currently processing their '{tank_data['name']}' submission.\n"
 
                 if is_rejected:
                     prompt += f"Final Status: REJECTED ({num_warnings} rule violations).\n"
