@@ -155,7 +155,7 @@ class contestFunctions(commands.Cog):
             processing_phrase = persona_data.get("processing_phrase", "Taking a look at this...")
 
             # Send the initial confirmation message instantly
-            processing_msg = await message.reply(f"*( {processing_phrase} )*")
+            processing_msg = await message.reply(f"{processing_phrase}")
 
             async with message.channel.typing():
                 try:
@@ -169,7 +169,7 @@ class contestFunctions(commands.Cog):
 
                 # --- VISUAL CONFIRMATION ---
                 await message.add_reaction('✅' if success else '❌')
-                status_header = "✅ **[OFFICIAL SUBMISSION ACCEPTED]**\n" if success else "❌ **[OFFICIAL SUBMISSION REJECTED]**\n"
+                #status_header = "✅ **[OFFICIAL SUBMISSION ACCEPTED]**\n" if success else "❌ **[OFFICIAL SUBMISSION REJECTED]**\n"
 
                 tank_data = {
                     "name": clean_name,
@@ -183,7 +183,7 @@ class contestFunctions(commands.Cog):
                                                       contest_data, tank_data=tank_data)
 
                 if not success and warnings:
-                    formatted_warnings = "\n".join([f"❌ **{w}**" for w in warnings])
+                    formatted_warnings = "\n".join([f"{w}" for w in warnings])
                     injection_string = f"\n\n{formatted_warnings}\n\n"
 
                     if "[warnings]" in ai_text.lower():
@@ -193,7 +193,7 @@ class contestFunctions(commands.Cog):
                         ai_text += f"\n\n*(Automated Violation Report):*{injection_string}"
 
                 # Edit the processing message with the final response
-                final_reply = f"{status_header}\n{ai_text}"
+                final_reply = f"{ai_text}"
                 await processing_msg.edit(content=final_reply)
             return
 
@@ -1716,7 +1716,7 @@ class contestFunctions(commands.Cog):
                 if not reaction_style:
                     reaction_style = "Provide a highly opinionated, in-character response declaring it accepted or rejected."
 
-                prompt += f"User ({user_name}) submitted a vehicle named '{tank_data['name']}'.\n"
+                prompt += f"The competitor you are speaking to just submitted their vehicle named '{tank_data['name']}'.\n"
 
                 if is_rejected:
                     prompt += f"Final Status: REJECTED ({num_warnings} rule violations).\n"
