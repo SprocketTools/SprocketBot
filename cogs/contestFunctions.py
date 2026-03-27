@@ -201,65 +201,86 @@ class contestFunctions(commands.Cog):
         # SCENARIO B: CONVERSATIONAL CHAT
         # ==========================================
         if message.content:
-            is_pinged = self.bot.user in message.mentions
-            force_reply = is_pinged
-            secret_context = ""
+            try:
+                print("DEBUG CHAT: Starting Scenario B analysis...")
+                is_pinged = self.bot.user in message.mentions
+                force_reply = is_pinged
+                secret_context = ""
 
-            chat_lower = message.content.lower()
-            keywords = ['rule', 'requirement', 'roll', 'stat', 'build', 'assignment', 'what do i', 'give me']
-            asking_for_stats = any(k in chat_lower for k in keywords)
-            if asking_for_stats:
-                force_reply = True
-
-            if contest_data.get('chaos_level') and contest_data['chaos_level'] > 0:
-                user_records = await self.bot.sql.databaseFetchdictDynamic(
-                    '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
-                    [message.author.id, contest_data['contest_id']]
-                )
-
-                if user_records and len(user_records) > 0:
-                    roll = user_records[0]
-                    if asking_for_stats:
-                        dm_success = await self._send_roll_dm(message.author, contest_data, roll)
-                        if dm_success:
-                            secret_context = "\n\n[System Note: The user asked for their vehicle requirements. You just sent the documents to their private direct messages (mailbox). Tell them aggressively/in-character to go check their mailbox! DO NOT state any numbers or vehicle types in this channel.]"
-                        else:
-                            secret_context = "\n\n[System Note: The user asked for their requirements, but their Discord DMs are closed! Yell at them in-character to open their mailbox so you can send the documents.]"
-                    else:
-                        secret_context = "\n\n[System Note: The user is just chatting. Reply in-character. Do NOT mention any of their specific vehicle stats.]"
-                else:
+                chat_lower = message.content.lower()
+                keywords = ['rule', 'requirement', 'roll', 'stat', 'build', 'assignment', 'what do i', 'give me']
+                asking_for_stats = any(k in chat_lower for k in keywords)
+                if asking_for_stats:
                     force_reply = True
-                    new_stats = self._generate_chaos_roll(
-                        contest_data['chaos_level'],
-                        contest_data.get('chaos_vehicle_types', '')
+
+                print(f"DEBUG CHAT: Is Pinged? {is_pinged} | Asking for Stats? {asking_for_stats}")
+
+                if contest_data.get('chaos_level') and contest_data['chaos_level'] > 0:
+                    print("DEBUG CHAT: Chaos level > 0 detected. Checking DB for existing rolls...")
+                    user_records = await self.bot.sql.databaseFetchdictDynamic(
+                        '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
+                        [message.author.id, contest_data['contest_id']]
                     )
 
-                    await self.bot.sql.databaseExecuteDynamic(
-                        '''INSERT INTO user_chaos_rolls (user_id, contest_id, target_weight, gun_count, vehicle_type, target_caliber, min_fuel)
-                           VALUES ($1, $2, $3, $4, $5, $6, $7);''',
-                        [message.author.id, contest_data['contest_id'], new_stats['target_weight'],
-                         new_stats['gun_count'],
-                         new_stats['vehicle_type'], new_stats['target_caliber'], new_stats['min_fuel']]
-                    )
-
-                    dm_success = await self._send_roll_dm(message.author, contest_data, new_stats)
-                    if dm_success:
-                        secret_context = "\n\n[System Note: This user did not have a vehicle assignment, so you just generated one and sent it to their private DMs. Welcome them to the contest and excitedly (or aggressively) tell them to check their mailbox for their assignment! DO NOT reveal the numbers in this channel.]"
+                    if user_records and len(user_records) > 0:
+                        print("DEBUG CHAT: User already has a roll.")
+                        roll = user_records[0]
+                        if asking_for_stats:
+                            print("DEBUG CHAT: User asked for existing stats. Resending DM...")
+                            dm_success = await self._send_roll_dm(message.author, contest_data, roll)
+                            if dm_success:
+                                secret_context = "\n\n[System Note: The user asked for their vehicle requirements. You just sent the documents to their private direct messages (mailbox). Tell them aggressively/in-character to go check their mailbox! DO NOT state any numbers or vehicle types in this channel.]"
+                            else:
+                                secret_context = "\n\n[System Note: The user asked for their requirements, but their Discord DMs are closed! Yell at them in-character to open their mailbox so you can send the documents.]"
+                        else:
+                            secret_context = "\n\n[System Note: The user is just chatting. Reply in-character. Do NOT mention any of their specific vehicle stats.]"
                     else:
-                        secret_context = "\n\n[System Note: You tried to assign this new user a vehicle, but their Discord DMs are closed! Tell them they must open their mailbox/DMs to receive their assignment.]"
+                        print("DEBUG CHAT: No roll found. Generating new stats...")
+                        force_reply = True
+                        new_stats = self._generate_chaos_roll(
+                            contest_data['chaos_level'],
+                            contest_data.get('chaos_vehicle_types', '')
+                        )
 
-            if not force_reply:
-                if random.random() > 0.03:
-                    return
+                        print("DEBUG CHAT: New stats generated. Saving to DB...")
+                        await self.bot.sql.databaseExecuteDynamic(
+                            '''INSERT INTO user_chaos_rolls (user_id, contest_id, target_weight, gun_count, vehicle_type, target_caliber, min_fuel)
+                               VALUES ($1, $2, $3, $4, $5, $6, $7);''',
+                            [message.author.id, contest_data['contest_id'], new_stats['target_weight'],
+                             new_stats['gun_count'],
+                             new_stats['vehicle_type'], new_stats['target_caliber'], new_stats['min_fuel']]
+                        )
 
-            async with message.channel.typing():
-                ai_text = await self._ask_gemma_judge(
-                    ai_prompt=contest_data.get('ai_prompt'),
-                    user_name=message.author.display_name,
-                    contest_data=contest_data,
-                    user_message=message.content + secret_context
-                )
-                await message.reply(ai_text)
+                        print("DEBUG CHAT: Sending new roll DM...")
+                        dm_success = await self._send_roll_dm(message.author, contest_data, new_stats)
+                        if dm_success:
+                            secret_context = "\n\n[System Note: This user did not have a vehicle assignment, so you just generated one and sent it to their private DMs. Welcome them to the contest and excitedly (or aggressively) tell them to check their mailbox for their assignment! DO NOT reveal the numbers in this channel.]"
+                        else:
+                            secret_context = "\n\n[System Note: You tried to assign this new user a vehicle, but their Discord DMs are closed! Tell them they must open their mailbox/DMs to receive their assignment.]"
+
+                print(f"DEBUG CHAT: Proceeding to chatter filter. Force Reply = {force_reply}")
+                if not force_reply:
+                    rng = random.random()
+                    print(f"DEBUG CHAT: Casual chat RNG roll: {rng} (Needs <= 0.03 to proceed)")
+                    if rng > 0.03:
+                        print("DEBUG CHAT: RNG failed. Silently ignoring casual message.")
+                        return
+
+                print("DEBUG CHAT: Handing off to AI Engine for final channel reply...")
+                async with message.channel.typing():
+                    ai_text = await self._ask_gemma_judge(
+                        ai_prompt=contest_data.get('ai_prompt'),
+                        user_name=message.author.display_name,
+                        contest_data=contest_data,
+                        user_message=message.content + secret_context
+                    )
+                    await message.reply(ai_text)
+                    print("DEBUG CHAT: Success! Message replied to.")
+
+            except Exception as e:
+                print(f"CRITICAL ERROR IN SCENARIO B: {e}")
+                import traceback
+                traceback.print_exc()
 
     @commands.command(name="createContest", description="Start a new building contest")
     async def createContest(self, ctx: commands.Context):
@@ -1458,6 +1479,7 @@ class contestFunctions(commands.Cog):
 
     async def _send_roll_dm(self, user: discord.Member, contest_data: dict, roll: dict) -> bool:
         """Attempts to DM the user. If AI is enabled, sends a generated briefing. Otherwise, sends an embed."""
+        print("DEBUG DM: Starting _send_roll_dm...")
         try:
             # --- 1. Extract Global Rules cleanly ---
             c_data = {k.lower(): v for k, v in contest_data.items()}
@@ -1466,24 +1488,21 @@ class contestFunctions(commands.Cog):
             if c_data.get('costlimit'): global_rules.append(f"Max Cost: ${c_data['costlimit']:,}")
             if c_data.get('era'): global_rules.append(f"Era: {c_data['era']}")
             vio_limit = c_data.get('violationlimit', 0)
-            global_rules.append(f"Allowed Violations: {'Strict (0)' if vio_limit == 0 else vio_limit}")
+            global_rules.append(f"Allowed Violations: {'Strict' if vio_limit == 0 else vio_limit}")
 
             # ==========================================
             # 2. AI-GENERATED DM (If Enabled)
             # ==========================================
             if contest_data.get('ai_companion') and contest_data.get('ai_prompt'):
-
-                # Decode the persona to get the base instructions
+                print("DEBUG DM: AI Enabled! Building custom prompt...")
                 persona_data = {}
                 try:
                     persona_data = json.loads(contest_data['ai_prompt'])
                 except Exception:
                     persona_data = {"base_persona": contest_data['ai_prompt']}
 
-                base_persona = persona_data.get("base_persona",
-                                                "You are a sassy mechanical engineer judging tank designs.")
+                base_persona = persona_data.get("base_persona", "You are a sassy mechanical engineer.")
 
-                # Build a special prompt just for this private DM
                 prompt = f"Context: You are managing the '{contest_data.get('name')}' contest.\n"
                 prompt += f"Task: Write a direct, private message (DM) to the competitor '{user.display_name}'. "
                 prompt += f"You MUST explicitly give them these exact assigned vehicle requirements in your message:\n"
@@ -1500,7 +1519,7 @@ class contestFunctions(commands.Cog):
 
                 prompt += "Deliver this strictly in-character, as a private briefing or assignment hand-off. Make it entertaining but clearly state the numbers.\nAI Response:"
 
-                # Call the AI Engine directly
+                print("DEBUG DM: Requesting generation from AITools...")
                 ai_text = await self.bot.AI.get_response(
                     prompt=prompt,
                     instructions=base_persona,
@@ -1508,20 +1527,20 @@ class contestFunctions(commands.Cog):
                     temperature=0.8
                 )
 
-                # If the AI successfully generated text, send it and stop!
-                if ai_text:
+                if ai_text and ai_text.strip():
+                    print("DEBUG DM: AI responded successfully! Sending to user...")
                     await user.send(ai_text)
                     return True
+                else:
+                    print("DEBUG DM: AI returned blank/None. Falling back to embed...")
 
             # ==========================================
             # 3. FALLBACK: STANDARD EMBED DM
             # ==========================================
-            # (If AI is turned off, or if the API crashes, it falls back to this perfectly formatted embed)
+            print("DEBUG DM: Sending static Embed fallback...")
             embed = discord.Embed(title=f"🎲 Your Official Requirements: {contest_data.get('name')}",
                                   color=discord.Color.purple())
-
             embed.description = f"This contest uses **Randomized Vehicle Stats** (Level {contest_data.get('chaos_level', 0)}). These are your unique design constraints!\n\n*(You must also adhere to the global rules listed below).*"
-
             embed.add_field(name="Classification", value=f"**Vehicle Type:** {roll['vehicle_type']}", inline=False)
 
             primary = f"**Target Weight:** {round(roll['target_weight'], 2)}t (±0.5t)\n**Min Fuel Capacity:** {roll['min_fuel']} L"
@@ -1530,18 +1549,24 @@ class contestFunctions(commands.Cog):
             armament = f"**Required Guns:** {roll['gun_count']}\n**Required Caliber:** {roll['target_caliber']}mm"
             embed.add_field(name="Armament", value=armament, inline=True)
 
-            formatted_global_rules = [f"**{r.split(': ')[0]}:** {r.split(': ')[1]}" for r in global_rules]
-            embed.add_field(name="Global Rules", value="\n".join(formatted_global_rules), inline=False)
+            formatted_global_rules = [f"**{r.split(': ')[0]}:** {r.split(': ')[1]}" for r in global_rules if ": " in r]
+            if formatted_global_rules:
+                embed.add_field(name="Global Rules", value="\n".join(formatted_global_rules), inline=False)
 
             if c_data.get('ruleslink') and str(c_data.get('ruleslink')).lower() != 'none':
                 embed.add_field(name="Extended Rules", value=f"[Read Full Rules Here]({c_data['ruleslink']})",
                                 inline=False)
 
             await user.send(embed=embed)
+            print("DEBUG DM: Embed sent successfully!")
             return True
 
         except discord.Forbidden:
-            return False  # Fails gracefully if they have server DMs turned off
+            print("DEBUG DM: Failed! User has DMs disabled.")
+            return False
+        except Exception as e:
+            print(f"DEBUG DM: CRITICAL ERROR IN DM HELPER: {e}")
+            return False
 
     async def _pick_contest(self, ctx: commands.Context, only_active=True):
         query = '''SELECT name, contest_id FROM contests WHERE serverID = $1'''
