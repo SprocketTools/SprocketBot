@@ -261,8 +261,8 @@ class contestFunctions(commands.Cog):
                 print(f"DEBUG CHAT: Proceeding to chatter filter. Force Reply = {force_reply}")
                 if not force_reply:
                     rng = random.random()
-                    print(f"DEBUG CHAT: Casual chat RNG roll: {rng} (Needs <= 0.03 to proceed)")
-                    if rng > 0.03:
+                    print(f"DEBUG CHAT: Casual chat RNG roll: {rng} (Needs <= 0.015 to proceed)")
+                    if rng > 0.015:
                         print("DEBUG CHAT: RNG failed. Silently ignoring casual message.")
                         return
 
