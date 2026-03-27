@@ -714,7 +714,7 @@ class contestFunctions(commands.Cog):
         await status_msg.edit(
             content=f"**Scan Complete!**\nEntries Processed: {count_processed}\nErrors/Invalid: {count_errors}\nUnique Users: {len(users_processed)}")
 
-    @commands.command(name="submitEntry", description="Submit a blueprint to a contest")
+    #@commands.command(name="submitEntry", description="Submit a blueprint to a contest")
     async def submitEntry(self, ctx: commands.Context):
         if not ctx.message.attachments:
             return await ctx.send("You must upload a `.blueprint` file with this command.")
@@ -1457,8 +1457,66 @@ class contestFunctions(commands.Cog):
     # ----------------------------------------------------------------------------------
 
     async def _send_roll_dm(self, user: discord.Member, contest_data: dict, roll: dict) -> bool:
-        """Attempts to DM the user their specific Chaos Roll requirements and global rules."""
+        """Attempts to DM the user. If AI is enabled, sends a generated briefing. Otherwise, sends an embed."""
         try:
+            # --- 1. Extract Global Rules cleanly ---
+            c_data = {k.lower(): v for k, v in contest_data.items()}
+            global_rules = []
+            if c_data.get('weightlimit'): global_rules.append(f"Max Weight: {c_data['weightlimit']}t")
+            if c_data.get('costlimit'): global_rules.append(f"Max Cost: ${c_data['costlimit']:,}")
+            if c_data.get('era'): global_rules.append(f"Era: {c_data['era']}")
+            vio_limit = c_data.get('violationlimit', 0)
+            global_rules.append(f"Allowed Violations: {'Strict (0)' if vio_limit == 0 else vio_limit}")
+
+            # ==========================================
+            # 2. AI-GENERATED DM (If Enabled)
+            # ==========================================
+            if contest_data.get('ai_companion') and contest_data.get('ai_prompt'):
+
+                # Decode the persona to get the base instructions
+                persona_data = {}
+                try:
+                    persona_data = json.loads(contest_data['ai_prompt'])
+                except Exception:
+                    persona_data = {"base_persona": contest_data['ai_prompt']}
+
+                base_persona = persona_data.get("base_persona",
+                                                "You are a sassy mechanical engineer judging tank designs.")
+
+                # Build a special prompt just for this private DM
+                prompt = f"Context: You are managing the '{contest_data.get('name')}' contest.\n"
+                prompt += f"Task: Write a direct, private message (DM) to the competitor '{user.display_name}'. "
+                prompt += f"You MUST explicitly give them these exact assigned vehicle requirements in your message:\n"
+                prompt += f"- Vehicle Type: {roll['vehicle_type']}\n"
+                prompt += f"- Target Weight: {round(roll['target_weight'], 2)}t (±0.5t)\n"
+                prompt += f"- Min Fuel Capacity: {roll['min_fuel']} L\n"
+                prompt += f"- Required Guns: {roll['gun_count']}\n"
+                prompt += f"- Required Caliber: {roll['target_caliber']}mm\n\n"
+                prompt += f"Also remind them of these global rules:\n" + "\n".join(
+                    [f"- {r}" for r in global_rules]) + "\n\n"
+
+                if c_data.get('ruleslink') and str(c_data.get('ruleslink')).lower() != 'none':
+                    prompt += f"Tell them to read the full extended rules here: {c_data['ruleslink']}\n\n"
+
+                prompt += "Deliver this strictly in-character, as a private briefing or assignment hand-off. Make it entertaining but clearly state the numbers.\nAI Response:"
+
+                # Call the AI Engine directly
+                ai_text = await self.bot.AI.get_response(
+                    prompt=prompt,
+                    instructions=base_persona,
+                    mode="gemma",
+                    temperature=0.8
+                )
+
+                # If the AI successfully generated text, send it and stop!
+                if ai_text:
+                    await user.send(ai_text)
+                    return True
+
+            # ==========================================
+            # 3. FALLBACK: STANDARD EMBED DM
+            # ==========================================
+            # (If AI is turned off, or if the API crashes, it falls back to this perfectly formatted embed)
             embed = discord.Embed(title=f"🎲 Your Official Requirements: {contest_data.get('name')}",
                                   color=discord.Color.purple())
 
@@ -1472,16 +1530,8 @@ class contestFunctions(commands.Cog):
             armament = f"**Required Guns:** {roll['gun_count']}\n**Required Caliber:** {roll['target_caliber']}mm"
             embed.add_field(name="Armament", value=armament, inline=True)
 
-            # --- Extract Global Rules ---
-            c_data = {k.lower(): v for k, v in contest_data.items()}
-            global_rules = []
-            if c_data.get('weightlimit'): global_rules.append(f"**Max Weight:** {c_data['weightlimit']}t")
-            if c_data.get('costlimit'): global_rules.append(f"**Max Cost:** {c_data['costlimit']}")
-            if c_data.get('era'): global_rules.append(f"**Era:** {c_data['era']}")
-            vio_limit = c_data.get('violationlimit', 0)
-            global_rules.append(f"**Allowed Violations:** {'Strict (0)' if vio_limit == 0 else vio_limit}")
-
-            embed.add_field(name="Global Rules", value="\n".join(global_rules), inline=False)
+            formatted_global_rules = [f"**{r.split(': ')[0]}:** {r.split(': ')[1]}" for r in global_rules]
+            embed.add_field(name="Global Rules", value="\n".join(formatted_global_rules), inline=False)
 
             if c_data.get('ruleslink') and str(c_data.get('ruleslink')).lower() != 'none':
                 embed.add_field(name="Extended Rules", value=f"[Read Full Rules Here]({c_data['ruleslink']})",
@@ -1489,8 +1539,9 @@ class contestFunctions(commands.Cog):
 
             await user.send(embed=embed)
             return True
+
         except discord.Forbidden:
-            return False  # Fails if they have server DMs turned off
+            return False  # Fails gracefully if they have server DMs turned off
 
     async def _pick_contest(self, ctx: commands.Context, only_active=True):
         query = '''SELECT name, contest_id FROM contests WHERE serverID = $1'''
