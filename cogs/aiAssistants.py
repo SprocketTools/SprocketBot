@@ -22,7 +22,7 @@ class AIAssistants(commands.Cog):
         self.user_bursts = {}
 
         # Blacklist for NSFW/Racist terms
-        self.blacklist = ["penis", "nigge", "cock", "jerk", "jork", "mig-15", "mig 15", "fagot"]
+        self.blacklist = ["penis", "nigg", "cock", "jerk", "jork", "mig-15", "mig 15", "fagot"]
 
     async def cog_load(self):
         """Native discord.py method that runs asynchronously when the cog loads."""
