@@ -155,7 +155,7 @@ class contestFunctions(commands.Cog):
             processing_phrase = persona_data.get("processing_phrase", "Taking a look at this...")
 
             # Send the initial confirmation message instantly
-            processing_msg = await message.reply(f"{processing_phrase}")
+            processing_msg = await message.reply(f"{processing_phrase}", allowed_mentions=discord.AllowedMentions.none())
 
             async with message.channel.typing():
                 try:
@@ -194,7 +194,7 @@ class contestFunctions(commands.Cog):
 
                 # Edit the processing message with the final response
                 final_reply = f"{ai_text}"
-                await processing_msg.edit(content=final_reply)
+                await processing_msg.edit(content=final_reply, allowed_mentions=discord.AllowedMentions.none())
             return
 
         # ==========================================
@@ -274,7 +274,10 @@ class contestFunctions(commands.Cog):
                         contest_data=contest_data,
                         user_message=message.content + secret_context
                     )
-                    await message.reply(ai_text)
+                    # --- SECURITY PATCH: Break highlight and block pings ---
+                    if ai_text:
+                        ai_text = ai_text.replace("@everyone", "an everyone ping").replace("@here", "a here ping")
+                    await message.reply(ai_text, allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False, replied_user=True))
                     print("DEBUG CHAT: Success! Message replied to.")
 
             except Exception as e:
@@ -841,6 +844,7 @@ class contestFunctions(commands.Cog):
 
             # Use CLEANED name for comparison and storage
             clean_name = bp_attachment.filename.replace('.blueprint', '').replace('_', ' ').strip()
+            clean_name = clean_name.replace("@", " ")  # Replaces with a safe, full-width character
             stats['vehicle_name'] = clean_name
 
             # C. Rules Check & Chaos Enforcement
@@ -1063,10 +1067,11 @@ class contestFunctions(commands.Cog):
                 if warnings:
                     txt += f"\n⚠️ **Warnings:** {len(warnings)} (Allowed)"
 
+                # --- SECURITY PATCH: Block Pings ---
                 if gif_file:
-                    sent_msg = await ctx.send(content=txt, file=gif_file)
+                    sent_msg = await ctx.send(content=txt, file=gif_file, allowed_mentions=discord.AllowedMentions.none())
                 else:
-                    sent_msg = await ctx.send(content=txt)
+                    sent_msg = await ctx.send(content=txt, allowed_mentions=discord.AllowedMentions.none())
 
             # UPDATE DB WITH GIF URL
             if sent_msg and gif_file:

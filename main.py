@@ -39,6 +39,12 @@ SQLsettings["database"] = instanceConfig[f"botinfo"]["sqldatabase"]
 ownerID = int(baseConfig["settings"]["ownerID"])
 githubPAT = baseConfig["settings"]["githubpat"]
 updateGithub = instanceConfig.getboolean("botinfo", "updateGithub", fallback=False)
+safe_mentions = discord.AllowedMentions(
+    everyone=False,
+    roles=False,
+    users=True,         # Allows the bot to ping specific users (e.g., the winner of a contest)
+    replied_user=True   # Allows the bot to ping a user when replying to their message
+)
 cogsList = ["cogs.textTools",
             "cogs.registerFunctions",
             "cogs.campaignRegisterFunctions",
@@ -50,8 +56,10 @@ cogsList = ["cogs.textTools",
             "cogs.imageFunctions",
             "cogs.campaignMapsFunctions",
             "cogs.campaignInfoFunctions",
+            "cogs.contestFunctions",
             "cogs.SprocketOfficialFunctions",
             "cogs.campaignManageFunctions",
+            "cogs.aiAssistants",
             "cogs.campaignFinanceFunctions",
             "cogs.campaignResearchFunctions",
             "cogs.campaignFactoryFunctions",
@@ -75,7 +83,7 @@ cogsList = ["cogs.textTools",
 class Bot(commands.Bot):
     # ... (__init__ and setup_hook are unchanged) ...
     def __init__(self, ai_wrapper: AITools):
-        super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True)
+        super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True, allowed_mentions=safe_mentions)
         self.cogslist = cogsList; self.baseConfig = baseConfig; self.ownerid = ownerID; self.configurationFilepath = configurationFilepath
         self.botMode = botMode; self.geminikey = baseConfig['settings']['geminiapis'].split(",")
         self.AI = ai_wrapper; self.sql: SQLtools = None; self.ui: UItools = None
