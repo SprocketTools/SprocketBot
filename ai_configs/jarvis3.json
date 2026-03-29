@@ -1,5 +1,5 @@
 {
-    "activation_name": "Jarvis",
+    "activation_name": "jarvis",
     "use_webhook": true,
     "webhook_name": "J.A.R.V.I.S.",
     "webhook_avatar": "https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229",
@@ -15,7 +15,7 @@
     "min_length": 10,
     "max_length": 850,
     "external_links": "",
-    "server_id": 1105048871484272682,
+    "server_id": 1117604775014432911,
     "channel_id": 0,
     "temperature": 0.88
 }
