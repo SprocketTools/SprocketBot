@@ -229,11 +229,11 @@ class contestFunctions(commands.Cog):
                             print("DEBUG CHAT: User asked for existing stats. Resending DM...")
                             dm_success = await self._send_roll_dm(message.author, contest_data, roll)
                             if dm_success:
-                                secret_context = "\n\n[System Note: The user asked for their vehicle requirements. You just sent the documents to their private direct messages (mailbox). Tell them aggressively/in-character to go check their mailbox! DO NOT state any numbers or vehicle types in this channel.]"
+                                secret_context = f"\n\n[System Note: The user asked for their vehicle requirements. Their OFFICIAL assignment is: {roll['vehicle_type']}, {round(roll['target_weight'], 1)}t, {roll['target_caliber']}mm. You just sent the documents to their private direct messages (mailbox). Tell them aggressively/in-character to go check their mailbox! Do NOT invent different numbers!]"
                             else:
-                                secret_context = "\n\n[System Note: The user asked for their requirements, but their Discord DMs are closed! Yell at them in-character to open their mailbox so you can send the documents.]"
+                                secret_context = f"\n\n[System Note: The user asked for their requirements, but their Discord DMs are closed! Their official assignment is: {roll['vehicle_type']}, {round(roll['target_weight'], 1)}t. Yell at them in-character to open their mailbox so you can send the documents.]"
                         else:
-                            secret_context = "\n\n[System Note: The user is just chatting. Reply in-character. Do NOT mention any of their specific vehicle stats.]"
+                            secret_context = f"\n\n[System Note: The user is just chatting. Reply in-character. Their assigned vehicle is a {roll['vehicle_type']}. Do NOT mention any of their specific numbers or invent new ones.]"
                     else:
                         print("DEBUG CHAT: No roll found. Generating new stats...")
                         force_reply = True
@@ -1103,7 +1103,7 @@ class contestFunctions(commands.Cog):
 
                     await log_chan.send(embed=embed)
 
-            return True
+            return True, stats, warnings, clean_name
 
         except Exception as e:
             if not silent: await ctx.send(f"Error processing file: {e}")
@@ -1523,7 +1523,8 @@ class contestFunctions(commands.Cog):
                 if c_data.get('ruleslink') and str(c_data.get('ruleslink')).lower() != 'none':
                     prompt += f"Tell them to read the full extended rules here: {c_data['ruleslink']}\n\n"
 
-                prompt += "Deliver this strictly in-character, as a private briefing or assignment hand-off. Make it entertaining but clearly state the numbers.\nAI Response:"
+                    # 1. THE PROMPT FIX: Command the AI to respect the limit
+                prompt += "Deliver this strictly in-character, as a private briefing or assignment hand-off. Make it entertaining but clearly state the numbers. STRICT RULE: Your response must be under 1300 characters.\nAI Response:"
 
                 print("DEBUG DM: Requesting generation from AITools...")
                 ai_text = await self.bot.AI.get_response(
@@ -1535,6 +1536,11 @@ class contestFunctions(commands.Cog):
 
                 if ai_text and ai_text.strip():
                     print("DEBUG DM: AI responded successfully! Sending to user...")
+
+                    # 2. THE FAILSAFE FIX: Hard truncate the string if the AI disobeyed
+                    if len(ai_text) > 1700:
+                        ai_text = ai_text[:1697] + "..."
+
                     await user.send(ai_text)
                     return True
                 else:

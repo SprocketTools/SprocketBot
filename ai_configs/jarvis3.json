@@ -13,7 +13,7 @@
     "cooldown_seconds": 10,
     "burst_limit": 5,
     "min_length": 10,
-    "max_length": 850,
+    "max_length": 650,
     "external_links": "",
     "server_id": 1105048871484272682,
     "channel_id": 0,
