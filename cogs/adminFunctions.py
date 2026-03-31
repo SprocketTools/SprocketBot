@@ -20,6 +20,7 @@ linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "1.jpg", "1.png", "
 whitelist = ["https://tenor.com/view/", "https://cdn.discordapp.com/attachments"]
 strikethreshold = 3
 piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c", "0.2.19.5", "0.2.30.0", "0.2.32.1", "0.2.46.4"]
+u26list = [712509599135301673, 367676077298024458, 580462834345836545, 421310278479642625, 753045014199795723, 1022554155191107654]
 colorint = -1
 class adminFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
@@ -986,7 +987,8 @@ class adminFunctions(commands.Cog):
 
     @commands.command(name="trollReply", description="send a message wherever you want")
     async def trollReply(self, ctx: commands.Context, msglink: str, *, message):
-        if ctx.author.id == 712509599135301673:
+
+        if ctx.author.id in u26list:
             import re
             srvrid = int(msglink.split("/")[-3])
             chnlid = int(msglink.split("/")[-2])
@@ -995,10 +997,12 @@ class adminFunctions(commands.Cog):
             channelIn = await self.bot.fetch_channel(chnlid)
             messageIn = await channelIn.fetch_message(msgid)
             await ctx.send("Message is en route.")
-            await messageIn.reply(message)
-            for attachment in ctx.message.attachments:
-                file = await attachment.to_file()
-                await channelIn.send(file=file, content="")
+            async with channelIn.typing():
+                await asyncio.sleep(2 + int(random.random()*3))
+                await messageIn.reply(message)
+                for attachment in ctx.message.attachments:
+                    file = await attachment.to_file()
+                    await channelIn.send(file=file, content="")
 
     @commands.command(name="complain", description="Get a response back from Google")
     async def complain(self, ctx: commands.Context, msglink: str, *, style = None):

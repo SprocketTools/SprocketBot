@@ -221,17 +221,13 @@ class contestFunctions(commands.Cog):
                         '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
                         [message.author.id, contest_data['contest_id']]
                     )
-
                     if user_records and len(user_records) > 0:
                         print("DEBUG CHAT: User already has a roll.")
                         roll = user_records[0]
                         if asking_for_stats:
-                            print("DEBUG CHAT: User asked for existing stats. Resending DM...")
-                            dm_success = await self._send_roll_dm(message.author, contest_data, roll)
-                            if dm_success:
-                                secret_context = f"\n\n[System Note: The user asked for their vehicle requirements. Their OFFICIAL assignment is: {roll['vehicle_type']}, {round(roll['target_weight'], 1)}t, {roll['target_caliber']}mm. You just sent the documents to their private direct messages (mailbox). Tell them aggressively/in-character to go check their mailbox! Do NOT invent different numbers!]"
-                            else:
-                                secret_context = f"\n\n[System Note: The user asked for their requirements, but their Discord DMs are closed! Their official assignment is: {roll['vehicle_type']}, {round(roll['target_weight'], 1)}t. Yell at them in-character to open their mailbox so you can send the documents.]"
+                            print("DEBUG CHAT: User asked for existing stats. Reminding them to check DMs...")
+                            # --- BUG FIX: Do NOT resend the DM! Just tell the AI to remind them! ---
+                            secret_context = f"\n\n[System Note: The user is asking for their vehicle requirements, but you ALREADY sent them to their private direct messages (mailbox) previously. Their OFFICIAL assignment is: {roll['vehicle_type']}, {round(roll['target_weight'], 1)}t, {roll['target_caliber']}mm. Tell them aggressively/in-character to go check their mailbox history! Do NOT invent different numbers and do NOT state the numbers in this channel!]"
                         else:
                             secret_context = f"\n\n[System Note: The user is just chatting. Reply in-character. Their assigned vehicle is a {roll['vehicle_type']}. Do NOT mention any of their specific numbers or invent new ones.]"
                     else:
