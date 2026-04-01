@@ -1200,7 +1200,7 @@ class adminFunctions(commands.Cog):
         if ctx.author.id in [712509599135301673, 686640777505669141]:
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url('https://discord.com/api/webhooks/1351525808484651008/C7EO5uUViQ5ZTPQcV06I88Vs0MTBMrbCofopyNd5aaDulqM_h0J-kgcS2U11pjDbhs83', session=session)
-                await webhook.send(message, username=ctx.author.nick, avatar_url=ctx.author.avatar.url)
+                await webhook.send(message, username=ctx.author.nick, avatar_url=ctx.author.avatar.url, file=ctx.message.attachments[0])
 
 async def setup(bot:commands.Bot) -> None:
     await bot.add_cog(adminFunctions(bot))

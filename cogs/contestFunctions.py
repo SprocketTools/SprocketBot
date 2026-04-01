@@ -32,8 +32,9 @@ class contestFunctions(commands.Cog):
     # ----------------------------------------------------------------------------------
     # SETUP: Database Tables (Contests Only)
     # ----------------------------------------------------------------------------------
-    @commands.command(name="setupContestTables", description="[Owner] Create SQL tables for contests.")
+    @commands.command()
     async def setupContestTables(self, ctx: commands.Context):
+        """[Owner] Initializes or updates the Contest database tables."""
         if ctx.author.id != self.bot.ownerid:
             return await self.bot.error.sendError(ctx)
 
@@ -43,72 +44,78 @@ class contestFunctions(commands.Cog):
             if bp_cog:
                 await bp_cog.setup_stats_tables(ctx)
             else:
-                await ctx.send("Warning: blueprintFunctions2 not loaded. Skipping stats table check.")
+                await ctx.send("Warning: `blueprintFunctions2` not loaded. Skipping stats table check.")
         except Exception as e:
             print(f"Stats table sync error: {e}")
 
-        # 2. Main Contests Table (WITH ALL NEW COLUMNS)
-        await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contests;''')
-        await self.bot.sql.databaseExecute('''
-                        CREATE TABLE IF NOT EXISTS contests (
-                            contest_id BIGINT PRIMARY KEY,
-                            name VARCHAR,
-                            serverID BIGINT,
-                            ownerID BIGINT,
-                            description VARCHAR,
-                            rulesLink VARCHAR,
-                            status BOOLEAN,
-                            deadline TIMESTAMP,
-                            costlimit BIGINT,
-                            weightLimit REAL,
-                            era VARCHAR,
-                            crewMin INT,
-                            crewMax INT,
-                            hullHeightMin REAL,
-                            hullWidthMax REAL,
-                            torsionBarLengthMin REAL,
-                            allowHVSS BOOLEAN,
-                            beltWidthMin REAL,
-                            groundPressureMax REAL,
-                            minHPT REAL,
-                            caliberLimit REAL,
-                            armorMax REAL,
-                            submission_channel_id BIGINT,
-                            log_channel_id BIGINT,
-                            entryLimit INT DEFAULT 0,
-                            violationLimit INT DEFAULT 0,
-                            caliber_min FLOAT DEFAULT 0,
-                            caliber_max FLOAT DEFAULT 0,
-                            prop_min FLOAT DEFAULT 0,
-                            prop_max FLOAT DEFAULT 0,
-                            barrel_limit_m FLOAT DEFAULT 0,
-                            chaos_level INT DEFAULT 0,
-                            chaos_vehicle_types VARCHAR,
-                            ai_companion BOOLEAN DEFAULT FALSE,
-                            ai_prompt VARCHAR
-                        );
-                    ''')
+        # 2. Main Contests Table
+        # (Commented out DROP TABLE so you don't accidentally wipe active contests! Re-enable only if you want a total nuke.)
+        # await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contests;''')
 
-        # 3. User Chaos Rolls Table (NEW)
         await self.bot.sql.databaseExecute('''
-                        CREATE TABLE IF NOT EXISTS user_chaos_rolls (
-                            user_id BIGINT,
-                            contest_id BIGINT,
-                            target_weight REAL,
-                            gun_count INT,
-                            vehicle_type VARCHAR,
-                            target_caliber REAL,
-                            min_fuel REAL,
-                            PRIMARY KEY (user_id, contest_id)
-                        );
-                    ''')
+                CREATE TABLE IF NOT EXISTS contests (
+                    contest_id BIGINT PRIMARY KEY,
+                    name VARCHAR,
+                    serverID BIGINT,
+                    ownerID BIGINT,
+                    description VARCHAR,
+                    rulesLink VARCHAR,
+                    status BOOLEAN,
+                    deadline TIMESTAMP,
+                    costlimit BIGINT,
+                    weightLimit REAL,
+                    era VARCHAR,
+                    crewMin INT,
+                    crewMax INT,
+                    hullHeightMin REAL,
+                    hullWidthMax REAL,
+                    torsionBarLengthMin REAL,
+                    allowHVSS BOOLEAN,
+                    beltWidthMin REAL,
+                    groundPressureMax REAL,
+                    minHPT REAL,
+                    caliberLimit REAL,
+                    armorMax REAL,
+                    submission_channel_id BIGINT,
+                    log_channel_id BIGINT,
+                    entryLimit INT DEFAULT 0,
+                    violationLimit INT DEFAULT 0,
+                    caliber_min FLOAT DEFAULT 0,
+                    caliber_max FLOAT DEFAULT 0,
+                    prop_min FLOAT DEFAULT 0,
+                    prop_max FLOAT DEFAULT 0,
+                    barrel_limit_m FLOAT DEFAULT 0,
+                    chaos_level INT DEFAULT 0,
+                    chaos_vehicle_types VARCHAR,
+                    ai_companion BOOLEAN DEFAULT FALSE,
+                    ai_prompt VARCHAR
+                );
+            ''')
+
+        # 3. User Chaos Rolls Table (WITH NEW TIMESTAMP COLUMN)
+        # We drop this one to cleanly wipe the old formats and apply the timestamp upgrade
+        await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS user_chaos_rolls;''')
+        await self.bot.sql.databaseExecute('''
+                CREATE TABLE IF NOT EXISTS user_chaos_rolls (
+                    user_id BIGINT,
+                    contest_id BIGINT,
+                    target_weight REAL,
+                    gun_count INT,
+                    vehicle_type VARCHAR,
+                    target_caliber REAL,
+                    min_fuel REAL,
+                    roll_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (user_id, contest_id)
+                );
+            ''')
 
         # 4. Cleanup old deprecated tables
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contestcategories;''')
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contest_entries;''')
         await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contestsubmissions;''')
 
-        await ctx.send("Done! Contest system ready.")
+        await ctx.send(
+            "✅ **Done!** Contest database tables are configured and running the latest schema (including AI Build Time tracking).")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -176,7 +183,8 @@ class contestFunctions(commands.Cog):
                     "weight": stats.get('tank_weight', 0) / 1000.0 if stats else 0,
                     "cost": stats.get('base_cost', 0) if stats else 0,
                     "warnings": warnings or [],
-                    "rejected": not success
+                    "rejected": not success,
+                    "build_time": stats.get('build_time') if stats else None
                 }
 
                 ai_text = await self._ask_gemma_judge(contest_data.get('ai_prompt'), message.author.display_name,
@@ -853,6 +861,23 @@ class contestFunctions(commands.Cog):
                     '''SELECT * FROM user_chaos_rolls WHERE user_id = $1 AND contest_id = $2;''',
                     [stats['owner_id'], contest_id]
                 )
+                # --- CALCULATE BUILD TIME IN MEMORY ---
+                if user_records and 'roll_timestamp' in user_records[0] and user_records[0]['roll_timestamp']:
+                    import datetime
+                    roll_time = user_records[0]['roll_timestamp']
+                    delta = datetime.datetime.utcnow() - roll_time.replace(tzinfo=None)
+
+                    days = delta.days
+                    hours, remainder = divmod(delta.seconds, 3600)
+                    minutes, _ = divmod(remainder, 60)
+
+                    if days > 0:
+                        stats['build_time'] = f"{days} days, {hours} hours"
+                    elif hours > 0:
+                        stats['build_time'] = f"{hours} hours, {minutes} minutes"
+                    else:
+                        stats['build_time'] = f"{minutes} minutes"
+
                 if not user_records:
                     if not silent:
                         await msg.delete()
@@ -1089,7 +1114,8 @@ class contestFunctions(commands.Cog):
                                     value=f"{stats.get('tank_weight', 0) / 1000:.1f}t | ${stats.get('base_cost', 0)}")
                     if stats.get('image_url'):
                         embed.add_field(name="Screenshot", value=f"[Link]({stats['image_url']})")
-
+                    if stats and stats.get('build_time'):
+                        embed.add_field(name="Build Time", value=stats['build_time'], inline=True)
                     if warnings:
                         embed.color = discord.Color.orange()
                         embed.add_field(name="Permitted Warnings", value="\n".join(warnings), inline=False)
