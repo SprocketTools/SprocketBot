@@ -20,7 +20,7 @@ linkFlags = ["steamcommunity.com/gift", "bit.ly", "sc.link", "1.jpg", "1.png", "
 whitelist = ["https://tenor.com/view/", "https://cdn.discordapp.com/attachments"]
 strikethreshold = 3
 piratedVersions = ["0.2.8", "0.2.4", "0.2.16b", "0.2.18c", "0.2.19.5", "0.2.30.0", "0.2.32.1", "0.2.46.4"]
-u26list = [712509599135301673, 367676077298024458, 580462834345836545, 421310278479642625, 753045014199795723, 1022554155191107654]
+u26list = [712509599135301673, 367676077298024458, 580462834345836545, 421310278479642625, 753045014199795723, 1022554155191107654, 199887270323552256, 271338260360462337]
 colorint = -1
 class adminFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
