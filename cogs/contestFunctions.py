@@ -1670,15 +1670,17 @@ class contestFunctions(commands.Cog):
         target_weight = round(random.uniform(w_mid - w_range / 2, w_mid + w_range / 2), 1)
 
         # GUN COUNT: 79% (1), 19% (2), 1% (3), 1% (4)
-        g_roll = random.randint(1, 100)
-        if g_roll <= 79:
-            gun_count = 1
-        elif g_roll <= 98:
-            gun_count = 2
-        elif g_roll <= 99:
-            gun_count = 3
-        else:
-            gun_count = 4
+        # g_roll = random.randint(1, 100)
+        # if g_roll <= 79:
+        #     gun_count = 1
+        # elif g_roll <= 98:
+        #     gun_count = 2
+        # elif g_roll <= 99:
+        #     gun_count = 3
+        # else:
+        #     gun_count = 4
+
+        gun_count = 1
 
         # ==========================================
         # 2. SECONDARY STATS (Dependent on Primary)
