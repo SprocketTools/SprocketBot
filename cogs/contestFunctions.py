@@ -190,15 +190,20 @@ class contestFunctions(commands.Cog):
                 ai_text = await self._ask_gemma_judge(contest_data.get('ai_prompt'), message.author.display_name,
                                                       contest_data, tank_data=tank_data)
 
-                if not success and warnings:
-                    formatted_warnings = "\n".join([f"{w}" for w in warnings])
+                import re
+                if not success:
+                    # REJECTED: Inject the list of broken rules
+                    formatted_warnings = "\n".join([f"❌ **{w}**" for w in
+                                                    warnings]) if warnings else "❌ **(Vehicle failed global rule validation)**"
                     injection_string = f"\n\n{formatted_warnings}\n\n"
 
                     if "[warnings]" in ai_text.lower():
-                        import re
                         ai_text = re.sub(r'\[warnings\]', injection_string, ai_text, flags=re.IGNORECASE)
                     else:
                         ai_text += f"\n\n*(Automated Violation Report):*{injection_string}"
+                else:
+                    # ACCEPTED: If the AI hallucinates the tag, silently erase it!
+                    ai_text = re.sub(r'\[warnings\]', "", ai_text, flags=re.IGNORECASE).strip()
 
                 # Edit the processing message with the final response
                 final_reply = f"{ai_text}"
@@ -1756,7 +1761,8 @@ class contestFunctions(commands.Cog):
                     prompt += f"Task: {reaction_style} {length_target} You MUST include the exact text `[warnings]` somewhere in your response where the list of broken rules should go. Do not explain the rules yourself, just use the tag.\nAI Response:"
                 else:
                     prompt += f"Final Status: ACCEPTED\n"
-                    prompt += f"Task: {reaction_style} {length_target}\nAI Response:"
+                    # --- BUG FIX: Tell the AI the tag is forbidden on success ---
+                    prompt += f"Task: {reaction_style} {length_target} DO NOT use the [warnings] tag because there are no rule violations!\nAI Response:"
 
             # 4. Hand off to your existing AITools!
             # Using mode="gemma" to trigger your specific gemma-3-27b-it configuration
