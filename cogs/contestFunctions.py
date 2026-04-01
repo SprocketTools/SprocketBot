@@ -1176,7 +1176,7 @@ class contestFunctions(commands.Cog):
         )
 
         await ctx.send(
-            f"✅ Successfully cleared the Chaos Roll for **{user_to_reset.display_name}** in '{contest_data['name']}'!\n*(They can now type in the submission channel to trigger the AI to generate a brand new set of requirements).*")
+            f"~Nyaa it looks like **{user_to_reset.display_name}** is a silly loser and needs a new assignment for {contest_data['name']}!  Once they say something again, I'll give them a new mission! :3")
 
     # ----------------------------------------------------------------------------------
     # VIEWING & DOWNLOAD
