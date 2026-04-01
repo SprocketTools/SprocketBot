@@ -104,7 +104,7 @@ class AIAssistants(commands.Cog):
 
         # 1. Skip if message violates blacklist
         if self.contains_blacklisted_words(message.content):
-            await message.channel.send("no")
+            # await message.channel.send("no")
             return
 
         channel_id = message.channel.id
