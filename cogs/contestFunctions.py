@@ -15,12 +15,12 @@ from typing import Union
 from cogs.textTools import textTools
 
 CHAOS_VEHICLE_TYPES = {
-    "Tankette": {"weight": (2.0, 5.0), "caliber": (20, 37)},
-    "Light Tank": {"weight": (5.0, 15.0), "caliber": (20, 50)},
+    "Tankette": {"weight": (6.0, 9.0), "caliber": (20, 37)},
+    "Light Tank": {"weight": (12.0, 20.0), "caliber": (20, 50)},
     "Medium Tank": {"weight": (15.0, 35.0), "caliber": (50, 88)},
     "Heavy Tank": {"weight": (35.0, 65.0), "caliber": (85, 122)},
     "Super Heavy Tank": {"weight": (65.0, 150.0), "caliber": (105, 183)},
-    "Armored Car": {"weight": (2.0, 15.0), "caliber": (20, 47)},
+    "Super Duper Heavy Tank": {"weight": (150.0, 189.0), "caliber": (152, 183)},
     "Tank Destroyer": {"weight": (10.0, 50.0), "caliber": (75, 152)},
     "SPG": {"weight": (10.0, 40.0), "caliber": (105, 183)}
 }
