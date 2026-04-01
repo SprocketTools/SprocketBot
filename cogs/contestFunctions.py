@@ -1152,7 +1152,7 @@ class contestFunctions(commands.Cog):
 
     @commands.command(name="resetRoll", description="[Host] Clear a user's randomized stats so they can roll again.")
     async def resetRoll(self, ctx: commands.Context, target: discord.Member = None):
-        if not (await self._check_manager(ctx)) or ctx.author.id in u26list: return
+        if not (await self._check_manager(ctx)) and not (ctx.author.id in u26list): return
 
         # 1. Ask which contest we are managing
         contest_id = await self._pick_contest(ctx)
