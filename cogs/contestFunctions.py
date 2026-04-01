@@ -209,7 +209,7 @@ class contestFunctions(commands.Cog):
 
                 # Edit the processing message with the final response
                 final_reply = f"{ai_text}"
-                await processing_msg.edit(content=final_reply, allowed_mentions=discord.AllowedMentions.none())
+                await processing_msg.edit(content=final_reply.replace("darling", "friend").replace("sweetie", "friend"), allowed_mentions=discord.AllowedMentions.none())
             return
 
         # ==========================================

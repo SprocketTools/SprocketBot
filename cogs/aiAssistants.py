@@ -426,10 +426,10 @@ class AIAssistants(commands.Cog):
                     else:
                         # Send directly from the bot as a reply
                         try:
-                            await message.reply(content=ai_response)
+                            await message.reply(content=ai_response.replace("darling", "friend").replace("sweetie", "friend"))
                         except discord.HTTPException:
                             # Fallback if the user deleted their message while the AI was thinking
-                            await channel.send(content=ai_response)
+                            await channel.send(content=ai_response.replace("darling", "friend").replace("sweetie", "friend"))
 
                     session["message_count"] += 1
                     history.append({"role": "AI", "content": ai_response})
