@@ -171,7 +171,7 @@ class contestFunctions(commands.Cog):
                                                                                      silent=True)
                 except Exception as e:
                     print(f"DEBUG: Validator crashed! {e}")
-                    await processing_msg.edit(content="❌ *(An error occurred while inspecting this blueprint.)*")
+                    await processing_msg.edit(content="*(An error occurred while inspecting this blueprint.)*")
                     return
 
                 # --- VISUAL CONFIRMATION ---
@@ -193,9 +193,9 @@ class contestFunctions(commands.Cog):
                 import re
                 if not success:
                     # REJECTED: Inject the list of broken rules
-                    formatted_warnings = "\n".join([f"❌ **{w}**" for w in
-                                                    warnings]) if warnings else "❌ **(Vehicle failed global rule validation)**"
-                    injection_string = f"\n\n{formatted_warnings}\n\n"
+                    formatted_warnings = "\n".join([f"{w}" for w in
+                                                    warnings]) if warnings else "Make sure all of your submission's compartments are converted to freeform."
+                    injection_string = f"```Analysis Report:\n\n{formatted_warnings}\n```"
 
                     if "[warnings]" in ai_text.lower():
                         ai_text = re.sub(r'\[warnings\]', injection_string, ai_text, flags=re.IGNORECASE)
@@ -1109,7 +1109,16 @@ class contestFunctions(commands.Cog):
 
             # H. Log Channel
             if contest_data.get('log_channel_id') and contest_data['log_channel_id'] != 0:
-                log_chan = ctx.guild.get_channel(contest_data['log_channel_id'])
+                log_chan_id = contest_data['log_channel_id']
+
+                # --- BUG FIX: Check Channels, then Threads, then force an API Fetch ---
+                log_chan = ctx.guild.get_channel(log_chan_id) or ctx.guild.get_thread(log_chan_id)
+                if not log_chan:
+                    try:
+                        log_chan = await ctx.guild.fetch_channel(log_chan_id)
+                    except discord.HTTPException:
+                        log_chan = None  # Fails gracefully if the thread was fully deleted
+
                 if log_chan:
                     embed = discord.Embed(title="New Contest Entry", color=discord.Color.blue())
                     embed.add_field(name="Contest", value=contest_name)
