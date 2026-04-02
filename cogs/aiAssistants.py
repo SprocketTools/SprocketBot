@@ -421,7 +421,8 @@ class AIAssistants(commands.Cog):
                         await webhook.send(
                             content=ai_response,
                             username=config.get("webhook_name"),
-                            avatar_url=config.get("webhook_avatar")
+                            avatar_url=config.get("webhook_avatar"),
+                            allowed_mentions=discord.AllowedMentions(everyone=False, roles=False)
                         )
                     else:
                         # Send directly from the bot as a reply
