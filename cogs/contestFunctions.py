@@ -1175,8 +1175,7 @@ class contestFunctions(commands.Cog):
             [contest_id, user_to_reset.id]
         )
 
-        await ctx.send(
-            f"~Nyaa it looks like **{user_to_reset.display_name}** is a silly loser and needs a new assignment for {contest_data['name']}!  Once they say something again, I'll give them a new mission! :3")
+        await ctx.send(f"~Nyaa it looks like **{user_to_reset.display_name}** is a silly loser and needs a new assignment for {contest_data['name']}!  Once they say something again, I'll give them a new mission! :3")
 
     # ----------------------------------------------------------------------------------
     # VIEWING & DOWNLOAD
