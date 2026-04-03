@@ -91,14 +91,14 @@ class timedMessageTools(commands.Cog):
 
     @commands.command(name="cancelMessage", description="generate a key that can be used to initiate a campaign")
     async def cancelMessage(self, ctx: commands.Context, *, messageID):
-        if ctx.author.id not in [686640777505669141, 712509599135301673]:
+        if ctx.author.id not in [712509599135301673, 367676077298024458, 580462834345836545, 421310278479642625, 753045014199795723, 1022554155191107654, 199887270323552256, 271338260360462337]:
             return
         await self.bot.sql.databaseExecuteDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [messageID])
         await ctx.send("Dropped any that match.")
 
     @commands.command(name="cancelMessageForUser", description="generate a key that can be used to initiate a campaign")
     async def cancelMessageForUser(self, ctx: commands.Context, *, messageID):
-        if ctx.author.id not in [686640777505669141, 712509599135301673]:
+        if ctx.author.id not in [712509599135301673, 367676077298024458, 580462834345836545, 421310278479642625, 753045014199795723, 1022554155191107654, 199887270323552256, 271338260360462337]:
             return
         await self.bot.sql.databaseExecuteDynamic('''DELETE FROM timedmessages WHERE ownerid = $1;''', [messageID])
         await ctx.send("Dropped any that match.")
@@ -127,7 +127,7 @@ class timedMessageTools(commands.Cog):
 
     @commands.command(name="scheduleBatchReply", description="generate a key that can be used to initiate a campaign")
     async def scheduleBatchReply(self, ctx: commands.Context):
-        if ctx.author.id not in [686640777505669141, 712509599135301673]:
+        if ctx.author.id not in [712509599135301673, 367676077298024458, 580462834345836545, 421310278479642625, 753045014199795723, 1022554155191107654, 199887270323552256, 271338260360462337]:
             return
         userDest = await textTools.getIntResponse(ctx, "What user is being replied to?  Reply with an id.")
         time_stamp = 1
