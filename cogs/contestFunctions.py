@@ -209,7 +209,7 @@ class contestFunctions(commands.Cog):
 
                 # Edit the processing message with the final response
                 final_reply = f"{ai_text}"
-                await processing_msg.edit(content=final_reply, allowed_mentions=discord.AllowedMentions.none())
+                await processing_msg.edit(content=final_reply.replace("darling", "friend").replace("sweetie", "friend"), allowed_mentions=discord.AllowedMentions.none())
             return
 
         # ==========================================
@@ -223,7 +223,7 @@ class contestFunctions(commands.Cog):
                 secret_context = ""
 
                 chat_lower = message.content.lower()
-                keywords = ['rule', 'requirement', 'roll', 'stat', 'build', 'assignment', 'what do i', 'give me']
+                keywords = ['rule', 'what do i', 'give me']
                 asking_for_stats = any(k in chat_lower for k in keywords)
                 if asking_for_stats:
                     force_reply = True
@@ -273,7 +273,7 @@ class contestFunctions(commands.Cog):
                 if not force_reply:
                     rng = random.random()
                     print(f"DEBUG CHAT: Casual chat RNG roll: {rng} (Needs <= 0.015 to proceed)")
-                    if rng > 0.015:
+                    if rng > 0.025:
                         print("DEBUG CHAT: RNG failed. Silently ignoring casual message.")
                         return
 
