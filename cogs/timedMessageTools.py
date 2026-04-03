@@ -41,6 +41,8 @@ class timedMessageTools(commands.Cog):
         try:
             if data['channelid'] > 0:
                 channel = await self.bot.fetch_channel((int(data['channelid'])))
+                async with channel.typing():
+                    await asyncio.sleep(4)
                 await channel.send(data['content'])
                 await self.bot.sql.databaseFetchdictDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [data['id']])
         except Exception: pass
@@ -56,6 +58,8 @@ class timedMessageTools(commands.Cog):
         data = (await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM timedmessages WHERE (EXTRACT(EPOCH FROM (time)) < 2) AND (ownerid = $1) AND ((channelid = $2) OR (channelid = 0)) LIMIT 1;''', [message.author.id, message.channel.id]))
         for msg in data:
             string = await self.bot.error.errorfyText(message, msg['content'])
+            async with message.channel.typing():
+                await asyncio.sleep(4)
             await message.reply(string)
             await self.bot.sql.databaseFetchdictDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [msg['id']])
     # @tasks.loop(seconds=300)
