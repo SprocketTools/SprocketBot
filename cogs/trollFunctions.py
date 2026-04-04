@@ -249,7 +249,7 @@ class trollFunctions(commands.Cog):
                 file = await attachment.to_file()
                 await channelIn.send(file=file, content="")
 
-    @commands.command(name="trollcai", description="Troll a channel")
+    @commands.command(name="trollaismart", description="Troll a channel")
     async def trollairead(self, ctx: commands.Context, channelin: str, *, prompt):
         if ctx.author.id in troll_users:
             import re
