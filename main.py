@@ -77,7 +77,8 @@ cogsList = ["cogs.textTools",
             "cogs.clickupFunctions",
             "cogs.starboardFunctions",
             "cogs.roleColorTools",
-            "cogs.observatoryFunctions"]
+            "cogs.observatoryFunctions",
+            "cogs.trollFunctions"]
     # A long list of almost everything.  
 
 class Bot(commands.Bot):
