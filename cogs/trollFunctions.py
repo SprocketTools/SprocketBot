@@ -229,28 +229,39 @@ class trollFunctions(commands.Cog):
                 file = await attachment.to_file()
                 await channelIn.send(file=file, content="")
 
-    @commands.command(name="trollreplyai", description="Get a response back from Google")
-    async def trollreplyai(self, ctx: commands.Context, msglink: str, *, prompt):
-        if ctx.author.id in [712509599135301673, 686640777505669141]:
+    @commands.command(name="smartreply", description="Troll a channel")
+    async def smartreply(self, ctx: commands.Context, msglink: str, *, prompt):
+        if ctx.author.id in troll_users:
             import re
             srvrid = int(msglink.split("/")[-3])
             chnlid = int(msglink.split("/")[-2])
             msgid = int(msglink.split("/")[-1])
             serverIn = await self.bot.fetch_guild(srvrid)
-            channelIn = await self.bot.fetch_channel(chnlid)
-            messageIn = await channelIn.fetch_message(msgid)
-            gemini = genai.Client(api_key=ctx.bot.geminikey)
-            message = gemini.models.generate_content(model='gemini-2.0-flash-001', contents=prompt)
-            print(message.text)
+            channel = await self.bot.fetch_channel(chnlid)
+            messageIn = await channel.fetch_message(msgid)
+            await ctx.send("Collecting message history")
+            messages = []
+            message_raw = channel.history(limit=100)
+            async for messagee in message_raw:
+                messages.append(
+                    {'author': messagee.author, 'content': messagee.content, 'author-ID': messagee.author.id,
+                     'url': messagee.jump_url,
+                     'attachments': [attachment.content_type for attachment in messagee.attachments]})
+            print(messages)
+            await ctx.send("Getting AI response")
+            message_out = await ctx.bot.AI.get_response(
+                prompt=f"You are a catgirl named 'Sprocket Chan'. You possess millions of dollars, past trauma from being captured and enslaved, and have the US government currently trying to find you to capture and experiment on.  You are about to reply to a Discord conversation and need to generate a funny response.  Here are the most recent messages from that Discord channel, provided backwards in a json format: \n\n {str(messages)}\n\n You must sound drunk and use plenty of 'catgirl language' like ':3' and 'nyaa' in your response.  Maintain an oblivious and carefree personality - suffering and traumatic events, even your own, are just 'funny' in your book. Unless otherwise instructed, your reply cannot exceed 250 words in length. {prompt}")
+            import re
             await ctx.send("Message is en route.")
+            async with channel.typing():
+                await asyncio.sleep(2 + int(random.random() * 3))
+                await messageIn.reply(message_out)
+                for attachment in ctx.message.attachments:
+                    file = await attachment.to_file()
+                    await channel.send(file=file, content="")
 
-            await messageIn.reply(message.text)
-            for attachment in ctx.message.attachments:
-                file = await attachment.to_file()
-                await channelIn.send(file=file, content="")
-
-    @commands.command(name="trollaismart", description="Troll a channel")
-    async def trollairead(self, ctx: commands.Context, channelin: str, *, prompt):
+    @commands.command(name="smarttroll", description="Troll a channel")
+    async def smarttroll(self, ctx: commands.Context, channelin: str, *, prompt):
         if ctx.author.id in troll_users:
             import re
             channelin = int(re.sub(r'[^0-9]', '', channelin))
