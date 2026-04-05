@@ -904,14 +904,15 @@ class blueprintAnalysisTools:
             # Mobility
             mr = 0.0
             if vol_factor > 0:
-                mr = (top_speed * 4) / (1 + gp) / (vol_factor+1)**0.5
+                mr = (top_speed * 4) / (1 + gp) / (1 + (min(1.0, (w/l))))
             stats["mobility_rating"] = int(mr)
 
             # Armor Rating
             armor_div = (4 * w) + l + h
             if armor_div > 0:
                 # Using tons for armor mass so armor rating stays aligned with penetration scales
-                stats["armor_rating"] = int((80 * armor_mass_tons /(armor_mass_tons + weight_tons)) + (0.1 + weight_tons) + (0.2 * mr))
+                #stats["armor_rating"] = int((80 * armor_mass_tons /(armor_mass_tons + weight_tons)) + (0.1 + weight_tons) + (0.2 * mr))
+                stats["armor_rating"] = int((((weight_tons * (armor_mass_tons / weight_tons) + (0.1 * weight_tons))) * (mr)**(0.5**10)) / ((l * w + l * h + w * h) * 2)**(0.5**4))
             else:
                 stats["armor_rating"] = int(0.1 * mr)
 
