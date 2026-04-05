@@ -912,7 +912,7 @@ class blueprintAnalysisTools:
             if armor_div > 0:
                 # Using tons for armor mass so armor rating stays aligned with penetration scales
                 #stats["armor_rating"] = int((80 * armor_mass_tons /(armor_mass_tons + weight_tons)) + (0.1 + weight_tons) + (0.2 * mr))
-                stats["armor_rating"] = int((((weight_tons * (armor_mass_tons / weight_tons) + (0.1 * weight_tons))) * (mr)**(0.5**10)) / ((l * w + l * h + w * h) * 2)**(0.5**4))
+                stats["armor_rating"] = int((((weight_tons * (armor_mass_tons / weight_tons) + (0.1 * weight_tons))) * (mr)**(0.1)) / ((l * w + l * h + w * h) * 2)**(0.25)) * 10
             else:
                 stats["armor_rating"] = int(0.1 * mr)
 
