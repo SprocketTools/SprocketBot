@@ -870,7 +870,6 @@ class contestFunctions(commands.Cog):
                 )
                 # --- CALCULATE BUILD TIME IN MEMORY ---
                 if user_records and 'roll_timestamp' in user_records[0] and user_records[0]['roll_timestamp']:
-                    import datetime
                     roll_time = user_records[0]['roll_timestamp']
                     delta = datetime.datetime.utcnow() - roll_time.replace(tzinfo=None)
 
