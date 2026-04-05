@@ -899,7 +899,7 @@ class blueprintAnalysisTools:
 
             # Penetration & Accuracy
             stats["penetration_rating"] = int((pen + (4 * ke_mj)) / 2)
-            stats["accuracy_rating"] = int(100 * (mv / (100 + mv))) if mv > 0 else 0
+            stats["accuracy_rating"] = 1000 / (best_proj_mass ** 0.25) * (max_mv ** 0.05) if mv > 0 else 0
 
             # Mobility
             mr = 0.0
