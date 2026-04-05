@@ -749,7 +749,7 @@ class contestFunctions(commands.Cog):
         await status_msg.edit(
             content=f"**Scan Complete!**\nEntries Processed: {count_processed}\nErrors/Invalid: {count_errors}\nUnique Users: {len(users_processed)}")
 
-    #@commands.command(name="submitEntry", description="Submit a blueprint to a contest")
+    @commands.command(name="submitEntry", description="Submit a blueprint to a contest")
     async def submitEntry(self, ctx: commands.Context):
         if not ctx.message.attachments:
             return await ctx.send("You must upload a `.blueprint` file with this command.")
@@ -1181,7 +1181,7 @@ class contestFunctions(commands.Cog):
     # VIEWING & DOWNLOAD
     # ----------------------------------------------------------------------------------
 
-    #@commands.command(name="contestRules", description="View the rules and requirements for an active contest.")
+    @commands.command(name="contestRules", description="View the rules and requirements for an active contest.")
     async def contestRules(self, ctx: commands.Context):
         # 1. AUTO-DETECT CONTEST
         contest_records = await self.bot.sql.databaseFetchdictDynamic(
