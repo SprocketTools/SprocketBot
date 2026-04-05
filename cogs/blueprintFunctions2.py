@@ -388,7 +388,7 @@ class blueprintFunctions2(commands.Cog):
                 embed.add_field(name="Crew", value=f"{stats['crew_count']} members")
                 embed.add_field(name="Fuel Capacity", value=f"{stats['fuel_tank_capacity']:.0f}L")
                 embed.add_field(name="Ground Pressure", value=f"{stats.get('ground_pressure', 0):.2f} kg/cm²")
-                embed.add_field(name="Armor Mass", value=f"{stats.get('armor_mass', 0):.2f}")
+                embed.add_field(name="Armor Mass", value=f"{(stats.get('armor_mass', 0)/1000):.2f}")
                 embed.add_field(name="RPG Stats", value=rpg_text, inline=False)
                 #embed.add_field(name="Frontal Angles",value=f"Upper: {stats['upper_frontal_angle']:.1f}°\nLower: {stats['lower_frontal_angle']:.1f}°")
                 gif_file = None
