@@ -880,10 +880,9 @@ class blueprintAnalysisTools:
             weight_tons = stats.get("tank_weight", 0) / 1000.0
             armor_mass_tons = stats.get("armor_mass", 0) / 1000.0
 
-            l = min(stats.get("tank_length", 0.5), 0.5)
-            w = min(stats.get("tank_width", 0.5), 0.5)
-            # Failsafe to grab highest available height metric
-            h = min(stats.get("tank_total_height", stats.get("tank_height", 0.5)), 0.5)
+            l = max(stats.get("tank_length", 0.5), 0.5)
+            w = max(stats.get("tank_width", 0.5), 0.5)
+            h = max(stats.get("tank_total_height", stats.get("tank_height", 0.5)), 0.5)
 
             vol_factor = math.sqrt((h * w * l) + 1)
             print("vol", vol_factor)
@@ -900,8 +899,9 @@ class blueprintAnalysisTools:
             # Penetration & Accuracy
             stats["penetration_rating"] = int((pen + (4 * ke_mj)) / 2)
 
-            stats["accuracy_rating"] = int(10 / ((best_proj_mass ** 0.25) / (((math.pi * best_caliber/2 ** 2) * (ke_mj ** 2)) ** 0.1)) * (max_mv ** 0.5) if max_mv > 0 else 0)
-
+            denom1 = max((((math.pi * (best_caliber / 2) ** 2) * (ke_mj ** 2)) ** 0.1), 0.0001)
+            denom2 = max((best_proj_mass ** 0.25) / denom1, 0.0001)
+            stats["accuracy_rating"] = int((10 / denom2) * (max_mv ** 0.5)) if max_mv > 0 else 0
             # Mobility
             mr = 0.0
             if vol_factor > 0:
@@ -914,6 +914,7 @@ class blueprintAnalysisTools:
                 # Using tons for armor mass so armor rating stays aligned with penetration scales
 
                 #stats["armor_rating"] = int((80 * armor_mass_tons /(armor_mass_tons + weight_tons)) + (0.1 + weight_tons) + (0.2 * mr))
+                weight_tons = max(weight_tons, 0.001)
                 stats["armor_rating"] = min(int((((weight_tons * (armor_mass_tons / weight_tons) + (0.1 * weight_tons))) * (mr)**(0.1)) / ((l * w + l * h + w * h) * 2)**(0.25)) * 10, 1)
             else:
                 stats["armor_rating"] = int(0.1 * mr)
