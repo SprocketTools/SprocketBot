@@ -880,10 +880,10 @@ class blueprintAnalysisTools:
             weight_tons = stats.get("tank_weight", 0) / 1000.0
             armor_mass_tons = stats.get("armor_mass", 0) / 1000.0
 
-            l = stats.get("tank_length", 0)
-            w = stats.get("tank_width", 0)
+            l = stats.get("tank_length", 0.5)
+            w = stats.get("tank_width", 0.5)
             # Failsafe to grab highest available height metric
-            h = stats.get("tank_total_height", stats.get("tank_height", 0))
+            h = stats.get("tank_total_height", stats.get("tank_height", 0.5))
 
             vol_factor = math.sqrt((h * w * l) + 1)
             print("vol", vol_factor)
@@ -909,9 +909,10 @@ class blueprintAnalysisTools:
             stats["mobility_rating"] = int(mr)
 
             # Armor Rating
-            armor_div = (4 * w) + l + h
+            armor_div = min((4 * w) + l + h, 1)
             if armor_div > 0:
                 # Using tons for armor mass so armor rating stays aligned with penetration scales
+<<<<<<< Updated upstream
                 #stats["armor_rating"] = int((80 * armor_mass_tons /(armor_mass_tons + weight_tons)) + (0.1 + weight_tons) + (0.2 * mr))
                 stats["armor_rating"] = int((((weight_tons * (armor_mass_tons / weight_tons) + (0.1 * weight_tons))) * (mr)**(0.1)) / ((l * w + l * h + w * h) * 2)**(0.25)) * 10
             else:
