@@ -107,6 +107,9 @@ class trollFunctions(commands.Cog):
                 username=member.display_name,
                 avatar_url=member.avatar.url if member.avatar else member.default_avatar.url
             )
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await webhook.send(file=file, content="")
         except discord.Forbidden:
             await ctx.send(
                 f"I do not have `Manage Webhooks` permission in **{channel_out.guild.name}** > {channel_out.mention}.")
