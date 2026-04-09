@@ -224,7 +224,7 @@ class trollFunctions(commands.Cog):
             if not style:
                 style = "drunk"
             message = gemini.models.generate_content(model='gemini-2.0-flash-001',
-                                                     contents=f"Make a complaint in less than 250 words about this sentence: '{init_prompt}'.  Apply a {style} accent to your complaint.")
+                                                     contents=f"Make a complaint in less than 120 words about this sentence: '{init_prompt}'.  Apply a {style} accent to your complaint.")
             print(message.text)
             await ctx.send("Message is en route.")
 

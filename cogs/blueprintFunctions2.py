@@ -314,7 +314,7 @@ class blueprintFunctions2(commands.Cog):
                 return await ctx.send("No `.blueprint` file found in your message!")
 
             try:
-                await ctx.send(f"Analyzing `{blueprint_attachment.filename}`...")
+                await ctx.send(f"Warning: tool is under development and will produce a broken .gif\n\nAnalyzing `{blueprint_attachment.filename}`...")
                 file_content = await blueprint_attachment.read()
                 blueprint_data = json.loads(file_content)
 
