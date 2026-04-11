@@ -1724,14 +1724,20 @@ class contestFunctions(commands.Cog):
         }
 
     async def _check_manager(self, ctx: commands.Context):
+        print("Checking manager status")
         try:
-            data = await self.bot.sql.databaseFetchrowDynamic(f'SELECT * FROM serverconfig WHERE serverid = $1',[ctx.guild.id])
-            roleid = data["contestmanagerroleid"]
-            role = discord.utils.get(ctx.guild.roles, id=roleid)
-            if role in ctx.author.roles:
+            data = (await self.bot.sql.databaseFetchdictDynamic(f'SELECT * FROM serverconfig WHERE serverid = $1',[ctx.guild.id]))
+            print("data:", data[0])
+            role_id = int(data[0]["contestmanagerroleid"])
+            print("role_id:", role_id)
+            print(str(ctx.author.roles))
+            if str(role_id) in str(ctx.author.roles):
+                print("Yes")
                 return True
+            print("No")
             return False
-        except Exception:
+        except Exception as e:
+            print(e)
             await self.bot.error.sendCategorizedError(ctx, "campaign")
             await ctx.send("It appears your server has not set up its roles correctly.  Ask an administrator to use the `-setup` command and give you the contest manager role.")
             return False
