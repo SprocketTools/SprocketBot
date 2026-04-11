@@ -11,6 +11,7 @@ import io
 from datetime import datetime
 import numpy as np
 import matplotlib
+from scipy.constants import horsepower
 
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
@@ -22,22 +23,59 @@ class blueprintAnalysisTools:
         self.bot = bot
 
     @staticmethod
-    def _render_worker(vertices, faces, iframes=12):
+    def _render_worker(vertices, faces, iframes=12, bp_json=None):
         """
-        Optimized 3D rendering:
-        - Reuses the Figure/Axes objects (avoids teardown/setup overhead).
-        - Uses raw buffer access (avoids PNG encoding/decoding).
-        - Manual margin adjustment (avoids costly bbox_inches calculation).
+        Optimized 3D rendering with procedural wheels and tracks.
         """
         try:
-            # 1. Coordinate Transformations (Same as before)
+            # 1. Coordinate Transformations (Sprocket Y/Z swap for Matplotlib)
             vertices = vertices[:, [0, 2, 1]]
 
-            # 2. Calculate Scene Bounds (Same as before)
+            # 2. Initial Scene Bounds based on the hull mesh
             x_min, x_max = vertices[:, 0].min(), vertices[:, 0].max()
             y_min, y_max = vertices[:, 1].min(), vertices[:, 1].max()
             z_min, z_max = vertices[:, 2].min(), vertices[:, 2].max()
 
+            # --- WHEEL AND TRACK GENERATION ---
+            wheel_render_data = []
+            wheel_faces = []
+            lowest_wheel_z = z_min
+
+            try:
+                if bp_json and 'objects' in bp_json:
+                    for obj in bp_json['objects']:
+                        # Fix: Lowercase search to match .lower()
+                        obj_str = str(obj).lower()
+                        if "wheelmount" in obj_str or "suspension" in obj_str:
+                            # Fix: Use nested transform -> pos path
+                            pos = obj.get('transform', {}).get('pos', [0, 0, 0])
+
+                            # Convert Sprocket pos to Plotting pos (Swap Y and Z)
+                            center_pos = [pos[0], pos[2], pos[1]]
+                            radius = 0.4  # Standardized radius
+                            width = 0.3  # Standardized width
+
+                            # Generate the wheel geometry
+                            cyl_faces = blueprintAnalysisTools._generate_cylinder(center_pos, radius, width)
+                            wheel_faces.extend(cyl_faces)
+
+                            # Cache for the track-wrap function
+                            wheel_render_data.append((center_pos, radius, width))
+
+                            # Track the absolute lowest point for the camera floor
+                            bottom_of_wheel = center_pos[2] - radius
+                            if bottom_of_wheel < lowest_wheel_z:
+                                lowest_wheel_z = bottom_of_wheel
+            except Exception as e:
+                print(f"Wheel render math failed: {e}")
+
+            # Generate the track belts using a convex hull wrap
+            track_faces = blueprintAnalysisTools._generate_track_belt(wheel_render_data)
+
+            # Update the floor bound so the camera doesn't cut off the wheels
+            z_min = min(z_min, lowest_wheel_z)
+
+            # 3. Finalize Scene Center and Zoom Level
             center = np.array([
                 np.mean([x_min, x_max]),
                 np.mean([y_min, y_max]),
@@ -52,12 +90,9 @@ class blueprintAnalysisTools:
 
             polygons = [vertices[face['v']] for face in faces]
 
-            # --- SETUP PHASE (Done ONCE) ---
-            # Set DPI lower if you want even more speed (e.g., 100 or 120)
+            # --- SETUP MATPLOTLIB (Done once per GIF) ---
             fig = plt.figure(figsize=(8, 8), dpi=120)
             ax = fig.add_subplot(111, projection='3d')
-
-            # Manual Layout: Removes whitespace without the slow 'bbox_inches="tight"'
             fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
             # Styling
@@ -66,7 +101,7 @@ class blueprintAnalysisTools:
             ax.set_facecolor(bg_color)
             ax.axis('off')
 
-            # Add Geometry ONCE
+            # Layer 1: The Tank Hull
             mesh_collection = Poly3DCollection(
                 polygons,
                 edgecolors=(0.8, 1.0, 1.0),
@@ -75,7 +110,29 @@ class blueprintAnalysisTools:
             )
             ax.add_collection3d(mesh_collection)
 
-            # Set Limits ONCE
+            # Layer 2: The Wheels (Dark Grey)
+            if wheel_faces:
+                wheel_poly = Poly3DCollection(
+                    wheel_faces,
+                    alpha=0.9,
+                    facecolors='#2a2d27',
+                    edgecolors='#1a1c18',
+                    linewidths=0.5
+                )
+                ax.add_collection3d(wheel_poly)
+
+            # Layer 3: The Tracks (Black)
+            if track_faces:
+                track_poly = Poly3DCollection(
+                    track_faces,
+                    alpha=0.8,
+                    facecolors='#1f1e1d',
+                    edgecolors='#111111',
+                    linewidths=0.5
+                )
+                ax.add_collection3d(track_poly)
+
+            # Set Camera Limits
             ax.set_xlim(center[0] - max_range, center[0] + max_range)
             ax.set_ylim(center[1] - max_range, center[1] + max_range)
             ax.set_zlim(center[2] - max_range, center[2] + max_range)
@@ -84,32 +141,23 @@ class blueprintAnalysisTools:
 
             images = []
 
-            # --- RENDER LOOP (Fast) ---
+            # --- RENDER LOOP ---
             for i in range(iframes):
-                # 1. Rotate Camera
                 azim = (360 / iframes) * i + (180 / iframes)
-                elev = 15
-                ax.view_init(elev=elev, azim=azim)
-
-                # 2. Draw to Canvas
+                ax.view_init(elev=15, azim=azim)
                 fig.canvas.draw()
 
-                # 3. Direct Buffer Access (Fastest Method)
-                # buffer_rgba returns an RGBA buffer directly, no swapping needed.
-                # Image.frombuffer is faster than frombytes as it avoids data copying.
                 w, h = fig.canvas.get_width_height()
                 buf = fig.canvas.buffer_rgba()
-
                 image = Image.frombytes("RGBA", (w, h), buf, "raw", "RGBA")
                 images.append(image)
 
-            # Cleanup
             plt.close(fig)
 
             if not images:
                 return None
 
-            # 4. Compile GIF
+            # Compile into GIF buffer
             gif_buffer = io.BytesIO()
             images[0].save(
                 gif_buffer,
@@ -129,7 +177,7 @@ class blueprintAnalysisTools:
             return None
 
     # --- HELPER: Async Interface ---
-    async def generate_blueprint_gif(self, mesh_data, name, iframes=12):
+    async def generate_blueprint_gif(self, mesh_data, name, iframes=12, bp_json=None):
         """
         Async helper to generate a 3D GIF.
         Call this from other commands (like analyzeBlueprint).
@@ -148,7 +196,8 @@ class blueprintAnalysisTools:
             self._render_worker,
             vertices,
             face_list,
-            iframes
+            iframes,
+            bp_json
         )
 
         if gif_buffer:
@@ -915,9 +964,28 @@ class blueprintAnalysisTools:
 
                 #stats["armor_rating"] = int((80 * armor_mass_tons /(armor_mass_tons + weight_tons)) + (0.1 + weight_tons) + (0.2 * mr))
                 weight_tons = max(weight_tons, 0.001)
-                stats["armor_rating"] = min(int((((weight_tons * (armor_mass_tons / weight_tons) + (0.1 * weight_tons))) * (mr)**(0.1)) / ((l * w + l * h + w * h) * 2)**(0.25)) * 10, 1)
+                stats["armor_rating"] = int(((((weight_tons * (armor_mass_tons / weight_tons)) * (mr)**(0.1)) / ((l * w + l * h + w * h) * 2)**(0.25)) * 10) + 1)
             else:
                 stats["armor_rating"] = int(0.1 * mr)
+
+            commander_mod = 1.0 if stats.get("crew_count", 0) > 0 else 0.5
+            crew_bonus = 1 + (stats.get("crew_count", 0) * 0.1)
+
+            stats["vision_rating"] = int(100 * (h ** 0.5) * commander_mod * crew_bonus)
+
+            # 2. Concealment Calculation
+            # Surface Area: (l*w + l*h + w*h) * 2
+            surface_area = ((l * w + l * h + w * h) * 2)
+
+            # Clamp denominators to 0.0001 to prevent crashes on broken blueprints
+            #c_denom = (max(surface_area, 0.0001) ** 0.1 * max(h, 0.0001) ** 0.5 * max(stats.get("horsepower", 1),1) ** 0.1 * max(ke_mj, 0.1) ** 0.25)
+
+            stats["concealment_rating"] = int(1000 / ((((l * w + l * h + w * h) * 2) ** 0.45) * (h ** 0.45) * (((horsepower + 50) ** 0.1) + 0.1) * (((ke_mj + 0.1) ** 0.2) + 0.3)))
+            #stats["concealment_rating"] = min(100, int(400 / ((((l * w + l * h + w * h) * 2) ** 0.6) + (h ** 0.6) + ((0.01 * horsepower + 50) ** 0.1) + ((ke_mj + 0.1) ** 0.2))))
+
+            # 3. Evasion Calculation
+            # Direct synergy between concealment and mobility
+            stats["evasion_rating"] = int((stats["concealment_rating"] * stats.get("mobility_rating", 0)) / 100)
 
             return stats
 
@@ -1073,6 +1141,59 @@ class blueprintAnalysisTools:
         memo[vuid] = global_matrix
         return global_matrix
 
+    @staticmethod
+    def _generate_cylinder(center, radius, width, segments=16):
+        """Generates matplotlib faces for a 3D cylinder aligned along the X-axis"""
+        cx, cy, cz = center
+        half_width = width / 2.0
+        angles = np.linspace(0, 2 * np.pi, segments, endpoint=False)
+        y_circle = np.cos(angles) * radius
+        z_circle = np.sin(angles) * radius
+
+        faces = []
+        for i in range(segments):
+            next_i = (i + 1) % segments
+            v1 = [cx - half_width, cy + y_circle[i], cz + z_circle[i]]
+            v2 = [cx - half_width, cy + y_circle[next_i], cz + z_circle[next_i]]
+            v3 = [cx + half_width, cy + y_circle[next_i], cz + z_circle[next_i]]
+            v4 = [cx + half_width, cy + y_circle[i], cz + z_circle[i]]
+            faces.append([v1, v2, v3, v4])
+        return faces
+
+    @staticmethod
+    def _generate_track_belt(wheel_data, track_width=0.6, track_x_offset=1.5):
+        """Uses a Convex Hull to 'shrink-wrap' a track belt around a set of wheels."""
+        from scipy.spatial import ConvexHull
+        if not wheel_data: return []
+
+        points_2d = []
+        for center, radius, _ in wheel_data:
+            cy, cz = center[1], center[2]
+            angles = np.linspace(0, 2 * np.pi, 8, endpoint=False)
+            for angle in angles:
+                points_2d.append([cy + np.cos(angle) * radius, cz + np.sin(angle) * radius])
+
+        points_2d = np.array(points_2d)
+        try:
+            hull = ConvexHull(points_2d)
+            hull_vertices = points_2d[hull.vertices]
+        except Exception:
+            return []
+
+        track_faces = []
+        half_w = track_width / 2.0
+        for i in range(len(hull_vertices)):
+            next_i = (i + 1) % len(hull_vertices)
+            y1, z1, y2, z2 = hull_vertices[i][0], hull_vertices[i][1], hull_vertices[next_i][0], hull_vertices[next_i][
+                1]
+
+            # Left & Right Tracks
+            for side in [-track_x_offset, track_x_offset]:
+                track_faces.append([
+                    [side - half_w, y1, z1], [side - half_w, y2, z2],
+                    [side + half_w, y2, z2], [side + half_w, y1, z1]
+                ])
+        return track_faces
 
 async def runMeshTranslation(ctx: commands.Context, meshData, sourcePartInfo):
     sourcePartPosX = sourcePartInfo["pos"][0]

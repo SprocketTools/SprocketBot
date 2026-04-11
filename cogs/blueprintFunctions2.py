@@ -95,71 +95,48 @@ class blueprintFunctions2(commands.Cog):
     async def setup_stats_tables(self, ctx: commands.Context):
         if ctx.author.id != self.bot.ownerid:
             return await self.bot.error.sendError(ctx)
-        await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS blueprint_stats;''')
-        create_prompt = ('''CREATE TABLE IF NOT EXISTS blueprint_stats (
-                                  vehicle_id BIGINT PRIMARY KEY,
-                                  vehicle_name VARCHAR,
-                                  vehicle_class VARCHAR(100),
-                                  vehicle_era VARCHAR(20),
-                                  host_id BIGINT,
-                                  faction_id BIGINT,
-                                  owner_id BIGINT,
-                                  base_cost BIGINT,
-                                  tank_weight REAL,
-                                  tank_length REAL,
-                                  tank_width REAL,
-                                  tank_height REAL,
-                                  tank_total_height REAL,
-                                  fuel_tank_capacity REAL,
-                                  ground_pressure REAL,
-                                  horsepower INT,
-                                  hpt REAL,
-                                  top_speed INT,
-                                  travel_range INT,
-                                  crew_count INT,
-                                  cannon_stats TEXT,
-                                  armor_mass REAL,
-                                  hit_points REAL,
-                                  damage_rating REAL,
-                                  penetration_rating REAL,
-                                  accuracy_rating REAL,
-                                  mobility_rating REAL,
-                                  armor_rating REAL,
-                                  muzzle_velocity REAL,
-                                  gun_len REAL,
-                                  file_url VARCHAR,
-                                  submission_date TIMESTAMP,
-                                  gif_url VARCHAR,
-                                  image_url VARCHAR
-                              );''')
-
         try:
-            await self.bot.sql.databaseExecute(create_prompt)
-            columns_to_ensure = [
-                ("file_url", "VARCHAR"),
-                ("submission_date", "TIMESTAMP"),
-                ("vehicle_name", "VARCHAR"),
-                ("host_id", "BIGINT"),
-                ("faction_id", "BIGINT"),
-                ("gif_url", "VARCHAR"),
-                ("image_url", "VARCHAR"),
-                ("hit_points", "REAL"),
-                ("damage_rating", "REAL"),
-                ("penetration_rating", "REAL"),
-                ("accuracy_rating", "REAL"),
-                ("mobility_rating", "REAL"),
-                ("armor_rating", "REAL"),
-                ("muzzle_velocity", "REAL"),
-                ("gun_len", "REAL")
-            ]
-
-            for col, dtype in columns_to_ensure:
-                try:
-                    await self.bot.sql.databaseExecute(
-                        f"ALTER TABLE blueprint_stats ADD COLUMN IF NOT EXISTS {col} {dtype};")
-                except Exception:
-                    pass
-
+            await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS blueprint_stats;''')
+            await self.bot.sql.databaseExecute('''
+                    CREATE TABLE IF NOT EXISTS blueprint_stats (
+                        vehicle_id BIGINT PRIMARY KEY,
+                        vehicle_name VARCHAR,
+                        owner_id BIGINT,
+                        host_id BIGINT,
+                        faction_id BIGINT,
+                        vehicle_class VARCHAR,
+                        base_cost REAL,
+                        tank_weight REAL,
+                        tank_length REAL,
+                        tank_width REAL,
+                        tank_height REAL,
+                        tank_total_height REAL,
+                        horsepower INT,
+                        hpt REAL,
+                        top_speed INT,
+                        ground_pressure REAL,
+                        fuel_tank_capacity REAL,
+                        muzzle_velocity REAL,
+                        penetration REAL,
+                        ke_mj REAL,
+                        gun_len REAL,
+                        armor_mass REAL,
+                        hit_points INT,
+                        damage_rating INT,
+                        penetration_rating INT,
+                        accuracy_rating INT,
+                        mobility_rating INT,
+                        armor_rating INT,
+                        vision_rating INT,
+                        concealment_rating INT,
+                        evasion_rating INT,
+                        build_time VARCHAR,
+                        submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        file_url TEXT,
+                        image_url TEXT,
+                        gif_url TEXT
+                    );
+                ''')
             await ctx.send("**Success!** The `blueprint_stats` table is ready (schema updated).")
         except Exception as e:
             await ctx.send(f"**Error updating table:**\n```\n{e}\n```")
@@ -344,18 +321,21 @@ class blueprintFunctions2(commands.Cog):
                 dmg = stats.get("damage_rating", 0)
                 pen_rtg = stats.get("penetration_rating", 0)
                 acc = stats.get("accuracy_rating", 0)
+                vis = stats.get("vision_rating", 0)
+                conc = stats.get("concealment_rating", 0)
+                evas = stats.get("evasion_rating", 0)
                 rpg_text = (
                     f"**HP:** {hp} | **Armor:** {arm} | **Mobility:** {mob}\n"
-                    f"**Damage:** {dmg} | **Penetration:** {pen_rtg} | **Accuracy:** {acc}"
+                    f"**Damage:** {dmg} | **Penetration:** {pen_rtg} | **Accuracy:** {acc}\n"
+                    f"**Vision:** {vis} | **Concealment:** {conc} | **Evasion:** {evas}\n"
                 )
                 valid_cols = [
-                    "vehicle_id", "vehicle_name", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id",
-                    "base_cost", "tank_weight", "tank_length", "tank_width", "tank_height", "tank_total_height",
-                    "fuel_tank_capacity", "ground_pressure", "horsepower", "hpt", "top_speed", "travel_range",
-                    "crew_count", "armor_mass",
-                    "hit_points", "damage_rating", "penetration_rating", "accuracy_rating", "mobility_rating",
-                    "armor_rating",
-                    "muzzle_velocity", "gun_len"
+                    "vehicle_class", "host_id", "faction_id", "base_cost", "ground_pressure", "travel_range",
+                    "vehicle_id", "owner_id", "tank_weight", "crew_count", "tank_length", "vehicle_era",
+                    "muzzle_velocity", "gun_len", "armor_mass", "tank_width", "tank_height", "tank_total_height",
+                    "horsepower", "hpt", "top_speed", "fuel_tank_capacity", "hit_points", "damage_rating",
+                    "penetration_rating", "accuracy_rating", "mobility_rating", "armor_rating",
+                    "vision_rating", "concealment_rating", "evasion_rating", "build_time", "vehicle_name"
                 ]
 
                 insert_data = {k: v for k, v in stats.items() if k in valid_cols}
@@ -425,7 +405,8 @@ class blueprintFunctions2(commands.Cog):
                         await ctx.send("Generating GIF, this could take awhile...")
                         gif_file = await self.bot.analyzer.generate_blueprint_gif(mesh_to_render,
                                                                                   blueprint_data['header']['name'],
-                                                                                  iframes=iframes_in)
+                                                                                  iframes=iframes_in,
+                                                                                  bp_json=None)
                         if gif_file:
                             embed.set_image(url=f"attachment://{gif_file.filename}")
                     except Exception as e:

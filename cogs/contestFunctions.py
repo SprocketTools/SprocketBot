@@ -1050,13 +1050,12 @@ class contestFunctions(commands.Cog):
             stats['submission_date'] = datetime.datetime.now()
 
             valid_cols = [
-                "vehicle_id", "vehicle_name", "vehicle_class", "vehicle_era", "host_id", "faction_id", "owner_id",
-                "base_cost", "tank_weight", "tank_length", "tank_width", "tank_height", "tank_total_height",
-                "fuel_tank_capacity", "ground_pressure", "horsepower", "hpt", "top_speed", "travel_range",
-                "crew_count", "armor_mass",
-                "hit_points", "damage_rating", "penetration_rating", "accuracy_rating", "mobility_rating",
-                "armor_rating",
-                "muzzle_velocity", "gun_len"
+                "vehicle_class", "host_id", "faction_id", "base_cost", "ground_pressure", "travel_range",
+                "vehicle_id", "owner_id", "tank_weight", "crew_count", "tank_length", "vehicle_era",
+                "muzzle_velocity", "gun_len", "armor_mass", "tank_width", "tank_height", "tank_total_height",
+                "horsepower", "hpt", "top_speed", "fuel_tank_capacity", "hit_points", "damage_rating",
+                "penetration_rating", "accuracy_rating", "mobility_rating", "armor_rating",
+                "vision_rating", "concealment_rating", "evasion_rating", "build_time", "vehicle_name"
             ]
 
             insert_data = {k: v for k, v in stats.items() if k in valid_cols}
@@ -1725,10 +1724,17 @@ class contestFunctions(commands.Cog):
         }
 
     async def _check_manager(self, ctx: commands.Context):
-        if ctx.author.id == ctx.guild.owner_id or ctx.author.guild_permissions.manage_guild or ctx.author.id == self.bot.ownerid:
-            return True
-        await ctx.send("You need **Manage Server** permissions.")
-        return False
+        try:
+            data = await self.bot.sql.databaseFetchrowDynamic(f'SELECT * FROM serverconfig WHERE serverid = $1',[ctx.guild.id])
+            roleid = data["contestmanagerroleid"]
+            role = discord.utils.get(ctx.guild.roles, id=roleid)
+            if role in ctx.author.roles:
+                return True
+            return False
+        except Exception:
+            await self.bot.error.sendCategorizedError(ctx, "campaign")
+            await ctx.send("It appears your server has not set up its roles correctly.  Ask an administrator to use the `-setup` command and give you the contest manager role.")
+            return False
 
     async def _ask_gemma_judge(self, ai_prompt: str, user_name: str, contest_data: dict, user_message: str = None,
                                tank_data: dict = None):
