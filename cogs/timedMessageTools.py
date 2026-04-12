@@ -35,55 +35,98 @@ class timedMessageTools(commands.Cog):
                 await asyncio.gather(*tasks)
 
     async def sendScheduledMessage(self, data):
-        print(data)
-        delay_secs = max(int(data['extract']), 0)
+        """
+        Handles messages scheduled for a specific time/date.
+        """
+        # --- SAFETY GUARD ---
+        # If the timestamp is < 2 (Interaction-based), ignore it here.
+        # This prevents the bot from spamming interaction replies on startup.
+        extract_val = float(data.get('extract', 0))
+        if extract_val < -1000000:  # Interaction messages will have a huge negative extract
+            return
+
+        # Wait for the scheduled time
+        delay_secs = max(int(extract_val), 0)
         await asyncio.sleep(delay_secs)
+
         try:
-            if data['channelid'] > 0:
-                channel = await self.bot.fetch_channel((int(data['channelid'])))
-                async with channel.typing():
-                    await asyncio.sleep(4)
-                await channel.send(data['content'])
-                await self.bot.sql.databaseFetchdictDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [data['id']])
-        except Exception: pass
-        try:
-            if "https" in data['webhookid']:
-                async with aiohttp.ClientSession() as session:
-                    webhook = Webhook.from_url(data['webhookid'], session=session)
-                    await webhook.send(data['content'])
-        except Exception: pass
+            # 1. Resolve Channel and Target User
+            channel = None
+            if int(data['channelid']) > 0:
+                channel = await self.bot.fetch_channel(int(data['channelid']))
+
+            # In time-based messages, ownerid is the person we are 'targeting'
+            target_user = await self.bot.fetch_user(int(data['ownerid']))
+
+            if channel and target_user:
+                # 2. Check for jumpscare tag
+                if "[jumpscare]" in data['content'].lower():
+                    await self.bot.ui.generate_jumpscare(None, memberin=target_user, channelin=channel)
+
+                # 3. Otherwise, send as a normal message
+                else:
+                    async with channel.typing():
+                        await asyncio.sleep(2)
+                    await channel.send(data['content'])
+
+            # 4. Cleanup
+            await self.bot.sql.databaseExecuteDynamic(
+                '''DELETE FROM timedmessages WHERE id = $1;''',
+                [data['id']]
+            )
+
+        except Exception as e:
+            print(f"[ERROR] Scheduled Task ID {data.get('id')} failed: {e}")
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        data = (await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM timedmessages WHERE (EXTRACT(EPOCH FROM (time)) < 2) AND (ownerid = $1) AND ((channelid = $2) OR (channelid = 0)) LIMIT 1;''', [message.author.id, message.channel.id]))
-        for msg in data:
-            string = await self.bot.error.errorfyText(message, msg['content'])
-            async with message.channel.typing():
-                await asyncio.sleep(4)
-            await message.reply(string)
-            await self.bot.sql.databaseFetchdictDynamic('''DELETE FROM timedmessages WHERE id = $1;''', [msg['id']])
-    # @tasks.loop(seconds=300)
-    # async def updateRoles(self):
-    #     await timedMessageTools.roleUpdater(self)
-    #
-    # @commands.command(name="updateColorChangers",description="Update the color changers by force")
-    # async def updateColorChangers(self, ctx: commands.Context):
-    #     try:
-    #         self.startup = False
-    #         await timedMessageTools.roleUpdater(self)
-    #         self.startup = True
-    #         print("test")
-    #         await ctx.send("## Done!")
-    #     except Exception as e:
-    #         await ctx.send(f"{e}")
-    #
-    # async def roleUpdater(self):
-    #     if self.startup == True:
-    #         await asyncio.sleep(self.startupdelay)
-    #         self.startup = False
-    #     else:
-    #         print("hi")
-    #
+        # 1. Ignore bots to prevent loops
+        if message.author.bot:
+            return
+
+        # 2. Fetch the next 'Trap' message (Interaction flag TS < 2)
+        # We use ORDER BY time ASC to ensure sequential batching
+        query = '''
+                SELECT * FROM timedmessages 
+                WHERE (EXTRACT(EPOCH FROM (time)) < 2) 
+                AND (ownerid = $1) 
+                AND ((channelid = $2) OR (channelid = 0)) 
+                ORDER BY time ASC 
+                LIMIT 1;
+            '''
+
+        try:
+            data = await self.bot.sql.databaseFetchdictDynamic(query, [message.author.id, message.channel.id])
+            if not data:
+                return
+            print("msg data:", data)
+            for msg in data:
+                content = msg.get('content', '')
+
+                # 3. Branching Logic: Jumpscare vs Text
+                if "[jumpscare]" in content.lower():
+                    # Pass 'None' for ctx and explicitly provide member/channel
+                    await self.bot.ui.generate_jumpscare(None, memberin=message.author, channelin=message.channel)
+
+                elif content.strip():
+                    # Process text placeholders
+                    string = await self.bot.error.errorfyText(message, content)
+
+                    # Human-like typing delay
+                    async with message.channel.typing():
+                        await asyncio.sleep(min(len(string) / 20, 3))
+
+                    await message.reply(string)
+
+                # 4. Clean up the database so we move to the next message in the batch
+                await self.bot.sql.databaseExecuteDynamic(
+                    '''DELETE FROM timedmessages WHERE id = $1;''',
+                    [msg['id']]
+                )
+
+        except Exception as e:
+            print(f"[CRITICAL] on_message Trap Error: {e}")
+
     @commands.command(name="setupTimedMessageDatabase", description="generate a key that can be used to initiate a campaign")
     async def setupTimedMessageDatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
@@ -129,32 +172,59 @@ class timedMessageTools(commands.Cog):
 
         print(await self.bot.sql.databaseFetchdict('''SELECT * FROM timedmessages;'''))
 
-    @commands.command(name="scheduleBatchReply", description="generate a key that can be used to initiate a campaign")
+    @commands.command(name="scheduleBatchReply",description="Queue a sequence of replies triggered by user interaction.")
     async def scheduleBatchReply(self, ctx: commands.Context):
-        if ctx.author.id not in [712509599135301673, 367676077298024458, 580462834345836545, 421310278479642625, 753045014199795723, 1022554155191107654, 199887270323552256, 271338260360462337]:
+        # Admin check (matching your existing list)
+        if ctx.author.id not in [712509599135301673, 367676077298024458, 580462834345836545]:
             return
-        userDest = await textTools.getIntResponse(ctx, "What user is being replied to?  Reply with an id.")
-        time_stamp = 1
 
-        await ctx.send("Continue sending unique messages unitl you have your chain of messages complete.  \n- Send `[continue]` to confirm or `[cancel]` to abort.  \n- Code ticks (`) will be stripped from the front and back of the message.\n- Use code ticks to help ensure pings of format <@userid> or <@&roleid> get included.\n   - Similarly, channel mentions are <#channelid>")
+        # 1. Get the Victim
+        userDest = await textTools.getIntResponse(ctx, "What user is being replied to? Reply with their ID.")
+
+        # 2. Collect the Messages
+        await ctx.send(
+            "Enter your messages one by one.\n"
+            "- Use `[jumpscare]` to trigger the animated GIF.\n"
+            "- Send `[continue]` to finish or `[cancel]` to abort."
+        )
+
         data = []
-        status = True
-        while status:
+        while True:
             msg = await textTools.awaitResponse(ctx, action="raw")
-            print(msg)
-            if msg != "[cancel]" and msg != "[continue]":
-                data.append(msg)
-            else:
-                status = False
+            if msg == "[cancel]":
+                return await ctx.send("Aborted.")
+            if msg == "[continue]":
+                break
+            data.append(msg)
 
-        channelDest = await textTools.getIntResponse(ctx, "Specify a channel **id** if you want to limit the command to a specific channel.  Otherwise send `0` to let it run anywhere.")
-        ids = "Your IDs are: "
-        for message in data:
-            id = str(time_stamp+random.random()*10000)
-            ids = ids + "\n" + str(id)
-            await self.bot.sql.databaseExecuteDynamic('''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5), $6);''',[id, userDest, channelDest, message, int(time_stamp), "empty"])
-            print(await self.bot.sql.databaseFetchdict('''SELECT * FROM timedmessages;'''))
-        await ctx.send(f"## Message queued!\n{ids}")
+        if not data:
+            return await ctx.send("No messages provided. Aborting.")
+
+        # 3. Get Channel Restriction
+        channelDest = await textTools.getIntResponse(ctx, "Specify a channel **id** for the trap, or `0` for anywhere.")
+
+        # 4. Queue the Interaction Batch
+        # We start at 1.0. The on_message listener looks for anything < 2.0.
+        base_interaction_ts = 1.0
+        ids_log = "Messages Queued:"
+
+        for i, content in enumerate(data):
+            # Increment by 0.001 per message so order is preserved (1.001, 1.002, etc.)
+            staggered_ts = base_interaction_ts + (i * 0.001)
+
+            # Create a unique ID for database tracking
+            msg_id = f"TRAP_{int(time.time())}_{i}"
+
+            # Insert into the database
+            # ownerid stores the 'Victim', content stores the text/tag, time stores the interaction flag
+            await self.bot.sql.databaseExecuteDynamic(
+                '''INSERT INTO timedmessages VALUES($1, $2, $3, $4, TO_TIMESTAMP($5), $6);''',
+                [msg_id, userDest, channelDest, content, staggered_ts, "empty"]
+            )
+
+            ids_log += f"\n- {msg_id}: {content[:20]}..."
+
+        await ctx.send(f"## Interaction Trap Armed!\n{ids_log}")
 
     @commands.command(name="scheduleBatch", description="Edit a faction un bulk")
     async def scheduleBatch(self, ctx: commands.Context):
