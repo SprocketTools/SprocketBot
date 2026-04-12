@@ -172,11 +172,12 @@ class timedMessageTools(commands.Cog):
 
         print(await self.bot.sql.databaseFetchdict('''SELECT * FROM timedmessages;'''))
 
+    @commands.is_owner()
     @commands.command(name="scheduleBatchReply",description="Queue a sequence of replies triggered by user interaction.")
     async def scheduleBatchReply(self, ctx: commands.Context):
         # Admin check (matching your existing list)
-        if ctx.author.id not in [712509599135301673, 367676077298024458, 580462834345836545]:
-            return
+        # if ctx.author.id not in [712509599135301673, 367676077298024458, 580462834345836545]:
+        #     return
 
         # 1. Get the Victim
         userDest = await textTools.getIntResponse(ctx, "What user is being replied to? Reply with their ID.")
