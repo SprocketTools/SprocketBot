@@ -133,6 +133,7 @@ class imageTools(commands.Cog):
             baseImages = newImages
 
     # --- NEW COMMAND: Avatar Welcome ---
+    @commands.is_owner()
     @commands.command(name="jumpscare", description="Replies with a welcome GIF, fading in your avatar.")
     async def avatar_fade_command(self, ctx: commands.Context, memberin: discord.Member, channelout: discord.TextChannel):
         author_id = memberin.id
