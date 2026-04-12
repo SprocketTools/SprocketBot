@@ -4,7 +4,8 @@ import discord, asyncio, requests, io
 from discord.ext import commands
 import platform
 import type_hints
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw, ImageOps
+
 import os
 import asyncio
 import io
@@ -17,7 +18,6 @@ from typing import Literal, Union
 import re
 #import demjson3
 import type_hints
-
 
 imageCategoryList = ["chalk inscriptions", "inscriptions", "labels", "letters", "memes", "numbers", "optics", "welding", "textures", "weathering"]
 
@@ -134,7 +134,7 @@ class imageTools(commands.Cog):
 
     # --- NEW COMMAND: Avatar Welcome ---
     @commands.command(name="jumpscare", description="Replies with a welcome GIF, fading in your avatar.")
-    async def avatar_fade_command(self, ctx: commands.Context, memberin: discord.Member):
+    async def avatar_fade_command(self, ctx: commands.Context, memberin: discord.Member, channelout: discord.TextChannel):
         author_id = memberin.id
         avatar_url = memberin.display_avatar.url
 
@@ -154,8 +154,22 @@ class imageTools(commands.Cog):
                     if resp.status != 200: return await ctx.send("Failed to download avatar.")
                     avatar_bytes = await resp.read()
 
-            with open(temp_avatar_name, "wb") as f:
-                f.write(avatar_bytes)
+            avatar_img = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
+
+            # 1. Force the image into a perfect square (512x512 is a good base)
+            size = (280, 280)
+            avatar_img = ImageOps.fit(avatar_img, size, Image.LANCZOS)
+
+            # 2. Create a circular mask
+            mask = Image.new('L', size, 0)
+            draw = ImageDraw.Draw(mask)
+            draw.ellipse((0, 0) + size, fill=255)
+
+            # 3. Apply the mask as the Alpha channel
+            avatar_img.putalpha(mask)
+
+            # 4. Save the "Circle Version" to the temp file
+            avatar_img.save(temp_avatar_name)
 
             if not os.path.exists(shadow_path):
                 return await ctx.send("Error: 'assets/shadow.png' is missing!")
@@ -182,7 +196,7 @@ class imageTools(commands.Cog):
                 print(f"FFmpeg Error: {process.stderr}")
                 return await ctx.send("FFmpeg failed to process the GIF.")
 
-            await ctx.reply(file=discord.File(temp_output_name, filename='welcome.gif'))
+            await channelout.send(file=discord.File(temp_output_name, filename=f'jumpscare_{memberin.name}.gif'))
 
         finally:
             # Cleanup
@@ -198,15 +212,15 @@ class imageTools(commands.Cog):
         - Targeted PaletteGen (only scans the first 3s for perfect colors).
         - Smooth dithering (sierra2_4a) for the fade.
         """
-        av_x, av_y = "20", "20"
-        sh_x, sh_y = "35", "360"
+        av_x, av_y = "55", "60"
+        sh_x, sh_y = "35", "400"
 
         filter_str = (
             # Step A: Loop and Prep Avatar
-            f"[1:v]loop=loop=-1:size=1:start=0,format=rgba,scale=350:350:flags=lanczos,fade=t=in:st=1.0:d=1.0:alpha=1[av_f];"
+            f"[1:v]loop=loop=-1:size=1:start=0,format=rgba,scale=280:280:flags=lanczos,fade=t=in:st=1.0:d=1.0:alpha=1[av_f];"
 
             # Step B: Loop and Prep Shadow
-            f"[2:v]loop=loop=-1:size=1:start=0,format=rgba,scale=320:80:flags=lanczos,colorchannelmixer=aa=0.2,"
+            f"[2:v]loop=loop=-1:size=1:start=0,format=rgba,scale=320:60:flags=lanczos,colorchannelmixer=aa=0.2,"
             f"fade=t=in:st=1.0:d=1.0:alpha=1[sh_f];"
 
             # Step C: Overlays
