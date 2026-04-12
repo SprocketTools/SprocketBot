@@ -347,8 +347,7 @@ class githubTools(commands.Cog):
             return
         try:
             while True:
-                decalInfo = [dict(row) for row in await self.bot.sql.databaseFetch(
-                    f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
+                decalInfo = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{decalInfo['strippedname']}"
                 imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{decalInfo['strippedname']}"
                 await ctx.send(file=discord.File(imageCatalogFilepath))

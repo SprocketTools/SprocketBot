@@ -1,10 +1,24 @@
 import random
-
+import aiohttp
 import discord, asyncio, requests, io
 from discord.ext import commands
 import platform
 import type_hints
 from PIL import Image, ImageChops
+import os
+import asyncio
+import io
+import math
+import subprocess
+import discord
+from PIL import Image
+from discord.ext import commands
+from typing import Literal, Union
+import re
+#import demjson3
+import type_hints
+
+
 imageCategoryList = ["chalk inscriptions", "inscriptions", "labels", "letters", "memes", "numbers", "optics", "welding", "textures", "weathering"]
 
 if platform.system() == "Windows":
@@ -23,6 +37,8 @@ imgCandidateFolder = "imgbin"
 class imageTools(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
+        self.WELCOME_GIF_PATH = os.path.join("assets", "jumpscare_background.gif")
+
     @commands.hybrid_command(name="weather", description="Weather a picture.  Must be a .png", extras={'category': 'utility'})
     async def weather(self, ctx: commands.Context):
         if random.random() < 0.001:
@@ -116,8 +132,94 @@ class imageTools(commands.Cog):
                 newImages.append(imageOut)
             baseImages = newImages
 
+    # --- NEW COMMAND: Avatar Welcome ---
+    @commands.command(name="jumpscare", description="Replies with a welcome GIF, fading in your avatar.")
+    async def avatar_fade_command(self, ctx: commands.Context, memberin: discord.Member):
+        author_id = memberin.id
+        avatar_url = memberin.display_avatar.url
 
+        # --- FIX: Use Absolute Paths to prevent Windows confusion ---
+        cwd = os.getcwd()
+        temp_avatar_name = os.path.abspath(os.path.join(cwd, f"temp_avatar_{author_id}.png"))
+        temp_output_name = os.path.abspath(os.path.join(cwd, f"final_output_{author_id}.gif"))
+        background_path = os.path.abspath(self.WELCOME_GIF_PATH)
+        shadow_path = os.path.abspath(os.path.join(cwd, "assets", "black_circle.png"))
 
+        try:
+            await ctx.send("Generating your customized welcome...")
+
+            # Download Avatar
+            async with aiohttp.ClientSession() as session:
+                async with session.get(avatar_url) as resp:
+                    if resp.status != 200: return await ctx.send("Failed to download avatar.")
+                    avatar_bytes = await resp.read()
+
+            with open(temp_avatar_name, "wb") as f:
+                f.write(avatar_bytes)
+
+            if not os.path.exists(shadow_path):
+                return await ctx.send("Error: 'assets/shadow.png' is missing!")
+
+            # Build the filter
+            ffmpeg_filter = self._build_fade_overlay_filter()
+
+            # --- FIX: Removed -loop to prevent 'Option not found' errors ---
+            # We now handle the loop inside the filter_complex instead
+            cmd = [
+                'ffmpeg',
+                '-threads', '0',
+                '-i', background_path,
+                '-i', temp_avatar_name,
+                '-i', shadow_path,
+                '-filter_complex', ffmpeg_filter,
+                '-fps_mode', 'passthrough',  # Keeps the original background FPS
+                '-y', temp_output_name
+            ]
+
+            process = await asyncio.to_thread(subprocess.run, cmd, capture_output=True, text=True)
+
+            if process.returncode != 0:
+                print(f"FFmpeg Error: {process.stderr}")
+                return await ctx.send("FFmpeg failed to process the GIF.")
+
+            await ctx.reply(file=discord.File(temp_output_name, filename='welcome.gif'))
+
+        finally:
+            # Cleanup
+            for f in [temp_avatar_name, temp_output_name]:
+                if os.path.exists(f): os.remove(f)
+
+    @staticmethod
+    def _build_fade_overlay_filter() -> str:
+        """
+        High-Quality / Low-Resource Hybrid:
+        - Internal loops for PNGs.
+        - High-quality scaling (Lanczos).
+        - Targeted PaletteGen (only scans the first 3s for perfect colors).
+        - Smooth dithering (sierra2_4a) for the fade.
+        """
+        av_x, av_y = "20", "20"
+        sh_x, sh_y = "35", "360"
+
+        filter_str = (
+            # Step A: Loop and Prep Avatar
+            f"[1:v]loop=loop=-1:size=1:start=0,format=rgba,scale=350:350:flags=lanczos,fade=t=in:st=1.0:d=1.0:alpha=1[av_f];"
+
+            # Step B: Loop and Prep Shadow
+            f"[2:v]loop=loop=-1:size=1:start=0,format=rgba,scale=320:80:flags=lanczos,colorchannelmixer=aa=0.2,"
+            f"fade=t=in:st=1.0:d=1.0:alpha=1[sh_f];"
+
+            # Step C: Overlays
+            f"[0:v][sh_f]overlay=x={sh_x}:y={sh_y}:shortest=1[bg_s];"
+            f"[bg_s][av_f]overlay=x={av_x}:y={av_y}:shortest=1[v_c];"
+
+            # Step D: Smart Palette (The Quality Fix)
+            # trim=end=3 ensures it only spends CPU analyzing the intro fade
+            f"[v_c]split[p_i][p_a];"
+            f"[p_i]trim=end=3,palettegen=stats_mode=full:max_colors=256[pal];"
+            f"[p_a][pal]paletteuse=dither=sierra2_4a:diff_mode=rectangle"
+        )
+        return filter_str
 
 
 
