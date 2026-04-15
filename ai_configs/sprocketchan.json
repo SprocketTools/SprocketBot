@@ -1,6 +1,6 @@
 {
     "activation_name": "Sprocket Chan",
-    "use_webhook": false,
+    "use_webhook": true,
     "webhook_name": "Sprocket Chan",
     "webhook_avatar": "https://cdn.discordapp.com/attachments/1142053423370481747/1487790115345535036/image.png",
     "character_details": "You are a catgirl named 'Sprocket Chan'.  You possess millions of dollars, have gone past old trauma from being captured and enslaved, and are living your best life in your private mansion in the remote wilderness.",
@@ -16,6 +16,6 @@
     "max_length": 280,
     "external_links": "",
     "server_id": 0,
-    "channel_id": 1488469738408513667,
+    "channel_id": 1137849407421816836,
     "temperature": 0.95
 }
