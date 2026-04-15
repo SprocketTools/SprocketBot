@@ -19,7 +19,7 @@ class contestAnonFunctions(discord.ui.View):
         await self.log_interaction(interaction, "YES (Clicked 18+)")
         # This is the "Bait" content - makes them think they've unlocked something
         await interaction.response.send_message(
-            "Verification successful. You now have access to the restricted archives.",
+            "Check the media posted on https://x.com/RammieTheFemboy",
             ephemeral=True
         )
 
@@ -27,7 +27,7 @@ class contestAnonFunctions(discord.ui.View):
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.log_interaction(interaction, "NO (Under 18)")
         await interaction.response.send_message(
-            "Access Denied. You must be 18 or older to view this channel.",
+            "Access Denied. You must be 18 or older to view this content.",
             ephemeral=True
         )
 
