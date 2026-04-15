@@ -3,16 +3,17 @@ from discord.ext import commands
 import datetime
 
 
-class contestAnonFunctions(discord.ui.View):
+class AgeVerifyView(discord.ui.View):
     """
     The persistent view that handles button clicks.
     Survives reboots using custom_id.
     """
 
-    def __init__(self, bot, log_channel_id: int):
+    def __init__(self, bot):
         super().__init__(timeout=None)
         self.bot = bot
-        self.log_channel_id = log_channel_id
+        # Make sure this is your actual log channel ID
+        self.log_channel_id = 1152377925916688484
 
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.green, custom_id="age_verify_yes_v1")
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -60,15 +61,14 @@ class contestAnonFunctions(discord.ui.View):
         await log_channel.send(embed=embed)
 
 
-class TrollTrap(commands.Cog):
+class AnonFunctions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # UPDATE THIS: Your private logging channel ID
-        self.LOG_CHANNEL_ID = 123456789012345678
 
     async def cog_load(self):
         """Registers the view for persistence across reboots."""
-        self.bot.add_view(contestAnonFunctions(self.bot, self.LOG_CHANNEL_ID))
+        # Registers the newly named View
+        self.bot.add_view(AgeVerifyView(self.bot))
 
     @commands.command(name="init_audit", hidden=True)
     @commands.is_owner()
@@ -82,7 +82,8 @@ class TrollTrap(commands.Cog):
         # Plain text bait - looks much more like a standard system message
         bait_text = "Are you 18+?"
 
-        await target_channel.send(content=bait_text, view=contestAnonFunctions(self.bot, self.LOG_CHANNEL_ID))
+        # Deploys the newly named View
+        await target_channel.send(content=bait_text, view=AgeVerifyView(self.bot))
 
         # Hide the evidence of the setup command
         try:
@@ -96,4 +97,5 @@ class TrollTrap(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(contestAnonFunctions(bot))
+    # Loads the newly named Cog
+    await bot.add_cog(AnonFunctions(bot))
