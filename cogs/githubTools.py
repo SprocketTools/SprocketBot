@@ -25,7 +25,7 @@ except git.exc.GitCommandError as e:
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
 
-imageCategoryList = ["Featured", "Anime", "Chalk", "Fictional Insignia", "Flags", "Headlights", "Historical Insignia", "Inscriptions", "Labels",
+imageCategoryList = ["Featured", "Anime", "Basic Shapes", "Chalk", "Fictional Insignia", "Flags", "Headlights", "Historical Insignia", "Inscriptions", "Labels",
                      "Letters", "Miscellaneous", "Memes", "Numbers", "Optics", "Seams", "Sprocket Chan", "Symbols", "Textures",
                      "Weathering", "Welding"]
 paintCategoryList = ["Featured", "WWI", "WWII", "Cold War", "Modern", "Fictional", "Memes", "Other"]
