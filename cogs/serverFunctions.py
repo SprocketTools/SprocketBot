@@ -112,7 +112,7 @@ class serverFunctions(commands.Cog):
 
         for rule in data:
             dt = await textTools.getUnixTimestamp(rule['timestamp'])
-            embed.add_field(name=rule['name'],
+            embed.add_field(name=rule['name'] + " (" + rule['points'] + " points)",
                             value=f"{rule['description']}\nModerator: <@{rule['moderatorid']}>\nTime: <t:{dt}:f>",
                             inline=False)
 
