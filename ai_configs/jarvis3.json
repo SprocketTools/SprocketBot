@@ -8,7 +8,7 @@
     "knowledge_url": "",
     "exit_instructions": "",
     "message_cap": 2,
-    "context_limit": 20,
+    "context_limit": 10,
     "ai_model": "gemma",
     "cooldown_seconds": 29500,
     "burst_limit": 2,
@@ -17,5 +17,5 @@
     "external_links": "",
     "server_id": 0,
     "channel_id": 0,
-    "temperature": 1.4
+    "temperature": 0.8
 }
