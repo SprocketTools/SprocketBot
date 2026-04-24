@@ -455,14 +455,20 @@ class adminFunctions(commands.Cog):
         i = 0
         c = 0
         serverList = "Your server list:"
+        out_list = []
         for server in self.bot.guilds:
-            serverList = serverList + f"\n{server.name} ({server.member_count} members)"
+            out_list.append([server.name, server.member_count])
+        out_list.sort(key=lambda x: x[1], reverse=True)
+        print(out_list)
+        for server in out_list:
+            print(server)
+            serverList = serverList + f"\n{server[0]} ({server[1]} members)"
             i+= 1
-            c += server.member_count
+            c += server[1]
             if i % 20 == 0:
                 await ctx.send(serverList)
                 serverList = ""
-        #await ctx.send(serverList)
+        await ctx.send(serverList)
         await ctx.send(f"count: {i} servers!")
         await ctx.send(f"serving: {c} members!")
 
