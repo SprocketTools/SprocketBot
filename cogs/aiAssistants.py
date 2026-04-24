@@ -286,7 +286,7 @@ class AIAssistants(commands.Cog):
                 break
 
             # --- PROCESS ATTACHMENTS (Images + Text Files) ---
-            ai_model = config.get("ai_model", "normal")
+            ai_model = config.get("ai_model", "gemma")
             attachments = []
             message_content = message.clean_content
 
@@ -294,7 +294,7 @@ class AIAssistants(commands.Cog):
                 # Handle Images
                 if att.content_type and att.content_type.startswith("image/"):
                     attachments.append(att)
-                    ai_model = "normal"
+                    ai_model = "gemma"
                     # Handle Text Files
                 elif att.filename.endswith(".txt") or (att.content_type and att.content_type.startswith("text/")):
                     try:
