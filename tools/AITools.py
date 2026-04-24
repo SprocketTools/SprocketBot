@@ -82,7 +82,7 @@ class GeminiAITools:
             case "smart":
                 model_name = 'models/gemini-3-flash-preview'
             case "gemma" | "gemma-3-27b-it":
-                model_name = 'models/gemma-4-31b-it'
+                model_name = 'gemma-4-26b-a4b-it'
 
         if not instructions:
             instructions = "You are responding to a Discord conversation."
