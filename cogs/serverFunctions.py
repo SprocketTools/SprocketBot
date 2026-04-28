@@ -415,22 +415,23 @@ class serverFunctions(commands.Cog):
         embed.add_field(name="Channels",
                         value=f"General: <#{serverData['generalchannelid']}>\nAnnouncements: <#{serverData['updateschannelid']}>\nBot commands: <#{serverData['commandschannelid']}>\nServer managers: <#{serverData['managerchannelid']}>",
                         inline=False)
-        embed.add_field(name="Roles", value=(
-            f"Server booster: <@&{serverData['serverboosterroleid']}>\nContest manager: <@&{serverData['contestmanagerroleid']}>\nBot manager: <@&{serverData['botmanagerroleid']}>\nCampaign manager: <@&{serverData['campaignmanagerroleid']}>\nMusic commands role: <@&{serverData['musicroleid']}>"),
-                        inline=False)
-        embed.add_field(name="Fun",
-                        value=f"Allow random error replies: {serverData['allowfunny']}\nAllow AI conversations: {serverData['allowconversations']}\nJarvis cooldown: {round(serverData['jarviscooldown'] / 60)} minutes\nJarvis burst count: {serverData['jarvisburst']}",
-                        inline=False)
+        embed.add_field(name="Roles", value=(f"Server booster: <@&{serverData['serverboosterroleid']}>\nContest manager: <@&{serverData['contestmanagerroleid']}>\nBot manager: <@&{serverData['botmanagerroleid']}>\nCampaign manager: <@&{serverData['campaignmanagerroleid']}>\nMusic commands role: <@&{serverData['musicroleid']}>"), inline=False)
+        this_text = f"Allow random joke (\"error\") replies in <#{serverData['generalchannelid']}>: {serverData['allowfunny']}"
+        if "ai" in ctx.bot.modules:
+            this_text = f"Allow random error replies: {serverData['allowfunny']}\nAllow AI conversations: {serverData['allowconversations']}\nJarvis cooldown: {round(serverData['jarviscooldown'] / 60)} minutes\nJarvis burst count: {serverData['jarvisburst']}"
+        embed.add_field(name="Fun",value=this_text, inline=False)
         embed.add_field(name="Threshold of scam messages", value=serverData['flagthreshold'], inline=False)
         embed.add_field(name="Action taken on scammer", value=serverData['flagaction'], inline=False)
         embed.add_field(name="What to ping on scam action", value=f"@{serverData['flagping']}", inline=False)
         if serverData['flagping'] == "custom":
             embed.add_field(name="Role pinged on scam action", value=(f"<@&{serverData['flagpingid']}>"), inline=False)
-        embed.add_field(name="Ban message", value=serverData['banmessage'], inline=False)
-        if serverData['clickupkey'] != "0":
-            embed.add_field(name="ClickUp integration", value=f"True", inline=False)
-        else:
-            embed.add_field(name="ClickUp integration", value=f"False", inline=False)
+        if "moderation" in ctx.bot.modules:
+            embed.add_field(name="Ban message", value=serverData['banmessage'], inline=False)
+        if "extras" in ctx.bot.modules:
+            if serverData['clickupkey'] != "0":
+                embed.add_field(name="ClickUp integration", value=f"True", inline=False)
+            else:
+                embed.add_field(name="ClickUp integration", value=f"False", inline=False)
 
         embed.set_thumbnail(url=ctx.guild.icon)
         await ctx.send(embed=embed)
@@ -528,10 +529,17 @@ class serverFunctions(commands.Cog):
             await serverFunctions.showSettings(self, ctx)
             await ctx.send("What setting do you wish to modify?")
             inList = ["General channel", "Announcements channel", "Bot commands channel", "Server managers channel",
-                      "Server booster role", "Contest manager role", "Bot manager role", "Campaign manager role",
-                      "Music player role", "Toggle the fun module", "Scam message threshold", "Action taken on scammer",
-                      "Who to ping post-action", "Ban message", "Clickup Integration", "Jarvis Cooldown",
-                      "Jarvis Burst", "Toggle AI Conversations", "Exit"]
+                      "Server booster role", "Bot manager role", "Toggle the fun module", "Scam message threshold", "Action taken on scammer",
+                      "Who to ping post-action", "Ban message"]
+            if "ai" in ctx.bot.modules:
+                inList.extend(["Toggle AI Conversations", "Jarvis Cooldown", "Jarvis Burst"])
+            if "extras" in ctx.bot.modules:
+                inList.extend(["Clickup Integration", "Music player role"])
+            if "sprocket" in ctx.bot.modules:
+                inList.append("Contest manager role")
+            if "campaigns" in ctx.bot.modules:
+                inList.append("Campaign manager role")
+            inList.append("Exit")
             answer = str.lower(await ctx.bot.ui.getButtonChoice(ctx, inList))
             if answer == "exit":
                 await ctx.send("Alright, have fun.")

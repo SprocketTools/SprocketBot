@@ -63,11 +63,12 @@ class Bot(commands.Bot):
         super().__init__(command_prefix=commands.when_mentioned_or(prefix), help_command=None, intents=intents, case_insensitive=True, allowed_mentions=safe_mentions)
         self.cogslist = cogsList; self.baseConfig = baseConfig; self.ownerid = ownerID; self.configurationFilepath = configurationFilepath
         self.botMode = botMode; self.geminikey = baseConfig['settings']['geminiapis'].split(",")
+        self.modules = instanceConfig[f"botinfo"]["modules"]
         self.AI = ai_wrapper; self.sql: SQLtools = None; self.ui: UItools = None
         self.pool: asyncpg.Pool = None; self.campaignTools: campaignTools = None; self.error: errorTools = None; self.analyzer = None; self.operational = True
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=20, max_inactive_connection_lifetime=60)
-        self.sql = SQLtools(self.pool); self.ui = UItools(self); self.campaignTools = campaignTools(self); self.analyzer = blueprintAnalysisTools(self); self.error = errorTools(self); self.baseConfig = baseConfig; self.sql.settings = SQLsettings; self.configurationFilepath = configurationFilepath; self.operational = True
+        self.sql = SQLtools(self.pool); self.ui = UItools(self); self.campaignTools = campaignTools(self); self.analyzer = blueprintAnalysisTools(self); self.error = errorTools(self); self.modules = instanceConfig[f"botinfo"]["modules"]; self.baseConfig = baseConfig; self.sql.settings = SQLsettings; self.configurationFilepath = configurationFilepath; self.operational = True
         # if updateGithub: cogsList.append("cogs.githubTools")
         for ext in self.cogslist:
             if ext in instanceConfig[f"botinfo"]["modules"]:
@@ -89,7 +90,7 @@ class Bot(commands.Bot):
         self.loop.create_task(self.monitor_shutdown_signal())
         channel = self.get_channel(1152377925916688484)
         if channel:
-            await channel.send(f"I am now online! Instance: `{configName}`")
+            await channel.send(f"### I am now online!\nID: {self.user.id} on instance: `{configName}`\nModules: {self.modules.replace(',', ', ')}")
         print(f'Logged in as {self.user} (ID: {self.user.id}) on instance: {configName}')
         print('------')
 
