@@ -70,7 +70,7 @@ class Bot(commands.Bot):
         self.sql = SQLtools(self.pool); self.ui = UItools(self); self.campaignTools = campaignTools(self); self.analyzer = blueprintAnalysisTools(self); self.error = errorTools(self); self.baseConfig = baseConfig; self.sql.settings = SQLsettings; self.configurationFilepath = configurationFilepath; self.operational = True
         # if updateGithub: cogsList.append("cogs.githubTools")
         for ext in self.cogslist:
-            if ext in instanceConfig[f"botinfo"]["sqldatabase"]:
+            if ext in instanceConfig[f"botinfo"]["modules"]:
                 for item in self.cogslist[ext]: await self.load_extension(item)
 
     async def monitor_shutdown_signal(self):
