@@ -45,42 +45,17 @@ safe_mentions = discord.AllowedMentions(
     users=True,         # Allows the bot to ping specific users (e.g., the winner of a contest)
     replied_user=True   # Allows the bot to ping a user when replying to their message
 )
-cogsList = ["cogs.textTools",
-            "cogs.registerFunctions",
-            "cogs.campaignRegisterFunctions",
-            "cogs.autoResponderFunctions",
-            "cogs.blueprintFunctions",
-            "cogs.blueprintFunctions2",
-            "cogs.errorFunctions",
-            "cogs.adminFunctions",
-            "cogs.imageFunctions",
-            "cogs.campaignMapsFunctions",
-            "cogs.campaignInfoFunctions",
-            "cogs.contestFunctions",
-            "cogs.contestAnonFunctions",
-            "cogs.SprocketOfficialFunctions",
-            "cogs.campaignManageFunctions",
-            "cogs.aiAssistants",
-            "cogs.campaignFinanceFunctions",
-            "cogs.campaignResearchFunctions",
-            "cogs.campaignFactoryFunctions",
-            "cogs.antiScamTools",
-            "cogs.campaignUpdateFunctions",
-            "cogs.testingFunctions",
-            "cogs.helpFunctions",
-            "cogs.inviteTracker",
-            "cogs.campaignTransactionFunctions",
-            "cogs.VCfunctions",
-            "cogs.channelFunctions",
-            "cogs.timedMessageTools",
-            "cogs.serverFunctions",
-            "cogs.flyoutTools",
-            "cogs.clickupFunctions",
-            "cogs.starboardFunctions",
-            "cogs.roleColorTools",
-            "cogs.observatoryFunctions",
-            "cogs.trollFunctions"]
+cogsList = {}
     # A long list of almost everything.  
+cogsList["core"] = ["cogs.textTools", "cogs.adminFunctions", "cogs.errorFunctions", "cogs.antiScamTools", "cogs.channelFunctions"]
+cogsList["ai"] = ["cogs.aiAssistants"]
+cogsList["sprockettools"] = ["cogs.githubTools"]
+cogsList["moderation"] = ["cogs.serverFunctions"]
+cogsList["sprocket"] = ["cogs.SprocketOfficialFunctions","cogs.blueprintFunctions", "cogs.blueprintFunctions2", "cogs.contestFunctions", "cogs.helpFunctions"]
+cogsList["campaigns"] = ["cogs.campaignMapsFunctions", "cogs.campaignInfoFunctions", "cogs.campaignTransactionFunctions", "cogs.campaignRegisterFunctions", "cogs.campaignUpdateFunctions", "cogs.campaignFinanceFunctions", "cogs.campaignResearchFunctions", "cogs.campaignFactoryFunctions", "cogs.campaignManageFunctions"]
+cogsList["utilities"] = ["cogs.VCfunctions", "cogs.imageFunctions", "cogs.autoResponderFunctions", "cogs.timedMessageTools", "cogs.starboardFunctions", "cogs.roleColorTools"]
+cogsList["extras"] = ["cogs.registerFunctions", "cogs.inviteTracker", "cogs.testingFunctions", "cogs.contestAnonFunctions", "cogs.flyoutTools", "cogs.trollFunctions", "cogs.clickupFunctions", "cogs.observatoryFunctions"]
+
 
 class Bot(commands.Bot):
     # ... (__init__ and setup_hook are unchanged) ...
@@ -93,8 +68,10 @@ class Bot(commands.Bot):
     async def setup_hook(self):
         self.pool = await asyncpg.create_pool(**SQLsettings, command_timeout=20, max_inactive_connection_lifetime=60)
         self.sql = SQLtools(self.pool); self.ui = UItools(self); self.campaignTools = campaignTools(self); self.analyzer = blueprintAnalysisTools(self); self.error = errorTools(self); self.baseConfig = baseConfig; self.sql.settings = SQLsettings; self.configurationFilepath = configurationFilepath; self.operational = True
-        if updateGithub: cogsList.append("cogs.githubTools")
-        for ext in self.cogslist: await self.load_extension(ext)
+        # if updateGithub: cogsList.append("cogs.githubTools")
+        for ext in self.cogslist:
+            if ext in instanceConfig[f"botinfo"]["sqldatabase"]:
+                for item in self.cogslist[ext]: await self.load_extension(item)
 
     async def monitor_shutdown_signal(self):
         # MODIFIED: Use the full path in the temp directory
