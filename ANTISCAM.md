@@ -12,7 +12,7 @@ Sprocket Bot scans messages and look for whether all messages match these three 
 If a message matches these 3 conditions, the associated user gets a flag.  Failing any of these 3 conditions reset's the user's flag count to 0.  Once a user accumulates enough flags to match the Discord server's threshold (typically 3 to 5), the account will be considered a scam bot, and Sprocket Bot will perform an action based on the server's configuration.  
 
 ## Setting up Sprocket Bot to automatically delete scams
-To set up this tool, run the `-settings` command as a server owner.  You have the ability to configure:
+To set up this tool, run the `-settings` command.  You have the ability to configure:
 - How many consecutive scam messages do you want an account to send before Sprocket Bot considers it as hacked?
 	- Setting to 3 is recommended; higher numbers increase the chance Sprocket Bot will miss a scam
 - What action do you want Sprocket Bot to take, if any?
@@ -30,5 +30,6 @@ Sprocket Bot has logged 2 or 3 "false kicks" over its initial 2 years of prevent
 - Any message that receives a flag is logged internally to help improve the accuracy of the scam detection systems.
 
 
-## Last updated on April 28th, 2026
+
+## Last updated on April 29th, 2026
 
