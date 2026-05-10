@@ -303,7 +303,7 @@ class antiScamFunctions(commands.Cog):
             # Notify Manager Channel
             if channel:
                 await channel.send(embed=embed)
-                await channel.send(f'Message content:\n`{message.content}`')
+                await channel.send(f'Message content:\n`{message.content}`', suppress_embeds=True)
                 if pingAction == "custom":
                     await channel.send(f"<@&{serverConfig['flagpingid']}>")
                 elif pingAction != "nobody":
