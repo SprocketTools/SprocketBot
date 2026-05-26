@@ -493,7 +493,7 @@ class serverFunctions(commands.Cog):
 
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
-        await ctx.send("HI")
+        #await ctx.send("HI")
         try:
             serverData = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT * FROM serverconfig WHERE serverid = $1;''', [ctx.guild.id])
@@ -514,6 +514,7 @@ class serverFunctions(commands.Cog):
                 await ctx.send("You are the bot owner.  Override the restriction against your server permissions?")
                 answer = await ctx.bot.ui.getYesNoChoice(ctx)
                 if not answer:
+                    await ctx.send("Cancelling interaction.")
                     return
             else:
                 return
