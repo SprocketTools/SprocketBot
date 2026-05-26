@@ -4,6 +4,8 @@ Scam bots, despite their seeming inconsistencies and rapidly changing scams, fol
 
 DM scams are similarly easy to detect and prevent; countermeasures are already implemented in some servers and will be implemented globally soon.
 
+### Want to add this protection to your own server?  Invite the "Scamsatsu" variant of Sprocket Bot by clicking [here!](https://discord.com/oauth2/authorize?client_id=1498533749124497478)
+
 ## How it works
 Sprocket Bot scans messages and look for whether all messages match these three conditions: 
 - The message matches the prior message sent by the account
@@ -31,5 +33,5 @@ Sprocket Bot has logged 2 or 3 "false kicks" over its initial 2 years of prevent
 
 
 
-## Last updated on April 29th, 2026
+## Last updated on May 25th, 2026
 
