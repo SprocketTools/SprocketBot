@@ -107,7 +107,7 @@ class antiScamFunctions(commands.Cog):
                 "timestamp": message.created_at,
                 "content": message.content,
                 "attachments": message.attachments,
-                "is_staff": message.author.guild_permissions.mute_members
+                "is_staff": message.author.guild_permissions.kick_members
             }
             await self.scam_queue.put(payload)
 
@@ -175,6 +175,7 @@ class antiScamFunctions(commands.Cog):
                 for hash in hashes:
                     for comp_hash in hash_catalog:
                         if (hash - imagehash.hex_to_hash(comp_hash)) <= hash_comp_threshold and "catalogscamimages" not in message.content.lower():
+                            print(is_staff)
                             if bool(is_staff) or maybeStaffForwarding:
                                 bonus = 2
                             else:
