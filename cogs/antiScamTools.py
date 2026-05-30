@@ -4,8 +4,11 @@ import os, discord
 from discord.ext import commands
 import json, requests
 import random, asyncio, datetime
+from PIL import Image
+import imagehash
 from discord import Webhook
 import aiohttp
+from pathlib import Path
 import type_hints
 from cogs.textTools import textTools
 
@@ -15,6 +18,8 @@ inspected = []
 to_delete = {}
 active_punishments = set()  # Prevents multiple punishment tasks for one user
 
+hash_folder = "scam_hashes"
+hash_comp_threshold = 3 # increase this number to widen the possibility for similar images to match.  Narrow for more strict comparisons.
 
 class antiScamFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
@@ -23,13 +28,32 @@ class antiScamFunctions(commands.Cog):
         self.color1 = (250, 250, 120)
         self.color2 = (119, 86, 35)
         self.operational = True
-
         self.scam_queue = asyncio.Queue()
         self.processing_task = self.bot.loop.create_task(self.process_scam_queue())
         print("Anti-Scam Queue Initialized")
+        self.hash_list = set(os.listdir(hash_folder))
+        print(f"Loaded {len(self.hash_list)} scam hashes into memory")
 
     def cog_unload(self):
         self.processing_task.cancel()
+
+    # Anti-scam image hash setup
+    @commands.command(name="catalogScamImages", description="Register images to the scam catalog")
+    async def catalogScamImages(self, ctx: commands.Context):
+        if not ctx.author.guild_permissions.mute_members:
+            return
+        imglist = ""
+        for attachment in ctx.message.attachments:
+            img_bytes = await attachment.read()
+            img = Image.open(io.BytesIO(img_bytes))
+            current_phash = imagehash.phash(img)
+            Path(f"./{hash_folder}{os.sep}{current_phash}").touch(exist_ok=True)
+            imglist = imglist + ("\n" + str(current_phash))
+            logChannel = self.bot.get_channel(1152377925916688484)
+            await logChannel.send(f"`{current_phash}` has been registered by {ctx.author.mention}!", file=await attachment.to_file())
+        await ctx.send(f"Registered the following hashes:`{imglist}`!")
+        if len(ctx.message.attachments) == 1:
+            await ctx.send("FYI: you can upload up to 10 images per bot command.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -65,11 +89,10 @@ class antiScamFunctions(commands.Cog):
             hashes = []
             for attachment in message.attachments:
                 try:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(attachment.url) as response:
-                            if response.status == 200:
-                                content = await response.read()
-                                hashes.append(hashlib.md5(content).hexdigest())
+                    img_bytes = await attachment.read()
+                    img = Image.open(io.BytesIO(img_bytes))
+                    current_phash = imagehash.phash(img)
+                    hashes.append(current_phash)
                 except Exception as e:
                     print(f"Error hashing attachment: {e}")
 
@@ -140,7 +163,17 @@ class antiScamFunctions(commands.Cog):
             whitelist = []
             is_whitelisted = any(item in message.content for item in whitelist)
 
-            if (contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and not is_whitelisted and not contentMismatch:
+            # Run checks to see if the uploaded images match anything previously uploaded
+            hashlist_trip = False
+            if len(hashes) > 0:
+                hash_catalog = os.listdir(hash_folder)
+                for hash in hashes:
+                    for comp_hash in hash_catalog:
+                        if (hash - imagehash.hex_to_hash(comp_hash)) <= hash_comp_threshold:
+                            userStrikes[message.author.id] = userStrikes.get(message.author.id, 0) + 5
+                            hashlist_trip = True
+
+            if ((contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and not is_whitelisted and not contentMismatch) or hashlist_trip:
                 print(f"Match detected for {message.author}")
 
                 logChannel = self.bot.get_channel(1152377925916688484)
@@ -169,7 +202,8 @@ class antiScamFunctions(commands.Cog):
                     embed.add_field(name="Spacing",
                                     value=f'''{(message.created_at - oldPacket["timestamp"]).total_seconds():.2f}s''',
                                     inline=False)
-
+                    for hash in hashes:
+                        embed.add_field(name="Image hash", value=f"`{hash}`", inline=False)
                     if userStrikes[message.author.id] >= flag_threshold:
                         embed.set_footer(text=f"Action taken: {serverConfig['flagaction']}")
 
@@ -186,11 +220,14 @@ class antiScamFunctions(commands.Cog):
                         pass
 
                 # --- PUNISHMENT STAGE (Non-Blocking & Single Instance) ---
+
                 if userStrikes[message.author.id] >= flag_threshold:
+                    for hash in hashes:
+                        Path(f"./{hash_folder}{os.sep}{hash}").touch(exist_ok=True)
                     if message.author.id not in active_punishments:
                         active_punishments.add(message.author.id)
                         self.bot.loop.create_task(
-                            self.execute_punishment(message, serverConfig, logChannel)
+                            self.execute_punishment(message, serverConfig, logChannel, hashes)
                         )
                     else:
                         # If a task is already running, just delete the new spam
@@ -210,7 +247,7 @@ class antiScamFunctions(commands.Cog):
             print(f"Critical error in check_scam_logic: {e}")
             active_punishments.discard(message.author.id)
 
-    async def execute_punishment(self, message, serverConfig, logChannel):
+    async def execute_punishment(self, message, serverConfig, logChannel, hashes):
         """Handles the actual kicking/banning logic in a separate task."""
         try:
             action = serverConfig['flagaction']
@@ -222,6 +259,8 @@ class antiScamFunctions(commands.Cog):
             embed.set_footer(text=f"Action taken: {action}")
             embed.add_field(name="Username", value=f"{message.author.name}", inline=False)
             embed.add_field(name="User ID", value=f"{message.author.id}", inline=False)
+            for hash in hashes:
+                embed.add_field(name="Image hash", value=f"`{hash}`", inline=False)
 
             if action == "kick":
                 # 1. Timeout immediately
