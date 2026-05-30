@@ -106,7 +106,8 @@ class antiScamFunctions(commands.Cog):
                 "serverConfig": serverConfig,
                 "timestamp": message.created_at,
                 "content": message.content,
-                "attachments": message.attachments
+                "attachments": message.attachments,
+                "is_staff": message.author.guild_permissions.mute_members
             }
             await self.scam_queue.put(payload)
 
@@ -120,14 +121,14 @@ class antiScamFunctions(commands.Cog):
                 message = payload["message"]
                 hashes = payload["hashes"]
                 serverConfig = payload["serverConfig"]
-                attachments = payload["attachments"]
-                await self.check_scam_logic(message, hashes, serverConfig, attachments)
+                is_staff = payload["is_staff"]
+                await self.check_scam_logic(message, hashes, serverConfig, is_staff)
             except Exception as e:
                 print(f"Error in scam processing worker: {e}")
             finally:
                 self.scam_queue.task_done()
 
-    async def check_scam_logic(self, message, hashes, serverConfig, attachments):
+    async def check_scam_logic(self, message, hashes, serverConfig, is_staff):
         try:
             # Re-Check Active Punishment (in case it started while this item was in queue)
             if message.author.id in active_punishments:
@@ -157,6 +158,7 @@ class antiScamFunctions(commands.Cog):
             hashesMatch = (oldPacket["hashes"] == hashes) and (len(hashes) > 0)
             contentMatch = (oldPacket["content"] == message.content) and (len(message.content) > 0)
             contentMismatch = (oldPacket["content"] != message.content) and (len(message.content) > 0)
+            maybeStaffForwarding = (oldPacket["content"] != message.content) and (len(oldPacket["content"]) > 0) # special check for if a staff member is maybe forwarding a message
             # Timestamp check (60s threshold)
             timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 12.1
             channelidMatch = (message.channel.id == oldPacket["channelid"])
@@ -167,15 +169,20 @@ class antiScamFunctions(commands.Cog):
 
             # Run checks to see if the uploaded images match anything previously uploaded
             hashlist_trip = False
+            bonus = 0
             if len(hashes) > 0:
                 hash_catalog = os.listdir(hash_folder)
                 for hash in hashes:
                     for comp_hash in hash_catalog:
                         if (hash - imagehash.hex_to_hash(comp_hash)) <= hash_comp_threshold:
-                            userStrikes[message.author.id] = userStrikes.get(message.author.id, 0) + 5
+                            if is_staff or maybeStaffForwarding:
+                                bonus = 2
+                            else:
+                                bonus = 5
                             hashlist_trip = True
+                userStrikes[message.author.id] = userStrikes.get(message.author.id, 0) + bonus
 
-            if ((contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and not is_whitelisted and not contentMismatch) or hashlist_trip:
+            if ((contentMatch or hashesMatch) and timestampMatch and (not channelidMatch) and not is_whitelisted and not contentMismatch) or (hashlist_trip):
                 print(f"Match detected for {message.author}")
 
                 logChannel = self.bot.get_channel(1152377925916688484)
