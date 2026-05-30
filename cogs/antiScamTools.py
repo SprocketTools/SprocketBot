@@ -177,7 +177,7 @@ class antiScamFunctions(commands.Cog):
                         if (hash - imagehash.hex_to_hash(comp_hash)) <= hash_comp_threshold and "catalogscamimages" not in message.content.lower():
                             print(is_staff)
                             if bool(is_staff) or maybeStaffForwarding:
-                                bonus = 2
+                                bonus = 1
                             else:
                                 bonus = 5
                             hashlist_trip = True
