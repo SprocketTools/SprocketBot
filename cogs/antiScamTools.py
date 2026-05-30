@@ -105,7 +105,8 @@ class antiScamFunctions(commands.Cog):
                 "hashes": hashes,
                 "serverConfig": serverConfig,
                 "timestamp": message.created_at,
-                "content": message.content
+                "content": message.content,
+                "attachments": message.attachments
             }
             await self.scam_queue.put(payload)
 
@@ -119,13 +120,14 @@ class antiScamFunctions(commands.Cog):
                 message = payload["message"]
                 hashes = payload["hashes"]
                 serverConfig = payload["serverConfig"]
-                await self.check_scam_logic(message, hashes, serverConfig)
+                attachments = payload["attachments"]
+                await self.check_scam_logic(message, hashes, serverConfig, attachments)
             except Exception as e:
                 print(f"Error in scam processing worker: {e}")
             finally:
                 self.scam_queue.task_done()
 
-    async def check_scam_logic(self, message, hashes, serverConfig):
+    async def check_scam_logic(self, message, hashes, serverConfig, attachments):
         try:
             # Re-Check Active Punishment (in case it started while this item was in queue)
             if message.author.id in active_punishments:
@@ -208,7 +210,7 @@ class antiScamFunctions(commands.Cog):
                         embed.set_footer(text=f"Action taken: {serverConfig['flagaction']}")
 
                     await logChannel.send(embed=embed)
-                    await logChannel.send(f'Message content:\n`{message.content}`')
+                    await logChannel.send(f'Message content:\n`{message.content}`', files=[await attachment.to_file() for attachment in message.attachments])
 
                 # --- WARNING STAGE ---
                 if userStrikes[message.author.id] == flag_threshold - 1:
