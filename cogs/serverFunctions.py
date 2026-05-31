@@ -509,7 +509,7 @@ class serverFunctions(commands.Cog):
             except Exception as e:
                 await ctx.send(e)
         cooldown_min = 30
-        if not ctx.message.author.guild_permissions.administrator:
+        if not (ctx.message.author.guild_permissions.administrator or ctx.message.author.guild_permissions.ban_members):
             if ctx.author.id == main.ownerID:
                 await ctx.send("You are the bot owner.  Override the restriction against your server permissions?")
                 answer = await ctx.bot.ui.getYesNoChoice(ctx)
