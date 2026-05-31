@@ -161,6 +161,7 @@ class antiScamFunctions(commands.Cog):
             maybeStaffForwarding = (oldPacket["content"] != message.content) and (len(oldPacket["content"]) > 0) # special check for if a staff member is maybe forwarding a message
             # Timestamp check (60s threshold)
             timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 12.1
+            timestampStrongMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 2.48
             channelidMatch = (message.channel.id == oldPacket["channelid"])
 
             # Whitelist logic
@@ -192,6 +193,10 @@ class antiScamFunctions(commands.Cog):
 
                 # Update strikes
                 userStrikes[message.author.id] = userStrikes.get(message.author.id, 0) + 1
+
+                # extra condition for if the spacing is really small
+                if timestampStrongMatch:
+                    userStrikes[message.author.id] = userStrikes.get(message.author.id, 0) + 2
 
                 flag_threshold = int(serverConfig['flagthreshold'])
 
