@@ -517,6 +517,7 @@ class serverFunctions(commands.Cog):
                     await ctx.send("Cancelling interaction.")
                     return
             else:
+                await ctx.send("This command requires the **administrator** permission.")
                 return
         continue_val = True
         if ctx.author.id == main.ownerID:
