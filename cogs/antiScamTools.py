@@ -270,7 +270,7 @@ class antiScamFunctions(commands.Cog):
             channel = self.bot.get_channel(serverConfig['managerchannelid'])
 
             # Prepare Log Embed for Manager Channel
-            embed = discord.Embed(title=f"Action taken on a hacked account", color=discord.Color.red())
+            embed = discord.Embed(title=f"Action taken on a hacked account", color=discord.Color.dark_blue())
             embed.set_footer(text=f"Action taken: {action}")
             embed.add_field(name="Username", value=f"{message.author.name}", inline=False)
             embed.add_field(name="User ID", value=f"{message.author.id}", inline=False)
