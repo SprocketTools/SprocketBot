@@ -72,15 +72,15 @@ class GeminiAITools:
         if not temperature:
             temperature = 1.0
 
-        model_name = 'models/gemini-2.5-flash'
+        model_name = 'models/gemini-3.1-flash-lite'
 
         match mode:
             case "fast":
-                model_name = 'models/gemini-2.5-flash-lite'
+                model_name = 'models/gemini-3.1-flash-lite'
             case "normal":
-                model_name = 'gemini-3.1-flash-lite-preview'
+                model_name = 'models/gemini-3.1-flash-lite'
             case "smart":
-                model_name = 'models/gemini-3-flash-preview'
+                model_name = 'models/gemini-3.1-flash-lite'
             case "gemma" | "gemma-3-27b-it":
                 model_name = 'gemma-4-26b-a4b-it'
 
