@@ -301,13 +301,14 @@ class serverFunctions(commands.Cog):
         user_to_ban = user
 
         if days == 0:
-            await ctx.send(f"Confirmation: you wish to ban {user_to_ban.mention} ({user_to_ban.id}) indefinitely?")
+            msgA = await ctx.send(f"Confirmation: you wish to ban {user_to_ban.mention} ({user_to_ban.id}) indefinitely?")
         else:
-            await ctx.send(f"Confirmation: you wish to ban {user_to_ban.mention} ({user_to_ban.id}) for {days} days?")
+            msgA = await ctx.send(f"Confirmation: you wish to ban {user_to_ban.mention} ({user_to_ban.id}) for {days} days?")
         if not await self.bot.ui.getYesNoChoice(ctx):
+            await msgA.delete()
             await self.bot.error.sendCategorizedError(ctx, "insult")
             return
-
+        await msgA.delete()
         # 1. Log to Database
         try:
             serverData = await adminFunctions.getServerConfig(ctx)

@@ -72,8 +72,9 @@ class UItools:
 
     async def getYesNoChoice(self, ctx: commands.Context):
         view = YesNoButtons()
-        await ctx.send(view=view)
+        msg = await ctx.send(view=view)
         await view.wait()
+        await msg.delete()
         return view.value
 
     async def getYesNoModifyStopChoice(self, ctx: commands.Context):
