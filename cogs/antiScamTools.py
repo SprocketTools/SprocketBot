@@ -352,6 +352,13 @@ class antiScamFunctions(commands.Cog):
                     await message.author.timeout(datetime.timedelta(hours=12), reason="Hacked account")
                 except:
                     pass
+
+                for msg in to_delete.get(message.author.id, []):
+                    try:
+                        await msg.delete()
+                    except Exception:
+                        pass
+
                 active_punishments.discard(message.author.id)
 
             # Notify Manager Channel
