@@ -228,7 +228,7 @@ class serverFunctions(commands.Cog):
         for rule in data:
             dataOut.append(f'{rule["name"]} - {rule["description"]}')
 
-        await ctx.send("Select the applicable rule violation")
+        await ctx.send(f"Select the applicable rule violation for {user.mention}")
         ruleName = await ctx.bot.ui.getButtonChoice(ctx, dataOut)
 
         if not ruleName:
@@ -274,7 +274,7 @@ class serverFunctions(commands.Cog):
             ban_str = "Never"
 
         await ctx.send(
-            f"Warning issued to **{user.name}**.\n\nTotal points: {points_total}\nLast Ban: {ban_str}\nPoints (365d): {points_365}")
+            f"Warning issued to **{user.name}**.\n\nReason: {reason}\nTotal points: {points_total}\nLast Ban: {ban_str}\nPoints (365d): {points_365}")
 
     @warn.error
     async def warn_error(self, ctx, error):
@@ -299,6 +299,14 @@ class serverFunctions(commands.Cog):
         await ctx.defer()
 
         user_to_ban = user
+
+        if days == 0:
+            await ctx.send(f"Confirmation: you wish to ban {user_to_ban.mention} ({user_to_ban.id}) indefinitely?")
+        else:
+            await ctx.send(f"Confirmation: you wish to ban {user_to_ban.mention} ({user_to_ban.id}) for {days} days?")
+        if not await self.bot.ui.getYesNoChoice(ctx):
+            await self.bot.error.sendCategorizedError(ctx, "insult")
+            return
 
         # 1. Log to Database
         try:
@@ -328,7 +336,7 @@ class serverFunctions(commands.Cog):
         try:
             await ctx.guild.ban(user_to_ban, reason=f"Banned by {ctx.author.name} - {reason}",
                                 delete_message_seconds=delete_days * 86400)
-            await ctx.send(f'**{target_username}** has been banned.')
+            await ctx.send(f'**{target_username}** - {user.mention} has been banned for {days} days.\nReason: {reason}')
         except Exception as e:
             await ctx.send(f'Failed to ban user on Discord: {e}')
 
