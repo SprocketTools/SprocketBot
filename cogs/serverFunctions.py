@@ -447,58 +447,62 @@ class serverFunctions(commands.Cog):
 
     async def _generate_best_guess_config(self, guild: discord.Guild) -> dict:
         """Generates a best-guess configuration for a server."""
+        try:
+            def find_channel_by_names(names_to_check):
+                for channel in guild.text_channels:
+                    for name in names_to_check:
+                        if name in channel.name.lower().replace('-', '').replace('_', ''):
+                            return channel
+                return guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
 
-        def find_channel_by_names(names_to_check):
-            for channel in guild.text_channels:
-                for name in names_to_check:
-                    if name in channel.name.lower().replace('-', '').replace('_', ''):
-                        return channel
-            return guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
+            def find_role_by_names(names_to_check):
+                matching_roles = []
+                for role in guild.roles:
+                    for name in names_to_check:
+                        if name in role.name.lower():
+                            matching_roles.append(role)
 
-        def find_role_by_names(names_to_check):
-            matching_roles = []
-            for role in guild.roles:
-                for name in names_to_check:
-                    if name in role.name.lower():
-                        matching_roles.append(role)
+                if matching_roles:
+                    return max(matching_roles, key=lambda r: r.position)
 
-            if matching_roles:
-                return max(matching_roles, key=lambda r: r.position)
+                return guild.roles[-1] if guild.roles else guild.default_role
 
-            return guild.roles[-1] if guild.roles else guild.default_role
+            manager_role = find_role_by_names(["admin", "moderator", "staff", "manager"])
+            booster_role = find_role_by_names(["booster"])
 
-        manager_role = find_role_by_names(["admin", "moderator", "staff", "manager"])
-        booster_role = find_role_by_names(["booster"])
+            general_channel = find_channel_by_names(["general", "chat", "lounge"])
+            updates_channel = find_channel_by_names(["updates", "announcements", "news"])
+            commands_channel = find_channel_by_names(["botcommands", "commands", "botspam"])
+            manager_channel = find_channel_by_names(["staff", "admin", "moderator"])
 
-        general_channel = find_channel_by_names(["general", "chat", "lounge"])
-        updates_channel = find_channel_by_names(["updates", "announcements", "news"])
-        commands_channel = find_channel_by_names(["botcommands", "commands", "botspam"])
-        manager_channel = find_channel_by_names(["staff", "admin", "moderator"])
-
-        config = {
-            "serverid": guild.id,
-            "ownerid": guild.owner_id,
-            "generalchannelid": general_channel.id if general_channel else 0,
-            "allowfunny": True,
-            "updateschannelid": updates_channel.id if updates_channel else 0,
-            "commandschannelid": commands_channel.id if commands_channel else 0,
-            "managerchannelid": manager_channel.id if manager_channel else 0,
-            "serverboosterroleid": booster_role.id if booster_role else 0,
-            "contestmanagerroleid": manager_role.id if manager_role else 0,
-            "campaignmanagerroleid": manager_role.id if manager_role else 0,
-            "botmanagerroleid": manager_role.id if manager_role else 0,
-            "flagthreshold": 3,
-            "flagaction": "timeout for 12 hours",
-            "flagping": "nobody",
-            "flagpingid": 0,
-            "musicroleid": 0,
-            "banmessage": f"You have been banned from {guild.name}.",
-            "clickupkey": "0",
-            "jarviscooldown": 3600,
-            "jarvisburst": 4,
-            "allowconversations": True,
-        }
-        return config
+            config = {
+                "serverid": guild.id,
+                "ownerid": guild.owner_id,
+                "generalchannelid": general_channel.id if general_channel else 0,
+                "allowfunny": True,
+                "updateschannelid": updates_channel.id if updates_channel else 0,
+                "commandschannelid": commands_channel.id if commands_channel else 0,
+                "managerchannelid": manager_channel.id if manager_channel else 0,
+                "serverboosterroleid": booster_role.id if booster_role else 0,
+                "contestmanagerroleid": manager_role.id if manager_role else 0,
+                "campaignmanagerroleid": manager_role.id if manager_role else 0,
+                "botmanagerroleid": manager_role.id if manager_role else 0,
+                "flagthreshold": 3,
+                "flagaction": "timeout for 12 hours",
+                "flagping": "nobody",
+                "flagpingid": 0,
+                "musicroleid": 0,
+                "banmessage": f"You have been banned from {guild.name}.",
+                "clickupkey": "0",
+                "jarviscooldown": 3600,
+                "jarvisburst": 4,
+                "allowconversations": True,
+            }
+            return config
+        except Exception as E:
+            channel = self.bot.get_channel(1152377925916688484)
+            if channel:
+                await channel.send(f"Settings generation failed on server {guild.name}.  Error: {E}")
 
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
@@ -517,6 +521,9 @@ class serverFunctions(commands.Cog):
                 await ctx.send("Done!")
             except Exception as e:
                 await ctx.send(e)
+                channel = self.bot.get_channel(1152377925916688484)
+                if channel:
+                    await channel.send(f"Settings generation failed on server {ctx.guild.name}.  Error: {e}")
         cooldown_min = 30
         if not (ctx.message.author.guild_permissions.administrator or ctx.message.author.guild_permissions.ban_members):
             if ctx.author.id == main.ownerID:
