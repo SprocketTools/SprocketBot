@@ -160,7 +160,7 @@ class antiScamFunctions(commands.Cog):
             contentMismatch = (oldPacket["content"] != message.content) and (len(message.content) > 0)
             maybeStaffForwarding = (oldPacket["content"] != message.content) and (len(oldPacket["content"]) > 0) # special check for if a staff member is maybe forwarding a message
             # Timestamp check (60s threshold)
-            timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 12.1
+            timestampMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 6.7
             timestampStrongMatch = (message.created_at - oldPacket["timestamp"]).total_seconds() < 2.48
             channelidMatch = (message.channel.id == oldPacket["channelid"])
 
@@ -297,7 +297,7 @@ class antiScamFunctions(commands.Cog):
                 try:
                     await message.author.send("# ⚠️ READ THE FOLLOWING INSTRUCTIONS CAREFULLY ⚠️")
                     await message.author.send(
-                        "### You have tripped Sprocket Bot's automated anti-scam functions and are about to be kicked.")
+                        "### You have tripped Sprocket Bot's automated anti-scam functions and are about to be kicked in **5 minutes**.")
 
                     # We use native wait_for instead of textTools to ensure we catch the USER's reply in DMs
                     def check(m):
