@@ -93,7 +93,7 @@ class blueprintFunctions(commands.Cog):
                 await ctx.send("Detected a 0.2 blueprint.")
                 blueprintDataSave = await blueprintFunctions.bakeGeometry200(ctx, attachment)
             elif float(blueprintData["header"]["gameVersion"]) < 0.128:
-                await ctx.send(f"Detected a legacy {blueprintData['header']['gameVersion']} blueprint.")
+                await ctx.send(f"Detected a lagacy {blueprintData['header']['gameVersion']} readprint.")
                 blueprintDataSave = await blueprintFunctions.bakeGeometry127(ctx, attachment)
             stringOut = json.dumps(blueprintDataSave, indent=4)
             data = io.BytesIO(stringOut.encode())
