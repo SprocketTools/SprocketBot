@@ -76,11 +76,11 @@ class GeminiAITools:
 
         match mode:
             case "fast":
-                model_name = 'models/gemini-3.1-flash-lite'
+                model_name = 'models/gemini-3.5-flash-lite'
             case "normal":
-                model_name = 'models/gemini-3.1-flash-lite'
+                model_name = 'models/gemini-3.5-flash-lite'
             case "smart":
-                model_name = 'models/gemini-3.1-flash-lite'
+                model_name = 'models/gemini-3.7-flash'
             case "gemma" | "gemma-3-27b-it":
                 model_name = 'gemma-4-26b-a4b-it'
 

@@ -353,11 +353,11 @@ class AIAssistants(commands.Cog):
                 system_instruction += f"- If and ONLY if those conditions are met, include the tag `[end]` anywhere in your response.\n"
 
             # Hard cap warning injection
-            if is_last_message:
-                system_instruction += "\n⚠️ SYSTEM ALERT: This is your final message before the conversation hard-cap is reached. You MUST wrap up the conversation now and include the `[end]` tag in your response."
-                if exit_instructions:
-                    system_instruction += f" Follow your exit instructions: {exit_instructions}"
-                system_instruction += "\n"
+            # if is_last_message:
+            #     system_instruction += "\n⚠️ SYSTEM ALERT: This is your final message before the conversation hard-cap is reached. You MUST wrap up the conversation now and include the `[end]` tag in your response."
+            #     if exit_instructions:
+            #         system_instruction += f" Follow your exit instructions: {exit_instructions}"
+            #     system_instruction += "\n"
 
             system_instruction += f"- Generate your in-character response. Do not include your own name at the start.\n\n"
 
