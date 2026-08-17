@@ -379,7 +379,7 @@ class blueprintFunctions2(commands.Cog):
                 mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
                 complexity_score = len(str(mesh_to_render))
                 complexity_limit = 100000000
-                iframes_in = min(round(complexity_limit/10/complexity_score), 64)
+                iframes_in = min(round(complexity_limit/2/complexity_score), 64)
 
                 if bp_cog and complexity_score < complexity_limit:
                     try:
