@@ -291,7 +291,7 @@ class blueprintFunctions2(commands.Cog):
                 return await ctx.send("No `.blueprint` file found in your message!")
 
             try:
-                await ctx.send(f"Warning: tool is under broken .gif and will produce a development\n\nAnalyzing `{blueprint_attachment.filename}`...")
+                await ctx.send(f"Warning: tool is under development\n\nAnalyzing `{blueprint_attachment.filename}`...")
                 file_content = await blueprint_attachment.read()
                 blueprint_data = json.loads(file_content)
 
@@ -379,7 +379,7 @@ class blueprintFunctions2(commands.Cog):
                 mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
                 complexity_score = len(str(mesh_to_render))
                 complexity_limit = 100000000
-                iframes_in = min(round(complexity_limit/2/complexity_score), 64)
+                iframes_in = min(round(complexity_limit/2.76/complexity_score), 75)
 
                 if bp_cog and complexity_score < complexity_limit:
                     try:
@@ -388,7 +388,7 @@ class blueprintFunctions2(commands.Cog):
                             mesh_to_render = baked_data["meshes"][0]["meshData"]["mesh"]
                         else:
                             mesh_to_render = blueprint_data["meshes"][0]["meshData"]["mesh"]
-                        await ctx.send("Generating GIF, this could take awhile...")
+                        await ctx.send("Generating GIF, this could take up to 30 seconds...")
                         gif_file = await self.bot.analyzer.generate_blueprint_gif(mesh_to_render,
                                                                                   blueprint_data['header']['name'],
                                                                                   iframes=iframes_in,
