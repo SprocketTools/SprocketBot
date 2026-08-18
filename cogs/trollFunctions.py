@@ -121,6 +121,98 @@ class trollFunctions(commands.Cog):
             await webhook.delete()
             await ctx.reply("## Sent!")
 
+    @commands.is_owner()
+    @commands.command()
+    async def jarvis(self, ctx, target: Union[discord.TextChannel, int], *, message: str):
+        """
+        Impersonate a user cross-server.
+        Usage: !impersonate @User #channel Message
+               !impersonate @User 123456789012345678 Message
+        """
+        # 1. Resolve the Channel (Local Object or Remote ID)
+        channel_out = None
+        if isinstance(target, int):
+            # Try fetching from cache first (faster), then API (reliable)
+            channel_out = self.bot.get_channel(target) or await self.bot.fetch_channel(target)
+        else:
+            channel_out = target  # It's already a TextChannel object from the current server
+
+        # 2. Validate the Channel
+        if not isinstance(channel_out, discord.TextChannel):
+            await ctx.send(f"Could not find a valid text channel from the input: `{target}`.")
+            return
+
+        # 3. Create Webhook & Send
+        webhook = None
+        try:
+            # Create webhook in the target channel (works cross-server if bot has permissions there)
+            webhook = await channel_out.create_webhook(name=f"J.A.R.V.I.S.")
+
+            await webhook.send(
+                content=message,
+                username="J.A.R.V.I.S.",
+                avatar_url="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"
+            )
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await webhook.send(file=file, username="J.A.R.V.I.S.",
+                avatar_url="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229", content="")
+        except discord.Forbidden:
+            await ctx.send(
+                f"I do not have `Manage Webhooks` permission in **{channel_out.guild.name}** > {channel_out.mention}.")
+        except Exception as e:
+            await ctx.send(f"Failed to send: {e}")
+        finally:
+            # Clean up: delete the webhook immediately after sending the message
+            await webhook.delete()
+            await ctx.reply("## Sent!")
+
+    @commands.is_owner()
+    @commands.command()
+    async def sprocketchan(self, ctx, target: Union[discord.TextChannel, int], *, message: str):
+        """
+        Impersonate a user cross-server.
+        Usage: !impersonate @User #channel Message
+               !impersonate @User 123456789012345678 Message
+        """
+        # 1. Resolve the Channel (Local Object or Remote ID)
+        channel_out = None
+        if isinstance(target, int):
+            # Try fetching from cache first (faster), then API (reliable)
+            channel_out = self.bot.get_channel(target) or await self.bot.fetch_channel(target)
+        else:
+            channel_out = target  # It's already a TextChannel object from the current server
+
+        # 2. Validate the Channel
+        if not isinstance(channel_out, discord.TextChannel):
+            await ctx.send(f"Could not find a valid text channel from the input: `{target}`.")
+            return
+
+        # 3. Create Webhook & Send
+        webhook = None
+        try:
+            # Create webhook in the target channel (works cross-server if bot has permissions there)
+            webhook = await channel_out.create_webhook(name=f"Sprocket Chan")
+
+            await webhook.send(
+                content=message,
+                username="Sprocket Chan",
+                avatar_url="https://cdn.discordapp.com/attachments/1142053423370481747/1487790115345535036/image.png"
+            )
+            for attachment in ctx.message.attachments:
+                file = await attachment.to_file()
+                await webhook.send(file=file, username="Sprocket Chan",
+                avatar_url="https://cdn.discordapp.com/attachments/1142053423370481747/1487790115345535036/image.png", content="")
+        except discord.Forbidden:
+            await ctx.send(
+                f"I do not have `Manage Webhooks` permission in **{channel_out.guild.name}** > {channel_out.mention}.")
+        except Exception as e:
+            await ctx.send(f"Failed to send: {e}")
+        finally:
+            # Clean up: delete the webhook immediately after sending the message
+            await webhook.delete()
+            await ctx.reply("## Sent!")
+
     @commands.command(name="troll", description="send a message wherever you want")
     async def troll(self, ctx: commands.Context, channelin: str, *, message):
         print("a")
@@ -220,15 +312,12 @@ class trollFunctions(commands.Cog):
                     messageIn = message_l
                 channelIn = messageIn.channel
             init_prompt = messageIn.content
-            gemini = genai.Client(api_key=ctx.bot.geminikey)
             if not style:
                 style = "drunk"
-            message = gemini.models.generate_content(model='gemini-2.0-flash-001',
-                                                     contents=f"Make a complaint in less than 120 words about this sentence: '{init_prompt}'.  Apply a {style} accent to your complaint.")
-            print(message.text)
+            message = await ctx.bot.AI.get_response(f"Make a complaint in less than 120 words about this sentence: '{init_prompt}'.  Apply a {style} accent to your complaint.")
             await ctx.send("Message is en route.")
 
-            await messageIn.reply(message.text)
+            await messageIn.reply(message)
             for attachment in ctx.message.attachments:
                 file = await attachment.to_file()
                 await channelIn.send(file=file, content="")

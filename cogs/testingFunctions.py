@@ -2,6 +2,8 @@ import io
 import json
 from datetime import datetime
 import discord
+import discord
+from discord.ext import commands
 import pandas as pd
 import matplotlib.dates as mdates
 import type_hints
@@ -292,7 +294,10 @@ class testingFunctions(commands.Cog):
         plt.close(figure)  # Close to free up memory
         return discord.File(buffer, filename="plot.png")
 
-
+    @commands.command(name="postserverinfo")
+    async def post_server_info(self, ctx: commands.Context):
+        view = ServerInfoView(author=ctx.author)
+        await ctx.send("Click the button below to fill out the server info:", view=view)
 
     @commands.command()
     async def send_checkbox(self, ctx):
@@ -328,6 +333,8 @@ class CheckboxView(discord.ui.View):
             button.style = discord.ButtonStyle.grey
             message = "You unchecked the box!"
 
+
+
         await interaction.response.edit_message(view=self)
         await interaction.followup.send(message, ephemeral=True)
 
@@ -354,3 +361,62 @@ class DropdownView(discord.ui.View):
         super().__init__()
         self.authorID = authorID
         self.add_item(Dropdown(authorID))
+
+
+class ServerInfoModal(discord.ui.Modal, title="Dedicated Server Details"):
+    server_name = discord.ui.TextInput(
+        label="Server Name",
+        placeholder="Astroneer Vicerants",
+        required=True,
+        max_length=100
+    )
+
+    ip_address = discord.ui.TextInput(
+        label="IP Address & Port",
+        placeholder="100.100.100.100",
+        required=True,
+        max_length=100
+    )
+
+    game_type = discord.ui.TextInput(
+        label="Self hosted or Externally hosted?",
+        placeholder="Hosted by Nitrado",
+        required=True,
+        max_length=100
+    )
+
+    description = discord.ui.TextInput(
+        label="Server Description",
+        style=discord.TextStyle.paragraph,
+        placeholder="Uses MEGATECH DLC!\nNo griefing, spawn base is communal!",
+        required=True,
+        max_length=1000
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title=f"🎮 {self.server_name.value}",
+            description=self.description.value or "No description provided.",
+            color=discord.Color.green()
+        )
+
+        embed.add_field(name="IP Address", value=f"`{self.ip_address.value}`", inline=False)
+        embed.add_field(name="Server Host", value=self.game_type.value, inline=False)
+        embed.set_footer(text=f"Posted by {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
+
+        await interaction.response.send_message(embed=embed)
+        await interaction.message.delete()
+
+
+class ServerInfoView(discord.ui.View):
+    def __init__(self, author: discord.Member):
+        super().__init__(timeout=60)
+        self.author = author
+
+    @discord.ui.button(label="Fill Out Server Details", style=discord.ButtonStyle.primary, emoji="📝")
+    async def open_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.author:
+            return await interaction.response.send_message("Only the command runner can use this button.",
+                                                           ephemeral=True)
+
+        await interaction.response.send_modal(ServerInfoModal())
