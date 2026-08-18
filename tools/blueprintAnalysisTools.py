@@ -106,7 +106,7 @@ class blueprintAnalysisTools:
                 polygons,
                 edgecolors=(0.8, 1.0, 1.0),
                 facecolors=(0.1, 0.2, 0.3, 0.5),
-                linewidths=0.5
+                linewidths=0.25
             )
             ax.add_collection3d(mesh_collection)
 
