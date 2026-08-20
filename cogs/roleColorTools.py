@@ -22,6 +22,7 @@ class roleColorTools(commands.Cog):
     async def updateRoles(self):
         await roleColorTools.roleUpdater(self)
 
+    # randomitalian pls stop looking at every commit thanks
     @commands.command(name="updateColorChangers",description="Update the color changers by force")
     async def updateColorChangers(self, ctx: commands.Context):
         try:

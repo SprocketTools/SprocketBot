@@ -844,6 +844,7 @@ class blueprintFunctions(commands.Cog):
 
         transform_cache = {}
 
+        # randomitalian pls stop looking at every commit thanks
         # 4. Merge EVERY source into EVERY target
         for t_data in target_objs:
             target_mesh = meshes_by_vuid.get(t_data["mesh_vuid"])

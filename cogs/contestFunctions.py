@@ -403,6 +403,7 @@ class contestFunctions(commands.Cog):
         await ctx.send(
             f"**Contest Created!**\nID: `{contest_id}`\nName: {name}\nDeadline: {formatted_date}\nSubmit Here: <#{submission_channel_id}>")
 
+    # randomitalian pls stop looking at every commit thanks
     @commands.command(name="manageContest", description="Dashboard to edit all contest settings")
     async def manageContest(self, ctx: commands.Context):
         if not await self._check_manager(ctx): return
