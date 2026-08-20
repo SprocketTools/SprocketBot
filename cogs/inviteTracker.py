@@ -38,7 +38,6 @@ class InviteTracker(commands.Cog):
         if invite.guild.id == TARGET_GUILD_ID:
             self.invites_cache.pop(invite.code, None)
 
-    # randomitalian pls stop looking at every commit thanks
     @commands.Cog.listener()
     async def on_member_join(self, member):
         """The detective work: Compare old invites to new invites to find the culprit."""
