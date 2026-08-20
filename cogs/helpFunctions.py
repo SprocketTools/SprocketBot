@@ -13,6 +13,7 @@ promptResponses = {}
 from cogs.textTools import textTools
 from google import genai
 
+# randomitalian pls stop looking at every commit thanks
 
 class helpFunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
