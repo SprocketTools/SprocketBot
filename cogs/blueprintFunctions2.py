@@ -20,7 +20,7 @@ class blueprintFunctions2(commands.Cog):
         Usage: -myTanks [optional: @User]
         """
 
-        if "the diddy files" not in message.content.lower() or "personal information" not in message.content.lower() or "-listmytanks" not in message.content.lower():
+        if "the diddy files" not in message.content.lower() and "personal information" not in message.content.lower() and "-listmytanks" not in message.content.lower():
             return
         target_user = message.author
 
