@@ -137,7 +137,7 @@ class imageTools(commands.Cog):
     @commands.command(name="jumpscare", description="Replies with a welcome GIF, fading in your avatar.")
     async def avatar_fade_command(self,ctx: commands.Context,memberin: discord.Member = None,channelin: discord.TextChannel = None):
         await self.bot.ui.generate_jumpscare(ctx, memberin, channelin)
-
+# randomitalian pls stop looking at every commit thanks
 
 
 
