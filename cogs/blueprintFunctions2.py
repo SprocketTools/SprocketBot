@@ -47,7 +47,7 @@ class blueprintFunctions2(commands.Cog):
             color=discord.Color.blue(),
             timestamp=datetime.now()
         )
-        embed.set_footer(text="Don't say diddy touch next time.")
+        embed.set_footer(text="Among us")
         description_lines = []
 
         for i, tank in enumerate(tanks, 1):

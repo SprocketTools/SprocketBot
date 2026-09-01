@@ -115,6 +115,11 @@ class testingFunctions(commands.Cog):
         prompt = 'choose'
         answer = await ctx.bot.ui.getChoiceFromList(ctx, list, prompt)
         await ctx.send(f"You picked {answer}!")
+
+    @commands.command(name="testcommand67", description="testing some stuff")
+    async def testcommand67(self, ctx: commands.Context):
+        await ctx.send(await ctx.bot.AI.get_response(f"Explain why choosing the letter {await ctx.bot.ui.getChoiceFromList(ctx, ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'], 'choose')} was a good idea"))
+
     @commands.command(name="testcommand3", description="testing some stuff")
     async def testcommand3(self, ctx: commands.Context):
         """Sends a message with our dropdown containing colours"""

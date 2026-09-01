@@ -348,6 +348,7 @@ class githubTools(commands.Cog):
         try:
             while True:
                 decalInfo = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
+                await ctx.send(f"There are {len(decalInfo)} decals waiting approval.")
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{decalInfo['strippedname']}"
                 imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{decalInfo['strippedname']}"
                 await ctx.send(file=discord.File(imageCatalogFilepath))
@@ -417,8 +418,8 @@ class githubTools(commands.Cog):
                     await recipient.send(
                         f'Your {decalInfo["type"]} "{decalInfo["strippedname"]}" was not approved.  Reason: {answer}')
                     await ctx.send(f"## Done!\nRejection letter was sent to <@{decalInfo['ownerid']}>")
-        except Exception:
-            await ctx.send("Looks like there are no more decals to approve!")
+        except Exception as e:
+            await ctx.send(f"Looks like there are no more decals to approve!\n{e}")
             result = await githubTools.updateHTML(self, ctx)
 
     async def updateHTML(self, ctx):
