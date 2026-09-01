@@ -143,15 +143,15 @@ class timedMessageTools(commands.Cog):
                 elif content.strip():
                     # Process text placeholders
                     string = await self.bot.error.errorfyText(message, content)
+
                     # Human-like typing delay
-                    # async with message.channel.typing():
-                    #     await asyncio.sleep(min(len(string) / 20, 3))
-                    channel = message.channel
+                    async with message.channel.typing():
+                        await asyncio.sleep(min(len(string) / 20, 3))
 
                     if "[jarvis]" in data['content'].lower():
                         webhook = None
                         try:
-                            webhook = await channel.create_webhook(name=f"J.A.R.V.I.S.")
+                            webhook = await message.channel.create_webhook(name=f"J.A.R.V.I.S.")
                             await webhook.send(
                                 content=data['content'].replace("[jarvis]", "").replace("[sc]", ""),
                                 username="J.A.R.V.I.S.",
@@ -168,7 +168,7 @@ class timedMessageTools(commands.Cog):
                     elif "[sc]" in data['content'].lower():
                         webhook = None
                         try:
-                            webhook = await channel.create_webhook(name=f"Sprocket Chan")
+                            webhook = await message.channel.create_webhook(name=f"Sprocket Chan")
                             await webhook.send(
                                 content=data['content'].replace("[jarvis]", "").replace("[sc]", ""),
                                 username="Sprocket Chan",
@@ -184,7 +184,7 @@ class timedMessageTools(commands.Cog):
                     else:
                         async with message.channel.typing():
                             await asyncio.sleep(min(len(string) / 20, 3))
-                            await channel.send("aa" + data['content'])
+                            await message.channel.send(data['content'])
 
                 # 4. Clean up the database so we move to the next message in the batch
                 await self.bot.sql.databaseExecuteDynamic(
