@@ -102,6 +102,12 @@ class AIAssistants(commands.Cog):
         if not self.bot.operational and (message.author.id != self.bot.owner_id):
             return
 
+        if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
+            await message.add_reaction("❌")
+            await asyncio.sleep(40)
+            await message.remove_reaction("❌", self.bot.user)
+            return
+
         # 1. Skip if message violates blacklist
         if self.contains_blacklisted_words(message.content):
             # await message.channel.send("no")
