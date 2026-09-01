@@ -145,8 +145,8 @@ class timedMessageTools(commands.Cog):
                     string = await self.bot.error.errorfyText(message, content)
 
                     # Human-like typing delay
-                    async with message.channel.typing():
-                        await asyncio.sleep(min(len(string) / 20, 3))
+                    # async with message.channel.typing():
+                    #     await asyncio.sleep(min(len(string) / 20, 3))
 
                     if "[jarvis]" in data['content'].lower():
                         webhook = None
