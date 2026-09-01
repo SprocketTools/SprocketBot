@@ -152,6 +152,9 @@ class timedMessageTools(commands.Cog):
                         webhook = None
                         try:
                             webhook = await message.channel.create_webhook(name=f"J.A.R.V.I.S.")
+                            # Human-like typing delay
+                            async with message.channel.typing():
+                                await asyncio.sleep(min(len(string) / 12, 3))
                             await webhook.send(
                                 content=content.replace("[jarvis]", "").replace("[sc]", ""),
                                 username="J.A.R.V.I.S.",
@@ -170,6 +173,9 @@ class timedMessageTools(commands.Cog):
                         webhook = None
                         try:
                             webhook = await message.channel.create_webhook(name=f"Sprocket Chan")
+                            # Human-like typing delay
+                            async with message.channel.typing():
+                                await asyncio.sleep(min(len(string) / 8, 2))
                             await webhook.send(
                                 content=content.replace("[jarvis]", "").replace("[sc]", ""),
                                 username="Sprocket Chan",
