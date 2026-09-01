@@ -103,9 +103,9 @@ class AIAssistants(commands.Cog):
             return
 
         if await self.bot.ui.channel_block_check(message.channel.id, "ai"):
-            await message.add_reaction("❌")
-            await asyncio.sleep(40)
-            await message.remove_reaction("❌", self.bot.user)
+            # await message.add_reaction("❌")
+            # await asyncio.sleep(40)
+            # await message.remove_reaction("❌", self.bot.user)
             return
 
         # 1. Skip if message violates blacklist
