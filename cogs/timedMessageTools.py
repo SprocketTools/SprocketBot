@@ -65,7 +65,7 @@ class timedMessageTools(commands.Cog):
 
                 # 3. Otherwise, send as a normal message
                 else:
-                    if "[jarvis]" in data['content']:
+                    if "[jarvis]" in data['content'].lower():
                         webhook = None
                         try:
                             webhook = await channel.create_webhook(name=f"J.A.R.V.I.S.")
@@ -82,7 +82,7 @@ class timedMessageTools(commands.Cog):
                             # Clean up: delete the webhook immediately after sending the message
                             await webhook.delete()
 
-                    if "[sc]" in data['content']:
+                    elif "[sc]" in data['content'].lower():
                         webhook = None
                         try:
                             webhook = await channel.create_webhook(name=f"Sprocket Chan")
@@ -99,7 +99,7 @@ class timedMessageTools(commands.Cog):
                             # Clean up: delete the webhook immediately after sending the message
                             await webhook.delete()
                     else:
-                        await channel.send(data['content'])
+                        await channel.send("aa" + data['content'])
 
             # 4. Cleanup
             await self.bot.sql.databaseExecuteDynamic(
