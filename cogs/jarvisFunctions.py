@@ -285,7 +285,8 @@ class jarvisFunctions(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-
+        if not self.bot.ui.channel_block_check(message.channel.id, "ai"):
+            return
         if not self.bot.operational and (message.author.id != self.bot.owner_id):
             return
         print("AA")
