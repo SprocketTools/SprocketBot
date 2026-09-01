@@ -348,7 +348,7 @@ class githubTools(commands.Cog):
         try:
             while True:
                 decalInfo = [dict(row) for row in await self.bot.sql.databaseFetch(f'''SELECT * FROM imagecatalog WHERE approved = 'Pending';''')][0]
-                await ctx.send(f"There are {len(decalInfo)} decals waiting approval.")
+                ## await ctx.send(f"There are {len(decalInfo)} decals waiting approval.")
                 imageCatalogFilepath = f"{GithubDirectory}{OSslashLine}{imgCatalogFolder}{OSslashLine}{decalInfo['strippedname']}"
                 imageDisplayFilepath = f"{GithubDirectory}{OSslashLine}{imgDisplayFolder}{OSslashLine}{decalInfo['strippedname']}"
                 await ctx.send(file=discord.File(imageCatalogFilepath))
@@ -356,7 +356,8 @@ class githubTools(commands.Cog):
                 responseList = ["Too inappropriate", "Invalid category", "Inadequate image quality",
                                 "Image descriptions are not consistent", "Rejection was requested by submitter",
                                 "Other", "No", "Override Name", "Override Category", "Yes"]
-                answer = await ctx.bot.ui.getChoiceFromList(ctx, responseList, userPrompt)
+                await ctx.send(userPrompt)
+                answer = await ctx.bot.ui.getButtonChoice(ctx, responseList)
                 if answer == "Yes":
                     values = [decalInfo['strippedname']]
                     await self.bot.sql.databaseExecuteDynamic(
