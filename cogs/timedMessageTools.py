@@ -195,7 +195,7 @@ class timedMessageTools(commands.Cog):
                             # Human-like typing delay
                             await asyncio.sleep(min(len(string) / 8, 2))
                             await webhook.send(
-                                content=content.replace("[jarvis]", "").replace("[sc]", ""),
+                                content=content.replace("[jarvis]", "").replace("[dyno]", ""),
                                 username="Dyno",
                                 avatar_url="https://cdn.discordapp.com/avatars/155149108183695360/b4fdfc64edff74c37e1574d34fad66c2.png?size=4096"
                             )
