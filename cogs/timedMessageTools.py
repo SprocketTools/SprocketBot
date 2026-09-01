@@ -143,12 +143,48 @@ class timedMessageTools(commands.Cog):
                 elif content.strip():
                     # Process text placeholders
                     string = await self.bot.error.errorfyText(message, content)
-
                     # Human-like typing delay
-                    async with message.channel.typing():
-                        await asyncio.sleep(min(len(string) / 20, 3))
+                    # async with message.channel.typing():
+                    #     await asyncio.sleep(min(len(string) / 20, 3))
+                    channel = message.channel
 
-                    await message.reply(string)
+                    if "[jarvis]" in data['content'].lower():
+                        webhook = None
+                        try:
+                            webhook = await channel.create_webhook(name=f"J.A.R.V.I.S.")
+                            await webhook.send(
+                                content=data['content'].replace("[jarvis]", "").replace("[sc]", ""),
+                                username="J.A.R.V.I.S.",
+                                avatar_url="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"
+                            )
+                        except discord.Forbidden:
+                            print("Failed to send embed - permissions blocked")
+                        except Exception as e:
+                            print(f"Failed to send: {e}")
+                        finally:
+                            # Clean up: delete the webhook immediately after sending the message
+                            await webhook.delete()
+
+                    elif "[sc]" in data['content'].lower():
+                        webhook = None
+                        try:
+                            webhook = await channel.create_webhook(name=f"Sprocket Chan")
+                            await webhook.send(
+                                content=data['content'].replace("[jarvis]", "").replace("[sc]", ""),
+                                username="Sprocket Chan",
+                                avatar_url="https://cdn.discordapp.com/attachments/1142053423370481747/1487790115345535036/image.png"
+                            )
+                        except discord.Forbidden:
+                            print("Failed to send embed - permissions blocked")
+                        except Exception as e:
+                            print(f"Failed to send: {e}")
+                        finally:
+                            # Clean up: delete the webhook immediately after sending the message
+                            await webhook.delete()
+                    else:
+                        async with message.channel.typing():
+                            await asyncio.sleep(min(len(string) / 20, 3))
+                            await channel.send("aa" + data['content'])
 
                 # 4. Clean up the database so we move to the next message in the batch
                 await self.bot.sql.databaseExecuteDynamic(
