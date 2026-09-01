@@ -148,12 +148,12 @@ class timedMessageTools(commands.Cog):
                     # async with message.channel.typing():
                     #     await asyncio.sleep(min(len(string) / 20, 3))
 
-                    if "[jarvis]" in data['content'].lower():
+                    if "[jarvis]" in content.lower():
                         webhook = None
                         try:
                             webhook = await message.channel.create_webhook(name=f"J.A.R.V.I.S.")
                             await webhook.send(
-                                content=data['content'].replace("[jarvis]", "").replace("[sc]", ""),
+                                content=content.replace("[jarvis]", "").replace("[sc]", ""),
                                 username="J.A.R.V.I.S.",
                                 avatar_url="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"
                             )
@@ -162,15 +162,16 @@ class timedMessageTools(commands.Cog):
                         except Exception as e:
                             print(f"Failed to send: {e}")
                         finally:
-                            # Clean up: delete the webhook immediately after sending the message
-                            await webhook.delete()
+                            if webhook:
+                                # Clean up: delete the webhook immediately after sending the message
+                                await webhook.delete()
 
-                    elif "[sc]" in data['content'].lower():
+                    elif "[sc]" in content.lower():
                         webhook = None
                         try:
                             webhook = await message.channel.create_webhook(name=f"Sprocket Chan")
                             await webhook.send(
-                                content=data['content'].replace("[jarvis]", "").replace("[sc]", ""),
+                                content=content.replace("[jarvis]", "").replace("[sc]", ""),
                                 username="Sprocket Chan",
                                 avatar_url="https://cdn.discordapp.com/attachments/1142053423370481747/1487790115345535036/image.png"
                             )
@@ -179,12 +180,13 @@ class timedMessageTools(commands.Cog):
                         except Exception as e:
                             print(f"Failed to send: {e}")
                         finally:
-                            # Clean up: delete the webhook immediately after sending the message
-                            await webhook.delete()
+                            if webhook:
+                                # Clean up: delete the webhook immediately after sending the message
+                                await webhook.delete()
                     else:
                         async with message.channel.typing():
                             await asyncio.sleep(min(len(string) / 20, 3))
-                            await message.channel.send(data['content'])
+                            await message.channel.send(content)
 
                 # 4. Clean up the database so we move to the next message in the batch
                 await self.bot.sql.databaseExecuteDynamic(
