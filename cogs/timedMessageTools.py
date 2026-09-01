@@ -187,6 +187,27 @@ class timedMessageTools(commands.Cog):
                             if webhook:
                                 # Clean up: delete the webhook immediately after sending the message
                                 await webhook.delete()
+
+                    elif "[dyno]" in content.lower():
+                        webhook = None
+                        try:
+                            webhook = await message.channel.create_webhook(name=f"Dyno")
+                            # Human-like typing delay
+                            await asyncio.sleep(min(len(string) / 8, 2))
+                            await webhook.send(
+                                content=content.replace("[jarvis]", "").replace("[sc]", ""),
+                                username="Dyno",
+                                avatar_url="https://cdn.discordapp.com/avatars/155149108183695360/b4fdfc64edff74c37e1574d34fad66c2.png?size=4096"
+                            )
+                        except discord.Forbidden:
+                            print("Failed to send embed - permissions blocked")
+                        except Exception as e:
+                            print(f"Failed to send: {e}")
+                        finally:
+                            if webhook:
+                                # Clean up: delete the webhook immediately after sending the message
+                                await webhook.delete()
+
                     else:
                         async with message.channel.typing():
                             await asyncio.sleep(min(len(string) / 20, 3))
