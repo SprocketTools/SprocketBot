@@ -277,7 +277,7 @@ class adminFunctions(commands.Cog):
         if self.cooldown >= 3:
             self.cooldown += -1
         print(self.cooldown)
-        if (serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"] or message.author.id == main.ownerID) and message.guild.id != 788349365466038283:
+        if (serverConfig[message.guild.id]["allowfunny"] == True and message.channel.id == serverConfig[message.guild.id]["generalchannelid"] or message.author.id == main.ownerID or message.channel.id == 1253823193689489458) and message.guild.id != 788349365466038283:
             guild = self.bot.get_guild(message.guild.id)
             prob = 1500 + len(guild.members)
             i = int(random.random()*prob)
@@ -332,6 +332,8 @@ class adminFunctions(commands.Cog):
                 for x in special_list:
                     if x in message.content.lower():
                         await textTools.sendThenDelete(message, await self.bot.error.retrieveCategorizedError(message, special_list[x]))
+            if message.author.id == 1384616061441278004 and message.channel.id == 1253823193689489458:
+                i = int(random.random()*750)
             try:
                 if serverConfig[message.guild.id]["funnycounter"] > 0 and i < 700:
                     serverConfig[message.guild.id]["funnycounter"] = serverConfig[message.guild.id]["funnycounter"] - 1
