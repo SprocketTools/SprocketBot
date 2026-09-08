@@ -357,6 +357,15 @@ class adminFunctions(commands.Cog):
         except Exception as e:
             await ctx.send(str(e))
 
+    @commands.command(name="dkick", description="Kick somebody")
+    async def dkick(self, ctx: commands.Context, member: discord.Member):
+        if not ctx.author.guild_permissions.administrator:
+            return
+        try:
+            await member.kick(reason="Did not claim member role in time.")
+        except Exception:
+            pass
+
     @commands.command(name="resetServerConfig", description="Reset everyone's server configurations")
     async def resetServerConfig(self, ctx: commands.Context):
         print("hi")
