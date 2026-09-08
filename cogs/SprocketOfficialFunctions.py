@@ -64,14 +64,6 @@ class SprocketOfficialFunctions(commands.Cog):
         except Exception as E:
             print(E)
 
-    @commands.command(name="dkick", description="Kick somebody")
-    async def dkick(self, ctx: commands.Context, member: discord.Member):
-        if not ctx.author.guild_permissions.administrator:
-            return
-        try:
-            await member.kick(reason="Did not claim member role in time.")
-        except Exception:
-            pass
 
 
     @commands.command(name="everyonerolestest", description="Ask Hamish a question.")
