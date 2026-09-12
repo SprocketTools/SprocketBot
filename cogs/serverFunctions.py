@@ -319,8 +319,10 @@ class serverFunctions(commands.Cog):
 
             logValues = [random.randint(1, 123456789), ctx.guild.id, user.id, ctx.author.id, ruleName, reason, points,
                          timeIn, endTime, "ban"]
-            await self.bot.sql.databaseExecuteDynamic(
-                '''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);''', logValues)
+            # await self.bot.sql.databaseExecute(
+            #             '''CREATE TABLE IF NOT EXISTS modlogs (logid BIGINT, serverid BIGINT, userid BIGINT, moderatorid BIGINT, name VARCHAR, description VARCHAR, points INT, timestamp TIMESTAMP, endtime TIMESTAMP, type VARCHAR);''')
+            await self.bot.sql.databaseExecuteDynamic('''UPDATE modlogs SET name = 'Overwritten Ban' WHERE name = 'Ban' AND endtime < now() AND serverid = $1 AND userid = $2 AND timestamp < endtime;''',[ctx.guild.id, user.id])
+            await self.bot.sql.databaseExecuteDynamic('''INSERT into modlogs VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);''', logValues)
         except Exception as e:
             print(f"Database logging failed: {e}")
 
