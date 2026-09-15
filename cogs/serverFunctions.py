@@ -58,6 +58,36 @@ class serverFunctions(commands.Cog):
         except Exception as e:
             print(f"Database error in loopUpdate: {e}")
 
+    @commands.command(name="permscheck", description="Setup the moderation database")
+    async def permscheck(self, ctx: commands.Context):
+        if ctx.author.id != main.ownerID or not ctx.author.guild_permissions.manage_channels:
+            await self.bot.error.sendError(ctx)
+            return
+        try:
+            embed = discord.Embed(title="Permissions Check", color=discord.Color.random())
+            rtext = ""
+            i = 1
+            nameout = f"Channel breakdown: {i} - "
+            for channel in ctx.guild.text_channels:
+
+                pc = int(channel.permissions_for(ctx.guild.me).read_messages) + int(channel.permissions_for(ctx.guild.me).manage_messages)
+                rtext = rtext + (f"{channel.mention}: {pc}/2 {'☑️' if pc == 2 else '❌'}\n")
+                i += 1
+                if i % 20 == 1:
+                    # embed.add_field(name="Channel count:", value=len(ctx.guild.text_channels), inline=False)
+                    embed.add_field(name=nameout + str(i-1), value=rtext, inline=False)
+                    await ctx.send(embed=embed)
+                    embed = discord.Embed(title="Permissions Check", color=discord.Color.random())
+                    rtext = ""
+                    nameout = f"Channel breakdown: {i} - "
+            # embed.add_field(name="Channel count:", value=len(ctx.guild.text_channels), inline=False)
+            embed.add_field(name=nameout + str(i-1), value=rtext, inline=False)
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
+
+
+
     @commands.command(name="setupmoderationdatabase", description="Setup the moderation database")
     async def setupmoderationdatabase(self, ctx: commands.Context):
         if ctx.author.id != main.ownerID:
