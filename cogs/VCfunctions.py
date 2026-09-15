@@ -162,36 +162,60 @@ class VCfunctions(commands.Cog):
                 await ctx.send(f"Search failed: `{e}`")
 
     @commands.command(name="trollVC", description="Play audio in a specified channel with optional filters")
-    async def trollVC(self, ctx: commands.Context, channelID: int, *, action=None):
+    async def trollVC(self, ctx: commands.Context, channelID: int, *, action: str = None):
+        # 1. Author permissions check
         if ctx.author.id != main.ownerID:
             await ctx.send(await self.bot.error.retrieveError(ctx))
             await ctx.send("You are not authorized to run this command.")
             return
 
-        channel = self.bot.get_channel(channelID)
-        if not channel:
-            return await ctx.send("Target voice channel not found.")
+        # 2. Fetch target channel
+        target_channel = self.bot.get_channel(channelID)
+        if not target_channel or not isinstance(target_channel, discord.VoiceChannel):
+            return await ctx.send("Target voice channel not found or invalid.")
 
-        search = await textTools.mild_sanitize(await textTools.getResponse(ctx, "What is the song's search query?"))
+        # 3. Robust voice connection logic (prevents 'Already connected' errors)
+        if ctx.voice_client:
+            if ctx.voice_client.channel != target_channel or not ctx.voice_client.is_connected():
+                try:
+                    await ctx.voice_client.disconnect(force=True)
+                except Exception:
+                    pass
+                await target_channel.connect(timeout=20.0, reconnect=True)
+        else:
+            await target_channel.connect(timeout=20.0, reconnect=True)
 
-        if not ctx.voice_client:
-            await channel.connect()
+        # Determine FFmpeg filters
+        options = FFMPEG_OPTIONS_CURSED if action == "cursed" else FFMPEG_OPTIONS
 
-        async with ctx.typing():
-            try:
-                with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                    url, title = await self.bot.loop.run_in_executor(
-                        None, lambda: self._extract_media_info(ydl, search)
-                    )
-
-                options = FFMPEG_OPTIONS_CURSED if action == "cursed" else FFMPEG_OPTIONS
+        # 4. Check for direct file attachments
+        if ctx.message.attachments:
+            attachment = ctx.message.attachments[0]
+            if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
+                url = attachment.url
+                title = f"Uploaded File: {attachment.filename}"
                 self.queue.append((url, title, options))
-                await ctx.send(f'Added to queue: **{title}**')
-            except Exception as e:
-                await ctx.send(f"Failed to extract target audio: `{e}`")
-                return
+                await ctx.send(f'Added attachment to queue for <#{channelID}>: **{attachment.filename}**')
+            else:
+                return await ctx.send("Unsupported audio file format attached.")
 
-        if not ctx.voice_client.is_playing():
+        # 5. Prompt for search query if no attachment is found
+        else:
+            search_prompt = await textTools.getResponse(ctx, "What is the song's search query?")
+            search = await textTools.mild_sanitize(search_prompt)
+
+            async with ctx.typing():
+                try:
+                    # Non-blocking thread-safe extraction
+                    url, title = await asyncio.to_thread(self._extract_media_info, search)
+                    self.queue.append((url, title, options))
+                    await ctx.send(f'Added to queue for <#{channelID}>: **{title}**')
+                except Exception as e:
+                    await ctx.send(f"Could not retrieve audio: `{e}`")
+                    return
+
+        # 6. Trigger playback loop if currently idle
+        if ctx.voice_client and not ctx.voice_client.is_playing():
             await self.play_next(ctx)
 
     @commands.command(name="skip", description="Skip the current track")
