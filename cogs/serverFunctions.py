@@ -68,7 +68,7 @@ class serverFunctions(commands.Cog):
             rtext = ""
             i = 1
             nameout = f"Channel breakdown: {i} - "
-            for channel in ctx.guild.text_channels:
+            for channel in ctx.guild.text_channels + ctx.guild.voice_channels:
 
                 pc = int(channel.permissions_for(ctx.guild.me).read_messages) + int(channel.permissions_for(ctx.guild.me).manage_messages)
                 rtext = rtext + (f"{channel.mention}: {pc}/2 {'☑️' if pc == 2 else '❌'}\n")
