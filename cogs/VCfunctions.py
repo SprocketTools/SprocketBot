@@ -163,32 +163,28 @@ class VCfunctions(commands.Cog):
 
     @commands.command(name="trollVC", description="Play audio in a specified channel with optional filters")
     async def trollVC(self, ctx: commands.Context, channelID: int, *, action: str = None):
-        # 1. Author permissions check
         if ctx.author.id != main.ownerID:
             await ctx.send(await self.bot.error.retrieveError(ctx))
             await ctx.send("You are not authorized to run this command.")
             return
 
-        # 2. Fetch target channel
         target_channel = self.bot.get_channel(channelID)
         if not target_channel or not isinstance(target_channel, discord.VoiceChannel):
             return await ctx.send("Target voice channel not found or invalid.")
 
-        # 3. Robust voice connection logic (prevents 'Already connected' errors)
+        # 1. Handle switching across different VCs cleanly
         if ctx.voice_client:
-            if ctx.voice_client.channel != target_channel or not ctx.voice_client.is_connected():
-                try:
-                    await ctx.voice_client.disconnect(force=True)
-                except Exception:
-                    pass
+            if ctx.voice_client.channel != target_channel:
+                await ctx.voice_client.move_to(target_channel)
+            elif not ctx.voice_client.is_connected():
+                await ctx.voice_client.disconnect(force=True)
                 await target_channel.connect(timeout=20.0, reconnect=True)
         else:
             await target_channel.connect(timeout=20.0, reconnect=True)
 
-        # Determine FFmpeg filters
         options = FFMPEG_OPTIONS_CURSED if action == "cursed" else FFMPEG_OPTIONS
 
-        # 4. Check for direct file attachments
+        # 2. Check initial command message for attachments
         if ctx.message.attachments:
             attachment = ctx.message.attachments[0]
             if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
@@ -199,22 +195,40 @@ class VCfunctions(commands.Cog):
             else:
                 return await ctx.send("Unsupported audio file format attached.")
 
-        # 5. Prompt for search query if no attachment is found
+        # 3. If no initial attachment, prompt the user and check response for text OR attachments
         else:
-            search_prompt = await textTools.getResponse(ctx, "What is the song's search query?")
-            search = await textTools.mild_sanitize(search_prompt)
+            await ctx.send("What is the song's search query or attached audio file?")
+            try:
+                def check(m):
+                    return m.author == ctx.author and m.channel == ctx.channel
 
-            async with ctx.typing():
-                try:
-                    # Non-blocking thread-safe extraction
-                    url, title = await asyncio.to_thread(self._extract_media_info, search)
+                prompt_msg = await self.bot.wait_for('message', check=check, timeout=30.0)
+            except asyncio.TimeoutError:
+                return await ctx.send("Timed out waiting for a response.")
+
+            # Check if the user uploaded an MP3 in response to the prompt
+            if prompt_msg.attachments:
+                attachment = prompt_msg.attachments[0]
+                if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
+                    url = attachment.url
+                    title = f"Uploaded File: {attachment.filename}"
                     self.queue.append((url, title, options))
-                    await ctx.send(f'Added to queue for <#{channelID}>: **{title}**')
-                except Exception as e:
-                    await ctx.send(f"Could not retrieve audio: `{e}`")
-                    return
+                    await ctx.send(f'Added attachment to queue for <#{channelID}>: **{attachment.filename}**')
+                else:
+                    return await ctx.send("Unsupported audio file format attached.")
+            elif prompt_msg.content:
+                search = await textTools.mild_sanitize(prompt_msg.content)
+                async with ctx.typing():
+                    try:
+                        url, title = await asyncio.to_thread(self._extract_media_info, search)
+                        self.queue.append((url, title, options))
+                        await ctx.send(f'Added to queue for <#{channelID}>: **{title}**')
+                    except Exception as e:
+                        await ctx.send(f"Could not retrieve audio: `{e}`")
+                        return
+            else:
+                return await ctx.send("No search query or audio file provided.")
 
-        # 6. Trigger playback loop if currently idle
         if ctx.voice_client and not ctx.voice_client.is_playing():
             await self.play_next(ctx)
 
