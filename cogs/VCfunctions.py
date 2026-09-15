@@ -30,7 +30,7 @@ YDL_OPTIONS = {
 class VCfunctions(commands.Cog):
     def __init__(self, bot: type_hints.SprocketBot):
         self.bot = bot
-        self.queue = []
+        self.queues = {}
 
     def _extract_media_info(self, ydl, search: str):
         """Helper function to cleanly extract single track details from yt-dlp queries."""
@@ -45,6 +45,11 @@ class VCfunctions(commands.Cog):
         url = info.get('url') or info.get('webpage_url')
         title = info.get('title', 'Unknown Track')
         return url, title
+
+    def get_queue(self, guild_id: int) -> list:
+        if guild_id not in self.queues:
+            self.queues[guild_id] = []
+        return self.queues[guild_id]
 
     def _extract_media_info(self, search: str):
         """Synchronous wrapper for yt-dlp to run inside an executor thread."""
@@ -82,70 +87,56 @@ class VCfunctions(commands.Cog):
                 await ctx.send(f"Failed to connect to voice channel: `{e}`")
                 return
 
+        guild_queue = self.get_queue(ctx.guild.id)
+
         # 1. Attachment handling
         if ctx.message.attachments:
             attachment = ctx.message.attachments[0]
             if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
-                url = attachment.url
-                title = f"Uploaded File: {attachment.filename}"
-                self.queue.append((url, title, FFMPEG_OPTIONS))
+                guild_queue.append((attachment.url, f"Uploaded File: {attachment.filename}", FFMPEG_OPTIONS))
                 await ctx.send(f'Added attachment to queue: **{attachment.filename}**')
             else:
                 return await ctx.send("Unsupported audio file format.")
-
-        # 2. Asynchronous search handling
         elif searchIn:
             search = await textTools.mild_sanitize(searchIn)
             async with ctx.typing():
                 try:
                     url, title = await asyncio.to_thread(self._extract_media_info, search)
-                    self.queue.append((url, title, FFMPEG_OPTIONS))
+                    guild_queue.append((url, title, FFMPEG_OPTIONS))
                     await ctx.send(f'Added to queue: **{title}**')
                 except Exception as e:
-                    await ctx.send(f"Could not retrieve audio: `{e}`")
-                    return
-        else:
-            return await ctx.send("Please provide a search query or attach an audio file.")
+                    return await ctx.send(f"Could not retrieve audio: `{e}`")
 
-        # 3. Trigger playback loop
         if ctx.voice_client and not ctx.voice_client.is_playing():
-            await self.play_next(ctx)
+            await self.play_next_guild(ctx, ctx.guild)
 
-    async def play_next(self, ctx):
-        if self.queue:
-            # Re-verify connection state before attempting stream creation
-            if not ctx.voice_client or not ctx.voice_client.is_connected():
-                voice_channel = ctx.author.voice.channel if ctx.author.voice else None
-                if voice_channel:
-                    try:
-                        await voice_channel.connect(timeout=20.0, reconnect=True)
-                    except Exception as e:
-                        await ctx.send(f"Voice reconnection failed: `{e}`")
-                        return
-                else:
-                    await ctx.send("Cannot resume queue: No user in voice channel to follow.")
-                    return
+    async def play_next_guild(self, ctx, guild: discord.Guild):
+        guild_vc = guild.voice_client
+        guild_queue = self.get_queue(guild.id)
 
-            url, title, ffoptions = self.queue.pop(0)
+        if guild_queue:
+            if not guild_vc or not guild_vc.is_connected():
+                await ctx.send(f"Lost voice connection in **{guild.name}**.")
+                return
+
+            url, title, ffoptions = guild_queue.pop(0)
 
             try:
-                # Directly await from_probe (do NOT wrap in asyncio.to_thread)
                 source = await discord.FFmpegOpusAudio.from_probe(url, **ffoptions)
-
-                ctx.voice_client.play(
+                guild_vc.play(
                     source,
-                    after=lambda e: self.bot.loop.create_task(self.play_next(ctx))
+                    after=lambda e: self.bot.loop.create_task(self.play_next_guild(ctx, guild))
                 )
-                await ctx.send(f'Now playing: **{title}**')
+                await ctx.send(f'Now playing in **{guild.name}**: **{title}**')
             except Exception as e:
                 await ctx.send(f"Error starting track **{title}**: `{e}`")
-                await self.play_next(ctx)
+                await self.play_next_guild(ctx, guild)
 
-        elif ctx.voice_client and not ctx.voice_client.is_playing():
-            await ctx.send("Queue is empty!")
+        elif guild_vc and not guild_vc.is_playing():
+            await ctx.send(f"Queue empty for **{guild.name}**!")
             await asyncio.sleep(5)
-            if ctx.voice_client and ctx.voice_client.is_connected() and not ctx.voice_client.is_playing() and not self.queue:
-                await ctx.voice_client.disconnect()
+            if guild_vc and guild_vc.is_connected() and not guild_vc.is_playing() and not guild_queue:
+                await guild_vc.disconnect()
 
     @commands.command(name="search", description="Search for music with the bot")
     async def search(self, ctx: commands.Context, *, searchIn):
@@ -161,41 +152,38 @@ class VCfunctions(commands.Cog):
             except Exception as e:
                 await ctx.send(f"Search failed: `{e}`")
 
-    @commands.command(name="trollVC", description="Play audio in a specified channel with optional filters")
+    @commands.command(name="trollVC", description="Play audio in a specified channel across servers")
     async def trollVC(self, ctx: commands.Context, channelID: int, *, action: str = None):
         if ctx.author.id != main.ownerID:
             await ctx.send(await self.bot.error.retrieveError(ctx))
-            await ctx.send("You are not authorized to run this command.")
-            return
+            return await ctx.send("You are not authorized to run this command.")
 
         target_channel = self.bot.get_channel(channelID)
         if not target_channel or not isinstance(target_channel, discord.VoiceChannel):
             return await ctx.send("Target voice channel not found or invalid.")
 
-        # 1. Handle switching across different VCs cleanly
-        if ctx.voice_client:
-            if ctx.voice_client.channel != target_channel:
-                await ctx.voice_client.move_to(target_channel)
-            elif not ctx.voice_client.is_connected():
-                await ctx.voice_client.disconnect(force=True)
-                await target_channel.connect(timeout=20.0, reconnect=True)
+        target_guild = target_channel.guild
+        guild_vc = target_guild.voice_client
+
+        if guild_vc:
+            if guild_vc.channel != target_channel:
+                await guild_vc.move_to(target_channel)
+            elif not guild_vc.is_connected():
+                await guild_vc.disconnect(force=True)
+                guild_vc = await target_channel.connect(timeout=20.0, reconnect=True)
         else:
-            await target_channel.connect(timeout=20.0, reconnect=True)
+            guild_vc = await target_channel.connect(timeout=20.0, reconnect=True)
 
         options = FFMPEG_OPTIONS_CURSED if action == "cursed" else FFMPEG_OPTIONS
+        url, title = None, None
 
-        # 2. Check initial command message for attachments
+        # Extract track details from attachments or prompts
         if ctx.message.attachments:
             attachment = ctx.message.attachments[0]
             if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
-                url = attachment.url
-                title = f"Uploaded File: {attachment.filename}"
-                self.queue.append((url, title, options))
-                await ctx.send(f'Added attachment to queue for <#{channelID}>: **{attachment.filename}**')
+                url, title = attachment.url, f"Uploaded File: {attachment.filename}"
             else:
                 return await ctx.send("Unsupported audio file format attached.")
-
-        # 3. If no initial attachment, prompt the user and check response for text OR attachments
         else:
             await ctx.send("What is the song's search query or attached audio file?")
             try:
@@ -206,14 +194,10 @@ class VCfunctions(commands.Cog):
             except asyncio.TimeoutError:
                 return await ctx.send("Timed out waiting for a response.")
 
-            # Check if the user uploaded an MP3 in response to the prompt
             if prompt_msg.attachments:
                 attachment = prompt_msg.attachments[0]
                 if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
-                    url = attachment.url
-                    title = f"Uploaded File: {attachment.filename}"
-                    self.queue.append((url, title, options))
-                    await ctx.send(f'Added attachment to queue for <#{channelID}>: **{attachment.filename}**')
+                    url, title = attachment.url, f"Uploaded File: {attachment.filename}"
                 else:
                     return await ctx.send("Unsupported audio file format attached.")
             elif prompt_msg.content:
@@ -221,16 +205,16 @@ class VCfunctions(commands.Cog):
                 async with ctx.typing():
                     try:
                         url, title = await asyncio.to_thread(self._extract_media_info, search)
-                        self.queue.append((url, title, options))
-                        await ctx.send(f'Added to queue for <#{channelID}>: **{title}**')
                     except Exception as e:
-                        await ctx.send(f"Could not retrieve audio: `{e}`")
-                        return
-            else:
-                return await ctx.send("No search query or audio file provided.")
+                        return await ctx.send(f"Could not retrieve audio: `{e}`")
 
-        if ctx.voice_client and not ctx.voice_client.is_playing():
-            await self.play_next(ctx)
+        # Append to target guild's isolated queue
+        target_queue = self.get_queue(target_guild.id)
+        target_queue.append((url, title, options))
+        await ctx.send(f'Added to queue for **{target_guild.name}** (<#{channelID}>): **{title}**')
+
+        if guild_vc and not guild_vc.is_playing():
+            await self.play_next_guild(ctx, target_guild)
 
     @commands.command(name="skip", description="Skip the current track")
     async def skip(self, ctx: commands.Context):
