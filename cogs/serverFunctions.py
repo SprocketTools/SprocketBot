@@ -60,7 +60,7 @@ class serverFunctions(commands.Cog):
 
     @commands.command(name="permscheck", description="Setup the moderation database")
     async def permscheck(self, ctx: commands.Context):
-        if ctx.author.id != main.ownerID or not ctx.author.guild_permissions.manage_channels:
+        if ctx.author.id != main.ownerID and not ctx.author.guild_permissions.manage_channels:
             await self.bot.error.sendError(ctx)
             return
         try:
