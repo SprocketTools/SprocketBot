@@ -74,14 +74,15 @@ class VCfunctions(commands.Cog):
         if not voice_channel:
             return await ctx.send("You need to be in a voice channel to play music!")
 
-        if not ctx.voice_client:
+        # Ensure active voice connection
+        if not ctx.voice_client or not ctx.voice_client.is_connected():
             try:
-                await voice_channel.connect()
+                await voice_channel.connect(timeout=20.0, reconnect=True)
             except Exception as e:
-                await ctx.send(f"Failed to connect to the voice channel.\nError: `{e}`")
+                await ctx.send(f"Failed to connect to voice channel: `{e}`")
                 return
 
-        # 1. Process local/uploaded file attachments
+        # 1. Attachment handling
         if ctx.message.attachments:
             attachment = ctx.message.attachments[0]
             if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
@@ -92,12 +93,11 @@ class VCfunctions(commands.Cog):
             else:
                 return await ctx.send("Unsupported audio file format.")
 
-        # 2. Process search queries asynchronously without blocking the loop
+        # 2. Asynchronous search handling
         elif searchIn:
             search = await textTools.mild_sanitize(searchIn)
             async with ctx.typing():
                 try:
-                    # Offloads blocking network call to a separate worker thread
                     url, title = await asyncio.to_thread(self._extract_media_info, search)
                     self.queue.append((url, title, FFMPEG_OPTIONS))
                     await ctx.send(f'Added to queue: **{title}**')
@@ -105,21 +105,33 @@ class VCfunctions(commands.Cog):
                     await ctx.send(f"Could not retrieve audio: `{e}`")
                     return
         else:
-            return await ctx.send("Please provide a search term/link or upload an audio file attachment.")
+            return await ctx.send("Please provide a search query or attach an audio file.")
 
-        # 3. Trigger playback loop if idle
-        if not ctx.voice_client.is_playing():
+        # 3. Trigger playback loop
+        if ctx.voice_client and not ctx.voice_client.is_playing():
             await self.play_next(ctx)
 
     async def play_next(self, ctx):
         if self.queue:
+            # Re-verify connection state before attempting stream creation
+            if not ctx.voice_client or not ctx.voice_client.is_connected():
+                voice_channel = ctx.author.voice.channel if ctx.author.voice else None
+                if voice_channel:
+                    try:
+                        await voice_channel.connect(timeout=20.0, reconnect=True)
+                    except Exception as e:
+                        await ctx.send(f"Voice reconnection failed: `{e}`")
+                        return
+                else:
+                    await ctx.send("Cannot resume queue: No user in voice channel to follow.")
+                    return
+
             url, title, ffoptions = self.queue.pop(0)
 
             try:
-                # Offload stream probing to a background thread to keep loop responsive
-                source = await asyncio.to_thread(
-                    discord.FFmpegOpusAudio.from_probe, url, **ffoptions
-                )
+                # Directly await from_probe (do NOT wrap in asyncio.to_thread)
+                source = await discord.FFmpegOpusAudio.from_probe(url, **ffoptions)
+
                 ctx.voice_client.play(
                     source,
                     after=lambda e: self.bot.loop.create_task(self.play_next(ctx))
@@ -132,7 +144,7 @@ class VCfunctions(commands.Cog):
         elif ctx.voice_client and not ctx.voice_client.is_playing():
             await ctx.send("Queue is empty!")
             await asyncio.sleep(5)
-            if ctx.voice_client and not ctx.voice_client.is_playing() and not self.queue:
+            if ctx.voice_client and ctx.voice_client.is_connected() and not ctx.voice_client.is_playing() and not self.queue:
                 await ctx.voice_client.disconnect()
 
     @commands.command(name="search", description="Search for music with the bot")
