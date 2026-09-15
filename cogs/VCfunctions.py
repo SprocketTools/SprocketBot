@@ -46,17 +46,31 @@ class VCfunctions(commands.Cog):
         title = info.get('title', 'Unknown Track')
         return url, title
 
-    @commands.command(name="play", description="Play music with the bot", extras={'category': 'utility'})
-    async def play(self, ctx: commands.Context, *, searchIn):
+    def _extract_media_info(self, search: str):
+        """Synchronous wrapper for yt-dlp to run inside an executor thread."""
+        with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+            if "https://" in search or "http://" in search:
+                info = ydl.extract_info(search, download=False)
+            else:
+                info = ydl.extract_info(f"scsearch:{search}", download=False)
+
+            if 'entries' in info and info['entries']:
+                info = info['entries'][0]
+
+            url = info.get('url') or info.get('webpage_url')
+            title = info.get('title', 'Unknown Track')
+            return url, title
+
+    @commands.command(name="play", description="Play music or uploaded audio files with the bot",
+                      extras={'category': 'utility'})
+    async def play(self, ctx: commands.Context, *, searchIn: str = None):
         serverConfig = await adminFunctions.getServerConfig(ctx)
         if str(serverConfig["musicroleid"]) not in str(ctx.author.roles):
             if not ctx.author.guild_permissions.administrator:
                 await ctx.send("You are not authorized to run this command.")
                 return
 
-        search = await textTools.mild_sanitize(searchIn)
         voice_channel = ctx.author.voice.channel if ctx.author.voice else None
-
         if not voice_channel:
             return await ctx.send("You need to be in a voice channel to play music!")
 
@@ -64,27 +78,62 @@ class VCfunctions(commands.Cog):
             try:
                 await voice_channel.connect()
             except Exception as e:
-                await ctx.send(f"Failed to connect to the voice channel. Please try again.\nError: `{e}`")
+                await ctx.send(f"Failed to connect to the voice channel.\nError: `{e}`")
                 return
 
-        if not ctx.voice_client:
-            await ctx.send("Could not establish a voice connection. Please check my permissions and try again.")
-            return
-
-        async with ctx.typing():
-            try:
-                with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                    url, title = await self.bot.loop.run_in_executor(
-                        None, lambda: self._extract_media_info(ydl, search)
-                    )
+        # 1. Process local/uploaded file attachments
+        if ctx.message.attachments:
+            attachment = ctx.message.attachments[0]
+            if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
+                url = attachment.url
+                title = f"Uploaded File: {attachment.filename}"
                 self.queue.append((url, title, FFMPEG_OPTIONS))
-                await ctx.send(f'Added to queue: **{title}**')
-            except Exception as e:
-                await ctx.send(f"Could not retrieve audio: `{e}`")
-                return
+                await ctx.send(f'Added attachment to queue: **{attachment.filename}**')
+            else:
+                return await ctx.send("Unsupported audio file format.")
 
+        # 2. Process search queries asynchronously without blocking the loop
+        elif searchIn:
+            search = await textTools.mild_sanitize(searchIn)
+            async with ctx.typing():
+                try:
+                    # Offloads blocking network call to a separate worker thread
+                    url, title = await asyncio.to_thread(self._extract_media_info, search)
+                    self.queue.append((url, title, FFMPEG_OPTIONS))
+                    await ctx.send(f'Added to queue: **{title}**')
+                except Exception as e:
+                    await ctx.send(f"Could not retrieve audio: `{e}`")
+                    return
+        else:
+            return await ctx.send("Please provide a search term/link or upload an audio file attachment.")
+
+        # 3. Trigger playback loop if idle
         if not ctx.voice_client.is_playing():
             await self.play_next(ctx)
+
+    async def play_next(self, ctx):
+        if self.queue:
+            url, title, ffoptions = self.queue.pop(0)
+
+            try:
+                # Offload stream probing to a background thread to keep loop responsive
+                source = await asyncio.to_thread(
+                    discord.FFmpegOpusAudio.from_probe, url, **ffoptions
+                )
+                ctx.voice_client.play(
+                    source,
+                    after=lambda e: self.bot.loop.create_task(self.play_next(ctx))
+                )
+                await ctx.send(f'Now playing: **{title}**')
+            except Exception as e:
+                await ctx.send(f"Error starting track **{title}**: `{e}`")
+                await self.play_next(ctx)
+
+        elif ctx.voice_client and not ctx.voice_client.is_playing():
+            await ctx.send("Queue is empty!")
+            await asyncio.sleep(5)
+            if ctx.voice_client and not ctx.voice_client.is_playing() and not self.queue:
+                await ctx.voice_client.disconnect()
 
     @commands.command(name="search", description="Search for music with the bot")
     async def search(self, ctx: commands.Context, *, searchIn):
@@ -132,24 +181,6 @@ class VCfunctions(commands.Cog):
 
         if not ctx.voice_client.is_playing():
             await self.play_next(ctx)
-
-    async def play_next(self, ctx):
-        if self.queue:
-            url, title, ffoptions = self.queue.pop(0)
-
-            try:
-                source = await discord.FFmpegOpusAudio.from_probe(url, **ffoptions)
-                ctx.voice_client.play(source, after=lambda _: self.bot.loop.create_task(self.play_next(ctx)))
-                await ctx.send(f'Now playing: **{title}**')
-            except Exception as e:
-                await ctx.send(f"Error starting track **{title}**: `{e}`")
-                await self.play_next(ctx)
-
-        elif ctx.voice_client and not ctx.voice_client.is_playing():
-            await ctx.send("Queue is empty!")
-            await asyncio.sleep(5)
-            if ctx.voice_client and not ctx.voice_client.is_playing() and not self.queue:
-                await ctx.voice_client.disconnect()
 
     @commands.command(name="skip", description="Skip the current track")
     async def skip(self, ctx: commands.Context):
