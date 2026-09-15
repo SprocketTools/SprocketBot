@@ -335,7 +335,7 @@ class serverFunctions(commands.Cog):
         else:
             msgA = await ctx.send(f"Confirmation: you wish to ban {user_to_ban.mention} ({user_to_ban.id}) for {days} days?")
         if not await self.bot.ui.getYesNoChoice(ctx):
-            await msgA.delete()
+            ## await msgA.delete()
             await self.bot.error.sendCategorizedError(ctx, "insult")
             return
         await msgA.delete()
