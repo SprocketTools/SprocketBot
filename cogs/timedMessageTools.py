@@ -21,7 +21,7 @@ webhook_data = {
     "sc2": {"name": "Sprocket Chan", "avatar": "https://cdn.discordapp.com/attachments/1119198688884051978/1555539590008541204/Sprocket_Chan_2025_Profile_Avatar.png?backend=b2&ex=6ac0e4a2&is=6abf9322&hm=85910d793f5850190ae189b66076869233c7185f5f9472576b475090770d991f&"},
     "dyno": {"name": "Dyno", "avatar": "https://cdn.discordapp.com/avatars/155149108183695360/b4fdfc64edff74c37e1574d34fad66c2.png?size=4096"},
     "mee6": {"name": "MEE6","avatar": "https://cdn.discordapp.com/avatars/159985870458322944/765030df32975c5b23f8dfe86d6ff520.png?size=4096"},
-    "yag": {"name": "MEE6","avatar": "https://cdn.discordapp.com/avatars/204255221017214977/a_f745fbd1c07799ac4ec443e988e2b766.gif?size=4096"},
+    "yag": {"name": "YAGPDB.xyz","avatar": "https://cdn.discordapp.com/avatars/204255221017214977/a_f745fbd1c07799ac4ec443e988e2b766.gif?size=4096"},
     "nobody": {"name": "???","avatar": "https://cdn.discordapp.com/attachments/1092616531353026611/1555540910727761920/image.png?backend=b2&ex=6ac0e5dd&is=6abf945d&hm=fd71cc4e73d0ac6f198d7c39c6309692c66b9f7dc7cba4eb5d899a5bf6736e48&"}
 }
 
