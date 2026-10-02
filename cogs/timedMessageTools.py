@@ -13,7 +13,7 @@ import main
 
 promptResponses = {}
 
-webhook_list = ["[jarvis]", "[sc]", "[sc1]", "[sc2]", "[dyno]", "[mee6]", "[yag]", "[nobody"]
+webhook_list = ["[jarvis]", "[sc]", "[sc1]", "[sc2]", "[dyno]", "[mee6]", "[yag]", "[nobody]"]
 webhook_data = {
     "jarvis": {"name": "J.A.R.V.I.S.", "avatar": "https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"},
     "sc": {"name": "Sprocket Chan", "avatar": "https://cdn.discordapp.com/attachments/1142053423370481747/1487790115345535036/image.png"},
@@ -184,6 +184,7 @@ class timedMessageTools(commands.Cog):
                                     string = await self.bot.error.retrieveError(await self.bot.get_context(message))
                                 else:
                                     string = await self.bot.error.errorfyText(await self.bot.get_context(message), content)
+                                    string = string.replace("[imp]", "")
                                     for item in webhook_list:
                                         string = string.replace(item, "")
 
