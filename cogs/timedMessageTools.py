@@ -276,7 +276,13 @@ class timedMessageTools(commands.Cog):
         # 2. Collect the Messages
         await ctx.send(
             "Enter your messages one by one.\n"
+            "- [jarvis], [sc], [sc1], [sc2], [dyno], [mee6], [yag], and [nobody] send via alt personalities.\n"
+            "- [imp] impersonates the user.\n"
+            "- [error] sends an error.\n"
+            "- [words] and [letters] split single messages with 1s delay; [s] does a manual split.\n"
+            "- personality and error tags between splits apply to those sections.\n"
             "- Use `[jumpscare]` to trigger the animated GIF.\n"
+            "- error [formatting](<https://github.com/SprocketTools/SprocketBot/blob/main/TOOLS.md>) is applied.\n"
             "- Send `[continue]` to finish or `[cancel]` to abort."
         )
 
