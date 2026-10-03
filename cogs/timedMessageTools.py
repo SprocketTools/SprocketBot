@@ -13,7 +13,7 @@ import main
 
 promptResponses = {}
 
-webhook_list = ["[jarvis]", "[sc]", "[sc1]", "[sc2]", "[dyno]", "[mee6]", "[yag]", "[nobody]"]
+webhook_list = ["[jarvis]", "[sc]", "[sc1]", "[sc2]", "[dyno]", "[mee6]", "[yag]", "[nobody]", "[imp]"]
 webhook_data = {
     "jarvis": {"name": "J.A.R.V.I.S.", "avatar": "https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"},
     "sc": {"name": "Sprocket Chan", "avatar": "https://cdn.discordapp.com/attachments/1142053423370481747/1487790115345535036/image.png"},
