@@ -174,7 +174,7 @@ class timedMessageTools(commands.Cog):
                                 status = True
                                 ch_name = character.replace("[", "").replace("]", "")
                                 if ch_name == "imp":
-                                    username_out = message.author.nick
+                                    username_out = message.author.display_name
                                     avatar_out = message.author.display_avatar.url
                                 else:
                                     username_out = webhook_data[ch_name]["name"]
@@ -206,7 +206,14 @@ class timedMessageTools(commands.Cog):
                         if status == False:
                             # async with message.channel.typing():
                             #     await asyncio.sleep(min(len(string) / 20, 3))
-                            await message.channel.send(content)
+                            if "[error]" in content.lower():
+                                string = await self.bot.error.retrieveError(await self.bot.get_context(message))
+                            else:
+                                string = await self.bot.error.errorfyText(await self.bot.get_context(message), content)
+                                string = string.replace("[imp]", "")
+                                for item in webhook_list:
+                                    string = string.replace(item, "")
+                            await message.channel.send(string)
                         await asyncio.sleep(1)
 
                 # 4. Clean up the database so we move to the next message in the batch
