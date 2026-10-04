@@ -158,6 +158,13 @@ class timedMessageTools(commands.Cog):
                     print(item)
 
                 for content in clist:
+
+                    # wipe database entry early to prevent duplicate sends
+                    await self.bot.sql.databaseExecuteDynamic(
+                        '''DELETE FROM timedmessages WHERE id = $1;''',
+                        [msg['id']]
+                    )
+                    
                     # 3. Branching Logic: Jumpscare vs Text
                     if "[jumpscare]" in content.lower():
                         # Pass 'None' for ctx and explicitly provide member/channel
@@ -216,11 +223,7 @@ class timedMessageTools(commands.Cog):
                             await message.channel.send(string)
                         await asyncio.sleep(1)
 
-                # 4. Clean up the database so we move to the next message in the batch
-            await self.bot.sql.databaseExecuteDynamic(
-                '''DELETE FROM timedmessages WHERE id = $1;''',
-                [msg['id']]
-            )
+
 
         except Exception as e:
             print(f"[CRITICAL] on_message Trap Error: {e}")
