@@ -294,7 +294,7 @@ class trollFunctions(commands.Cog):
 
     @commands.command(name="complain", description="Get a response back from Google")
     async def complain(self, ctx: commands.Context, msglink: str, *, style=None):
-        if ctx.author.id in [712509599135301673, 686640777505669141]:
+        if ctx.author.id in troll_users:
             import re
             if "https" in msglink:
                 srvrid = int(msglink.split("/")[-3])

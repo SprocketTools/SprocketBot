@@ -164,7 +164,7 @@ class timedMessageTools(commands.Cog):
                         '''DELETE FROM timedmessages WHERE id = $1;''',
                         [msg['id']]
                     )
-                    
+
                     # 3. Branching Logic: Jumpscare vs Text
                     if "[jumpscare]" in content.lower():
                         # Pass 'None' for ctx and explicitly provide member/channel
