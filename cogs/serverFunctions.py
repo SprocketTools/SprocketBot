@@ -537,6 +537,7 @@ class serverFunctions(commands.Cog):
                 await channel.send(f"Settings generation failed on server {guild.name}.  Error: {E}")
 
     @commands.command()
+    @commands.has_permissions(ban_members=True)
     async def translate(self, ctx, msglink: str):
 
         srvrid = int(msglink.split("/")[-3])
@@ -569,7 +570,7 @@ class serverFunctions(commands.Cog):
             webhook = await ctx.channel.create_webhook(name=f"J.A.R.V.I.S.")
 
             await webhook.send(
-                content="Sir, here is your translated messages for your pleasure.\n" + message_out + await self.bot.error.retrieveError(ctx),
+                content="Sir, here is your translated messages for your pleasure.\n" + message_out + "\n" + await self.bot.error.retrieveError(ctx),
                 username="J.A.R.V.I.S.",
                 avatar_url="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"
             )
@@ -581,7 +582,7 @@ class serverFunctions(commands.Cog):
         finally:
             # Clean up: delete the webhook immediately after sending the message
             await webhook.delete()
-            await ctx.reply("## Sent!")
+            # await ctx.reply("## Sent!")
 
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
