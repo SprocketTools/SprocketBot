@@ -1,3 +1,4 @@
+import json
 import shutil
 import urllib.parse
 import discord, os, platform, time, asyncio, requests, io, datetime
@@ -810,7 +811,11 @@ class githubTools(commands.Cog):
         with open(saveDirectory, "w") as outfile:
             outfile.write(HTMLdoccontribute)
         operatingRepo.index.add(saveDirectory)
-
+        decaljson = await self.bot.sql.databaseFetchdict(f'''SELECT * FROM imagecatalog;''')
+        jsonsavedirectory = f'{GithubDirectory}{OSslashLine}ImageCatalog.html'
+        with open(jsonsavedirectory) as file:
+            json.dump(decaljson, file, indent=4)
+        operatingRepo.index.add(jsonsavedirectory)
         # await githubTools.updateActiveContests(self)
         await ctx.send("Done!")
         try:
