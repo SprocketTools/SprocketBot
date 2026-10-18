@@ -472,6 +472,160 @@ class githubTools(commands.Cog):
                 </script>
                 </html>'''
 
+        HTMLPaintending = '''	                <div class="container text-center">
+                    <!-- Search Bar -->
+                    <input class="numberIn" type="text" id="searchInput" placeholder="Search decals or uploaders...">
+                </div>
+
+                <!-- Dynamic Catalog Grid -->
+                <ul class="catalog" id="catalogGrid">
+                    <!-- JavaScript will populate items here -->
+                </ul>
+
+                <script type="module" src="/scripts/catalogLoader.js"></script>
+                
+                <script>
+                    let allDecals = [];
+                    const grid = document.getElementById("catalogGrid");
+                    const searchInput = document.getElementById("searchInput");
+
+                    async function loadCatalog() {
+                        try {
+                            const response = await fetch('PaintCatalog.json'); 
+                            allDecals = await response.json();
+                            allDecals.sort(() => Math.random() - 0.5);
+                            renderDecals(allDecals); 
+                        } catch (error) {
+                            console.error("Failed to load catalog data:", error);
+                            grid.innerHTML = "<li><h3>Failed to load catalog items.</h3></li>";
+                        }
+                    }
+
+                    function renderDecals(items) {
+                        if (items.length === 0) {
+                            grid.innerHTML = "<li><h3>No decals found.</h3></li>";
+                            return;
+                        }
+
+                        grid.innerHTML = items.toSorted((name) => name).slice(0, 20).map(item => `
+                            <li>
+                                <img src="imgbin/${item.strippedname}" onclick="copyText('https://sprockettools.github.io/img/${item.strippedname}')" alt="${item.name}"/>
+                                <h3>${item.name}</h3>
+                                <h5>Uploaded by: ${item.ownername}</h5>
+                            </li>
+                        `).join('');
+                    }
+
+                    searchInput.addEventListener("input", (e) => {
+                        const query = e.target.value.toLowerCase().trim();
+                        
+                        const filtered = allDecals.filter(item => {
+                            const nameMatch = item.name && item.name.toLowerCase().includes(query);
+                            const ownerMatch = item.ownername && item.ownername.toLowerCase().includes(query);
+                            const categoryMatch = item.category && item.category.toLowerCase().includes(query);
+                            
+                            let tagMatch = false;
+                            if (item.tags) {
+                                if (Array.isArray(item.tags)) {
+                                    tagMatch = item.tags.some(tag => tag.toLowerCase().includes(query));
+                                } else if (typeof item.tags === 'string') {
+                                    tagMatch = item.tags.toLowerCase().includes(query);
+                                }
+                            }
+
+                            return nameMatch || ownerMatch || categoryMatch || tagMatch;
+                        });
+
+                        renderDecals(filtered);
+                    });
+
+                    loadCatalog();
+
+                    function copyText(inputText) {
+                        navigator.clipboard.writeText(inputText);
+                    }
+                
+            </script>
+        </body>
+    </html>'''
+
+        HTMLDecalending = '''	                <div class="container text-center">
+                    <!-- Search Bar -->
+                    <input class="numberIn" type="text" id="searchInput" placeholder="Search decals or uploaders...">
+                </div>
+
+                <!-- Dynamic Catalog Grid -->
+                <ul class="catalog" id="catalogGrid">
+                    <!-- JavaScript will populate items here -->
+                </ul>
+
+                <script type="module" src="/scripts/catalogLoader.js"></script>
+                
+                <script>
+                    let allDecals = [];
+                    const grid = document.getElementById("catalogGrid");
+                    const searchInput = document.getElementById("searchInput");
+
+                    async function loadCatalog() {
+                        try {
+                            const response = await fetch('DecalCatalog.json'); 
+                            allDecals = await response.json();
+                            allDecals.sort(() => Math.random() - 0.5);
+                            renderDecals(allDecals); 
+                        } catch (error) {
+                            console.error("Failed to load catalog data:", error);
+                            grid.innerHTML = "<li><h3>Failed to load catalog items.</h3></li>";
+                        }
+                    }
+
+                    function renderDecals(items) {
+                        if (items.length === 0) {
+                            grid.innerHTML = "<li><h3>No decals found.</h3></li>";
+                            return;
+                        }
+
+                        grid.innerHTML = items.toSorted((name) => name).slice(0, 20).map(item => `
+                            <li>
+                                <img src="imgbin/${item.strippedname}" onclick="copyText('https://sprockettools.github.io/img/${item.strippedname}')" alt="${item.name}"/>
+                                <h3>${item.name}</h3>
+                                <h5>Uploaded by: ${item.ownername}</h5>
+                            </li>
+                        `).join('');
+                    }
+
+                    searchInput.addEventListener("input", (e) => {
+                        const query = e.target.value.toLowerCase().trim();
+                        
+                        const filtered = allDecals.filter(item => {
+                            const nameMatch = item.name && item.name.toLowerCase().includes(query);
+                            const ownerMatch = item.ownername && item.ownername.toLowerCase().includes(query);
+                            const categoryMatch = item.category && item.category.toLowerCase().includes(query);
+                            
+                            let tagMatch = false;
+                            if (item.tags) {
+                                if (Array.isArray(item.tags)) {
+                                    tagMatch = item.tags.some(tag => tag.toLowerCase().includes(query));
+                                } else if (typeof item.tags === 'string') {
+                                    tagMatch = item.tags.toLowerCase().includes(query);
+                                }
+                            }
+
+                            return nameMatch || ownerMatch || categoryMatch || tagMatch;
+                        });
+
+                        renderDecals(filtered);
+                    });
+
+                    loadCatalog();
+
+                    function copyText(inputText) {
+                        navigator.clipboard.writeText(inputText);
+                    }
+                
+            </script>
+        </body>
+    </html>'''
+
         # The specific script for the RGB Maker page
         RGB_script = '''<script>
                 var output = document.getElementById("output");
@@ -602,13 +756,16 @@ class githubTools(commands.Cog):
                 else:
                     decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
                         f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND (type <> 'paint' OR type IS NULL) ORDER BY name;''')]
-                for decalInfo in decalList:
-                    print("Hi!")
-                    decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
-                    <h3>{decalInfo['name']}</h3>
-                    <h5>Uploaded by: {decalInfo['ownername']}</h5>'''
-                    HTMLdoc = f'{HTMLdoc}{decalLI}'
-                HTMLdoc = HTMLdoc + HTMLending
+                    for decalInfo in decalList:
+                        print("Hi!")
+                        decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
+                        <h3>{decalInfo['name']}</h3>
+                        <h5>Uploaded by: {decalInfo['ownername']}</h5>'''
+                        HTMLdoc = f'{HTMLdoc}{decalLI}'
+                if category == "Featured":
+                    HTMLdoc = HTMLdoc + HTMLDecalending
+                else:
+                    HTMLdoc = HTMLdoc + HTMLending
 
             # Save the generated file with the URL-safe name
             safe_category_name = category.replace(" ", "")
@@ -696,13 +853,16 @@ class githubTools(commands.Cog):
             else:
                 decalList = [dict(row) for row in await self.bot.sql.databaseFetch(
                     f'''SELECT * FROM imagecatalog WHERE approved = 'True' AND category = '{category}' AND type = 'paint' ORDER BY name;''')]
-            for decalInfo in decalList:
-                print("Hi!")
-                decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
-                <h3>{decalInfo['name']}</h3>
-                <h5>Uploaded by: {decalInfo['ownername']}</h5>'''
-                HTMLdoc = f'{HTMLdoc}{decalLI}'
-            HTMLdoc = HTMLdoc + HTMLending
+                for decalInfo in decalList:
+                    print("Hi!")
+                    decalLI = f'''<li><img src="imgbin/{decalInfo['strippedname']}" onclick="copyText('https://sprockettools.github.io/img/{decalInfo['strippedname']}')"/>
+                    <h3>{decalInfo['name']}</h3>
+                    <h5>Uploaded by: {decalInfo['ownername']}</h5>'''
+                    HTMLdoc = f'{HTMLdoc}{decalLI}'
+            if category == "Featured":
+                HTMLdoc = HTMLdoc + HTMLPaintending
+            else:
+                HTMLdoc = HTMLdoc + HTMLending
 
             # Save the generated file with the URL-safe name
             safe_category_name = category.replace(" ", "")
@@ -811,13 +971,15 @@ class githubTools(commands.Cog):
         with open(saveDirectory, "w") as outfile:
             outfile.write(HTMLdoccontribute)
         operatingRepo.index.add(saveDirectory)
-        decaljson = await self.bot.sql.databaseFetchdict(f'''SELECT * FROM imagecatalog;''')
-        print("JSON decals")
-        print(decaljson)
-        print("JSON decals")
-        jsonsavedirectory = f'{GithubDirectory}{OSslashLine}ImageCatalog.json'
+        decaljson = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT * FROM imagecatalog WHERE category = ANY($1);''', imageCategoryList)
+        jsonsavedirectory = f'{GithubDirectory}{OSslashLine}DecalCatalog.json'
         with open(jsonsavedirectory, "w", encoding="utf-8") as file:
             json.dump(decaljson, file, indent=4)
+        operatingRepo.index.add(jsonsavedirectory)
+        paintjson = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT * FROM imagecatalog WHERE category = ANY($1);''', paintCategoryList)
+        jsonsavedirectory = f'{GithubDirectory}{OSslashLine}PaintCatalog.json'
+        with open(jsonsavedirectory, "w", encoding="utf-8") as file:
+            json.dump(paintjson, file, indent=4)
         operatingRepo.index.add(jsonsavedirectory)
         # await githubTools.updateActiveContests(self)
         await ctx.send("Done!")
