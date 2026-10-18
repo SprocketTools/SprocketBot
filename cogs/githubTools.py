@@ -974,12 +974,12 @@ class githubTools(commands.Cog):
         with open(saveDirectory, "w") as outfile:
             outfile.write(HTMLdoccontribute)
         operatingRepo.index.add(saveDirectory)
-        decaljson = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT * FROM imagecatalog WHERE category = ANY($1);''', imageCategoryList)
+        decaljson = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT * FROM imagecatalog WHERE category = ANY($1);''', (imageCategoryList))
         jsonsavedirectory = f'{GithubDirectory}{OSslashLine}DecalCatalog.json'
         with open(jsonsavedirectory, "w", encoding="utf-8") as file:
             json.dump(decaljson, file, indent=4)
         operatingRepo.index.add(jsonsavedirectory)
-        paintjson = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT * FROM imagecatalog WHERE category = ANY($1);''', paintCategoryList)
+        paintjson = await self.bot.sql.databaseFetchdictDynamic(f'''SELECT * FROM imagecatalog WHERE category = ANY($1);''', (paintCategoryList))
         jsonsavedirectory = f'{GithubDirectory}{OSslashLine}PaintCatalog.json'
         with open(jsonsavedirectory, "w", encoding="utf-8") as file:
             json.dump(paintjson, file, indent=4)
