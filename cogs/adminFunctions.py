@@ -621,6 +621,15 @@ class adminFunctions(commands.Cog):
         data = io.BytesIO(stringOut.encode())
         await ctx.send(file=discord.File(data, f'errors.json'))
 
+    @commands.command(name="adminDownloadTanks", description="add a column to a SQL table")
+    async def adminDownloadErrors(self, ctx: commands.Context):
+        if ctx.author.id != main.ownerID:
+            return
+        data = await self.bot.sql.databaseFetchdict('''SELECT * FROM blueprint_stats''')
+        stringOut = json.dumps(data, indent=4)
+        data = io.BytesIO(stringOut.encode())
+        await ctx.send(file=discord.File(data, f'bp_stats.json'))
+
     @commands.command(name="adminExecute", description="register a contest")
     async def adminExecute(self, ctx: commands.Context, *, prompt):
         if ctx.author.id != main.ownerID:

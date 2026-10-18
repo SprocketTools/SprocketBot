@@ -1462,25 +1462,51 @@ class contestFunctions(commands.Cog):
 
         # A. CSV
         try:
-            data = await self.bot.sql.databaseFetchdictDynamic('''SELECT * FROM blueprint_stats WHERE host_id = $1''',
-                                                               [contest_id])
+            data = await self.bot.sql.databaseFetchdictDynamic(
+                '''SELECT * FROM blueprint_stats WHERE host_id = $1''', [contest_id]
+            )
+            print(data)
+            print("data is above")
             if not data:
                 await ctx.send("No database entries found.")
             else:
-                df = pd.DataFrame(data)
-
-                if 'vehicle_name' not in df.columns:
-                    df['vehicle_name'] = df['file_url'].apply(
-                        lambda x: x.split('/')[-1].replace('.blueprint', '').replace('_', ' ') if x else 'Unknown')
+                # Convert any custom database cursor/row object into a standard Python list
+                if isinstance(data, dict):
+                    rows = [data]
                 else:
-                    mask = df['vehicle_name'].isna()
-                    df.loc[mask, 'vehicle_name'] = df.loc[mask, 'file_url'].apply(
-                        lambda x: x.split('/')[-1].replace('.blueprint', '').replace('_', ' ') if x else 'Unknown')
+                    try:
+                        # If it's a list of custom row objects, convert them to standard dicts
+                        rows = [dict(row) for row in data]
+                    except (TypeError, ValueError):
+                        # Fallback if the elements can't be cast directly to dict
+                        rows = list(data)
 
+                # Feed the sanitized, standard Python list to Pandas
+                df = pd.DataFrame(rows)
+
+                # Safeguard against missing 'file_url' column
+                if 'file_url' not in df.columns:
+                    df['file_url'] = None
+
+                    # Initialize vehicle_name if it doesn't exist
+                if 'vehicle_name' not in df.columns:
+                    df['vehicle_name'] = None
+
+                # Safely compute fallback names from file_url
+                fallback_names = df['file_url'].apply(
+                    lambda x: x.split('/')[-1].replace('.blueprint', '').replace('_', ' ') if pd.notna(
+                        x) and x else 'Unknown'
+                )
+
+                # Fill in missing vehicle names
+                df['vehicle_name'] = df['vehicle_name'].fillna(fallback_names)
+
+                # Generate and send the CSV
                 csv_buffer = io.BytesIO()
                 df.to_csv(csv_buffer, index=False, encoding='utf-8')
                 csv_buffer.seek(0)
                 await ctx.send(file=discord.File(csv_buffer, filename=f"{contest_name}_stats.csv"))
+
         except Exception as e:
             await ctx.send(f"Error generating CSV: `{e}`")
 
