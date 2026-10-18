@@ -537,7 +537,7 @@ class serverFunctions(commands.Cog):
                 await channel.send(f"Settings generation failed on server {guild.name}.  Error: {E}")
 
     @commands.command()
-    @commands.has_permissions(mute_members=True)
+    @commands.has_permissions(manage_expressions=True)
     async def translate(self, ctx, msglink: str):
 
         srvrid = int(msglink.split("/")[-3])
@@ -558,7 +558,7 @@ class serverFunctions(commands.Cog):
         # await ctx.send("Getting AI response")
         try:
             message_out = await ctx.bot.AI.get_response(
-            prompt=f"Look for any messages in the list below that are not English.  In your response, create a list of the messages in this format: author - original message - message translated to English || MESSAGE LIST: \n\n{messages}")
+            prompt=f"Look for any messages in the list below that are not English.  In your response, create just a list of the messages in this format: 'author - original message - message translated to English' || MESSAGE LIST: \n\n{messages}")
         except Exception as E:
             message_out = "The toaster is in the attic today."
         import re
@@ -570,7 +570,7 @@ class serverFunctions(commands.Cog):
             webhook = await ctx.channel.create_webhook(name=f"J.A.R.V.I.S.")
 
             await webhook.send(
-                content="At your pleasure sir. " + message_out + "\n\n" + await self.bot.error.retrieveError(ctx),
+                content="At your pleasure sir. \n\n" + message_out + "\n\n" + await self.bot.error.retrieveError(ctx),
                 username="J.A.R.V.I.S.",
                 avatar_url="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"
             )
