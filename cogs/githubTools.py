@@ -812,7 +812,7 @@ class githubTools(commands.Cog):
             outfile.write(HTMLdoccontribute)
         operatingRepo.index.add(saveDirectory)
         decaljson = await self.bot.sql.databaseFetchdict(f'''SELECT * FROM imagecatalog;''')
-        jsonsavedirectory = f'{GithubDirectory}{OSslashLine}ImageCatalog.html'
+        jsonsavedirectory = f'{GithubDirectory}{OSslashLine}ImageCatalog.json'
         with open(jsonsavedirectory) as file:
             json.dump(decaljson, file, indent=4)
         operatingRepo.index.add(jsonsavedirectory)
