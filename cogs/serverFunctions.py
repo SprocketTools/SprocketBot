@@ -536,6 +536,53 @@ class serverFunctions(commands.Cog):
             if channel:
                 await channel.send(f"Settings generation failed on server {guild.name}.  Error: {E}")
 
+    @commands.command()
+    async def translate(self, ctx, msglink: str):
+
+        srvrid = int(msglink.split("/")[-3])
+        chnlid = int(msglink.split("/")[-2])
+        msgid = int(msglink.split("/")[-1])
+        serverIn = await self.bot.fetch_guild(srvrid)
+        channel = await self.bot.fetch_channel(chnlid)
+        messageIn = await channel.fetch_message(msgid)
+        # await ctx.send("Collecting message history")
+        messages = []
+        message_raw = channel.history(limit=20)
+        async for messagee in message_raw:
+            messages.append(
+                {'author': messagee.author, 'content': messagee.content, 'author-ID': messagee.author.id,
+                 'url': messagee.jump_url,
+                 'attachments': [attachment.content_type for attachment in messagee.attachments]})
+        print(messages)
+        # await ctx.send("Getting AI response")
+        try:
+            message_out = await ctx.bot.AI.get_response(
+            prompt=f"Look for any messages in the list below that are not English.  In your response, create a list of the messages in this format: author - original message - message translated to English || MESSAGE LIST: \n\n{messages}")
+        except Exception as E:
+            message_out = "The toaster is in the attic today."
+        import re
+
+        # 3. Create Webhook & Send
+        webhook = None
+        try:
+            # Create webhook in the target channel (works cross-server if bot has permissions there)
+            webhook = await ctx.channel.create_webhook(name=f"J.A.R.V.I.S.")
+
+            await webhook.send(
+                content="Sir, here is your translated messages for your pleasure.\n" + message_out + await self.bot.error.retrieveError(ctx),
+                username="J.A.R.V.I.S.",
+                avatar_url="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"
+            )
+        except discord.Forbidden:
+            await ctx.send(
+                f"I do not have `Manage Webhooks` permission in **{ctx.channel.guild.name}** > {ctx.channel.mention}.")
+        except Exception as e:
+            await ctx.send(f"Failed to send: {e}")
+        finally:
+            # Clean up: delete the webhook immediately after sending the message
+            await webhook.delete()
+            await ctx.reply("## Sent!")
+
     @commands.command(name="settings", description="Configure Sprocket Bot")
     async def settings(self, ctx: commands.Context):
         #await ctx.send("HI")
