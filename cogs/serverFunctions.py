@@ -570,7 +570,7 @@ class serverFunctions(commands.Cog):
             webhook = await ctx.channel.create_webhook(name=f"J.A.R.V.I.S.")
 
             await webhook.send(
-                content="Sir, here is your translated messages for your pleasure.\n" + message_out + "\n" + await self.bot.error.retrieveError(ctx),
+                content="At your pleasure sir. " + message_out + "\n\n" + await self.bot.error.retrieveError(ctx),
                 username="J.A.R.V.I.S.",
                 avatar_url="https://static.wikia.nocookie.net/marvelcinematicuniverse/images/b/bf/JARVIS.png/revision/latest?cb=20230923172229"
             )
