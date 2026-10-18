@@ -545,9 +545,9 @@ class githubTools(commands.Cog):
                         navigator.clipboard.writeText(inputText);
                     }
                 
-            </script>
-        </body>
-    </html>'''
+                </script>
+            </body>
+        </html>'''
 
         HTMLDecalending = '''	                <div class="container text-center">
                     <!-- Search Bar -->
@@ -622,9 +622,9 @@ class githubTools(commands.Cog):
                         navigator.clipboard.writeText(inputText);
                     }
                 
-            </script>
-        </body>
-    </html>'''
+                </script>
+            </body>
+        </html>'''
 
         # The specific script for the RGB Maker page
         RGB_script = '''<script>
@@ -768,12 +768,15 @@ class githubTools(commands.Cog):
                     HTMLdoc = HTMLdoc + HTMLending
 
             # Save the generated file with the URL-safe name
-            safe_category_name = category.replace(" ", "")
-            saveDirectory = f'{GithubDirectory}{OSslashLine}Decals{safe_category_name}.html'
-            print(saveDirectory)
-            with open(saveDirectory, "w", encoding="utf-8") as outfile:
-                outfile.write(HTMLdoc)
-            operatingRepo.index.add(saveDirectory)
+            try:
+                safe_category_name = category.replace(" ", "")
+                saveDirectory = f'{GithubDirectory}{OSslashLine}Decals{safe_category_name}.html'
+                print(saveDirectory)
+                with open(saveDirectory, "w", encoding="utf-8") as outfile:
+                    outfile.write(HTMLdoc)
+                operatingRepo.index.add(saveDirectory)
+            except Exception as e:
+                print(e)
 
 
         # Update the paint pages next
