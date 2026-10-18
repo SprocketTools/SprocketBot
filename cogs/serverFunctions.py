@@ -537,7 +537,7 @@ class serverFunctions(commands.Cog):
                 await channel.send(f"Settings generation failed on server {guild.name}.  Error: {E}")
 
     @commands.command()
-    @commands.has_permissions(ban_members=True)
+    @commands.has_permissions(mute_members=True)
     async def translate(self, ctx, msglink: str):
 
         srvrid = int(msglink.split("/")[-3])
