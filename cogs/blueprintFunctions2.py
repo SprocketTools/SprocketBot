@@ -99,46 +99,50 @@ class blueprintFunctions2(commands.Cog):
         try:
             await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS blueprint_stats;''')
             await self.bot.sql.databaseExecute('''
-                    CREATE TABLE IF NOT EXISTS blueprint_stats (
-                        vehicle_id BIGINT PRIMARY KEY,
-                        vehicle_name VARCHAR,
-                        owner_id BIGINT,
-                        host_id BIGINT,
-                        faction_id BIGINT,
-                        vehicle_class VARCHAR,
-                        base_cost REAL,
-                        tank_weight REAL,
-                        tank_length REAL,
-                        tank_width REAL,
-                        tank_height REAL,
-                        tank_total_height REAL,
-                        horsepower INT,
-                        hpt REAL,
-                        top_speed INT,
-                        ground_pressure REAL,
-                        fuel_tank_capacity REAL,
-                        muzzle_velocity REAL,
-                        penetration REAL,
-                        ke_mj REAL,
-                        gun_len REAL,
-                        armor_mass REAL,
-                        hit_points INT,
-                        damage_rating INT,
-                        penetration_rating INT,
-                        accuracy_rating INT,
-                        mobility_rating INT,
-                        armor_rating INT,
-                        vision_rating INT,
-                        concealment_rating INT,
-                        evasion_rating INT,
-                        build_time VARCHAR,
-                        submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        file_url TEXT,
-                        image_url TEXT,
-                        gif_url TEXT
-                    );
-                ''')
-            await ctx.send("**Success!** The `blueprint_stats` table is ready (schema updated).")
+                        CREATE TABLE IF NOT EXISTS blueprint_stats (
+                            vehicle_id BIGINT PRIMARY KEY,
+                            vehicle_name VARCHAR,
+                            owner_id BIGINT,
+                            host_id BIGINT,
+                            faction_id BIGINT,
+                            vehicle_class VARCHAR,
+                            base_cost REAL,
+                            tank_weight REAL,
+                            tank_length REAL,
+                            tank_width REAL,
+                            tank_height REAL,
+                            tank_total_height REAL,
+                            horsepower INT,
+                            hpt REAL,
+                            top_speed INT,
+                            ground_pressure REAL,
+                            travel_range REAL,
+                            fuel_tank_capacity REAL,
+                            muzzle_velocity REAL,
+                            penetration REAL,
+                            ke_mj REAL,
+                            gun_len REAL,
+                            armor_mass REAL,
+                            crew_count INT,
+                            hit_points INT,
+                            damage_rating INT,
+                            penetration_rating INT,
+                            accuracy_rating INT,
+                            mobility_rating INT,
+                            armor_rating INT,
+                            vision_rating INT,
+                            concealment_rating INT,
+                            evasion_rating INT,
+                            build_time VARCHAR,
+                            vehicle_era VARCHAR,
+                            submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            file_url TEXT,
+                            image_url TEXT,
+                            gif_url TEXT
+                        );
+                    ''')
+            await ctx.send(
+                "**Success!** The `blueprint_stats` table is ready with all required columns (including `vehicle_era`).")
         except Exception as e:
             await ctx.send(f"**Error updating table:**\n```\n{e}\n```")
 

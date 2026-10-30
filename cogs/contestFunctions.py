@@ -1069,7 +1069,7 @@ class contestFunctions(commands.Cog):
                 )
             except Exception as e:
                 await ctx.reply(e)
-            
+
             # --- G. Generate GIF & Update DB ---
             gif_file = None
             sent_msg = None
@@ -1464,6 +1464,12 @@ class contestFunctions(commands.Cog):
 
         # A. CSV
         try:
+            # DEBUG: Let's see ALL rows in blueprint_stats regardless of host_id
+            all_entries = await self.bot.sql.databaseFetchdict(
+                '''SELECT vehicle_id, vehicle_name, host_id FROM blueprint_stats;'''
+            )
+            print(f"--- GLOBAL DB DUMP ---: {all_entries}")
+
             data = await self.bot.sql.databaseFetchdictDynamic(
                 '''SELECT * FROM blueprint_stats WHERE host_id = $1''', [contest_id]
             )
