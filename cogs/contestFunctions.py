@@ -53,7 +53,6 @@ class contestFunctions(commands.Cog):
         # 2. Main Contests Table
         # (Commented out DROP TABLE so you don't accidentally wipe active contests! Re-enable only if you want a total nuke.)
         # await self.bot.sql.databaseExecute('''DROP TABLE IF EXISTS contests;''')
-
         await self.bot.sql.databaseExecute('''
                 CREATE TABLE IF NOT EXISTS contests (
                     contest_id BIGINT PRIMARY KEY,
@@ -1063,11 +1062,14 @@ class contestFunctions(commands.Cog):
             columns = ", ".join(insert_data.keys())
             placeholders = ", ".join([f"${i + 1}" for i in range(len(insert_data))])
 
-            await self.bot.sql.databaseExecuteDynamic(
+            try:
+                await self.bot.sql.databaseExecuteDynamic(
                 f"INSERT INTO blueprint_stats ({columns}) VALUES ({placeholders}) ON CONFLICT (vehicle_id) DO UPDATE SET host_id = EXCLUDED.host_id, vehicle_name = EXCLUDED.vehicle_name, image_url = EXCLUDED.image_url;",
                 list(insert_data.values())
-            )
-
+                )
+            except Exception as e:
+                await ctx.reply(e)
+            
             # --- G. Generate GIF & Update DB ---
             gif_file = None
             sent_msg = None
