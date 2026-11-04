@@ -1,15 +1,37 @@
 import asyncio
+import configparser
 import locale
-import type_hints
+import os
+import re
 import discord
 from discord.ext import commands
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 import yt_dlp
 
+import type_hints
 import main
 from cogs.adminFunctions import adminFunctions
 from cogs.textTools import textTools
 
 locale.setlocale(locale.LC_ALL, '')
+
+# --- Spotify Configuration (Ported from celestial_navigator.py) ---
+sp = None
+try:
+    baseConfig = configparser.ConfigParser()
+    if os.name == 'nt':
+        config_path = "C:\\\\SprocketBot\\\\configuration.ini"
+    else:
+        config_path = os.path.join(os.path.expanduser("~"), "configuration.ini")
+
+    baseConfig.read(config_path)
+    client_id = baseConfig['settings']['spotify_client_id']
+    client_secret = baseConfig['settings']['spotify_client_secret']
+    auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+except Exception as e:
+    print(f"[VCfunctions] Warning: Could not initialize Spotify client: {e}")
 
 FFMPEG_OPTIONS_CURSED = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
@@ -22,8 +44,12 @@ FFMPEG_OPTIONS = {
 YDL_OPTIONS = {
     'format': 'bestaudio/best',
     'noplaylist': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0', # prevents IPv6 routing issues on some servers
+    'default_search': 'ytsearch1',
+    'source_address': '0.0.0.0',  # prevents IPv6 routing issues on some servers
+    'quiet': True,
+    'noprogress': True,
+    'cookiefile': 'cookies.txt',
+    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 
 
@@ -32,39 +58,133 @@ class VCfunctions(commands.Cog):
         self.bot = bot
         self.queues = {}
 
-    def _extract_media_info(self, ydl, search: str):
-        """Helper function to cleanly extract single track details from yt-dlp queries."""
-        if "https://" in search or "http://" in search:
-            info = ydl.extract_info(search, download=False)
-        else:
-            info = ydl.extract_info(f"scsearch:{search}", download=False)
-
-        if 'entries' in info and info['entries']:
-            info = info['entries'][0]
-
-        url = info.get('url') or info.get('webpage_url')
-        title = info.get('title', 'Unknown Track')
-        return url, title
-
     def get_queue(self, guild_id: int) -> list:
         if guild_id not in self.queues:
             self.queues[guild_id] = []
         return self.queues[guild_id]
 
-    def _extract_media_info(self, search: str):
-        """Synchronous wrapper for yt-dlp to run inside an executor thread."""
-        with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-            if "https://" in search or "http://" in search:
-                info = ydl.extract_info(search, download=False)
-            else:
-                info = ydl.extract_info(f"scsearch:{search}", download=False)
+    def _resolve_spotify_queries(self, search: str) -> list[tuple[str, str | None]]:
+        """
+        Resolves a search string or URL into a list of (query_or_url, spotify_display_title) tuples.
+        - Direct Spotify URLs (track, playlist, album) are fetched directly via Spotipy.
+        - Direct non-Spotify URLs are passed through untouched.
+        - Text queries search Spotify first for track metadata, falling back to raw text if Spotify fails.
+        """
+        is_url = "https://" in search or "http://" in search
+        is_spotify_url = ("open.spotify.com" in search or "spotify.link" in search or search.startswith("spotify:"))
 
-            if 'entries' in info and info['entries']:
-                info = info['entries'][0]
+        if is_spotify_url and sp:
+            try:
+                if "track" in search:
+                    track = sp.track(search)
+                    designation = f"{track['artists'][0]['name']} - {track['name']}"
+                    return [(designation, designation)]
+                elif "playlist" in search:
+                    tracks = []
+                    results = sp.playlist_items(search)
+                    while results:
+                        for item in results.get('items', []):
+                            track = item.get('track')
+                            if track and track.get('artists') and track.get('name'):
+                                designation = f"{track['artists'][0]['name']} - {track['name']}"
+                                tracks.append((designation, designation))
+                        results = sp.next(results) if results.get('next') else None
+                    if tracks:
+                        return tracks
+                elif "album" in search:
+                    tracks = []
+                    results = sp.album_tracks(search)
+                    while results:
+                        for track in results.get('items', []):
+                            if track and track.get('artists') and track.get('name'):
+                                designation = f"{track['artists'][0]['name']} - {track['name']}"
+                                tracks.append((designation, designation))
+                        results = sp.next(results) if results.get('next') else None
+                    if tracks:
+                        return tracks
+            except Exception as e:
+                print(f"[VCfunctions] Spotify link extraction failed, falling back to raw query: {e}")
 
-            url = info.get('url') or info.get('webpage_url')
-            title = info.get('title', 'Unknown Track')
-            return url, title
+        if is_url:
+            return [(search, None)]
+
+        # Default to searching through Spotify for text queries
+        if sp:
+            try:
+                results = sp.search(q=search, type='track', limit=1)
+                items = results.get('tracks', {}).get('items', [])
+                if items:
+                    track = items[0]
+                    designation = f"{track['artists'][0]['name']} - {track['name']}"
+                    return [(designation, designation)]
+            except Exception as e:
+                print(f"[VCfunctions] Spotify search failed, falling back to YouTube search: {e}")
+
+        return [(search, None)]
+
+    def _query_youtube_with_retries(self, query: str, preferred_title: str = None) -> tuple[str, str]:
+        """
+        Queries YouTube via yt-dlp with multiple fallback attempts (ported from celestial_navigator.py).
+        """
+        is_url = "https://" in query or "http://" in query
+
+        if is_url:
+            attempts = [query]
+        else:
+            clean_query = re.sub(r'[^a-zA-Z0-9 \\-]', '', query).strip()
+            attempts = [
+                f"ytsearch1:{query} lyrics",
+                f"ytsearch1:{clean_query if clean_query else query}",
+                f"ytsearch1:{query}"
+            ]
+            # Deduplicate while preserving order
+            seen = set()
+            attempts = [a for a in attempts if not (a in seen or seen.add(a))]
+
+        last_error = None
+        for attempt_idx, attempt_query in enumerate(attempts, start=1):
+            try:
+                with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+                    info = ydl.extract_info(attempt_query, download=False)
+                    if 'entries' in info:
+                        entries = [e for e in info['entries'] if e]
+                        if not entries:
+                            raise ValueError("No results returned from YouTube.")
+                        info = entries[0]
+
+                    url = info.get('url') or info.get('webpage_url')
+                    if not url:
+                        raise ValueError("Could not extract playable stream URL.")
+
+                    title = preferred_title or info.get('title', 'Unknown Track')
+                    return url, title
+            except Exception as e:
+                print(f"[VCfunctions] YouTube attempt {attempt_idx}/{len(attempts)} failed for '{attempt_query}': {e}")
+                last_error = e
+
+        raise RuntimeError(f"All YouTube search attempts failed. Last error: {last_error}")
+
+    def _extract_media_info(self, search: str) -> tuple[str, str]:
+        """Single-track synchronous wrapper for compatibility."""
+        resolved = self._resolve_spotify_queries(search)
+        query, preferred_title = resolved[0]
+        return self._query_youtube_with_retries(query, preferred_title)
+
+    def _extract_media_list(self, search: str) -> list[tuple[str, str]]:
+        """Resolves one or more tracks (supporting Spotify track/playlist/album links) into playable (url, title) pairs."""
+        resolved = self._resolve_spotify_queries(search)
+        tracks = []
+        for query, preferred_title in resolved:
+            try:
+                url, title = self._query_youtube_with_retries(query, preferred_title)
+                tracks.append((url, title))
+            except Exception as e:
+                print(f"[VCfunctions] Skipping failed track '{query}': {e}")
+                if len(resolved) == 1:
+                    raise
+        if not tracks:
+            raise RuntimeError("Could not resolve any playable tracks.")
+        return tracks
 
     @commands.command(name="play", description="Play music or uploaded audio files with the bot",
                       extras={'category': 'utility'})
@@ -98,12 +218,22 @@ class VCfunctions(commands.Cog):
             else:
                 return await ctx.send("Unsupported audio file format.")
         elif searchIn:
-            search = await textTools.mild_sanitize(searchIn)
+            # Preserve URLs directly (avoid stripping URL characters in mild_sanitize), sanitize normal search queries
+            if "https://" in searchIn or "http://" in searchIn or searchIn.startswith("spotify:"):
+                search = searchIn.strip()
+            else:
+                search = await textTools.mild_sanitize(searchIn)
+
             async with ctx.typing():
                 try:
-                    url, title = await asyncio.to_thread(self._extract_media_info, search)
-                    guild_queue.append((url, title, FFMPEG_OPTIONS))
-                    await ctx.send(f'Added to queue: **{title}**')
+                    tracks = await asyncio.to_thread(self._extract_media_list, search)
+                    for url, title in tracks:
+                        guild_queue.append((url, title, FFMPEG_OPTIONS))
+
+                    if len(tracks) == 1:
+                        await ctx.send(f'Added to queue: **{tracks[0][1]}**')
+                    else:
+                        await ctx.send(f'Added **{len(tracks)}** tracks from Spotify to the queue!')
                 except Exception as e:
                     return await ctx.send(f"Could not retrieve audio: `{e}`")
 
@@ -140,15 +270,15 @@ class VCfunctions(commands.Cog):
 
     @commands.command(name="search", description="Search for music with the bot")
     async def search(self, ctx: commands.Context, *, searchIn):
-        search = await textTools.mild_sanitize(searchIn)
+        if "https://" in searchIn or "http://" in searchIn or searchIn.startswith("spotify:"):
+            search = searchIn.strip()
+        else:
+            search = await textTools.mild_sanitize(searchIn)
 
         async with ctx.typing():
             try:
-                with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-                    url, title = await self.bot.loop.run_in_executor(
-                        None, lambda: self._extract_media_info(ydl, search)
-                    )
-                await ctx.send(f'Result:\n**{title}**\n<{url}>')
+                url, title = await asyncio.to_thread(self._extract_media_info, search)
+                await ctx.send(f'Result:\\n**{title}**\\n<{url}>')
             except Exception as e:
                 await ctx.send(f"Search failed: `{e}`")
 
@@ -175,13 +305,13 @@ class VCfunctions(commands.Cog):
             guild_vc = await target_channel.connect(timeout=20.0, reconnect=True)
 
         options = FFMPEG_OPTIONS_CURSED if action == "cursed" else FFMPEG_OPTIONS
-        url, title = None, None
+        tracks_to_queue = []
 
         # Extract track details from attachments or prompts
         if ctx.message.attachments:
             attachment = ctx.message.attachments[0]
             if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
-                url, title = attachment.url, f"Uploaded File: {attachment.filename}"
+                tracks_to_queue.append((attachment.url, f"Uploaded File: {attachment.filename}"))
             else:
                 return await ctx.send("Unsupported audio file format attached.")
         else:
@@ -197,21 +327,31 @@ class VCfunctions(commands.Cog):
             if prompt_msg.attachments:
                 attachment = prompt_msg.attachments[0]
                 if any(attachment.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.ogg', '.m4a', '.flac']):
-                    url, title = attachment.url, f"Uploaded File: {attachment.filename}"
+                    tracks_to_queue.append((attachment.url, f"Uploaded File: {attachment.filename}"))
                 else:
                     return await ctx.send("Unsupported audio file format attached.")
             elif prompt_msg.content:
-                search = await textTools.mild_sanitize(prompt_msg.content)
+                raw_content = prompt_msg.content.strip()
+                if "https://" in raw_content or "http://" in raw_content or raw_content.startswith("spotify:"):
+                    search = raw_content
+                else:
+                    search = await textTools.mild_sanitize(raw_content)
+
                 async with ctx.typing():
                     try:
-                        url, title = await asyncio.to_thread(self._extract_media_info, search)
+                        tracks_to_queue = await asyncio.to_thread(self._extract_media_list, search)
                     except Exception as e:
                         return await ctx.send(f"Could not retrieve audio: `{e}`")
 
         # Append to target guild's isolated queue
         target_queue = self.get_queue(target_guild.id)
-        target_queue.append((url, title, options))
-        await ctx.send(f'Added to queue for **{target_guild.name}** (<#{channelID}>): **{title}**')
+        for url, title in tracks_to_queue:
+            target_queue.append((url, title, options))
+
+        if len(tracks_to_queue) == 1:
+            await ctx.send(f'Added to queue for **{target_guild.name}** (<#{channelID}>): **{tracks_to_queue[0][1]}**')
+        else:
+            await ctx.send(f'Added **{len(tracks_to_queue)}** tracks to queue for **{target_guild.name}** (<#{channelID}>)!')
 
         if guild_vc and not guild_vc.is_playing():
             await self.play_next_guild(ctx, target_guild)
