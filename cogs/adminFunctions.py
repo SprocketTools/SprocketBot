@@ -74,7 +74,7 @@ class adminFunctions(commands.Cog):
         # except Exception:
         #     pass
 
-        if ctx.author.id in [439836738064613378, 670531747972251676, 171352085340618753]: # blacklist
+        if ctx.author.id in [439836738064613378, 670531747972251676, 171352085340618753, 834498801599381504]: # blacklist
             await self.bot.error.sendCategorizedError(ctx, "insult")
             return False
         if ctx.author.id == main.ownerID:
