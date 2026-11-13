@@ -164,9 +164,10 @@ class githubTools(commands.Cog):
             if "image" in attachment.content_type:
                 name_list.append(attachment.filename)
 
-        output = f"### Respond with an updated list of names for your pictures corresponding to the list below\n- Limit each name to no more than 32 characters.\n- Name your decals in lower case and include spaces, like this: `roca 10th field army`\n- Put each name on a new line (like in the list below)\n\n=====================\n"
+        output = f"### Copy the list of names below and resend it to this channel with any desired adjustments to each name.\n- Limit each name to no more than 32 characters.\n- Name your decals in lower case and include spaces, like this: `roca 10th field army`\n- Put each name on a new line (like in the list below)\n\n=====================\n```"
         for name in name_list:
             output = output + f"\n{name.lower().replace('_', ' ').replace('.png', '').replace('.jpg', '')}"
+        output = output + "\n```"
         await ctx.send("https://cdn.discordapp.com/attachments/1092616531353026611/1570788702693752942/image.png?ex=6af85e7a&is=6af70cfa&hm=8c5d2da90e8091a8091c604339592b69a2a1a7398b735ae104e3c398110cfdf3&")
         names = await textTools.getResponse(ctx, output, 32)
         user_name_list = names.split("\n")
