@@ -213,7 +213,7 @@ class githubTools(commands.Cog):
                     await self.bot.sql.databaseExecuteDynamic(
                         f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);''',
                         values)
-                    await ctx.send(f"### {strippedname} has been sent off for approval as {name}!")
+                    await ctx.send(f"`{strippedname}`, named as **{name}**, has been sent off for approval!")
                     channel = self.bot.get_channel(1152377925916688484)
                     await channel.send(
                         f"<@{main.ownerID}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
