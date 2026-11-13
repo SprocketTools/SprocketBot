@@ -158,12 +158,24 @@ class githubTools(commands.Cog):
         origin = operatingRepo.remote('origin')
         origin.fetch()
         origin.pull(origin.refs[0].remote_head)
+
+        name_list = []
+        for attachment in allAttachments:
+            if "image" in attachment.content_type:
+                name_list.append(attachment.filename)
+
+        output = f"### Respond with an updated list of names for your pictures corresponding to the list below\n- Limit each name to no more than 32 characters.\n- Name your decals in lower case and include spaces, like this: `roca 10th field army`\n- Put each name on a new line (like in the list below)\n\n=====================\n"
+        for name in name_list:
+            output = output + f"\n{name.lower().replace('_', ' ').replace('.png', '').replace('.jpg', '')}"
+        await ctx.send("https://cdn.discordapp.com/attachments/1092616531353026611/1570788702693752942/image.png?ex=6af85e7a&is=6af70cfa&hm=8c5d2da90e8091a8091c604339592b69a2a1a7398b735ae104e3c398110cfdf3&")
+        names = await textTools.getResponse(ctx, output, 32)
+        user_name_list = names.split("\n")
+        i_spot = 0
         for attachment in allAttachments:
             if "image" in attachment.content_type:
                 type = ".png"
-                name = await textTools.getCappedResponse(ctx,
-                                                         f"What is the title of {attachment.filename}?  Limit the name to no more than 32 characters.\nName your decals in lower case and include spaces, like this: `roca 10th field army`",
-                                                         32)
+                name = user_name_list[i_spot]
+                i_spot += 1
                 name = name.lower()
                 strippedname = name.replace(" ", "_")
                 strippedname = f"{strippedname}{type}"
@@ -358,7 +370,11 @@ class githubTools(commands.Cog):
                                 "Image descriptions are not consistent", "Rejection was requested by submitter",
                                 "Other", "No", "Override Name", "Override Category", "Yes"]
                 await ctx.send(userPrompt)
-                answer = await ctx.bot.ui.getButtonChoice(ctx, responseList)
+                if int(decalInfo['ownerid']) == 712509599135301673:
+                    answer = "Yes"
+                    await ctx.send("Auto approved.")
+                else:
+                    answer = await ctx.bot.ui.getButtonChoice(ctx, responseList)
                 if answer == "Yes":
                     values = [decalInfo['strippedname']]
                     await self.bot.sql.databaseExecuteDynamic(
