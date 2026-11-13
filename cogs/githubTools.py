@@ -151,7 +151,7 @@ class githubTools(commands.Cog):
         tags = await textTools.getCappedResponse(ctx,
                                                  "Reply with a list of comma-separated tags to help with searching for these images.  Ex: `british, tonnage, tons`",
                                                  32)
-        await ctx.send(f'''Got it!\n\n Next, let's get the names down for your images.  These are the titles that users will see when browsing the catalog.\n- Stick to a lower case format with spaces "like this" for the names.\n- Avoid using punctuation.''')
+        await ctx.send(f'''Got it!\n\n Next, let's get the names down for your images.  These are the titles that users will see when browsing the catalog, shown below.''')
 
         print(category)
         operatingRepo = Repo(GithubDirectory)
@@ -212,7 +212,7 @@ class githubTools(commands.Cog):
                     await self.bot.sql.databaseExecuteDynamic(
                         f'''INSERT INTO imagecatalog (name, tags, strippedname, approved, ownername, ownerid, category, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);''',
                         values)
-                    await ctx.send(f"### The image {strippedname} has been sent off for approval!")
+                    await ctx.send(f"### {strippedname} has been sent off for approval as {name}!")
                     channel = self.bot.get_channel(1152377925916688484)
                     await channel.send(
                         f"<@{main.ownerID}>\n**{name}** has been submitted by <@{ctx.author.id}> and is waiting for approval!")
